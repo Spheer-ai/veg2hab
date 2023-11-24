@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "veg2hab"
+version = "0.1.0"
+description = "Package voor automatisch omzetten van vegetatiekarteringen naar habitatkaarten"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+geopandas = "^0.12.0"
+openpyxl = "^3.1.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.26.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
