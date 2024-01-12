@@ -69,6 +69,8 @@ Mits niet in mozaiek met vegetaties van H2130
 
 *Mits in FGR*
 Mits in FGR Rivierengebied
+Mits in FGR Laagveengebied
+Mits in FGR Heuvelland
 
 *Mits niet in FGR*
 Mits niet in FGR Duinen
@@ -143,10 +145,10 @@ Mits tussen hoge moerasplanten
 ### Dingen met hoogte ###
 
 *Dieptelijn*
-Voorzovel gelegen tussen de -20 meter-dieptelijn en de op LAT gebaseerde laagwaterlijn
+Voorzover gelegen tussen de -20 meter-dieptelijn en de op LAT gebaseerde laagwaterlijn
 
-*LAT*
-Voorzovel gelegen tussen de -20 meter-dieptelijn en de op LAT gebaseerde laagwaterlijn
+*LAT gebaseerde laagwaterlijn*
+Voorzover gelegen tussen de -20 meter-dieptelijn en de op LAT gebaseerde laagwaterlijn
 - Vraag: voorbeeld gaat verder ...inclusief de tussenliggende diepere laagten en geulen. Wat betekent dat?
 
 *Gemiddelde hoogwaterlijn*
@@ -173,13 +175,12 @@ mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal h
 ### Vage dingen met rivieren ###
 Mits onder invloed van beek of rivier
 
-Mits in de FGR Getijdengebied en mits gelegen in het verlengde van een rivier waarvan het water een sterke en continue invloed op het habitattype heeft
+(Mits in de FGR Getijdengebied en) mits gelegen in het verlengde van een rivier waarvan het water een sterke en continue invloed op het habitattype heeft
 
 ----------------------------------------------------
 
 ### Mits een acrotelm aanwezig is ###
 Mits een acrotelm aanwezig is
-- Vraag: Is acrotelm te vinden in de bodemkaart? Dan moet deze misschien bij Mits in bodem
 Mits een acrotelm aanwezig is of een vergelijkbaar hoogveenvormend proces
 
 ----------------------------------------------------
