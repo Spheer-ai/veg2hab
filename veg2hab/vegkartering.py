@@ -14,7 +14,6 @@ class VegetatieTypeInfo:
         self.percentage = percentage
         self.vvn = vvn
         self.sbb = sbb
-        
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
@@ -35,9 +34,7 @@ class JoinParameters:
     A set of parameters that is used for join operations. Can be chained together to create a join operation that joins multiple tables.
     """
 
-    def __init__(
-        self, csv_path, left_column, right_column, left_regex=None, right_regex=None
-    ):
+    def __init__(self, csv_path, left_column, right_column):
         self.csv_path = csv_path
         self.left_column = left_column
         self.right_column = right_column

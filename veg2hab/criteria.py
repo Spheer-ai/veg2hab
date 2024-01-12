@@ -76,7 +76,7 @@ class OfCriteria(BeperkendCriterium):
     subCriteria: List[BeperkendCriterium]
 
     def check(self, geometry: Geometrie) -> MaybeBoolean:
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic 
+        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
         for crit in self.criteria:
             if crit.check(geometry) == MaybeBoolean.TRUE:
                 return MaybeBoolean.TRUE
@@ -87,7 +87,7 @@ class EnCriteria(BeperkendCriterium):
     subCriteria: List[BeperkendCriterium]
 
     def check(self, geometry: Geometrie) -> MaybeBoolean:
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic 
+        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
         for crit in self.criteria:
             if crit.check(geometry) == MaybeBoolean.FALSE:
                 return MaybeBoolean.FALSE
