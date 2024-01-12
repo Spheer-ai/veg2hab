@@ -152,7 +152,7 @@ class ProtoKartering:
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegetatieTypeInfo.from_access_rows_to_list)
+            .apply(VegetatieTypeInfo.create_list_from_access_rows)
             .reset_index(name="VegTypeInfo")
         )
 
@@ -160,6 +160,8 @@ class ProtoKartering:
         gdf = gdf.merge(
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
+
+        #
 
         return cls(gdf)
 
