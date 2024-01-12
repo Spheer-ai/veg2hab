@@ -7,17 +7,20 @@ import pandas as pd
 
 class VegetatieTypeInfo:
     """
-    # TODO
+    Klasse met alle informatie over een vegetatietype van een vlak
     """
 
     def __init__(self, percentage: int, vvn: str = None, sbb: str = None):
         self.percentage = percentage
         self.vvn = vvn
         self.sbb = sbb
+        
 
     @classmethod
-    def from_access_rows_to_list(cls, rows: pd.DataFrame):
-        # NOTE: Is dit netjes? Een lijst van deze klasse teruggeven?
+    def create_list_from_access_rows(cls, rows: pd.DataFrame):
+        """
+        Maakt van alle rijen met vegetatietypes (van een vlak) een lijst van VegetatieTypeInfo objecten
+        """
         lst = []
         for row in rows.itertuples():
             lst.append(cls(row.Bedekking_num, sbb=row.Sbb))
@@ -109,10 +112,6 @@ class ProtoKartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
-
-        # NOTE: Moet ik nog wat met kolom "Bedekking" in KarteringVegetatietype.csv? Zie rottigemeenthe
-        # NOTE: Moet kolom "Opmerking" in Vegetatietype.csv bewaard? Zijn enkel ints. Zie rottigemeenthe
-
         gdf = gpd.read_file(shape_path)
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
