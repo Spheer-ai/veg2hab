@@ -6,16 +6,17 @@ authors = ["Spheer.ai <info@spheer.ai>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-geopandas = "^0.12.0"
-openpyxl = "^3.1.2"
-xlrd = "^2.0.1"
-pyodbc= "^5.0.1"
+python = ">=3.7,<4.0"
+geopandas = ">=0.10.0"
+openpyxl = ">=3.0.0"
+xlrd = ">=2.0.1"
+pyodbc= ">=4.0.1"
+pydantic = "1.10"
 
 [tool.poetry.group.dev.dependencies]
-ipykernel = "^6.26.0"
-black = "^23.12.1"
-isort = "^5.13.2"
+ipykernel = ">=6.0.0"
+black = ">=23.0.0"
+isort = ">=5.0.0"
 pytest = "^7.4.4"
 
 [build-system]
