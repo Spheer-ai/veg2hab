@@ -33,7 +33,7 @@ class SBB(VegetatieType):
     """
     Format van SBB codes:
     # is cijfer, x is letter
-    Normale SBB: ## x x #: zoals 14e1a
+    Normale SBB: ## x ## x: zoals 14e1a
     Elke toevoeging na de eerste ## is optioneel, zolang de latere ook afwezig zijn (14e is valid, 14a niet)
     De eerste van 2 cijfers mag geen 0 zijn (5d2 is valid, 05d2 niet)
     Derivaatgemeenschappen: {normale sbb} / x, zoals 16B/a
