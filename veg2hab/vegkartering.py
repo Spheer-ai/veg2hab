@@ -1,16 +1,6 @@
 import geopandas as gpd
 
 
-class VvN:
-
-    def __init__(self, code: str):
-        self.validate(code)
-        self.code = code
-
-    def validate(self, code: str):
-        # Validate dat t een valide VvN code is
-        pass
-
 class Geometrie:
     """Een shape uit de vegetatiekartering.
     Deze bevat of een VvN of een SBB code en een geometrie.

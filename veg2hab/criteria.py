@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from veg2hab.enum import MaybeBoolean
+from veg2hab.enums import MaybeBoolean
 from veg2hab.vegkartering import Geometrie
 
 
