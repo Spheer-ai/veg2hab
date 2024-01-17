@@ -19,11 +19,45 @@ class SBB:
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
     """
 
-    def __init__(self, code: str):
-        if not self.validate(code):
-            raise ValueError(f"SBB code {code} is niet valide")
+    basis_ssb: ClassVar = re.compile(r"(?P<klasse>[1-9][0-9])?((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?")
 
-        self.code = code
+    gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
+
+    klasse: str
+    verbond: Optional[str]
+    associatie: Optional[str]
+    subassociatie: Optional[str]
+    derivaatgemeenschap: Optional[str]
+    rompgemeenschap: Optional[str]
+
+    def __init__(self, code: str):
+
+        match = self.gemeenschap.match(code)
+        if match:
+            # Strippen van gemeenschap
+            code = code[:-2]
+            if match.group("type") == "/":
+                self.derivaatgemeenschap = match.group("gemeenschap")
+                self.rompgemeenschap = None
+                return
+            elif match.group("type") == "-":
+                self.derivaatgemeenschap = None
+                self.rompgemeenschap = match.group("gemeenschap")
+                return
+            else:
+                assert False, "Onmogelijk om hier te komen; groep 'type' moet '/' of '-' zijn"
+            
+        match = self.basis_ssb.fullmatch(code)
+        if match:
+            self.klasse = match.group("klasse")
+            self.verbond = match.group("verbond")
+            self.associatie = match.group("associatie")
+            self.subassociatie = match.group("subassociatie")
+            self.derivaatgemeenschap = None
+            self.rompgemeenschap = None
+            return
+        
+        raise ValueError()
 
     @staticmethod
     def validate(code: str):
@@ -96,9 +130,6 @@ class VvN:
     rompgemeenschap: Optional[str]
 
     def __init__(self, code: str):
-        # if not self.validate(code):
-        #     raise ValueError(f"VvN code {code} is niet valide")
-        
         match = self.gemeenschap.fullmatch(code)
         if match:
             self.klasse = match.group("klasse")
