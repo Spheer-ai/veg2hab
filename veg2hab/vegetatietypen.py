@@ -58,6 +58,42 @@ class SBB:
             return
         
         raise ValueError()
+    
+    def base_SSB_as_tuple(self):
+        """
+        Returns the base part of the SBB code as a tuple
+        """
+        return (self.klasse, self.verbond, self.associatie, self.subassociatie)
+
+    def match_up_to(self, other: SBB):
+        """
+        Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere
+        """
+
+        self_tuple = self.base_SSB_as_tuple()
+        other_tuple = other.base_SSB_as_tuple()
+
+        if self.derivaatgemeenschap or other.derivaatgemeenschap:
+            # Check of ze dezelfde derivaatgemeenschap zijn
+            # TODO
+            return
+
+        if self.rompgemeenschap or other.rompgemeenschap:
+            # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
+            # TODO
+            return
+
+        
+
+        # for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
+        #     if (self_group is None) and (other_group is None):
+        #         return i
+        #     if (self_group == other_group):
+        #         continue
+        #     if (self_group != other_group) and (other_group is None):
+        #         return i
+        #     return 0
+        return len(self_tuple)
 
     @staticmethod
     def validate(code: str):
