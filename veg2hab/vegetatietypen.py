@@ -51,7 +51,6 @@ class SBB(VegetatieType):
         """
         Validate dat t een valide SBB code is
         """
-        # TODO: This is a prototype, if possible find some sort of explanation/standard somewhere
         base_sbb = re.compile(r"[1-9][0-9]?([a-z]([1-9]([a-z])?)?)?")
         # 14E1a                     1    4      E     1     a
         rompgemeenschap = re.compile(r"-[a-z]$")
@@ -72,9 +71,11 @@ class SBB(VegetatieType):
 
         return False
 
-    @staticmethod
-    def validate_pandas_series(series: pd.Series, print_invalid: bool = False):
-        invalid_mask = VegetatieType.get_invalid_mask_pandas_series(SBB, series)
+    @classmethod
+    def validate_pandas_series(cls, series: pd.Series, print_invalid: bool = False):
+        series = series.astype("string")
+
+        invalid_mask = ~series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
 
         if print_invalid:
             if ~invalid_mask.any():
@@ -108,7 +109,6 @@ class VvN(VegetatieType):
         """
         Valideert dat het aan onze opmaak van VvN codes voldoet
         """
-        # TODO: test this works - should work tested some examples yet to test the wwl
         normale_vvn = re.compile(r"[1-9][0-9]?([a-z]([a-z]([1-9][0-9]?([a-z])?)?)?)?")
         # 42Aa1e            4    2       A    a     1           e
         rompgemeenschap = re.compile(r"[1-9][0-9]?rg[1-9][0-9]?")
@@ -124,9 +124,12 @@ class VvN(VegetatieType):
 
         return False
 
-    @staticmethod
-    def validate_pandas_series(series: pd.Series, print_invalid: bool = False):
-        invalid_mask = VegetatieType.get_invalid_mask_pandas_series(VvN, series)
+    @classmethod
+    def validate_pandas_series(cls, series: pd.Series, print_invalid: bool = False):
+        series = series.astype("string")
+
+        # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
+        invalid_mask = ~series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
 
         if print_invalid:
             if ~invalid_mask.any():
