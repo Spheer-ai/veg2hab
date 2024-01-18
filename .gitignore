@@ -161,3 +161,5 @@ cython_debug/
 
 # Testing
 testing/
+
+*.pyc
