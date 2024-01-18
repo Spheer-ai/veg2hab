@@ -51,7 +51,7 @@ class Geometrie:
         self.data = data
 
 
-class Veg2HabKartering:
+class Veg2HabReadyKartering:
     """
     Een vegetatiekartering is klaar om gekoppeld te worden aan de definitietabel
     DWZ dat voor zover mogelijk de was-wordt lijst al is toegepast (en evt handmatig is gecorrigeerd)
@@ -160,8 +160,6 @@ class ProtoKartering:
         gdf = gdf.merge(
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
-
-        #
 
         return cls(gdf)
 

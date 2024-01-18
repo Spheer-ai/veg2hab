@@ -7,6 +7,7 @@ from typing import ClassVar, Optional, Union
 import pandas as pd
 
 
+@dataclass()
 class SBB:
     """
     Format van SBB codes:
@@ -19,9 +20,10 @@ class SBB:
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
     """
 
-    basis_ssb: ClassVar = re.compile(r"(?P<klasse>[1-9][0-9])?((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?")
-
+    basis_sbb: ClassVar = re.compile(r"(?P<klasse>[1-9][0-9]?)((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?")
+    # 14e1a                                        1    4                   e                     1                       a
     gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
+    # 16b/a                                        /                     a
 
     klasse: str
     verbond: Optional[str]
@@ -32,29 +34,27 @@ class SBB:
 
     def __init__(self, code: str):
 
-        match = self.gemeenschap.match(code)
+        # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
+        self.derivaatgemeenschap = None
+        self.rompgemeenschap = None
+
+        match = self.gemeenschap.search(code)
         if match:
             # Strippen van gemeenschap
             code = code[:-2]
             if match.group("type") == "/":
                 self.derivaatgemeenschap = match.group("gemeenschap")
-                self.rompgemeenschap = None
-                return
             elif match.group("type") == "-":
-                self.derivaatgemeenschap = None
                 self.rompgemeenschap = match.group("gemeenschap")
-                return
             else:
                 assert False, "Onmogelijk om hier te komen; groep 'type' moet '/' of '-' zijn"
             
-        match = self.basis_ssb.fullmatch(code)
+        match = self.basis_sbb.fullmatch(code)
         if match:
             self.klasse = match.group("klasse")
             self.verbond = match.group("verbond")
             self.associatie = match.group("associatie")
             self.subassociatie = match.group("subassociatie")
-            self.derivaatgemeenschap = None
-            self.rompgemeenschap = None
             return
         
         raise ValueError()
@@ -70,29 +70,21 @@ class SBB:
         Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere
         """
 
+        if self.derivaatgemeenschap or other.derivaatgemeenschap or self.rompgemeenschap or other.rompgemeenschap:
+            # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
+            return int(self == other)
+
         self_tuple = self.base_SSB_as_tuple()
         other_tuple = other.base_SSB_as_tuple()
 
-        if self.derivaatgemeenschap or other.derivaatgemeenschap:
-            # Check of ze dezelfde derivaatgemeenschap zijn
-            # TODO
-            return
-
-        if self.rompgemeenschap or other.rompgemeenschap:
-            # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
-            # TODO
-            return
-
-        
-
-        # for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
-        #     if (self_group is None) and (other_group is None):
-        #         return i
-        #     if (self_group == other_group):
-        #         continue
-        #     if (self_group != other_group) and (other_group is None):
-        #         return i
-        #     return 0
+        for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
+            if (self_group is None) and (other_group is None):
+                return i
+            if (self_group == other_group):
+                continue
+            if (self_group != other_group) and (other_group is None):
+                return i
+            return 0
         return len(self_tuple)
 
     @staticmethod
@@ -100,25 +92,10 @@ class SBB:
         """
         Validate dat t een valide SBB code is
         """
-        base_sbb = re.compile(r"[1-9][0-9]?([a-z]([1-9]([a-z])?)?)?")
-        # 14e1a                  1    4      e     1     a
-        rompgemeenschap = re.compile(r"-[a-z]$")
-        # 14D-a                        - a
-        derivaatgemeenschap = re.compile(r"\/[a-z]$")
-        # 14A/a                             / a
-
         # Strippen van evt rompgemeenschap of derivaatgemeenschap
-        code_rg = re.sub(rompgemeenschap, "", code)
-        code_dg = re.sub(derivaatgemeenschap, "", code)
+        code_gemeenschap = re.sub(SBB.gemeenschap, "", code)
 
-        if (
-            base_sbb.fullmatch(code)
-            or base_sbb.fullmatch(code_rg)
-            or base_sbb.fullmatch(code_dg)
-        ):
-            return True
-
-        return False
+        return SBB.basis_sbb.fullmatch(code) or SBB.basis_sbb.fullmatch(code_gemeenschap)
 
     @classmethod
     def validate_pandas_series(cls, series: pd.Series, print_invalid: bool = False):
@@ -153,9 +130,9 @@ class VvN:
     """
 
     normale_vvn: ClassVar = re.compile(r"(?P<klasse>[1-9][0-9]?)((?P<orde>[a-z])((?P<verbond>[a-z])((?P<associatie>[1-9][0-9]?)(?P<subassociatie>[a-z])?)?)?)?")
-    # 42Aa1e            4    2       A    a     1           e
+    # 42aa1e                                         4    2                a                  a                     1                             e
     gemeenschap: ClassVar = re.compile(r"(?P<klasse>[1-9][0-9]?)(?P<type>[dr]g)(?P<gemeenschap>[1-9][0-9]?)")
-    # 37RG2                     3    7     rg 2
+    # 37rg2                                          3    7               r  g                  2
 
     klasse: str
     orde: Optional[str]
@@ -296,3 +273,6 @@ def opschonen_VvN_pandas_series(series: pd.Series):
     series = series.str.replace("0([1-9])", r"\1", regex=True)
 
     return series
+
+
+a = SBB("6b/a")

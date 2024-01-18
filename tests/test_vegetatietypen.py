@@ -157,7 +157,7 @@ def test_match_sbb_codes():
     assert sbb.match_up_to(sbb) == 4, "Should match all subgroups"
     assert sbb2.match_up_to(sbb2) == 2, "Should match all subgroups"
 
-    assert sbb.match_up_to(sbb2) == 3, "Should match to less specific sbb"
+    assert sbb.match_up_to(sbb2) == 2, "Should match to less specific sbb"
     assert sbb2.match_up_to(sbb) == 0, "Should not match to more specific sbb"
 
     assert sbb.match_up_to(sbb3) == 0, "Should not match to unequal"
