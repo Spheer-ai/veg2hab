@@ -3,7 +3,7 @@ from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel
 
-from veg2hab.enum import MaybeBoolean
+from veg2hab.enums import MaybeBoolean
 from veg2hab.vegkartering import Geometrie
 
 
