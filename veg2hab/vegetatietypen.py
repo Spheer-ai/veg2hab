@@ -24,7 +24,7 @@ class SBB:
     basis_sbb: ClassVar = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?"
     )
-    # 14e1a                                        1    4                   e                     1                       a
+    # 14e1a           1    4                   e                     1                       a
     gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
     # 16b/a                                        /                     a
 
