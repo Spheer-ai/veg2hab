@@ -1,4 +1,3 @@
-
 import pytest
 
 from veg2hab.vegetatietypen import SBB, VvN
@@ -13,6 +12,8 @@ def test_vvn_from_str():
     assert vvn.subassociatie == "e"
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
+    assert vvn.max_match_level == 5
+
 
 def test_partial_vvn_from_str():
     vvn = VvN("42aa")
@@ -23,10 +24,13 @@ def test_partial_vvn_from_str():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
+    assert vvn.max_match_level == 3
+
 
 def test_invalid_vvn_from_str():
     with pytest.raises(ValueError):
         vvn = VvN("some-random-str")
+
 
 def test_vvn_with_derivaat_gemeenschap():
     vvn = VvN("42dg2")
@@ -37,6 +41,8 @@ def test_vvn_with_derivaat_gemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap == "2"
     assert vvn.rompgemeenschap is None
+    assert vvn.max_match_level == 1
+
 
 def test_vvn_with_rompgemeenschap():
     vvn = VvN("37rg2")
@@ -47,10 +53,11 @@ def test_vvn_with_rompgemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap == "2"
+    assert vvn.max_match_level == 1
 
-def test_rompgemeenschap_is_only_possible_on_klasse():
+
+def test_vvn_rompgemeenschap_is_only_possible_on_klasse():
     with pytest.raises(ValueError):
-        # NOTE: Wordt dit uitegvoerd? We doen er niks mee
         vvn = VvN("37aa17rg2")
 
 
@@ -89,7 +96,6 @@ def test_basic_vvn_equality():
     assert vvn != vvn3
 
 
-
 def test_sbb_from_str():
     sbb = SBB("42a1e")
     assert sbb.klasse == "42"
@@ -98,6 +104,8 @@ def test_sbb_from_str():
     assert sbb.subassociatie == "e"
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
+    assert sbb.max_match_level == 4
+
 
 def test_partial_sbb_from_str():
     sbb = SBB("42a")
@@ -107,10 +115,13 @@ def test_partial_sbb_from_str():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
+    assert sbb.max_match_level == 2
+
 
 def test_invalid_sbb_from_str():
     with pytest.raises(ValueError):
         sbb = SBB("some-random-str")
+
 
 def test_sbb_with_derivaat_gemeenschap():
     sbb = SBB("37/b")
@@ -122,13 +133,16 @@ def test_sbb_with_derivaat_gemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap == "b"
     assert sbb.rompgemeenschap is None
-    
+    assert sbb.max_match_level == 1
+
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
     assert sbb2.associatie == "3"
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap == "b"
     assert sbb2.rompgemeenschap is None
+    assert sbb2.max_match_level == 1
+
 
 def test_sbb_with_rompgemeenschap():
     sbb = SBB("37-b")
@@ -140,13 +154,15 @@ def test_sbb_with_rompgemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap == "b"
-    
+    assert sbb.max_match_level == 1
+
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
     assert sbb2.associatie == "3"
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap is None
     assert sbb2.rompgemeenschap == "b"
+    assert sbb2.max_match_level == 1
 
 
 def test_match_sbb_codes():
@@ -170,7 +186,7 @@ def test_match_sbb_rompgemeenschap():
     sbb3 = SBB("42")
     sbb4 = SBB("42a1e-b")
 
-    # NOTE: is dit een logische manier om score te geven? Match to self 
+    # NOTE: is dit een logische manier om score te geven? Match to self
     #       geeft 5 zodat de ranking met minder specifieke ssb niet de
     #       voorkeur krijgt.
 
@@ -189,9 +205,6 @@ def test_basic_ssb_equality():
     assert sbb == sbb
     assert sbb == sbb2
     assert sbb != sbb3
-
-
-
 
 
 # NOTE: deze kan weg toch

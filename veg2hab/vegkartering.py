@@ -1,19 +1,41 @@
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import geopandas as gpd
 import pandas as pd
 
+from veg2hab.vegetatietypen import SBB as _SBB
+from veg2hab.vegetatietypen import VvN as _VvN
+from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
 
-class VegetatieTypeInfo:
+
+@dataclass
+class VegTypeInfo:
     """
-    Klasse met alle informatie over een vegetatietype van een vlak
+    Klasse met alle informatie over één vegetatietype van een vlak
     """
 
-    def __init__(self, percentage: int, vvn: str = None, sbb: str = None):
+    percentage: int
+    SBB: Optional[_SBB]
+    VvN: Optional[_VvN]
+
+    def __init__(self, percentage: int, VvN: _VvN = None, SBB: _SBB = None):
         self.percentage = percentage
-        self.vvn = vvn
-        self.sbb = sbb
+        self.SBB = SBB
+        self.VvN = VvN
+
+    @classmethod
+    def from_str_vegtypes(cls, percentage: int, VvN: str = None, SBB: str = None):
+        """
+        Aanmaken vanuit string vegetatietypen
+        """
+        percentage = percentage
+        if SBB is not None:
+            SBB = _SBB(SBB)
+        if VvN is not None:
+            VvN = _VvN(VvN)
+        return cls(percentage, VvN, SBB)
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
@@ -22,11 +44,15 @@ class VegetatieTypeInfo:
         """
         lst = []
         for row in rows.itertuples():
-            lst.append(cls(row.Bedekking_num, sbb=row.Sbb))
+            if pd.isnull(row.Sbb):
+                # NA SBB moet geen SBB object worden
+                lst.append(cls.from_str_vegtypes(row.Bedekking_num))
+            else:
+                lst.append(cls.from_str_vegtypes(row.Bedekking_num, SBB=row.Sbb))
         return lst
 
     def __str__(self):
-        return f"({self.percentage}%, vvn: '{self.vvn}', sbb: '{self.sbb}')"
+        return f"({self.percentage}%, VvN: '{self.VvN}', SBB: '{self.SBB}')"
 
 
 class JoinParameters:
@@ -101,7 +127,7 @@ class ProtoKartering:
 
     @classmethod
     def from_access_db(
-        cls, shape_path: Path, shp_elm_id_column: str, access_csvs_path: Path
+        cls, shape_path: Path, shape_elm_id_column: str, access_csvs_path: Path
     ):
         """
         Deze method wordt gebruikt om een ProtoKartering te maken van een shapefile en een access database die al is opgedeeld in losse csv bestanden.
@@ -110,6 +136,7 @@ class ProtoKartering:
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
         gdf = gpd.read_file(shape_path)
+
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
             usecols=["ElmID", "intern_id"],
@@ -138,7 +165,7 @@ class ProtoKartering:
 
         # Intern ID toevoegen aan de gdf
         gdf = gdf.merge(
-            element, left_on=shp_elm_id_column, right_on="ElmID", how="left"
+            element, left_on=shape_elm_id_column, right_on="ElmID", how="left"
         )
 
         # SBB code toevoegen aan KarteringVegetatietype
@@ -149,10 +176,13 @@ class ProtoKartering:
             sbbtype, left_on="SbbType", right_on="Cata_ID", how="left"
         )
 
+        # Opschonen SBB codes
+        kart_veg["Sbb"] = opschonen_SBB_pandas_series(kart_veg["Sbb"])
+
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegetatieTypeInfo.create_list_from_access_rows)
+            .apply(VegTypeInfo.create_list_from_access_rows)
             .reset_index(name="VegTypeInfo")
         )
 
