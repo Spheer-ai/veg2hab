@@ -114,5 +114,10 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
     assert VvN.validate_pandas_series(
         dt["VvN"], print_invalid=True
     ), "Niet alle VvN codes zijn valid"
+    
+    # Reorder
+    dt = dt[
+        ["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]
+    ]
 
     dt.to_excel(path_out, index=False)
