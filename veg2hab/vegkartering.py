@@ -1,19 +1,49 @@
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import geopandas as gpd
 import pandas as pd
 
+from veg2hab.vegetatietypen import SBB as _SBB
+from veg2hab.vegetatietypen import VvN as _VvN
+from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
 
-class VegetatieTypeInfo:
+
+@dataclass
+class VegTypeInfo:
     """
-    Klasse met alle informatie over een vegetatietype van een vlak
+    Klasse met alle informatie over één vegetatietype van een vlak
     """
 
-    def __init__(self, percentage: int, vvn: str = None, sbb: str = None):
+    percentage: int
+    SBB: List[_SBB]
+    VvN: List[_VvN]
+
+    def __init__(self, percentage: int, VvN: List[_VvN] = [], SBB: List[_SBB] = []):
+        assert len(SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+        
         self.percentage = percentage
-        self.vvn = vvn
-        self.sbb = sbb
+        self.SBB = SBB
+        self.VvN = VvN
+
+    @classmethod
+    def from_str_vegtypes(cls, percentage: int, VvN_strings: List[str] = [], SBB_strings: List[str] = []):
+        """
+        Aanmaken vanuit string vegetatietypen
+        """
+        percentage = percentage
+        SBB_list = []
+        VvN_list = []
+
+        # NOTE: Is hier en hierboven in init hetzelfde asserten netjes of juist niet?
+        assert len(SBB_strings) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+        for SBB_string in SBB_strings:
+            SBB_list.append(_SBB(SBB_string))
+
+        for VvN_string in VvN_strings:
+            VvN_list.append(_VvN(VvN_string))
+        return cls(percentage, VvN_list, SBB_list)
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
@@ -22,11 +52,15 @@ class VegetatieTypeInfo:
         """
         lst = []
         for row in rows.itertuples():
-            lst.append(cls(row.Bedekking_num, sbb=row.Sbb))
+            if pd.isnull(row.Sbb):
+                # NA SBB moet geen SBB object worden
+                lst.append(cls.from_str_vegtypes(row.Bedekking_num))
+            else:
+                lst.append(cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb]))
         return lst
 
     def __str__(self):
-        return f"({self.percentage}%, vvn: '{self.vvn}', sbb: '{self.sbb}')"
+        return f"({self.percentage}%, VvN: '{self.VvN}', SBB: '{self.SBB}')"
 
 
 class JoinParameters:
@@ -51,7 +85,7 @@ class Geometrie:
         self.data = data
 
 
-class Veg2HabKartering:
+class Veg2HabReadyKartering:
     """
     Een vegetatiekartering is klaar om gekoppeld te worden aan de definitietabel
     DWZ dat voor zover mogelijk de was-wordt lijst al is toegepast (en evt handmatig is gecorrigeerd)
@@ -101,7 +135,7 @@ class ProtoKartering:
 
     @classmethod
     def from_access_db(
-        cls, shape_path: Path, shp_elm_id_column: str, access_csvs_path: Path
+        cls, shape_path: Path, shape_elm_id_column: str, access_csvs_path: Path
     ):
         """
         Deze method wordt gebruikt om een ProtoKartering te maken van een shapefile en een access database die al is opgedeeld in losse csv bestanden.
@@ -110,6 +144,7 @@ class ProtoKartering:
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
         gdf = gpd.read_file(shape_path)
+
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
             usecols=["ElmID", "intern_id"],
@@ -138,7 +173,7 @@ class ProtoKartering:
 
         # Intern ID toevoegen aan de gdf
         gdf = gdf.merge(
-            element, left_on=shp_elm_id_column, right_on="ElmID", how="left"
+            element, left_on=shape_elm_id_column, right_on="ElmID", how="left"
         )
 
         # SBB code toevoegen aan KarteringVegetatietype
@@ -149,10 +184,13 @@ class ProtoKartering:
             sbbtype, left_on="SbbType", right_on="Cata_ID", how="left"
         )
 
+        # Opschonen SBB codes
+        kart_veg["Sbb"] = opschonen_SBB_pandas_series(kart_veg["Sbb"])
+
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegetatieTypeInfo.create_list_from_access_rows)
+            .apply(VegTypeInfo.create_list_from_access_rows)
             .reset_index(name="VegTypeInfo")
         )
 
@@ -160,8 +198,6 @@ class ProtoKartering:
         gdf = gdf.merge(
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
-
-        #
 
         return cls(gdf)
 
@@ -194,3 +230,5 @@ class ProtoKartering:
         # Validate dat de geometrie valide is (geen overlap, geen self intersection, etc)
 
         # Validate dat t rijksdriehoek is
+
+
