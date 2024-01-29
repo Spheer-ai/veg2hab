@@ -29,25 +29,25 @@ def test_perfect_match_single_sbb_to_vvn(wwl):
 
 def test_nonexistent_single_sbb_to_vvn(wwl):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["7a1z"])
-    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["7a1z"], VvN_strings=None)
+    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["7a1z"], VvN_strings=[])
     assert wwl.toevoegen_VvN_aan_VegTypeInfo(pre) == post
 
 
-def test_none_sbb(wwl):
-    pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=None, VvN_strings=["1aa1"])
-    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=None, VvN_strings=["1aa1"])
+def test_empty_sbb(wwl):
+    pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=[], VvN_strings=["1aa1"])
+    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=[], VvN_strings=["1aa1"])
     assert wwl.toevoegen_VvN_aan_VegTypeInfo(pre) == post
 
 
 def test_partial_match_single_sbb_to_vvn(wwl):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["5a2a"])
-    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["5a2a"], VvN_strings=None)
+    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["5a2a"], VvN_strings=[])
     assert wwl.toevoegen_VvN_aan_VegTypeInfo(pre) == post
 
 
 def test_perfect_match_sbb_to_nonexistent_vvn(wwl):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1a"])
-    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1a"], VvN_strings=None)
+    post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1a"], VvN_strings=[])
     a = wwl.toevoegen_VvN_aan_VegTypeInfo(pre)
     print(a)
     assert wwl.toevoegen_VvN_aan_VegTypeInfo(pre) == post
@@ -90,7 +90,7 @@ def test_toevoegen_VvN_aan_pandas_series(wwl):
             ],
             [
                 VegTypeInfo.from_str_vegtypes(
-                    50, SBB_strings=["7a1z"], VvN_strings=None
+                    50, SBB_strings=["7a1z"], VvN_strings=[]
                 ),
                 VegTypeInfo.from_str_vegtypes(
                     50, SBB_strings=["5d-b"], VvN_strings=["5rg7"]
