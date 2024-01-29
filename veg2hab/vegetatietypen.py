@@ -85,7 +85,6 @@ class SBB:
         """
         if other is None:
             return 0
-
         assert isinstance(other, SBB), "Other is not an SBB"
 
         if (
@@ -148,11 +147,9 @@ def convert_string_to_SBB(code):
     Functie om pandas om te zetten naar SBB klasse
     """
     # Check dat het een string is
-    if isinstance(code, str):
-        return SBB(code)
-    else:
-        assert pd.isnull(code), "Code is not a string or null"
-        return code
+    if pd.isnull(code):
+        return None
+    return SBB(code)
 
 
 @dataclass()
@@ -244,10 +241,14 @@ class VvN:
             self.subassociatie,
         )
 
-    def match_up_to(self, other: VvN):
+    def match_up_to(self, other: Optional[VvN]):
         """
         Geeft het aantal subgroepen terug waarin deze VvN overeenkomt met de andere
         """
+        if other is None:
+            return 0
+        assert isinstance(other, VvN), "Other is not an VvN"
+
         if (
             self.derivaatgemeenschap
             or other.derivaatgemeenschap
@@ -351,8 +352,6 @@ def convert_string_to_VvN(code):
     Functie om pandas om te zetten naar VvN klasse
     """
     # Check dat het geen nan is
-    if isinstance(code, str):
-        return VvN(code)
-    else:
-        assert pd.isnull(code), "Code is not a string or null"
-        return code
+    if pd.isnull(code):
+        return None
+    return VvN(code)
