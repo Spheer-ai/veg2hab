@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence
@@ -9,27 +10,14 @@ from veg2hab.enums import GoedMatig
 from veg2hab.vegetatietypen import (
     SBB,
     VvN,
+    convert_string_to_SBB,
+    convert_string_to_VvN,
     opschonen_SBB_pandas_series,
     opschonen_VvN_pandas_series,
 )
 from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
 
-# From early pair programming session
-# Commented out in order to work on the rest
-"""@dataclass
-class DefinitieRowItem:
-    row_idx: int
-    VvN: Optional[str]  # enum?
-    SBB: Optional[str]  # enum?
-    HABCODE: str  # enum?
-    Kwaliteit: GoedMatig
-    mits: BeperkendCriterium
-    mozaiek: MozaiekRegel
-
-    def __post_init__(self):
-        if (self.VvN is None) != (self.SBB is None):
-            raise ValueError("Precies een van VvN of SBB moet een waarde hebben")
-"""
+_LOGGER = logging.getLogger(__name__)
 
 
 class DefinitieTabel:
@@ -37,46 +25,42 @@ class DefinitieTabel:
         # Inladen
         self.df = df
 
-        # Checken
-        assert self.check_validity_SBB(
-            print_invalid=True
-        ), "Niet alle SBB codes zijn valid"
-        assert self.check_validity_VvN(
-            print_invalid=True
-        ), "Niet alle VvN codes zijn valid"
+        self.df.Kwaliteit = self.df.Kwaliteit.apply(GoedMatig.from_letter)
+        self.df.SBB = self.df.SBB.apply(convert_string_to_SBB)
+        self.df.VvN = self.df.VvN.apply(convert_string_to_VvN)
+
+        # TODO parse mits en mozaiek
 
     @classmethod
     def from_excel(cls, path):
-        df = pd.read_excel(path, engine="openpyxl")
+        df = pd.read_excel(
+            path,
+            engine="openpyxl",
+            usecols=[
+                "Habitattype",
+                "Kwaliteit",
+                "SBB",
+                "VvN",
+                "mits",
+                "mozaiek",
+            ],
+            dtype="string",
+        )
         return cls(df)
 
-    def check_validity_VvN(self, print_invalid: bool = False):
-        """
-        Checkt of de VvN valide zijn.
-        """
-        dt_VvN = self.df["VvN"].astype("string")
-
-        return VvN.validate_pandas_series(dt_VvN, print_invalid=print_invalid)
-
-    def check_validity_SBB(self, print_invalid: bool = False):
-        """
-        Checkt of de SBB valide zijn.
-        """
-        dt_SBB = self.df["SBB"].astype("string")
-
-        return SBB.validate_pandas_series(dt_SBB, print_invalid=print_invalid)
-
     def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
-        """
-        Maakt de habitattype voorstellen voor een vegtypeinfo
-        """
-
+        """Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo"""
         voorstellen = []
 
-        for code in info.VvN + info.SBB:  # TODO SBB cannot be matched
-            match_values = self.df["VvN"].apply(code.match_up_to)
+        for code in info.VvN + info.SBB:
+            column = "VvN" if isinstance(code, VvN) else "SBB"  # TODO kan dit mooier?
+
+            match_values = self.df[column].apply(code.match_up_to)
             max_value = match_values.max()
             if max_value == 0:
+                _LOGGER.info(
+                    f"Geen matchende habitattype gevonden voor {column}: {code}"
+                )
                 continue
 
             match_rows = self.df[match_values == max_value]
@@ -85,7 +69,7 @@ class DefinitieTabel:
                     HabitatVoorstel(
                         vegtype=code,
                         habtype=row["Habitattype"],
-                        kwaliteit=GoedMatig.from_letter(row["Kwaliteit"]),
+                        kwaliteit=row["Kwaliteit"],
                         regel_in_deftabel=idx,
                         mits=None,  # TODO
                         mozaiek=None,  # TODO
@@ -106,7 +90,7 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
 
     dt = pd.read_excel(
         path_in,
-        engine="openpyxl",
+        engine="xlrd",
         usecols=[
             "Code habitat (sub)type",
             "Goed / Matig",
