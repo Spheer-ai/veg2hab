@@ -12,6 +12,7 @@ from veg2hab.vegetatietypen import (
     opschonen_SBB_pandas_series,
     opschonen_VvN_pandas_series,
 )
+from veg2hab.vegkartering import VegTypeInfo
 
 # From early pair programming session
 # Commented out in order to work on the rest
@@ -65,6 +66,14 @@ class DefinitieTabel:
 
         return SBB.validate_pandas_series(dt_SBB, print_invalid=print_invalid)
 
+    def add_habtype_to_VegTypeInfo(self, info: VegTypeInfo):
+        # / get_habtypeinfo_from_VegTypeInfo
+        # / attach_habtypeinfo_to_VegTypeInfo
+        """
+        Voegt een habitattype toe aan een VegTypeInfo object
+        """
+
+        
 
 def opschonen_definitietabel(path_in: Path, path_out: Path):
     """
