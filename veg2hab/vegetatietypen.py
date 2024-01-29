@@ -34,9 +34,11 @@ class SBB:
     subassociatie: Optional[str]
     derivaatgemeenschap: Optional[str]
     rompgemeenschap: Optional[str]
-    max_match_level: Optional[int]
+    max_match_level: int
 
     def __init__(self, code: str):
+        assert isinstance(code, str), "Code is not a string"
+
         # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
         self.derivaatgemeenschap = None
         self.rompgemeenschap = None
@@ -63,14 +65,7 @@ class SBB:
             # 1 voor elke matchende subgroep, of 1 als het een gemeenschap is
             if not (self.derivaatgemeenschap or self.rompgemeenschap):
                 self.max_match_level = sum(
-                    1
-                    for subgroup in [
-                        self.klasse,
-                        self.verbond,
-                        self.associatie,
-                        self.subassociatie,
-                    ]
-                    if subgroup
+                    1 for subgroup in self.base_SBB_as_tuple() if subgroup
                 )
             else:
                 self.max_match_level = 1
@@ -78,16 +73,22 @@ class SBB:
 
         raise ValueError()
 
-    def base_SSB_as_tuple(self):
+    def base_SBB_as_tuple(self):
         """
         Returns the base part of the SBB code as a tuple
         """
         return (self.klasse, self.verbond, self.associatie, self.subassociatie)
 
-    def match_up_to(self, other: SBB):
+ 
+    def match_up_to(self, other: Optional[SBB]):
         """
         Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere
         """
+        if other is None:
+            return 0
+
+        assert isinstance(other, SBB), "Other is not an SBB"
+
         if (
             self.derivaatgemeenschap
             or other.derivaatgemeenschap
@@ -97,8 +98,8 @@ class SBB:
             # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
             return int(self == other)
 
-        self_tuple = self.base_SSB_as_tuple()
-        other_tuple = other.base_SSB_as_tuple()
+        self_tuple = self.base_SBB_as_tuple()
+        other_tuple = other.base_SBB_as_tuple()
 
         for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
             if (self_group is None) and (other_group is None):
@@ -147,10 +148,11 @@ def convert_string_to_SBB(code: str):
     """
     Functie om pandas om te zetten naar SBB klasse
     """
-    # Check dat het geen nan is
-    if type(code) == str:
+    # Check dat het een string is
+    if isinstance(code, str):
         return SBB(code)
     else:
+        assert pd.isnull(code), "Code is not a string or null"
         return code
 
 
@@ -182,9 +184,11 @@ class VvN:
     subassociatie: Optional[str]
     derivaatgemeenschap: Optional[str]
     rompgemeenschap: Optional[str]
-    max_match_level: Optional[int]
+    max_match_level: int
 
     def __init__(self, code: str):
+        assert isinstance(code, str), "Code is not a string"
+
         match = self.gemeenschap.fullmatch(code)
         if match:
             self.klasse = match.group("klasse")
@@ -348,7 +352,8 @@ def convert_string_to_VvN(code: str):
     Functie om pandas om te zetten naar VvN klasse
     """
     # Check dat het geen nan is
-    if type(code) == str:
+    if isinstance(code, str):
         return VvN(code)
     else:
+        assert pd.isnull(code), "Code is not a string or null"
         return code

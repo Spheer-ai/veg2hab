@@ -17,25 +17,33 @@ class VegTypeInfo:
     """
 
     percentage: int
-    SBB: Optional[_SBB]
-    VvN: Optional[_VvN]
+    SBB: List[_SBB]
+    VvN: List[_VvN]
 
-    def __init__(self, percentage: int, VvN: _VvN = None, SBB: _SBB = None):
+    def __init__(self, percentage: int, VvN: List[_VvN] = [], SBB: List[_SBB] = []):
+        assert len(SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+        
         self.percentage = percentage
         self.SBB = SBB
         self.VvN = VvN
 
     @classmethod
-    def from_str_vegtypes(cls, percentage: int, VvN: str = None, SBB: str = None):
+    def from_str_vegtypes(cls, percentage: int, VvN_strings: List[str] = [], SBB_strings: List[str] = []):
         """
         Aanmaken vanuit string vegetatietypen
         """
         percentage = percentage
-        if SBB is not None:
-            SBB = _SBB(SBB)
-        if VvN is not None:
-            VvN = _VvN(VvN)
-        return cls(percentage, VvN, SBB)
+        SBB_list = []
+        VvN_list = []
+        if SBB_strings is not None:
+            # NOTE: Is hier en hierboven in init hetzelfde asserten netjes of juist niet?
+            assert len(SBB_strings) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+            for SBB_string in SBB_strings:
+                SBB_list.append(_SBB(SBB_string))
+        if VvN_strings is not None:
+            for VvN_string in VvN_strings:
+                VvN_list.append(_VvN(VvN_string))
+        return cls(percentage, VvN_list, SBB_list)
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
@@ -48,7 +56,7 @@ class VegTypeInfo:
                 # NA SBB moet geen SBB object worden
                 lst.append(cls.from_str_vegtypes(row.Bedekking_num))
             else:
-                lst.append(cls.from_str_vegtypes(row.Bedekking_num, SBB=row.Sbb))
+                lst.append(cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb]))
         return lst
 
     def __str__(self):
@@ -222,3 +230,5 @@ class ProtoKartering:
         # Validate dat de geometrie valide is (geen overlap, geen self intersection, etc)
 
         # Validate dat t rijksdriehoek is
+
+
