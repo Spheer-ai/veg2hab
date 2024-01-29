@@ -4,7 +4,6 @@ from typing import ClassVar, List, Optional
 from pydantic import BaseModel
 
 from veg2hab.enums import MaybeBoolean
-from veg2hab.vegkartering import Geometrie
 
 
 class BeperkendCriterium(BaseModel):
@@ -42,7 +41,7 @@ class BeperkendCriterium(BaseModel):
         """Same here"""
         return json.dumps(self.dict(*args, **kwargs))
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         pass
 
 
@@ -59,7 +58,7 @@ class LocatieCriterium(BeperkendCriterium):
     ):
         pass
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         pass
 
 
@@ -67,7 +66,7 @@ class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
     subCriterium: BeperkendCriterium
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         return ~self.criteria.check(geometry)
 
 
@@ -75,7 +74,7 @@ class OfCriteria(BeperkendCriterium):
     type: ClassVar[str] = "OfCriteria"
     subCriteria: List[BeperkendCriterium]
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
         for crit in self.criteria:
             if crit.check(geometry) == MaybeBoolean.TRUE:
@@ -86,7 +85,7 @@ class EnCriteria(BeperkendCriterium):
     type: ClassVar[str] = "EnCriteria"
     subCriteria: List[BeperkendCriterium]
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
         for crit in self.criteria:
             if crit.check(geometry) == MaybeBoolean.FALSE:
@@ -103,7 +102,7 @@ class SoortAanwezigCiteria(BeperkendCriterium):
     def __str__(self):
         return f"Minimaal {self.min_aantal} en maximaal {self.max_aantal} van {self.soorten} aanwezig"
 
-    def check(self, geometry: Geometrie) -> MaybeBoolean:
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
         pass
 
 

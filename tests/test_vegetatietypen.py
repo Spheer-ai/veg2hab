@@ -205,4 +205,3 @@ def test_basic_ssb_equality():
     assert sbb == sbb
     assert sbb == sbb2
     assert sbb != sbb3
-

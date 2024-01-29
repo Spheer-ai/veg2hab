@@ -89,9 +89,7 @@ def test_toevoegen_VvN_aan_pandas_series(wwl):
                 ),
             ],
             [
-                VegTypeInfo.from_str_vegtypes(
-                    50, SBB_strings=["7a1z"], VvN_strings=[]
-                ),
+                VegTypeInfo.from_str_vegtypes(50, SBB_strings=["7a1z"], VvN_strings=[]),
                 VegTypeInfo.from_str_vegtypes(
                     50, SBB_strings=["5d-b"], VvN_strings=["5rg7"]
                 ),
