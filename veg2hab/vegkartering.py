@@ -1,13 +1,29 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import geopandas as gpd
 import pandas as pd
 
+from veg2hab.criteria import BeperkendCriterium, Mozaiekregel
+from veg2hab.enums import GoedMatig
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
+
+
+@dataclass
+class HabitatVoorstel:
+    """
+    Een voorstel voor een habitattype voor een vegetatietype
+    """
+
+    vegtype: Union[_SBB, _VvN]
+    habtype: str
+    kwaliteit: GoedMatig
+    regel_in_deftabel: int
+    mits: Optional[BeperkendCriterium]
+    mozaiek: Optional[Mozaiekregel]
 
 
 @dataclass
@@ -22,13 +38,15 @@ class VegTypeInfo:
 
     def __init__(self, percentage: int, VvN: List[_VvN] = [], SBB: List[_SBB] = []):
         assert len(SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
-        
+
         self.percentage = percentage
         self.SBB = SBB
         self.VvN = VvN
 
     @classmethod
-    def from_str_vegtypes(cls, percentage: int, VvN_strings: List[str] = [], SBB_strings: List[str] = []):
+    def from_str_vegtypes(
+        cls, percentage: int, VvN_strings: List[str] = [], SBB_strings: List[str] = []
+    ):
         """
         Aanmaken vanuit string vegetatietypen
         """
@@ -56,7 +74,9 @@ class VegTypeInfo:
                 # NA SBB moet geen SBB object worden
                 lst.append(cls.from_str_vegtypes(row.Bedekking_num))
             else:
-                lst.append(cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb]))
+                lst.append(
+                    cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb])
+                )
         return lst
 
     def __str__(self):
@@ -230,5 +250,3 @@ class ProtoKartering:
         # Validate dat de geometrie valide is (geen overlap, geen self intersection, etc)
 
         # Validate dat t rijksdriehoek is
-
-

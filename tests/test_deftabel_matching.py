@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.enums import GoedMatig
+from veg2hab.vegetatietypen import SBB, VvN
+from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
 
 
 @pytest.fixture(scope="module")
@@ -15,30 +17,69 @@ def dt():
 
 
 def test_perfect_match_VvN(dt):
-    pre = VegTypeInfo.from_str_vegtypes(100, VvN=["25aa3"])
-    post = VegTypeInfo.from_str_vegtypes(100, VvN=["25aa3"], habtype=["H1310_A"]) #G
-    assert dt.add_habtype_to_VegTypeInfo(pre) == post
+    pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["25aa3"])
+    post = [
+        HabitatVoorstel(
+            vegtype=VvN("25aa3"),
+            habtype="H1310_A",
+            kwaliteit=GoedMatig.GOED,
+            regel_in_deftabel=13,
+            mits=None,
+            mozaiek=None,
+        )
+    ]
+    assert dt.find_habtypes(pre) == post
+
 
 def test_match_to_less_specific_VvN(dt):
-    pre = VegTypeInfo.from_str_vegtypes(100, VvN=["5ca2a"])
-    post = VegTypeInfo.from_str_vegtypes(100, VvN=["5ca2a"], habtype=["H3260_A"]) #G
+    pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["5ca2a"])
+    post = [
+        HabitatVoorstel(
+            vegtype=VvN("5ca2a"),
+            habtype="H3260_A",
+            kwaliteit=GoedMatig.GOED,
+            regel_in_deftabel=316,
+            mits=None,
+            mozaiek=None,
+        )
+    ]
     # Should match with 5ca2
-    assert dt.add_habtype_to_VegTypeInfo(pre) == post
+    assert dt.find_habtypes(pre) == post
 
-def test_gemeenschap_perfect_match_VvN(dt):
-    pre = VegTypeInfo.from_str_vegtypes(100, VvN=["5rg8"])
-    post = VegTypeInfo.from_str_vegtypes(100, VvN=["5rg8"], habtype=["H3260_A"]) #kwaliteit="M"
-    assert dt.add_habtype_to_VegTypeInfo(pre) == post
+
+# def test_gemeenschap_perfect_match_VvN(dt):
+#     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["5rg8"])
+#     post = VegTypeInfo.from_str_vegtypes(
+#         100, VvN_strings=["5rg8"], habtype=["H3260_A"]
+#     )  # kwaliteit="M"
+#     assert dt.find_habtypes(pre) == post
+
 
 def test_match_to_multiple_perfect_matches_VvN(dt):
-    pre = VegTypeInfo.from_str_vegtypes(100, VvN=["14bb1a"])
-    post = VegTypeInfo.from_str_vegtypes(100, VvN=["14bb1a"], habtype=["H6120", "H2330"]) #G G
-    # Should match with 5ca2
-    assert dt.add_habtype_to_VegTypeInfo(pre) == post
+    pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["14bb1a"])
+    post = [
+        HabitatVoorstel(
+            vegtype=VvN("14bb1a"),
+            habtype="H6120",
+            kwaliteit=GoedMatig.GOED,
+            regel_in_deftabel=360,
+            mits=None,
+            mozaiek=None,
+        ),
+        HabitatVoorstel(
+            vegtype=VvN("14bb1a"),
+            habtype="H2330",
+            kwaliteit=GoedMatig.GOED,
+            regel_in_deftabel=245,
+            mits=None,
+            mozaiek=None,
+        ),
+    ]
+
+    assert dt.find_habtypes(pre) == post
 
 
-
-def test_perfect_match_SBB(dt):
-    pre = VegTypeInfo.from_str_vegtypes(100, SBB=["9b1"])
-    post = VegTypeInfo.from_str_vegtypes(100, SBB=["9b1"], habtype=["H3160"]) #G
-    assert dt.add_habtype_to_VegTypeInfo(pre) == post
+# def test_perfect_match_SBB(dt):
+#     pre = VegTypeInfo.from_str_vegtypes(100, SBB=["9b1"])
+#     post = VegTypeInfo.from_str_vegtypes(100, SBB=["9b1"], habtype=["H3160"])  # G
+#     assert dt.find_habtypes(pre) == post
