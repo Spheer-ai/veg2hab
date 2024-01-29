@@ -144,7 +144,7 @@ class SBB:
         return valid_mask.all()
 
 
-def convert_string_to_SBB(code: str):
+def convert_string_to_SBB(code):
     """
     Functie om pandas om te zetten naar SBB klasse
     """
@@ -347,7 +347,7 @@ def opschonen_VvN_pandas_series(series: pd.Series):
     return series
 
 
-def convert_string_to_VvN(code: str):
+def convert_string_to_VvN(code):
     """
     Functie om pandas om te zetten naar VvN klasse
     """
