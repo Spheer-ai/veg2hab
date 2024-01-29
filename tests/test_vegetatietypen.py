@@ -206,27 +206,3 @@ def test_basic_ssb_equality():
     assert sbb == sbb2
     assert sbb != sbb3
 
-
-# NOTE: deze kan weg toch
-# def test_vvn_validate():
-#     # Valid code
-#     assert VvN.validate("42aa1e") == True
-
-#     # Invalid code with extra characters
-#     assert VvN.validate("42a1e") == False
-
-#     # Invalid code with leading zero
-#     assert VvN.validate("08bb02") == False
-
-#     # Invalid code with missing characters
-#     assert VvN.validate("42a") == False
-
-# def test_vvn_validate_pandas_series():
-#     # Create a pandas series with codes
-#     series = pd.Series(["42aa1e", "42a1e", "08bb02", "42a"])
-
-#     # Validate the series
-#     invalid_mask = VvN.validate_pandas_series(series)
-
-#     # Check if the invalid mask is correct
-#     assert invalid_mask.tolist() == [False, True, True, True]

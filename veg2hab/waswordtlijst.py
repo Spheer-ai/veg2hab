@@ -20,6 +20,9 @@ class WasWordtLijst:
         # Inladen
         self.df = df
 
+        assert df.dtypes["VvN"] == "string", "VvN kolom is geen string"
+        assert df.dtypes["SBB"] == "string", "SBB kolom is geen string"
+
         # Checken
         assert self.check_validity_SBB(
             print_invalid=True
@@ -31,11 +34,16 @@ class WasWordtLijst:
         # Omvormen naar SBB en VvN klasses
         self.df["SBB"] = self.df["SBB"].apply(convert_string_to_SBB)
         self.df["VvN"] = self.df["VvN"].apply(convert_string_to_VvN)
-        pass
+
+        # Replace pd.NA with None
+        # NOTE: kunnen we ook alle rows met een NA gewoon verwijderen? Als we of geen VvN of
+        #       geen SBB hebben dan kunnen we het toch niet gebruiken voor het omzetten
+        self.df = self.df.where(self.df.notnull(), None)
 
     @classmethod
     def from_excel(cls, path: Path):
-        df = pd.read_excel(path)
+        # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
+        df = pd.read_excel(path, usecols=["VvN", "SBB"], dtype="string")
         return cls(df)
 
     def check_validity_SBB(self, print_invalid: bool = False):
@@ -59,37 +67,24 @@ class WasWordtLijst:
         Zoekt adhv SBB codes de bijbehorende VvN codes en voegt deze toe aan de VegetatieTypeInfo
         """
         if info is None:
-            ValueError("VegTypeInfo is None")
+            raise ValueError("VegTypeInfo is None")
 
         # Als er geen SBB code is
-        if info.SBB is None:
+        if len(info.SBB) == 0:
             return info
 
-        match_levels = self.df["SBB"].apply(
-            lambda x: info.SBB.match_up_to(x) if type(x) == SBB else 0
-        )
-        max_level = max(match_levels)
+        assert all(
+            [isinstance(x, SBB) for x in info.SBB]
+        ), "SBB is geen lijst van SBB objecten"
 
-        # Als er geen perfecte match is gevonden
-        if max_level < info.SBB.max_match_level:
-            return VegTypeInfo(info.percentage, SBB=info.SBB, VvN=None)
-
-        possible_VvN = self.df.loc[match_levels == max_level, "VvN"]
-
-        # NOTE: Voor nu even uitgecomment en returnen we gewoon de eerste
-        # assert len(possible_VvN) == 1, "Meerdere matchende SBB codes gevonden" + str(possible_VvN[0].SBB) + str(possible_VvN[0].VvN)
-
-        # Als de VvN kolom float is (nan) bij de matchende SBB
-        if type(possible_VvN.iloc[0]) == float:
-            assert math.isnan(
-                possible_VvN.iloc[0]
-            ), "VvN kolom is een float maar geen nan"
-            return VegTypeInfo(info.percentage, SBB=info.SBB, VvN=None)
+        matching_VvN = self.df[self.df.SBB == info.SBB[0]].VvN
+        # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
+        new_VvN = matching_VvN.dropna().to_list()
 
         return VegTypeInfo(
             info.percentage,
             SBB=info.SBB,
-            VvN=possible_VvN.iloc[0],
+            VvN=new_VvN,
         )
 
     def toevoegen_VvN_aan_List_VegTypeInfo(self, infos: List[VegTypeInfo]):
