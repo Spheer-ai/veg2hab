@@ -79,7 +79,6 @@ class SBB:
         """
         return (self.klasse, self.verbond, self.associatie, self.subassociatie)
 
- 
     def match_up_to(self, other: Optional[SBB]):
         """
         Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere

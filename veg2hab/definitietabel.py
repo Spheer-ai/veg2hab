@@ -12,7 +12,7 @@ from veg2hab.vegetatietypen import (
     opschonen_SBB_pandas_series,
     opschonen_VvN_pandas_series,
 )
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
 
 # From early pair programming session
 # Commented out in order to work on the rest
@@ -66,14 +66,35 @@ class DefinitieTabel:
 
         return SBB.validate_pandas_series(dt_SBB, print_invalid=print_invalid)
 
-    def add_habtype_to_VegTypeInfo(self, info: VegTypeInfo):
-        # / get_habtypeinfo_from_VegTypeInfo
-        # / attach_habtypeinfo_to_VegTypeInfo
+    def find_habtypes(self, info: VegTypeInfo)-> List[HabitatVoorstel]:
         """
-        Voegt een habitattype toe aan een VegTypeInfo object
+        Maakt de habitattype voorstellen voor een vegtypeinfo
         """
 
-        
+        voorstellen = []
+
+        for code in info.VvN + info.SBB: # TODO SBB cannot be matched
+            match_values = self.df["VvN"].apply(code.match_up_to)
+            max_value = match_values.max()
+            if max_value == 0:
+                continue
+            
+            match_rows = self.df[match_values == max_value]
+            for idx, row in match_rows.iterrows():
+                voorstellen.append(
+                    HabitatVoorstel(
+                        vegtype=code,
+                        habtype=row["Habitattype"],
+                        kwaliteit=GoedMatig.from_letter(row["Kwaliteit"]),
+                        regel_in_deftabel=idx,
+                        mits=None, # TODO
+                        mozaiek=None, # TODO
+                    )
+                )            
+
+        return voorstellen 
+
+
 
 def opschonen_definitietabel(path_in: Path, path_out: Path):
     """
@@ -123,10 +144,8 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
     assert VvN.validate_pandas_series(
         dt["VvN"], print_invalid=True
     ), "Niet alle VvN codes zijn valid"
-    
+
     # Reorder
-    dt = dt[
-        ["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]
-    ]
+    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     dt.to_excel(path_out, index=False)
