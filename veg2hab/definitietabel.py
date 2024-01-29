@@ -47,7 +47,7 @@ class DefinitieTabel:
 
     @classmethod
     def from_excel(cls, path):
-        df = pd.read_excel(path)
+        df = pd.read_excel(path, engine="openpyxl")
         return cls(df)
 
     def check_validity_VvN(self, print_invalid: bool = False):
@@ -66,19 +66,19 @@ class DefinitieTabel:
 
         return SBB.validate_pandas_series(dt_SBB, print_invalid=print_invalid)
 
-    def find_habtypes(self, info: VegTypeInfo)-> List[HabitatVoorstel]:
+    def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
         """
         Maakt de habitattype voorstellen voor een vegtypeinfo
         """
 
         voorstellen = []
 
-        for code in info.VvN + info.SBB: # TODO SBB cannot be matched
+        for code in info.VvN + info.SBB:  # TODO SBB cannot be matched
             match_values = self.df["VvN"].apply(code.match_up_to)
             max_value = match_values.max()
             if max_value == 0:
                 continue
-            
+
             match_rows = self.df[match_values == max_value]
             for idx, row in match_rows.iterrows():
                 voorstellen.append(
@@ -87,13 +87,12 @@ class DefinitieTabel:
                         habtype=row["Habitattype"],
                         kwaliteit=GoedMatig.from_letter(row["Kwaliteit"]),
                         regel_in_deftabel=idx,
-                        mits=None, # TODO
-                        mozaiek=None, # TODO
+                        mits=None,  # TODO
+                        mozaiek=None,  # TODO
                     )
-                )            
+                )
 
-        return voorstellen 
-
+        return voorstellen
 
 
 def opschonen_definitietabel(path_in: Path, path_out: Path):
@@ -107,6 +106,7 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
 
     dt = pd.read_excel(
         path_in,
+        engine="openpyxl",
         usecols=[
             "Code habitat (sub)type",
             "Goed / Matig",

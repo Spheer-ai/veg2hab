@@ -43,7 +43,9 @@ class WasWordtLijst:
     @classmethod
     def from_excel(cls, path: Path):
         # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
-        df = pd.read_excel(path, usecols=["VvN", "SBB"], dtype="string")
+        df = pd.read_excel(
+            path, engine="openpyxl", usecols=["VvN", "SBB"], dtype="string"
+        )
         return cls(df)
 
     def check_validity_SBB(self, print_invalid: bool = False):
@@ -109,7 +111,7 @@ def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
     # assert path out is an xlsx file
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
-    wwl = pd.read_excel(path_in, usecols=["VvN", "SBB-code"])
+    wwl = pd.read_excel(path_in, engine="openpyxl", usecols=["VvN", "SBB-code"])
     wwl = wwl.rename(columns={"SBB-code": "SBB"})
     wwl = wwl.dropna(how="all")
 
