@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -27,15 +27,15 @@ class HabitatVoorstel:
     match_level: int
 
 
-@dataclass(frozen=True)
+@dataclass
 class VegTypeInfo:
     """
     Klasse met alle informatie over één vegetatietype van een vlak
     """
 
     percentage: int
-    SBB: List[_SBB] = field(default_factory=list)
-    VvN: List[_VvN] = field(default_factory=list)
+    SBB: List[_SBB]
+    VvN: List[_VvN]
 
     def __post_init__(self):
         assert len(self.SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
