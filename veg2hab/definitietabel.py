@@ -56,8 +56,7 @@ class DefinitieTabel:
 
         for code in info.VvN + info.SBB:
             voorstel = self._find_habtypes_for_code(code)
-            if voorstel is not None:
-                voorstellen += voorstel
+            voorstellen += voorstel
 
         return voorstellen
 
@@ -73,22 +72,21 @@ class DefinitieTabel:
         max_level = match_levels.max()
         if max_level == 0:
             _LOGGER.info(f"Geen matchende habitattype gevonden voor {column}: {code}")
-            return None
+            return []
 
-        for match_level in range(max_level, 0, -1):
-            match_rows = self.df[match_levels == match_level]
-            for idx, row in match_rows.iterrows():
-                voorstellen.append(
-                    HabitatVoorstel(
-                        vegtype=code,
-                        habtype=row["Habitattype"],
-                        kwaliteit=row["Kwaliteit"],
-                        regel_in_deftabel=idx,
-                        mits=None,  # TODO
-                        mozaiek=None,  # TODO
-                        match_level=match_level,
-                    )
+        match_rows = self.df[match_levels > 0]
+        for idx, row in match_rows.iterrows():
+            voorstellen.append(
+                HabitatVoorstel(
+                    vegtype=code,
+                    habtype=row["Habitattype"],
+                    kwaliteit=row["Kwaliteit"],
+                    regel_in_deftabel=idx,
+                    mits=None,  # TODO
+                    mozaiek=None,  # TODO
+                    match_level=match_levels[idx],
                 )
+            )
 
         return voorstellen
 
