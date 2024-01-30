@@ -1,11 +1,11 @@
 import logging
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import GoedMatig
 from veg2hab.vegetatietypen import (
     SBB,
@@ -49,21 +49,34 @@ class DefinitieTabel:
         return cls(df)
 
     def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
-        """Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo"""
+        """
+        Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo
+        """
         voorstellen = []
 
         for code in info.VvN + info.SBB:
-            column = "VvN" if isinstance(code, VvN) else "SBB"  # TODO kan dit mooier?
+            voorstel = self._find_habtypes_for_code(code)
+            if voorstel is not None:
+                voorstellen += voorstel
 
-            match_values = self.df[column].apply(code.match_up_to)
-            max_value = match_values.max()
-            if max_value == 0:
-                _LOGGER.info(
-                    f"Geen matchende habitattype gevonden voor {column}: {code}"
-                )
-                continue
+        return voorstellen
 
-            match_rows = self.df[match_values == max_value]
+    @lru_cache(maxsize=256)
+    def _find_habtypes_for_code(self, code: Union[SBB, VvN]):
+        """
+        Maakt een lijst met habitattype voorstellen voor een gegeven code
+        Wordt gecached om snelheid te verhogen
+        """
+        voorstellen = []
+        column = "VvN" if isinstance(code, VvN) else "SBB"
+        match_levels = self.df[column].apply(code.match_up_to)
+        max_level = match_levels.max()
+        if max_level == 0:
+            _LOGGER.info(f"Geen matchende habitattype gevonden voor {column}: {code}")
+            return None
+
+        for match_level in range(max_level, 0, -1):
+            match_rows = self.df[match_levels == match_level]
             for idx, row in match_rows.iterrows():
                 voorstellen.append(
                     HabitatVoorstel(
@@ -73,6 +86,7 @@ class DefinitieTabel:
                         regel_in_deftabel=idx,
                         mits=None,  # TODO
                         mozaiek=None,  # TODO
+                        match_level=match_level,
                     )
                 )
 
@@ -83,9 +97,7 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst
     """
-    # assert path in is an xlsx file
     assert path_in.suffix == ".xls", "Input file is not an xls file"
-    # assert path out is an xlsx file
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
     dt = pd.read_excel(

@@ -1,4 +1,5 @@
 import math
+from functools import lru_cache
 from pathlib import Path
 from typing import List
 
@@ -64,6 +65,18 @@ class WasWordtLijst:
 
         return VvN.validate_pandas_series(wwl_VvN, print_invalid=print_invalid)
 
+    @lru_cache(maxsize=256)
+    def match_SBB_to_VvN(self, code: SBB) -> List[VvN]:
+        """
+        Zoekt de VvN codes die bij een SBB code horen
+        """
+
+        assert isinstance(code, SBB), "Code is geen SBB object"
+
+        matching_VvN = self.df[self.df.SBB == code].VvN
+        # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
+        return matching_VvN.dropna().to_list()
+
     def toevoegen_VvN_aan_VegTypeInfo(self, info: VegTypeInfo):
         """
         Zoekt adhv SBB codes de bijbehorende VvN codes en voegt deze toe aan de VegetatieTypeInfo
@@ -79,9 +92,7 @@ class WasWordtLijst:
             [isinstance(x, SBB) for x in info.SBB]
         ), "SBB is geen lijst van SBB objecten"
 
-        matching_VvN = self.df[self.df.SBB == info.SBB[0]].VvN
-        # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
-        new_VvN = matching_VvN.dropna().to_list()
+        new_VvN = self.match_SBB_to_VvN(info.SBB[0])
 
         return VegTypeInfo(
             info.percentage,
