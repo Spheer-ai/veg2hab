@@ -15,7 +15,7 @@ class SBB:
     ## is cijfer ('1', '5', '10', '32', zonder voorloopnul, dus geen '01' of '04')
     x is lowercase letter ('a', 'b', 'c' etc)
     Normale SBB: ##x##x: zoals 14e1a
-    Behalve klasse is elke taxonomiegroep is optioneel, zolang de meer specifieke ook
+    Behalve klasse is elke taxonomiegroep optioneel, zolang de meer specifieke ook
     afwezig zijn (klasse-verbond-associatie is valid, klasse-associatie-subassociatie niet)
     Derivaatgemeenschappen: {normale sbb}/x, zoals 16b/a
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
@@ -141,15 +141,27 @@ class SBB:
 
         return valid_mask.all()
 
+    def __str__(self):
+        classification = [x for x in self.base_SBB_as_tuple() if x is not None]
+        if self.derivaatgemeenschap:
+            classification.append("/")
+            classification.append(self.derivaatgemeenschap)
+        if self.rompgemeenschap:
+            classification.append("-")
+            classification.append(self.rompgemeenschap)
+        return "".join(classification)
 
-def convert_string_to_SBB(code):
-    """
-    Functie om pandas om te zetten naar SBB klasse
-    """
-    # Check dat het een string is
-    if pd.isnull(code):
-        return None
-    return SBB(code)
+    def __hash__(self):
+        return hash(
+            (
+                self.klasse,
+                self.verbond,
+                self.associatie,
+                self.subassociatie,
+                self.derivaatgemeenschap,
+                self.rompgemeenschap,
+            )
+        )
 
 
 @dataclass()
@@ -158,7 +170,7 @@ class VvN:
     Format van VvN codes:
     ## is cijfer ('1', '5', '10', '32', niet '01' of '04'), x is letter ('a', 'b', 'c' etc)
     Normale VvN: ##xx##x, zoals 42aa1e
-    Behalve klasse is elke taxonomiegroep is optioneel, zolang de meer specifieke ook
+    Behalve klasse is elke taxonomiegroep optioneel, zolang de meer specifieke ook
     afwezig zijn (klasse-orde-verbond is valid, klasse-verbond-associatie niet)
     Rompgemeenschappeen: ## rg ##, zoals 37rg2
     Derivaatgemeenschappen: ## dg ##, zoals 42dg2
@@ -298,6 +310,37 @@ class VvN:
 
         return valid_mask.all()
 
+    def __str__(self):
+        classification = []
+
+        if self.derivaatgemeenschap:
+            classification.append(self.klasse)
+            classification.append("dg")
+            classification.append(self.derivaatgemeenschap)
+            return "".join(classification)
+
+        if self.rompgemeenschap:
+            classification.append(self.klasse)
+            classification.append("rg")
+            classification.append(self.rompgemeenschap)
+            return "".join(classification)
+
+        classification = [x for x in self.normal_VvN_as_tuple() if x is not None]
+        return "".join(classification)
+
+    def __hash__(self):
+        return hash(
+            (
+                self.klasse,
+                self.orde,
+                self.verbond,
+                self.associatie,
+                self.subassociatie,
+                self.derivaatgemeenschap,
+                self.rompgemeenschap,
+            )
+        )
+
 
 def opschonen_SBB_pandas_series(series: pd.Series):
     """
@@ -355,3 +398,13 @@ def convert_string_to_VvN(code):
     if pd.isnull(code):
         return None
     return VvN(code)
+
+
+def convert_string_to_SBB(code):
+    """
+    Functie om pandas om te zetten naar SBB klasse
+    """
+    # Check dat het een string is
+    if pd.isnull(code):
+        return None
+    return SBB(code)

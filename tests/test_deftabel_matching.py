@@ -27,6 +27,7 @@ def test_perfect_match_VvN(dt):
             regel_in_deftabel=12,
             mits=None,
             mozaiek=None,
+            match_level=4,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -47,6 +48,7 @@ def test_match_to_less_specific_VvN(dt):
             regel_in_deftabel=316,
             mits=None,
             mozaiek=None,
+            match_level=4,
         )
     ]
     # Should match with 5ca2
@@ -63,6 +65,7 @@ def test_gemeenschap_perfect_match_VvN(dt):
             regel_in_deftabel=319,
             mits=None,
             mozaiek=None,
+            match_level=1,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -78,6 +81,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             regel_in_deftabel=245,
             mits=None,
             mozaiek=None,
+            match_level=5,
         ),
         HabitatVoorstel(
             vegtype=VvN("14bb1a"),
@@ -86,9 +90,35 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             regel_in_deftabel=360,
             mits=None,
             mozaiek=None,
+            match_level=5,
         ),
     ]
 
+    assert dt.find_habtypes(pre) == post
+
+
+def test_perfect_and_less_specific_match_VvN(dt):
+    pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["36aa2a"])
+    post = [
+        HabitatVoorstel(
+            vegtype=VvN("36aa2a"),
+            habtype="H2180_B",
+            kwaliteit=GoedMatig.MATIG,
+            regel_in_deftabel=140,
+            mits=None,
+            mozaiek=None,
+            match_level=5,
+        ),
+        HabitatVoorstel(
+            vegtype=VvN("36aa2a"),
+            habtype="H91D0",
+            kwaliteit=GoedMatig.MATIG,
+            regel_in_deftabel=591,
+            mits=None,
+            mozaiek=None,
+            match_level=4,
+        ),
+    ]
     assert dt.find_habtypes(pre) == post
 
 
@@ -102,6 +132,7 @@ def test_perfect_match_SBB(dt):
             regel_in_deftabel=304,
             mits=None,
             mozaiek=None,
+            match_level=3,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -119,6 +150,7 @@ def test_matches_both_vvn_and_sbb(dt):
             regel_in_deftabel=319,
             mits=None,
             mozaiek=None,
+            match_level=1,
         ),
         HabitatVoorstel(
             vegtype=VvN("14bb1a"),
@@ -127,6 +159,7 @@ def test_matches_both_vvn_and_sbb(dt):
             regel_in_deftabel=245,
             mits=None,
             mozaiek=None,
+            match_level=5,
         ),
         HabitatVoorstel(
             vegtype=VvN("14bb1a"),
@@ -135,6 +168,7 @@ def test_matches_both_vvn_and_sbb(dt):
             regel_in_deftabel=360,
             mits=None,
             mozaiek=None,
+            match_level=5,
         ),
         HabitatVoorstel(
             vegtype=SBB("9b1"),
@@ -143,6 +177,7 @@ def test_matches_both_vvn_and_sbb(dt):
             regel_in_deftabel=304,
             mits=None,
             mozaiek=None,
+            match_level=3,
         ),
     ]
     assert dt.find_habtypes(pre) == post
