@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -24,24 +24,21 @@ class HabitatVoorstel:
     regel_in_deftabel: int
     mits: Optional[BeperkendCriterium]
     mozaiek: Optional[Mozaiekregel]
+    match_level: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class VegTypeInfo:
     """
     Klasse met alle informatie over één vegetatietype van een vlak
     """
 
     percentage: int
-    SBB: List[_SBB]
-    VvN: List[_VvN]
+    SBB: List[_SBB] = field(default_factory=list)
+    VvN: List[_VvN] = field(default_factory=list)
 
-    def __init__(self, percentage: int, VvN: List[_VvN] = [], SBB: List[_SBB] = []):
-        assert len(SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
-
-        self.percentage = percentage
-        self.SBB = SBB
-        self.VvN = VvN
+    def __post_init__(self):
+        assert len(self.SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
 
     @classmethod
     def from_str_vegtypes(
@@ -61,7 +58,7 @@ class VegTypeInfo:
 
         for VvN_string in VvN_strings:
             VvN_list.append(_VvN(VvN_string))
-        return cls(percentage, VvN_list, SBB_list)
+        return cls(percentage, VvN=VvN_list, SBB=SBB_list)
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
@@ -80,7 +77,10 @@ class VegTypeInfo:
         return lst
 
     def __str__(self):
-        return f"({self.percentage}%, VvN: '{self.VvN}', SBB: '{self.SBB}')"
+        return f"({self.percentage}%, VvN: {[str(x) for x in self.VvN]}, SBB: {[str(x) for x in self.SBB]})"
+
+    def __hash__(self):
+        return hash((self.percentage, tuple(self.VvN), tuple(self.SBB)))
 
 
 class JoinParameters:
