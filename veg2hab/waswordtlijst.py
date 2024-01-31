@@ -105,12 +105,7 @@ class WasWordtLijst:
         Voert elke rij door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
         """
         assert len(infos) > 0, "Lijst met VegTypeInfo is leeg"
-
-        new_infos = []
-        for info in infos:
-            new_infos.append(self.toevoegen_VvN_aan_VegTypeInfo(info))
-
-        return new_infos
+        return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
 
 
 def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
