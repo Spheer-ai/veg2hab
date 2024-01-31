@@ -311,20 +311,10 @@ class VvN:
         return valid_mask.all()
 
     def __str__(self):
-        classification = []
-
         if self.derivaatgemeenschap:
-            classification.append(self.klasse)
-            classification.append("dg")
-            classification.append(self.derivaatgemeenschap)
-            return "".join(classification)
-
+            return f"{self.klasse}dg{self.derivaatgemeenschap}"
         if self.rompgemeenschap:
-            classification.append(self.klasse)
-            classification.append("rg")
-            classification.append(self.rompgemeenschap)
-            return "".join(classification)
-
+            return f"{self.klasse}rg{self.rompgemeenschap}"
         classification = [x for x in self.normal_VvN_as_tuple() if x is not None]
         return "".join(classification)
 
