@@ -47,18 +47,13 @@ class VegTypeInfo:
         """
         Aanmaken vanuit string vegetatietypen
         """
-        percentage = percentage
-        SBB_list = []
-        VvN_list = []
-
-        # NOTE: Is hier en hierboven in init hetzelfde asserten netjes of juist niet?
         assert len(SBB_strings) <= 1, "Er kan niet meer dan 1 SBB type zijn"
-        for SBB_string in SBB_strings:
-            SBB_list.append(_SBB(SBB_string))
 
-        for VvN_string in VvN_strings:
-            VvN_list.append(_VvN(VvN_string))
-        return cls(percentage, VvN=VvN_list, SBB=SBB_list)
+        return cls(
+            percentage=percentage,
+            VvN=[_VvN(i) for i in VvN_strings],
+            SBB=[_SBB(i) for i in SBB_strings],
+        )
 
     @classmethod
     def create_list_from_access_rows(cls, rows: pd.DataFrame):
