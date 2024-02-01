@@ -13,6 +13,7 @@ xlrd = ">=2.0.1"
 pyodbc= ">=4.0.1"
 pydantic = ">=1.0,<2.0"
 setuptools = "<60.0.0"
+pygeos = "^0.14"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = ">=6.0.0"

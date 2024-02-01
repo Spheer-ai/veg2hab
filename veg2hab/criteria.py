@@ -4,6 +4,7 @@ from typing import ClassVar, List, Optional
 from pydantic import BaseModel
 
 from veg2hab.enums import MaybeBoolean
+from veg2hab.fgr import FGRType
 
 
 class BeperkendCriterium(BaseModel):
@@ -62,32 +63,50 @@ class LocatieCriterium(BeperkendCriterium):
         pass
 
 
-class NietCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "NietCriterium"
-    subCriterium: BeperkendCriterium
+class PlaceholderCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "Placeholder"
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
-        return ~self.criteria.check(geometry)
+        return MaybeBoolean.FALSE
+
+
+class FGRCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "FGRCriterium"
+    fgrtype: FGRType
+
+    def init(self, fgrtype):
+        self.fgrtype = FGRType(fgrtype)
+
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
+        return fgr.check_shape(geometry, fgrtype)
+
+
+class NietCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "NietCriterium"
+    sub_criterium: BeperkendCriterium
+
+    def check(self, geometry: "Geometrie") -> MaybeBoolean:
+        return ~self.sub_criterium.check(geometry)
 
 
 class OfCriteria(BeperkendCriterium):
     type: ClassVar[str] = "OfCriteria"
-    subCriteria: List[BeperkendCriterium]
+    sub_criteria: List[BeperkendCriterium]
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
-        for crit in self.criteria:
+        for crit in self.sub_criteria:
             if crit.check(geometry) == MaybeBoolean.TRUE:
                 return MaybeBoolean.TRUE
 
 
 class EnCriteria(BeperkendCriterium):
     type: ClassVar[str] = "EnCriteria"
-    subCriteria: List[BeperkendCriterium]
+    sub_criteria: List[BeperkendCriterium]
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
-        for crit in self.criteria:
+        for crit in self.sub_criteria:
             if crit.check(geometry) == MaybeBoolean.FALSE:
                 return MaybeBoolean.FALSE
         return MaybeBoolean.TRUE
