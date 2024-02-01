@@ -1,23 +1,37 @@
 from enum import Enum
+from pathlib import Path
 
-from geopandas import GeoDataFrame
+import geopandas as gpd
 
 
+# NOTE: als ik alle typen toch wil valideren, is er een enum van maken dan een goede manier? dan is het meteen mooi gegarandeerd matchend met eventuele input
 class FGRType(Enum):
-    DUINEN = 'Duinen'
-    GETIJDENGEBIED ='Getijdengebied'
-    HEUVELLAND = 'Heuvelland'
-    HOGERE_ZANDGRONDEN = 'Hogere Zandgronden'
-    LAAGVEENGEBIED = 'Laagveengebied'
-    NIET_INDEELBAAR = 'Niet indeelbaar'
-    RIVIERENGEBIED = 'Rivierengebied'
-    ZEEKLEIGEBIED = 'Zeekleigebied'
-    AFGESLOTEN_ZEEARMEN = 'Afgesloten Zeearmen'
-    NOORDZEE = 'Noordzee'
+    DU = 'Duinen'
+    GG = 'Getijdengebied'
+    HL = 'Heuvelland'
+    HZ = 'Hogere Zandgronden'
+    LV = 'Laagveengebied'
+    NI = 'Niet indeelbaar'
+    RI = 'Rivierengebied'
+    ZK = 'Zeekleigebied'
+    AZ = 'Afgesloten Zeearmen'
+    NZ = 'Noordzee'
+        
 
-    @classmethod
-    def from_string(cls, string):
-        try:
-            return cls[string]
-        except KeyError:
-            raise ValueError(f'String moet een van de volgende waarden zijn: {", ".join(cls.__members__.keys())}')
+class FGR():
+
+    def __init__(self, path: Path):
+        # inladen
+        self.gdf = gpd.read_file(path)
+        self.gdf = self.gdf[["fgr", "geometry"]]
+
+        # omzetten naar enum (validatie)
+        self.gdf["fgr"] = self.gdf["fgr"].apply(FGRType)
+
+    def get_fgr_for_shape(self, shape):
+        """
+        Geeft de FGR voor een gegeven shape
+        """
+        overlapping_fgr = self.gdf[self.gdf.geometry.intersects(shape)].fgr.tolist()
+        return overlapping_fgr
+        

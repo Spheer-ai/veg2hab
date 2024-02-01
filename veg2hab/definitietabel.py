@@ -93,15 +93,16 @@ class DefinitieTabel:
         return voorstellen
 
 
-def opschonen_definitietabel(path_in: Path, path_out: Path):
+def opschonen_definitietabel(path_in_deftabel: Path, path_in_json_def: Path, path_out: Path):
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst
     """
-    assert path_in.suffix == ".xls", "Input file is not an xls file"
+    assert path_in_deftabel.suffix == ".xls", "Input deftabel file is not an xls file"
+    assert path_in_json_def.suffix == ".csv", "Input json definitions file is not an csv file"
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
     dt = pd.read_excel(
-        path_in,
+        path_in_deftabel,
         engine="xlrd",
         usecols=[
             "Code habitat (sub)type",
@@ -143,5 +144,7 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
 
     # Reorder
     dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
-
+    
+    json_definitions = pd.read_csv(path_in_json_def, sep="|")
+    
     dt.to_excel(path_out, index=False)
