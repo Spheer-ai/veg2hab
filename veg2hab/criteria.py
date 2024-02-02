@@ -53,7 +53,7 @@ class PlaceholderCriterium(BeperkendCriterium):
         return MaybeBoolean.FALSE
 
     def is_criteria_type_present(self, type):
-        return type == "Placeholder"
+        return isinstance(self, type)
 
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
@@ -66,7 +66,7 @@ class FGRCriterium(BeperkendCriterium):
         pass
 
     def is_criteria_type_present(self, type):
-        return type == "FGRCriterium"
+        return isinstance(self, type)
 
 class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
@@ -76,7 +76,7 @@ class NietCriterium(BeperkendCriterium):
         return ~self.sub_criterium.check(geometry)
     
     def is_criteria_type_present(self, type):
-        return self.sub_criterium.is_criteria_type_present(type)
+        return self.sub_criterium.is_criteria_type_present(type) or isinstance(self, type)
 
 
 class OfCriteria(BeperkendCriterium):
@@ -90,7 +90,7 @@ class OfCriteria(BeperkendCriterium):
                 return MaybeBoolean.TRUE
 
     def is_criteria_type_present(self, type):
-        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria])
+        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria]) or isinstance(self, type)
 
 
 class EnCriteria(BeperkendCriterium):
@@ -105,7 +105,7 @@ class EnCriteria(BeperkendCriterium):
         return MaybeBoolean.TRUE
 
     def is_criteria_type_present(self, type):
-        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria])
+        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria]) or isinstance(self, type)
 
 
 class Mozaiekregel:
