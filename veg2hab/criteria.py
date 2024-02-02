@@ -46,29 +46,14 @@ class BeperkendCriterium(BaseModel):
         pass
 
 
-class LocatieCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "LocatieCriterium"
-
-    def __init__(
-        self,
-        kaart,  # bijvoorbeeld "FGR"
-        kolom,  # bijvoorbeeld "typologie"
-        waarde,  # bijvoorbeeld "duinen"
-        min_max,
-        niet_waarde,
-    ):
-        pass
-
-    def check(self, geometry: "Geometrie") -> MaybeBoolean:
-        pass
-
-
 class PlaceholderCriterium(BeperkendCriterium):
     type: ClassVar[str] = "Placeholder"
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
         return MaybeBoolean.FALSE
 
+    def is_criteria_type_present(self, type):
+        return type == "Placeholder"
 
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
@@ -78,8 +63,10 @@ class FGRCriterium(BeperkendCriterium):
         self.fgrtype = FGRType(fgrtype)
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
-        return fgr.check_shape(geometry, fgrtype)
+        pass
 
+    def is_criteria_type_present(self, type):
+        return type == "FGRCriterium"
 
 class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
@@ -87,6 +74,9 @@ class NietCriterium(BeperkendCriterium):
 
     def check(self, geometry: "Geometrie") -> MaybeBoolean:
         return ~self.sub_criterium.check(geometry)
+    
+    def is_criteria_type_present(self, type):
+        return self.sub_criterium.is_criteria_type_present(type)
 
 
 class OfCriteria(BeperkendCriterium):
@@ -98,6 +88,9 @@ class OfCriteria(BeperkendCriterium):
         for crit in self.sub_criteria:
             if crit.check(geometry) == MaybeBoolean.TRUE:
                 return MaybeBoolean.TRUE
+
+    def is_criteria_type_present(self, type):
+        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria])
 
 
 class EnCriteria(BeperkendCriterium):
@@ -111,18 +104,8 @@ class EnCriteria(BeperkendCriterium):
                 return MaybeBoolean.FALSE
         return MaybeBoolean.TRUE
 
-
-class SoortAanwezigCiteria(BeperkendCriterium):
-    type: ClassVar[str] = "SoortAanwezigCriterium"
-    soorten: List[str]
-    min_aantal: int
-    max_aantal: Optional[int]
-
-    def __str__(self):
-        return f"Minimaal {self.min_aantal} en maximaal {self.max_aantal} van {self.soorten} aanwezig"
-
-    def check(self, geometry: "Geometrie") -> MaybeBoolean:
-        pass
+    def is_criteria_type_present(self, type):
+        return any([crit.is_criteria_type_present(type) for crit in self.sub_criteria])
 
 
 class Mozaiekregel:
