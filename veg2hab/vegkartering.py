@@ -115,10 +115,10 @@ def hab_as_final_format(voorstel: HabitatVoorstel, idx: int, opp: float):
             # f"Opm{idx}" NOTE: Ik weet niet wat ik hier moet zetten
             # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
             # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
-            f"VvN{idx}": voorstel.vegtype
+            f"VvN{idx}": str(voorstel.vegtype)
             if isinstance(voorstel.vegtype, _VvN)
             else None,
-            f"SBB{idx}": voorstel.vegtype
+            f"SBB{idx}": str(voorstel.vegtype)
             if isinstance(voorstel.vegtype, _SBB)
             else None,
             # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
