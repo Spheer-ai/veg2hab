@@ -252,6 +252,15 @@ class Kartering:
             lambda infos: [dt.find_habtypes(info) for info in infos]
         )
 
+    def check_mitsen(self):
+        """
+        Check of de mitsen in de habitatvoorstellen van de kartering voldoen. 
+        """
+        assert "HabitatVoorstel" in self.gdf.columns, "Er is geen kolom met HabitatVoorstel"
+        # Bepaal waar meer informatie nodig is
+        # FGR
+        
+
     def as_final_format(self):
         """
         Output de kartering conform de beschrijving voor habitattypekarteringen zoals beschreven
