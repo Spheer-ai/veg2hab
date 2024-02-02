@@ -8,6 +8,7 @@ import pandas as pd
 
 from veg2hab.criteria import BeperkendCriterium, Mozaiekregel
 from veg2hab.enums import GoedMatig
+from veg2hab.utils import fully_flatten_list
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
@@ -259,7 +260,8 @@ class Kartering:
         assert "HabitatVoorstel" in self.gdf.columns, "Er is geen kolom met HabitatVoorstel"
         # Bepaal waar meer informatie nodig is
         # FGR
-        
+        # flatten en dan .is_criteria_type_present(FGRCriterium)
+
 
     def as_final_format(self):
         """
