@@ -63,6 +63,24 @@ class DefinitieTabel:
                 item.percentage = info.percentage
             voorstellen += voorstel
 
+        if len(voorstellen) == 0:
+            return [
+                HabitatVoorstel(
+                    vegtype=info.VvN[0]
+                    if info.VvN
+                    else info.SBB[0]
+                    if info.SBB
+                    else None,
+                    habtype="H0000",
+                    kwaliteit=None,
+                    regel_in_deftabel=None,
+                    mits=None,
+                    mozaiek=None,
+                    match_level=None,
+                    percentage=100,
+                )
+            ]
+
         return voorstellen
 
     @lru_cache(maxsize=256)

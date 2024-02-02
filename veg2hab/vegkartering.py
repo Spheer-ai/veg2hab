@@ -109,7 +109,9 @@ def hab_as_final_format(voorstel: HabitatVoorstel, idx: int, opp: float):
             f"Perc{idx}": voorstel.percentage,
             f"Opp{idx}": opp * voorstel.percentage,
             # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
-            f"Kwal{idx}": voorstel.kwaliteit.as_letter(),
+            f"Kwal{idx}": voorstel.kwaliteit.as_letter()
+            if voorstel.kwaliteit is not None
+            else None,  # In H0000 gevallen is er geen kwaliteit (voorstel.kwaliteit is dan None)
             # f"Opm{idx}" NOTE: Ik weet niet wat ik hier moet zetten
             # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
             # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
