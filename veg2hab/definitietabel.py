@@ -55,13 +55,13 @@ class DefinitieTabel:
         voorstellen = []
 
         for code in info.VvN + info.SBB:
-            voorstel = self._find_habtypes_for_code(code)
+            voorstel = self._find_habtypes_for_code(code, info.percentage)
             voorstellen += voorstel
 
         return voorstellen
 
     @lru_cache(maxsize=256)
-    def _find_habtypes_for_code(self, code: Union[SBB, VvN]):
+    def _find_habtypes_for_code(self, code: Union[SBB, VvN], info_percentage: int):
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven code
         Wordt gecached om snelheid te verhogen
@@ -85,6 +85,7 @@ class DefinitieTabel:
                     mits=None,  # TODO
                     mozaiek=None,  # TODO
                     match_level=match_levels[idx],
+                    percentage=info_percentage,
                 )
             )
 
