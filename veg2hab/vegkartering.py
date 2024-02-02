@@ -101,21 +101,29 @@ class Geometrie:
     def __init__(self, data: gpd.GeoSeries):
         self.data = data
 
+
 def hab_as_final_format(voorstel: HabitatVoorstel, idx: int, opp: float):
-    return pd.Series({
-        f"Habtype{idx}" : voorstel.habtype,
-        f"Perc{idx}" : voorstel.percentage,
-        f"Opp{idx}" : opp * voorstel.percentage,
-        #f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
-        f"Kwal{idx}" : voorstel.kwaliteit.as_letter(),
-        #f"Opm{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-        #f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-        #f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
-        f"VvN{idx}" : voorstel.vegtype if isinstance(voorstel.vegtype, _VvN) else None,
-        f"SBB{idx}" : voorstel.vegtype if isinstance(voorstel.vegtype, _SBB) else None,
-        #f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
-        #f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
-    })
+    return pd.Series(
+        {
+            f"Habtype{idx}": voorstel.habtype,
+            f"Perc{idx}": voorstel.percentage,
+            f"Opp{idx}": opp * voorstel.percentage,
+            # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
+            f"Kwal{idx}": voorstel.kwaliteit.as_letter(),
+            # f"Opm{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+            # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+            # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
+            f"VvN{idx}": voorstel.vegtype
+            if isinstance(voorstel.vegtype, _VvN)
+            else None,
+            f"SBB{idx}": voorstel.vegtype
+            if isinstance(voorstel.vegtype, _SBB)
+            else None,
+            # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
+            # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
+        }
+    )
+
 
 def reorder_columns_final_format(df: pd.DataFrame):
     """
@@ -126,11 +134,18 @@ def reorder_columns_final_format(df: pd.DataFrame):
     new_columns = ["Area", "Opm", "geometry"]
     n_habtype_blocks = len([i for i in df.columns if "Habtype" in i])
     for i in range(n_habtype_blocks):
-        new_columns = new_columns + [f"Habtype{i}", f"Perc{i}", f"Opp{i}", f"Kwal{i}", f"VvN{i}", f"SBB{i}"]
+        new_columns = new_columns + [
+            f"Habtype{i}",
+            f"Perc{i}",
+            f"Opp{i}",
+            f"Kwal{i}",
+            f"VvN{i}",
+            f"SBB{i}",
+        ]
     return df[new_columns]
 
-class Kartering:
 
+class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
         self.gdf = gdf
 
@@ -138,14 +153,14 @@ class Kartering:
         self.validate()
 
         # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
-        #       Misschien een dict met welke stappen gedaan zijn? 
+        #       Misschien een dict met welke stappen gedaan zijn?
 
     @classmethod
     def from_access_db(
         cls, shape_path: Path, shape_elm_id_column: str, access_csvs_path: Path
     ):
         """
-        Deze method wordt gebruikt om een Kartering te maken van een shapefile en 
+        Deze method wordt gebruikt om een Kartering te maken van een shapefile en
         een access database die al is opgedeeld in losse csv bestanden.
 
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
@@ -216,13 +231,15 @@ class Kartering:
         """
         gdf = gpd.read_file(shape_path)
         return cls(gdf)
-    
+
     def apply_wwl(self, wwl: pd.DataFrame):
         """
         Pas een was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
-        self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(wwl.toevoegen_VvN_aan_List_VegTypeInfo)
+        self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
+            wwl.toevoegen_VvN_aan_List_VegTypeInfo
+        )
 
     def apply_deftabel(self, dt: pd.DataFrame):
         """
@@ -230,21 +247,27 @@ class Kartering:
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
         # NOTE: iets wat vast stelt dat er tenminste 1 VegTypeInfo met een VvN is, zo niet geef warning?
-        
-        self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(lambda infos: [dt.find_habtypes(info) for info in infos])
+
+        self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
+            lambda infos: [dt.find_habtypes(info) for info in infos]
+        )
 
     def as_final_format(self):
         """
-        Output de kartering conform de beschrijving voor habitattypekarteringen zoals beschreven 
+        Output de kartering conform de beschrijving voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
         """
         # NOTE: Voor nu behandelen de de HabitatVoorstellen als definitief
         self.gdf["HabitatDefinitief"] = self.gdf["HabitatVoorstel"]
         # NOTE: Voor nu nog even handmatig de "definitieve" habitattypen eenduidig maken
-        self.gdf["HabitatDefinitief"] = self.gdf["HabitatDefinitief"].apply(lambda x: [i[0] for i in x if len(i) > 0] if len(x) > 0 else [])
-        
-        assert "HabitatDefinitief" in self.gdf.columns, "Er is geen kolom met definitieve habitatvoorstellen"
-        
+        self.gdf["HabitatDefinitief"] = self.gdf["HabitatDefinitief"].apply(
+            lambda x: [i[0] for i in x if len(i) > 0] if len(x) > 0 else []
+        )
+
+        assert (
+            "HabitatDefinitief" in self.gdf.columns
+        ), "Er is geen kolom met definitieve habitatvoorstellen"
+
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatDefinitief"]]
         base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
@@ -261,10 +284,12 @@ class Kartering:
         if len(voorstellen) == 0:
             return pd.Series()
 
-        return pd.concat([
-            hab_as_final_format(voorstel, i, row["Area"])
-            for i, voorstel in enumerate(voorstellen)
-        ])
+        return pd.concat(
+            [
+                hab_as_final_format(voorstel, i, row["Area"])
+                for i, voorstel in enumerate(voorstellen)
+            ]
+        )
 
     def __len__(self):
         return len(self.gdf)
