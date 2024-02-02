@@ -31,7 +31,7 @@ class GoedMatig(Enum):
             return cls.MATIG
         else:
             raise ValueError("Letter moet G of M zijn")
-        
+
     def as_letter(self):
         if self == GoedMatig.GOED:
             return "G"
