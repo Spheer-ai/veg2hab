@@ -1,3 +1,4 @@
+import copy
 import logging
 from dataclasses import dataclass
 from functools import lru_cache
@@ -55,13 +56,17 @@ class DefinitieTabel:
         voorstellen = []
 
         for code in info.VvN + info.SBB:
-            voorstel = self._find_habtypes_for_code(code, info.percentage)
+            # We voegen het percentage los to zodat _find_habtypes_for_code gecached kan worden
+            # We moeten een deepcopy maken anders passen we denk ik via referentie de percentages aan in de cache
+            voorstel = copy.deepcopy(self._find_habtypes_for_code(code))
+            for item in voorstel:
+                item.percentage = info.percentage
             voorstellen += voorstel
 
         return voorstellen
 
     @lru_cache(maxsize=256)
-    def _find_habtypes_for_code(self, code: Union[SBB, VvN], info_percentage: int):
+    def _find_habtypes_for_code(self, code: Union[SBB, VvN]):
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven code
         Wordt gecached om snelheid te verhogen
@@ -85,7 +90,7 @@ class DefinitieTabel:
                     mits=None,  # TODO
                     mozaiek=None,  # TODO
                     match_level=match_levels[idx],
-                    percentage=info_percentage,
+                    percentage=None,
                 )
             )
 
