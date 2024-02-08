@@ -1,34 +1,24 @@
+import copy
+import logging
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import GoedMatig
 from veg2hab.vegetatietypen import (
     SBB,
     VvN,
+    convert_string_to_SBB,
+    convert_string_to_VvN,
     opschonen_SBB_pandas_series,
     opschonen_VvN_pandas_series,
 )
+from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
 
-# From early pair programming session
-# Commented out in order to work on the rest
-"""@dataclass
-class DefinitieRowItem:
-    row_idx: int
-    VvN: Optional[str]  # enum?
-    SBB: Optional[str]  # enum?
-    HABCODE: str  # enum?
-    Kwaliteit: GoedMatig
-    mits: BeperkendCriterium
-    mozaiek: MozaiekRegel
-
-    def __post_init__(self):
-        if (self.VvN is None) != (self.SBB is None):
-            raise ValueError("Precies een van VvN of SBB moet een waarde hebben")
-"""
+_LOGGER = logging.getLogger(__name__)
 
 
 class DefinitieTabel:
@@ -36,47 +26,105 @@ class DefinitieTabel:
         # Inladen
         self.df = df
 
-        # Checken
-        assert self.check_validity_SBB(
-            print_invalid=True
-        ), "Niet alle SBB codes zijn valid"
-        assert self.check_validity_VvN(
-            print_invalid=True
-        ), "Niet alle VvN codes zijn valid"
+        self.df.Kwaliteit = self.df.Kwaliteit.apply(GoedMatig.from_letter)
+        self.df.SBB = self.df.SBB.apply(convert_string_to_SBB)
+        self.df.VvN = self.df.VvN.apply(convert_string_to_VvN)
+
+        # TODO parse mits en mozaiek
 
     @classmethod
     def from_excel(cls, path):
-        df = pd.read_excel(path)
+        df = pd.read_excel(
+            path,
+            engine="openpyxl",
+            usecols=[
+                "Habitattype",
+                "Kwaliteit",
+                "SBB",
+                "VvN",
+                "mits",
+                "mozaiek",
+            ],
+            dtype="string",
+        )
         return cls(df)
 
-    def check_validity_VvN(self, print_invalid: bool = False):
+    def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
         """
-        Checkt of de VvN valide zijn.
+        Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo
         """
-        dt_VvN = self.df["VvN"].astype("string")
+        voorstellen = []
 
-        return VvN.validate_pandas_series(dt_VvN, print_invalid=print_invalid)
+        for code in info.VvN + info.SBB:
+            # We voegen het percentage los to zodat _find_habtypes_for_code gecached kan worden
+            # We moeten een deepcopy maken anders passen we denk ik via referentie de percentages aan in de cache
+            voorstel = copy.deepcopy(self._find_habtypes_for_code(code))
+            for item in voorstel:
+                item.percentage = info.percentage
+            voorstellen += voorstel
 
-    def check_validity_SBB(self, print_invalid: bool = False):
-        """
-        Checkt of de SBB valide zijn.
-        """
-        dt_SBB = self.df["SBB"].astype("string")
+        if len(voorstellen) == 0:
+            return [
+                HabitatVoorstel(
+                    vegtype=info.VvN[0]
+                    if info.VvN
+                    else info.SBB[0]
+                    if info.SBB
+                    else None,
+                    habtype="H0000",
+                    kwaliteit=None,
+                    regel_in_deftabel=None,
+                    mits=None,
+                    mozaiek=None,
+                    match_level=None,
+                    percentage=100,
+                )
+            ]
 
-        return SBB.validate_pandas_series(dt_SBB, print_invalid=print_invalid)
+        return voorstellen
+
+    @lru_cache(maxsize=256)
+    def _find_habtypes_for_code(self, code: Union[SBB, VvN]):
+        """
+        Maakt een lijst met habitattype voorstellen voor een gegeven code
+        Wordt gecached om snelheid te verhogen
+        """
+        voorstellen = []
+        column = "VvN" if isinstance(code, VvN) else "SBB"
+        match_levels = self.df[column].apply(code.match_up_to)
+        max_level = match_levels.max()
+        if max_level == 0:
+            _LOGGER.info(f"Geen matchende habitattype gevonden voor {column}: {code}")
+            return []
+
+        match_rows = self.df[match_levels > 0]
+        for idx, row in match_rows.iterrows():
+            voorstellen.append(
+                HabitatVoorstel(
+                    vegtype=code,
+                    habtype=row["Habitattype"],
+                    kwaliteit=row["Kwaliteit"],
+                    regel_in_deftabel=idx,
+                    mits=None,  # TODO
+                    mozaiek=None,  # TODO
+                    match_level=match_levels[idx],
+                    percentage=None,
+                )
+            )
+
+        return voorstellen
 
 
 def opschonen_definitietabel(path_in: Path, path_out: Path):
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst
     """
-    # assert path in is an xlsx file
     assert path_in.suffix == ".xls", "Input file is not an xls file"
-    # assert path out is an xlsx file
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
     dt = pd.read_excel(
         path_in,
+        engine="xlrd",
         usecols=[
             "Code habitat (sub)type",
             "Goed / Matig",
@@ -114,5 +162,8 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
     assert VvN.validate_pandas_series(
         dt["VvN"], print_invalid=True
     ), "Niet alle VvN codes zijn valid"
+
+    # Reorder
+    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     dt.to_excel(path_out, index=False)

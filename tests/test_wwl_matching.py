@@ -15,6 +15,7 @@ def wwl():
         / "data/5. Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx"
     )
     path_out = Path("testing/opgeschoonde_waswordt.xlsx")
+    path_out.parent.mkdir(exist_ok=True)
     opschonen_was_wordt_lijst(path_in, path_out)
     return WasWordtLijst.from_excel(path_out)
 
@@ -89,9 +90,7 @@ def test_toevoegen_VvN_aan_pandas_series(wwl):
                 ),
             ],
             [
-                VegTypeInfo.from_str_vegtypes(
-                    50, SBB_strings=["7a1z"], VvN_strings=[]
-                ),
+                VegTypeInfo.from_str_vegtypes(50, SBB_strings=["7a1z"], VvN_strings=[]),
                 VegTypeInfo.from_str_vegtypes(
                     50, SBB_strings=["5d-b"], VvN_strings=["5rg7"]
                 ),
