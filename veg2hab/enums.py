@@ -22,3 +22,20 @@ class MaybeBoolean(Enum):
 class GoedMatig(Enum):
     GOED = "Goed"
     MATIG = "Matig"
+
+    @classmethod
+    def from_letter(cls, letter: str):
+        if letter == "G":
+            return cls.GOED
+        elif letter == "M":
+            return cls.MATIG
+        else:
+            raise ValueError("Letter moet G of M zijn")
+
+    def as_letter(self):
+        if self == GoedMatig.GOED:
+            return "G"
+        elif self == GoedMatig.MATIG:
+            return "M"
+        else:
+            raise ValueError("GoedMatig is niet Goed of Matig")
