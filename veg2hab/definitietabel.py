@@ -5,10 +5,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Union
 
-import pandas as path_in_deftabel
+import pandas as pd
 
 from veg2hab.criteria import BeperkendCriterium
-from veg2hab.enums import GoedMatig
+from veg2hab.enums import Kwaliteit
+from veg2hab.habitat import HabitatVoorstel
 from veg2hab.vegetatietypen import (
     SBB,
     VvN,
@@ -17,7 +18,7 @@ from veg2hab.vegetatietypen import (
     opschonen_SBB_pandas_series,
     opschonen_VvN_pandas_series,
 )
-from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
+from veg2hab.vegkartering import VegTypeInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +28,17 @@ class DefinitieTabel:
         # Inladen
         self.df = df
 
-        self.df.Kwaliteit = self.df.Kwaliteit.apply(GoedMatig.from_letter)
+        self.df.Kwaliteit = self.df.Kwaliteit.apply(Kwaliteit.from_letter)
         self.df.SBB = self.df.SBB.apply(convert_string_to_SBB)
         self.df.VvN = self.df.VvN.apply(convert_string_to_VvN)
 
-        self.df["Criteria"] = self.df.json.loc[self.df.json.notnull()].apply(BeperkendCriterium.parse_raw)
+        self.df["Criteria"] = (
+            self.df["json"]
+            .loc[self.df["json"].notnull()]
+            .apply(BeperkendCriterium.parse_raw)
+        )
+        self.df.loc[self.df.Criteria.isnull(), "Criteria"] = None
         # TODO parse mozaiek
-
 
     @classmethod
     def from_excel(cls, path):
@@ -67,6 +72,9 @@ class DefinitieTabel:
                 item.percentage = info.percentage
             voorstellen += voorstel
 
+        if len(voorstellen) == 0:
+            voorstellen.append(HabitatVoorstel.H0000_from_info(info))
+
         return voorstellen
 
     @lru_cache(maxsize=256)
@@ -90,8 +98,8 @@ class DefinitieTabel:
                     vegtype=code,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
-                    regel_in_deftabel=idx,
-                    mits=None,  # TODO
+                    idx_opgeschoonde_dt=idx,
+                    mits=row["Criteria"],
                     mozaiek=None,  # TODO
                     match_level=match_levels[idx],
                     percentage=None,
@@ -101,13 +109,17 @@ class DefinitieTabel:
         return voorstellen
 
 
-def opschonen_definitietabel(path_in_deftabel: Path, path_in_json_def: Path, path_out: Path):
+def opschonen_definitietabel(
+    path_in_deftabel: Path, path_in_json_def: Path, path_out: Path
+):
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst.
     Voegt ook json voor de mitsen toe vanuit path_in_json_def.
     """
     assert path_in_deftabel.suffix == ".xls", "Input deftabel file is not an xls file"
-    assert path_in_json_def.suffix == ".csv", "Input json definitions file is not an csv file"
+    assert (
+        path_in_json_def.suffix == ".csv"
+    ), "Input json definitions file is not an csv file"
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
     dt = pd.read_excel(
@@ -153,14 +165,14 @@ def opschonen_definitietabel(path_in_deftabel: Path, path_in_json_def: Path, pat
 
     # Reorder
     dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
-    
+
     json_definitions = pd.read_csv(path_in_json_def, sep="|")
 
     # Checken dat we alle mitsen in dt ook in json_definitions hebben
     for mits in dt.mits.dropna().unique():
         if mits not in json_definitions.mits.unique():
             raise ValueError(f"Mits {mits} is niet gevonden in json_definitions")
-    
+
     dt = dt.merge(json_definitions, on="mits", how="left")
-    
+
     dt.to_excel(path_out, index=False)
