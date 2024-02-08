@@ -1,33 +1,24 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List
 
 import geopandas as gpd
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium, Mozaiekregel
-from veg2hab.enums import GoedMatig
-from veg2hab.utils import fully_flatten_list
+from veg2hab.criteria import FGRCriterium
+from veg2hab.enums import Kwaliteit
+from veg2hab.fgr import FGR
+from veg2hab.habitat import (
+    HabitatKeuze,
+    HabitatVoorstel,
+    KeuzeStatus,
+    habitatkeuze_obv_mitsen,
+    is_criteria_type_present,
+)
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
-
-
-@dataclass
-class HabitatVoorstel:
-    """
-    Een voorstel voor een habitattype voor een vegetatietype
-    """
-
-    vegtype: Union[_SBB, _VvN]
-    habtype: str
-    kwaliteit: GoedMatig
-    regel_in_deftabel: int
-    mits: Optional[BeperkendCriterium]
-    mozaiek: Optional[Mozaiekregel]
-    match_level: int
-    percentage: int
 
 
 @dataclass
@@ -81,17 +72,6 @@ class VegTypeInfo:
         return hash((self.percentage, tuple(self.VvN), tuple(self.SBB)))
 
 
-class JoinParameters:
-    """
-    A set of parameters that is used for join operations. Can be chained together to create a join operation that joins multiple tables.
-    """
-
-    def __init__(self, csv_path, left_column, right_column):
-        self.csv_path = csv_path
-        self.left_column = left_column
-        self.right_column = right_column
-
-
 class Geometrie:
     """Een shape/rij uit de vegetatiekartering.
     Deze bevat of een VvN of een SBB code en een geometrie.
@@ -103,27 +83,93 @@ class Geometrie:
         self.data = data
 
 
-def hab_as_final_format(voorstel: HabitatVoorstel, idx: int, opp: float):
-    return pd.Series(
-        {
-            f"Habtype{idx}": voorstel.habtype,
-            f"Perc{idx}": voorstel.percentage,
-            f"Opp{idx}": opp * voorstel.percentage,
-            # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
-            f"Kwal{idx}": voorstel.kwaliteit.as_letter(),
-            # f"Opm{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-            # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-            # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
-            f"VvN{idx}": voorstel.vegtype
-            if isinstance(voorstel.vegtype, _VvN)
-            else None,
-            f"SBB{idx}": voorstel.vegtype
-            if isinstance(voorstel.vegtype, _SBB)
-            else None,
-            # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
-            # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
-        }
-    )
+def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
+    """
+    Haal alle habitatvoorstellen door een functie heen
+    """
+    return [func(complex) for complex in complexen]
+
+
+def hab_as_final_format(keuze: HabitatKeuze, idx: int, opp: float):
+    if (
+        keuze.status == KeuzeStatus.DUIDELIJK
+        or keuze.status == KeuzeStatus.GEEN_HABITAT
+    ):
+        voorstel = keuze.habitatkeuze[0]
+        return pd.Series(
+            {
+                f"Habtype{idx}": voorstel.habtype,
+                f"Perc{idx}": voorstel.percentage,
+                f"Opp{idx}": opp * voorstel.percentage,
+                # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
+                f"Kwal{idx}": voorstel.kwaliteit.as_letter()
+                if isinstance(voorstel.kwaliteit, Kwaliteit)
+                else None,
+                f"Opm{idx}": keuze.opmerking,
+                # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+                # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
+                f"VvN{idx}": str(voorstel.vegtype)
+                if isinstance(voorstel.vegtype, _VvN)
+                else None,
+                f"SBB{idx}": str(voorstel.vegtype)
+                if isinstance(voorstel.vegtype, _SBB)
+                else None,
+                # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
+                # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
+            }
+        )
+
+    if keuze.status == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
+        voorstellen = keuze.habitatkeuze
+        return pd.Series(
+            {
+                f"Habtype{idx}": str([voorstel.habtype for voorstel in voorstellen]),
+                f"Perc{idx}": str([voorstel.percentage for voorstel in voorstellen]),
+                f"Opp{idx}": str(
+                    [opp * voorstel.percentage for voorstel in voorstellen]
+                ),
+                # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
+                f"Kwal{idx}": str(
+                    [
+                        (
+                            voorstel.kwaliteit.as_letter()
+                            if isinstance(voorstel.kwaliteit, Kwaliteit)
+                            else None
+                        )
+                        for voorstel in voorstellen
+                    ]
+                ),
+                f"Opm{idx}": keuze.opmerking,
+                # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+                # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
+                f"VvN{idx}": str(
+                    [
+                        (
+                            str(voorstel.vegtype)
+                            if isinstance(voorstel.vegtype, _VvN)
+                            else None
+                        )
+                        for voorstel in voorstellen
+                    ]
+                ),
+                f"SBB{idx}": str(
+                    [
+                        (
+                            str(voorstel.vegtype)
+                            if isinstance(voorstel.vegtype, _SBB)
+                            else None
+                        )
+                        for voorstel in voorstellen
+                    ]
+                ),
+                # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
+                # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
+            }
+        )
+
+    assert (
+        False
+    ), f"hab_as_final_form voor KeuzeStatus {keuze.status} is niet geimplementeerd"
 
 
 def reorder_columns_final_format(df: pd.DataFrame):
@@ -140,6 +186,7 @@ def reorder_columns_final_format(df: pd.DataFrame):
             f"Perc{i}",
             f"Opp{i}",
             f"Kwal{i}",
+            f"Opm{i}",
             f"VvN{i}",
             f"SBB{i}",
         ]
@@ -253,34 +300,65 @@ class Kartering:
             lambda infos: [dt.find_habtypes(info) for info in infos]
         )
 
-    def check_mitsen(self):
+    def check_mitsen(self, fgr: FGR):
         """
-        Check of de mitsen in de habitatvoorstellen van de kartering voldoen. 
+        Check of de mitsen in de habitatvoorstellen van de kartering voldoen.
         """
-        assert "HabitatVoorstel" in self.gdf.columns, "Er is geen kolom met HabitatVoorstel"
-        # Bepaal waar meer informatie nodig is
-        # FGR
-        # flatten en dan .is_criteria_type_present(FGRCriterium)
+        assert (
+            "HabitatVoorstel" in self.gdf.columns
+        ), "Er is geen kolom met HabitatVoorstel"
 
+        # Deze dataframe wordt gevuld met de info nodig om mitsen te checken.
+        mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
+
+        ### Bepaal waar meer informatie nodig is
+        # FGR
+        fgr_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(FGRCriterium,)
+        )
+        # Bodem
+        # etc
+
+        ### Verrijken met de benodigde informatie
+        # FGR
+        mits_info_df["fgr"] = fgr.fgr_for_geometry(mits_info_df.loc[fgr_needed]).drop(
+            columns="index_right"
+        )
+        # Bodem
+        # etc
+
+        ### Mitsen checken
+        for idx, row in self.gdf.iterrows():
+            mits_info_row = mits_info_df.loc[idx]
+            for voorstellen in row.HabitatVoorstel:
+                for voorstel in voorstellen:
+                    # NOTE: Willen we een "geen" mits die altijd true is?
+                    if voorstel.mits is None:
+                        continue
+                    voorstel.mits.check(mits_info_row)
+
+        self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
+            haal_complexen_door_functie, args=[habitatkeuze_obv_mitsen]
+        )
 
     def as_final_format(self):
         """
         Output de kartering conform de beschrijving voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
         """
-        # NOTE: Voor nu behandelen de de HabitatVoorstellen als definitief
-        self.gdf["HabitatDefinitief"] = self.gdf["HabitatVoorstel"]
-        # NOTE: Voor nu nog even handmatig de "definitieve" habitattypen eenduidig maken
-        self.gdf["HabitatDefinitief"] = self.gdf["HabitatDefinitief"].apply(
-            lambda x: [i[0] for i in x if len(i) > 0] if len(x) > 0 else []
-        )
+        # # NOTE: Voor nu behandelen de de HabitatVoorstellen als definitief
+        # self.gdf["HabitatDefinitief"] = self.gdf["HabitatVoorstel"]
+        # # NOTE: Voor nu nog even handmatig de "definitieve" habitattypen eenduidig maken
+        # self.gdf["HabitatDefinitief"] = self.gdf["HabitatDefinitief"].apply(
+        #     lambda x: [i[0] for i in x if len(i) > 0] if len(x) > 0 else []
+        # )
 
         assert (
-            "HabitatDefinitief" in self.gdf.columns
+            "HabitatKeuze" in self.gdf.columns
         ), "Er is geen kolom met definitieve habitatvoorstellen"
 
         # Base dataframe conform Gegevens Leverings Protocol maken
-        base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatDefinitief"]]
+        base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatKeuze"]]
         base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
@@ -291,16 +369,23 @@ class Kartering:
         """
         Maakt van een rij een dataseries met blokken kolommen volgens het Gegevens Leverings Protocol (Bijlage 3a)
         """
-        voorstellen = row["HabitatDefinitief"]
-        if len(voorstellen) == 0:
-            return pd.Series()
+        keuzes = row["HabitatKeuze"]
+        assert len(keuzes) > 0, "Er vlakken zonder habitatkeuze"
 
         return pd.concat(
             [
-                hab_as_final_format(voorstel, i, row["Area"])
-                for i, voorstel in enumerate(voorstellen)
+                hab_as_final_format(keuze, i, row["Area"])
+                for i, keuze in enumerate(keuzes)
             ]
         )
+
+    def final_format_to_shp(self, path: Path):
+        """
+        Slaat de kartering op in een shapefile
+        """
+        final = self.as_final_format()
+        gdf = gpd.GeoDataFrame(final, geometry="geometry")
+        gdf.to_file(path)
 
     def __len__(self):
         return len(self.gdf)

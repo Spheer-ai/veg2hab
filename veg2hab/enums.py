@@ -19,7 +19,7 @@ class MaybeBoolean(Enum):
             return self
 
 
-class GoedMatig(Enum):
+class Kwaliteit(Enum):
     GOED = "Goed"
     MATIG = "Matig"
 
@@ -33,9 +33,9 @@ class GoedMatig(Enum):
             raise ValueError("Letter moet G of M zijn")
 
     def as_letter(self):
-        if self == GoedMatig.GOED:
+        if self == Kwaliteit.GOED:
             return "G"
-        elif self == GoedMatig.MATIG:
+        elif self == Kwaliteit.MATIG:
             return "M"
         else:
             raise ValueError("GoedMatig is niet Goed of Matig")
