@@ -1,4 +1,5 @@
 import math
+from functools import lru_cache
 from pathlib import Path
 from typing import List
 
@@ -43,7 +44,9 @@ class WasWordtLijst:
     @classmethod
     def from_excel(cls, path: Path):
         # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
-        df = pd.read_excel(path, usecols=["VvN", "SBB"], dtype="string")
+        df = pd.read_excel(
+            path, engine="openpyxl", usecols=["VvN", "SBB"], dtype="string"
+        )
         return cls(df)
 
     def check_validity_SBB(self, print_invalid: bool = False):
@@ -62,6 +65,18 @@ class WasWordtLijst:
 
         return VvN.validate_pandas_series(wwl_VvN, print_invalid=print_invalid)
 
+    @lru_cache(maxsize=256)
+    def match_SBB_to_VvN(self, code: SBB) -> List[VvN]:
+        """
+        Zoekt de VvN codes die bij een SBB code horen
+        """
+
+        assert isinstance(code, SBB), "Code is geen SBB object"
+
+        matching_VvN = self.df[self.df.SBB == code].VvN
+        # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
+        return matching_VvN.dropna().to_list()
+
     def toevoegen_VvN_aan_VegTypeInfo(self, info: VegTypeInfo):
         """
         Zoekt adhv SBB codes de bijbehorende VvN codes en voegt deze toe aan de VegetatieTypeInfo
@@ -77,9 +92,7 @@ class WasWordtLijst:
             [isinstance(x, SBB) for x in info.SBB]
         ), "SBB is geen lijst van SBB objecten"
 
-        matching_VvN = self.df[self.df.SBB == info.SBB[0]].VvN
-        # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
-        new_VvN = matching_VvN.dropna().to_list()
+        new_VvN = self.match_SBB_to_VvN(info.SBB[0])
 
         return VegTypeInfo(
             info.percentage,
@@ -92,12 +105,7 @@ class WasWordtLijst:
         Voert elke rij door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
         """
         assert len(infos) > 0, "Lijst met VegTypeInfo is leeg"
-
-        new_infos = []
-        for info in infos:
-            new_infos.append(self.toevoegen_VvN_aan_VegTypeInfo(info))
-
-        return new_infos
+        return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
 
 
 def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
@@ -109,7 +117,7 @@ def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
     # assert path out is an xlsx file
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
-    wwl = pd.read_excel(path_in, usecols=["VvN", "SBB-code"])
+    wwl = pd.read_excel(path_in, engine="openpyxl", usecols=["VvN", "SBB-code"])
     wwl = wwl.rename(columns={"SBB-code": "SBB"})
     wwl = wwl.dropna(how="all")
 
