@@ -1,0 +1,38 @@
+Op deze cd vindt u de digitale einddata en digitale versie van de eindrapportage van de vegetatie- en florakartering Rottige Meenthe die in 2013 is uitgevoerd (SBB projectnr. 864).
+
+
+De volgende digitale gegevens zijn bijgeleverd op cd-rom:
+
+
+Digitale standaard
+864_RottigeMeenthe2013.mdb - Digitale Standaard Staatsbosbeheer in MS Access formaat.
+
+
+GIS
+lijnen.shp - ESRI-shapefile.
+vlakken.shp - ESRI-shapefile.
+
+Rapportage
+864_RottigeMeenthe2013.pdf - PDF-bestand van het volledige rapport, inclusief bijlagen (tabellen, kaarten en figuren).
+864_RottigeMeenthe2013.docx - Worddocument met rapporttekst.
+864_Bijlage 4-Vegetatietabellen.xlsx - Excel-tabellen met gegevens bijlage 4.
+864_MatrixVlakken.xlsx - Excel-tabel met vlakgegevens.
+864_MatrixLijnen.xlsx - Excel-tabel met lijngegevens.
+864_Vlakkenkaart.pdf - PDF-bestand met de vlaknummerkaarten behorend bij de excel-tabel met vlakgegevens (864_MatrixVlakken.xlsx).
+864_Lijnenkaart.pdf - PDF-bestand met de lijnnummerkaarten behorend bij de excel-tabel met lijngegevens (864_MatrixLijnen.xlsx).
+
+TurboVeg
+864_RottigeMeenthe.zip - Turboveg-backup als ZIP-bestand. Bevat de TurboVegdata (opnamegegevens).
+
+Overig
+864_leesmij.txt - Tekstdocument met informatie over de bijgeleverde digitale gegevens.
+
+
+Voor eventuele vragen kunt u terecht bij:
+
+Wout Bijkerk (w.bijkerk@altwym.nl) of Sjoukje Attema (s.attema@altym.nl) van
+
+Bureau Altenburg & Wymenga
+tel: 0511 47 47 64
+
+
