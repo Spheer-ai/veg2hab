@@ -148,6 +148,7 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             if voorstel.mits.evaluation == MaybeBoolean.TRUE
         ]
 
+        # TODO: het 1 voorstel geval qua output unifien met meerdere voorstellen
         # Er is 1 kloppende mits; Duidelijk
         if len(true_voorstellen) == 1:
             voorstel = true_voorstellen[0]
@@ -168,6 +169,7 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             )
 
     # Er zijn geen kloppende mitsen gevonden; Alle voorstellen stellen dan dus H0000 voor
+    # TODO: voorstellen niet veranderen, maar obv status H0000 printen in as_final in vegkartering
     for voorstel in habitatvoorstellen:
         voorstel.habtype = "H0000"
         voorstel.kwaliteit = None
