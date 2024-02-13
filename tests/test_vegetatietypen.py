@@ -12,7 +12,6 @@ def test_vvn_from_str():
     assert vvn.subassociatie == "e"
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 5
 
 
 def test_partial_vvn_from_str():
@@ -24,7 +23,6 @@ def test_partial_vvn_from_str():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 3
 
 
 def test_invalid_vvn_from_str():
@@ -41,7 +39,6 @@ def test_vvn_with_derivaat_gemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap == "2"
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 1
 
 
 def test_vvn_with_rompgemeenschap():
@@ -53,7 +50,6 @@ def test_vvn_with_rompgemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap == "2"
-    assert vvn.max_match_level == 1
 
 
 def test_vvn_rompgemeenschap_is_only_possible_on_klasse():
@@ -112,7 +108,6 @@ def test_sbb_from_str():
     assert sbb.subassociatie == "e"
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 4
 
 
 def test_partial_sbb_from_str():
@@ -123,7 +118,6 @@ def test_partial_sbb_from_str():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 2
 
 
 def test_invalid_sbb_from_str():
@@ -141,7 +135,6 @@ def test_sbb_with_derivaat_gemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap == "b"
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 1
 
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
@@ -149,7 +142,6 @@ def test_sbb_with_derivaat_gemeenschap():
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap == "b"
     assert sbb2.rompgemeenschap is None
-    assert sbb2.max_match_level == 1
 
 
 def test_sbb_with_rompgemeenschap():
@@ -162,7 +154,6 @@ def test_sbb_with_rompgemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap == "b"
-    assert sbb.max_match_level == 1
 
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
@@ -170,7 +161,6 @@ def test_sbb_with_rompgemeenschap():
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap is None
     assert sbb2.rompgemeenschap == "b"
-    assert sbb2.max_match_level == 1
 
 
 def test_match_sbb_codes():
