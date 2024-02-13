@@ -48,26 +48,7 @@ class HabitatVoorstel:
             percentage=info.percentage,
         )
 
-    # @classmethod NOTE: Wordt niet gebruikt omdat ik in dit geval de al bestaande habitatvoorstellen aanpas naar habtype=H0000, kwaliteit=None
-    # def H0000_geen_kloppende_mitsen(
-    #     cls, info: "VegTypeInfo", vegtype_in_dt: Union[_SBB, _VvN]
-    # ):
-    #     return cls(
-    #         onderbouwend_vegtype=None,
-    #         vegtype_in_dt=vegtype_in_dt,
-    #         vegtypeinfo=info,
-    #         habtype="H0000",
-    #         kwaliteit=None,
-    #         idx_opgeschoonde_dt=None,
-    #         idx_in_dt=None,
-    #         mits=GeenCriterium(),
-    #         mozaiek=None,
-    #         match_level=MatchLevel.NO_MATCH,
-    #         percentage=info.percentage,
-    #     )
 
-
-# NOTE: Misschien classes maken van elk van deze statussen?
 class KeuzeStatus(enum.Enum):
     # 1 Habitatvoorstel met kloppende mits
     DUIDELIJK = enum.auto()
@@ -83,7 +64,6 @@ class KeuzeStatus(enum.Enum):
 
     HANDMATIGE_CONTROLE = enum.auto()
     WACHTEN_OP_MOZAIEK = enum.auto()
-    # TODO verder opvullen
 
 
 @dataclass
@@ -98,6 +78,7 @@ class HabitatKeuze:
 def is_criteria_type_present(voorstellen: List[List[HabitatVoorstel]], criteria_type):
     """
     Geeft True als er in de lijst met Criteria eentje van crit_type is
+    Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
     """
     flat = completely_flatten(voorstellen)
     return any(

@@ -1,6 +1,6 @@
 def completely_flatten(nested_list):
     """
-    Slaat lijst van lijsten van arbitraire diepte volledigplat
+    Slaat lijst van lijsten van arbitraire diepte volledig plat
     """
     flat_list = []
     for element in nested_list:
