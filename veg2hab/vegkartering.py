@@ -401,13 +401,6 @@ class Kartering:
         Output de kartering conform de beschrijving voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
         """
-        # # NOTE: Voor nu behandelen de de HabitatVoorstellen als definitief
-        # self.gdf["HabitatDefinitief"] = self.gdf["HabitatVoorstel"]
-        # # NOTE: Voor nu nog even handmatig de "definitieve" habitattypen eenduidig maken
-        # self.gdf["HabitatDefinitief"] = self.gdf["HabitatDefinitief"].apply(
-        #     lambda x: [i[0] for i in x if len(i) > 0] if len(x) > 0 else []
-        # )
-
         assert (
             "HabitatKeuze" in self.gdf.columns
         ), "Er is geen kolom met definitieve habitatvoorstellen"
