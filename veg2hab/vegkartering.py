@@ -92,6 +92,8 @@ def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
 
 
 def hab_as_final_format(keuze: HabitatKeuze, idx: int, opp: float):
+    # TODO: het 1 voorstel geval qua output unifien met meerdere voorstellen zodat het enkel afhangt van status wat er geprint wordt
+
     # Er is 1 HabitatVoorstel
     if len(keuze.habitatvoorstellen) == 1:
         if (
@@ -363,7 +365,7 @@ class Kartering:
             "HabitatVoorstel" in self.gdf.columns
         ), "Er is geen kolom met HabitatVoorstel"
 
-        # Deze dataframe wordt gevuld met de info nodig om mitsen te checken.
+        # Deze dataframe wordt verrijkt met de info nodig om mitsen te checken.
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
 
         ### Bepaal waar meer informatie nodig is
@@ -387,11 +389,11 @@ class Kartering:
             mits_info_row = mits_info_df.loc[idx]
             for voorstellen in row.HabitatVoorstel:
                 for voorstel in voorstellen:
-                    # NOTE: Willen we een "geen" mits die altijd true is?
                     if voorstel.mits is None:
-                        continue
+                        raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
+        ### Habitatkeuzes bepalen
         self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
             haal_complexen_door_functie, args=[habitatkeuze_obv_mitsen]
         )
