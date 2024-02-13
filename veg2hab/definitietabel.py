@@ -42,10 +42,16 @@ class DefinitieTabel:
 
     @classmethod
     def from_excel(cls, path):
+        """
+        Maakt een DefinitieTabel object van een excel file.
+        Deze method is bedoeld om om te gaan met de opgeschoonde definitietabel uit opschonen_definitietabel().
+        """
+        # NOTE: Als ik toch de opgeschoonde definitietabel inlaad moet ik dan nog usecols specificeren?
         df = pd.read_excel(
             path,
             engine="openpyxl",
             usecols=[
+                "DT regel",
                 "Habitattype",
                 "Kwaliteit",
                 "SBB",
@@ -56,6 +62,8 @@ class DefinitieTabel:
             ],
             dtype="string",
         )
+        # NOTE: Ik kan ook wel hierboven een dict meegeven maar dan wordt het lezen van de file zo lang
+        df["DT regel"] = df["DT regel"].astype(int)
         return cls(df)
 
     def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
@@ -65,15 +73,16 @@ class DefinitieTabel:
         voorstellen = []
 
         for code in info.VvN + info.SBB:
-            # We voegen het percentage los to zodat _find_habtypes_for_code gecached kan worden
+            # We voegen het percentage en VegTypeInfo los to zodat _find_habtypes_for_code gecached kan worden
             # We moeten een deepcopy maken anders passen we denk ik via referentie de percentages aan in de cache
             voorstel = copy.deepcopy(self._find_habtypes_for_code(code))
             for item in voorstel:
                 item.percentage = info.percentage
+                item.vegtypeinfo = info
             voorstellen += voorstel
 
         if len(voorstellen) == 0:
-            voorstellen.append(HabitatVoorstel.H0000_from_info(info))
+            voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
 
         return voorstellen
 
@@ -93,12 +102,17 @@ class DefinitieTabel:
 
         match_rows = self.df[match_levels > 0]
         for idx, row in match_rows.iterrows():
+            vegtype_in_dt = row["SBB"] if isinstance(row["SBB"], SBB) else row["VvN"]
+            assert isinstance(vegtype_in_dt, (SBB, VvN))
             voorstellen.append(
                 HabitatVoorstel(
-                    vegtype=code,
+                    onderbouwend_vegtype=code,
+                    vegtype_in_dt=vegtype_in_dt,
+                    vegtypeinfo=None,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
                     idx_opgeschoonde_dt=idx,
+                    idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
                     mozaiek=None,  # TODO
                     match_level=match_levels[idx],
@@ -143,6 +157,8 @@ def opschonen_definitietabel(
             "alleen in mozaïek": "mozaiek",
         }
     )
+    # Toevoegen index als kolom
+    dt["DT regel"] = dt.index + 2
 
     # Verwijderen rijen met missende data in VvN
     dt = dt.dropna(subset=["VvN"])
@@ -164,7 +180,7 @@ def opschonen_definitietabel(
     ), "Niet alle VvN codes zijn valid"
 
     # Reorder
-    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
+    dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     json_definitions = pd.read_csv(path_in_json_def, sep="|")
 
