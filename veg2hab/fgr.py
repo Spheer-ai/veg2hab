@@ -26,13 +26,6 @@ class FGR:
         # omzetten naar enum (validatie)
         self.gdf["fgr"] = self.gdf["fgr"].apply(FGRType)
 
-    # def get_fgr_for_shape(self, shape):
-    #     """
-    #     Geeft de FGR voor een gegeven shape
-    #     """
-    #     overlapping_fgr = self.gdf[self.gdf.geometry.intersects(shape)].fgr.tolist()
-    #     return overlapping_fgr
-
     def fgr_for_geometry(self, other_gdf: gpd.GeoDataFrame):
         """
         Returns fgr codes voor de gegeven geometrie
