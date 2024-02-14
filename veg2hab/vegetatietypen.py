@@ -28,7 +28,7 @@ class MatchLevel(IntEnum):
     GEMEENSCHAP_SBB = 11
 
 
-@dataclass()
+@dataclass
 class SBB:
     """
     Format van SBB codes:
@@ -49,14 +49,17 @@ class SBB:
     # 16b/a                                        /                     a
 
     klasse: str
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
+        if code == "100":
+            self.klasse = "niet habitattypewaardig"
+            return
 
         # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
         self.derivaatgemeenschap = None
@@ -83,7 +86,7 @@ class SBB:
             self.subassociatie = match.group("subassociatie")
             return
 
-        raise ValueError()
+        raise ValueError(f"Invalid SBB code: {code}")
 
     def base_SBB_as_tuple(self):
         """
@@ -246,7 +249,8 @@ class VvN:
             self.derivaatgemeenschap = None
             self.rompgemeenschap = None
             return
-        raise ValueError()
+
+        raise ValueError(f"Invalid VvN code: {code}")
 
     def normal_VvN_as_tuple(self):
         if self.derivaatgemeenschap or self.rompgemeenschap:

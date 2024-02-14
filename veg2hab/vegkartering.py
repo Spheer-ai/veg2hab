@@ -330,7 +330,13 @@ class Kartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
-        gdf = gpd.read_file(shape_path)
+        # NOTE: Willen we ook Opmerkingen mee? Die is er namelijk soms niet/kan vast ook een andere naam hebben
+        gdf = gpd.read_file(
+            shape_path,
+            usecols=[shape_elm_id_column, "geometry"],
+            dtype={shape_elm_id_column: int},
+        )
+        gdf["Opp"] = gdf["geometry"].area
 
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
@@ -343,12 +349,15 @@ class Kartering:
             usecols=["Locatie", "Vegetatietype", "Bedekking_num"],
             dtype={"Locatie": int, "Vegetatietype": str, "Bedekking_num": int},
         )
+        # BV voor GM2b -> Gm2b (elmid 10219 in ruitenaa2020)
+        kart_veg.Vegetatietype = kart_veg.Vegetatietype.str.lower()
 
         vegetatietype = pd.read_csv(
             access_csvs_path / "VegetatieType.csv",
             usecols=["Code", "SbbType"],
             dtype={"Code": str, "SbbType": int},
         )
+        vegetatietype.Code = vegetatietype.Code.str.lower()
 
         sbbtype = pd.read_csv(
             access_csvs_path / "SbbType.csv",
@@ -385,6 +394,19 @@ class Kartering:
         gdf = gdf.merge(
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
+
+        # We drop all NA vegtype info - these could be due to geom that are lines, not shapes,
+        # but also due to missing values in one of the csv files.
+        if gdf.VegTypeInfo.isnull().any():
+            # TODO: Once we have a nice logging system, we should log this instead of printing it.
+            # NOTE: Should this be a warning?
+            print(
+                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo. Deze worden gedropt."
+            )
+            print(
+                f"De eerste paar ElmID van de gedropte vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
+            )
+            gdf = gdf.dropna(subset=["VegTypeInfo"])
 
         return cls(gdf)
 
@@ -500,13 +522,14 @@ class Kartering:
             ]
         )
 
-    def final_format_to_shp(self, path: Path):
+    def final_format_to_file(self, path: Path):
         """
         Slaat de kartering op in een shapefile
         """
         final = self.as_final_format()
-        gdf = gpd.GeoDataFrame(final, geometry="geometry")
-        gdf.to_file(path)
+        #gdf = gpd.GeoDataFrame(final, geometry="geometry")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        final.to_file(path)
 
     def __len__(self):
         return len(self.gdf)
@@ -518,11 +541,9 @@ class Kartering:
         pass
         # Validation error als t foute boel is
 
-        # Validate aanwezigheid vvn/sbb/geometry kolommen (en evt nog andere die nodig zijn)
+        # Validate aanwezigheid benodigde kolommen
 
         # Validate dat we of vvn of sbb hebben
-
-        # Validate dat het valide codes zijn
 
         # Validate dat de geometrie een 2D multipolygon is
 
