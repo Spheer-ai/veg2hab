@@ -58,7 +58,7 @@ class VegTypeInfo:
         )
 
     @classmethod
-    def create_list_from_access_rows(cls, rows: pd.DataFrame):
+    def create_list_from_access_rows(cls, rows: pd.DataFrame, percentage_kolom: str):
         """
         Maakt van alle rijen met vegetatietypes (van een vlak) een lijst van VegetatieTypeInfo objecten
         """
@@ -69,7 +69,7 @@ class VegTypeInfo:
                 lst.append(cls.from_str_vegtypes(row.Bedekking_num))
             else:
                 lst.append(
-                    cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb])
+                    cls.from_str_vegtypes(row[percentage_kolom], SBB_strings=[row.Sbb])
                 )
         return lst
 
@@ -215,7 +215,7 @@ class Kartering:
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegTypeInfo.create_list_from_access_rows)
+            .apply(VegTypeInfo.create_list_from_access_rows, args=["Bedekking_num"])
             .reset_index(name="VegTypeInfo")
         )
 
@@ -227,11 +227,29 @@ class Kartering:
         return cls(gdf)
 
     @classmethod
-    def from_shapefile(cls, shape_path):
+    def from_shapefile(
+        cls,
+        shape_path: Path,
+        ElmID_column: str,
+        VvN_column: Optional[str] = None,
+        SBB_column: Optional[str] = None,
+        vegtype_split_char: Optional[str] = None,
+        percentage_column: Optional[str] = None,
+    ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
         """
-        gdf = gpd.read_file(shape_path)
+        shapefile = gpd.read_file(shape_path)
+        cols = [ElmID_column, VvN_column, SBB_column, percentage_column, "geometry"]
+        gdf = shapefile[[col for col in cols if col in shapefile.columns]]
+        
+        if VvN_column:
+            pass
+
+        # We pakken alleen SBB als er geen VvN is
+        if SBB_column and not VvN_column:
+            pass
+
         return cls(gdf)
 
     def apply_wwl(self, wwl: pd.DataFrame):
