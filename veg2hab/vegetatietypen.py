@@ -71,7 +71,7 @@ class SBB:
                 self.max_match_level = 1
             return
 
-        raise ValueError()
+        raise ValueError(f"{code} is invalid")
 
     def base_SBB_as_tuple(self):
         """
@@ -240,7 +240,7 @@ class VvN:
                 if subgroup
             )
             return
-        raise ValueError()
+        raise ValueError(f"{code} is invalid")
 
     def normal_VvN_as_tuple(self):
         if self.derivaatgemeenschap or self.rompgemeenschap:
