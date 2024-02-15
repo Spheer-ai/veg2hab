@@ -128,6 +128,7 @@ def ingest_vegtype_column(
     gdf = gdf.drop(columns=["split_vegtypen"])
 
     # TODO: add support for already existing percentage_col
+    # If there is no percentage column, we add it by evenly dividing the space in each shape
     if True:  # not percentage_col:
         exploded["percentage"] = exploded.groupby(ElmID_col)[ElmID_col].transform(
             lambda x: 100.0 / len(x)
