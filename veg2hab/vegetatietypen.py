@@ -29,16 +29,16 @@ class SBB:
     # 16b/a                                        /                     a
 
     klasse: str
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
-    max_match_level: int
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
+    max_match_level: int = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
-        if code in ["100", "200"]:
+        if code in ["100", "200", "300", "400"]:
             self.klasse = "niet habitattypewaardig"
             return
 
@@ -74,7 +74,7 @@ class SBB:
                 self.max_match_level = 1
             return
 
-        raise ValueError(f"{code} is invalid")
+        raise ValueError(f"SBB {code} is invalid")
 
     def base_SBB_as_tuple(self):
         """
@@ -182,8 +182,6 @@ class SBB:
         series = series.str.lower()
         # Verwijderen whitespace
         series = series.str.replace(" ", "")
-        # Vervangen 300 / 400 door nan
-        series = series.replace(["300", "400"], pd.NA)
         # Regex vervang 0[1-9] door [1-9]
         series = series.str.replace(r"0([1-9])", r"\1", regex=True)
 
@@ -212,13 +210,13 @@ class VvN:
     # 37rg2                                          3    7               r  g                  2
 
     klasse: str
-    orde: Optional[str]
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
-    max_match_level: int
+    orde: Optional[str] = None
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
+    max_match_level: int = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
@@ -266,7 +264,8 @@ class VvN:
                 if subgroup
             )
             return
-        raise ValueError(f"{code} is invalid")
+        
+        raise ValueError(f"VvN {code} is invalid")
 
     def normal_VvN_as_tuple(self):
         if self.derivaatgemeenschap or self.rompgemeenschap:
