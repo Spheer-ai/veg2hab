@@ -1,7 +1,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Type, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -10,7 +10,6 @@ from veg2hab.criteria import BeperkendCriterium, Mozaiekregel
 from veg2hab.enums import GoedMatig
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
-from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
 
 
 @dataclass
@@ -58,18 +57,29 @@ class VegTypeInfo:
         )
 
     @classmethod
-    def create_list_from_access_rows(cls, rows: pd.DataFrame, percentage_kolom: str):
+    def create_list_from_access_rows(
+        cls,
+        rows: pd.DataFrame,
+        perc_col: str,
+        SBB_col: Optional[str] = None,
+        VvN_col: Optional[str] = None,
+    ):
         """
         Maakt van alle rijen met vegetatietypes (van een vlak) een lijst van VegetatieTypeInfo objecten
         """
+        assert (
+            SBB_col or VvN_col and not (SBB_col and VvN_col)
+        ), f"Er moet een SBB of VvN kolom zijn, maar niet beide. Nu is SBB_col={SBB_col} en VvN_col={VvN_col}"
+        vegtype_col = VvN_col if VvN_col else SBB_col
         lst = []
-        for row in rows.itertuples():
-            if pd.isnull(row.Sbb):
-                # NA SBB moet geen SBB object worden
-                lst.append(cls.from_str_vegtypes(row.Bedekking_num))
+
+        for _, row in rows.iterrows():
+            if pd.isnull(row[vegtype_col]):
+                # NA SBB moet geen VegTypeInfo object worden
+                lst.append(cls.from_str_vegtypes(row[perc_col]))
             else:
                 lst.append(
-                    cls.from_str_vegtypes(row[percentage_kolom], SBB_strings=[row.Sbb])
+                    cls.from_str_vegtypes(row[perc_col], SBB_strings=[row[vegtype_col]])
                 )
         return lst
 
@@ -100,6 +110,47 @@ class Geometrie:
 
     def __init__(self, data: gpd.GeoSeries):
         self.data = data
+
+
+def ingest_vegtype_column(
+    gdf: gpd.GeoDataFrame,
+    ElmID_col: str,
+    vegtype_col: str,
+    vegtype_cls: Union[Type[_SBB], Type[_VvN]],
+    vegtype_split_char: Optional[str] = None,
+    # percentage_col: Optional[str] = None, TODO: add support for already existing percentage_col
+):
+    gdf = gdf.copy()  # Needed to avoid SettingWithCopyWarning
+
+    if vegtype_split_char:
+        gdf["split_vegtypen"] = gdf[vegtype_col].str.split(vegtype_split_char)
+    exploded = gdf.explode("split_vegtypen")
+    gdf = gdf.drop(columns=["split_vegtypen"])
+
+    # TODO: add support for already existing percentage_col
+    if True:  # not percentage_col:
+        exploded["percentage"] = exploded.groupby(ElmID_col)[ElmID_col].transform(
+            lambda x: 100.0 / len(x)
+        )
+
+    exploded["split_vegtypen"] = vegtype_cls.opschonen_series(
+        exploded["split_vegtypen"]
+    )
+    vegtypeinfos = (
+        exploded.groupby(ElmID_col)
+        .apply(
+            VegTypeInfo.create_list_from_access_rows,
+            perc_col="percentage",
+            SBB_col="split_vegtypen" if vegtype_cls == _SBB else None,
+            VvN_col="split_vegtypen" if vegtype_cls == _VvN else None,
+        )
+        .reset_index(name="VegTypeInfo")
+        .VegTypeInfo
+    )
+
+    gdf["VegTypeInfo"] = vegtypeinfos
+
+    return gdf
 
 
 def hab_as_final_format(voorstel: HabitatVoorstel, idx: int, opp: float):
@@ -169,6 +220,7 @@ class Kartering:
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
         gdf = gpd.read_file(shape_path)
+        gdf = gdf[["ElmID", "Datum", "Opmerking", "geometry"]]
 
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
@@ -210,12 +262,16 @@ class Kartering:
         )
 
         # Opschonen SBB codes
-        kart_veg["Sbb"] = opschonen_SBB_pandas_series(kart_veg["Sbb"])
+        kart_veg["Sbb"] = _SBB.opschonen_series(kart_veg["Sbb"])
 
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegTypeInfo.create_list_from_access_rows, args=["Bedekking_num"])
+            .apply(
+                VegTypeInfo.create_list_from_access_rows,
+                perc_col="Bedekking_num",
+                SBB_col="Sbb",
+            )
             .reset_index(name="VegTypeInfo")
         )
 
@@ -230,25 +286,40 @@ class Kartering:
     def from_shapefile(
         cls,
         shape_path: Path,
-        ElmID_column: str,
-        VvN_column: Optional[str] = None,
-        SBB_column: Optional[str] = None,
+        ElmID_col: str,
+        VvN_col: Optional[str] = None,
+        SBB_col: Optional[str] = None,
         vegtype_split_char: Optional[str] = None,
-        percentage_column: Optional[str] = None,
+        # datum_col: Optional[str] = None, # mogelijk nodig 
+        # percentage_col: Optional[str] = None, # TODO add support for already existing percentage_col
+        # opmerking_col: Optional[str] = None, # mogelijk nodig
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
         """
+        # TODO: Voor nu gemaakt enkel voor de Groningen non-access karteringen, die hebben geen percentage kolom
         shapefile = gpd.read_file(shape_path)
-        cols = [ElmID_column, VvN_column, SBB_column, percentage_column, "geometry"]
-        gdf = shapefile[[col for col in cols if col in shapefile.columns]]
-        
-        if VvN_column:
-            pass
+        cols = [
+            col for col in [ElmID_col, VvN_col, SBB_col, "geometry"] if col is not None
+        ]
 
-        # We pakken alleen SBB als er geen VvN is
-        if SBB_column and not VvN_column:
-            pass
+        assert all(
+            col in shapefile.columns for col in cols
+        ), f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
+
+        gdf = shapefile[[col for col in cols if col in shapefile.columns]]
+
+        if VvN_col:
+            gdf = ingest_vegtype_column(
+                gdf, ElmID_col, VvN_col, _VvN, vegtype_split_char
+            )
+        elif SBB_col:
+            # We pakken alleen SBB als er geen VvN is
+            gdf = ingest_vegtype_column(
+                gdf, ElmID_col, SBB_col, _SBB, vegtype_split_char
+            )
+        else:
+            raise ValueError("Er is geen VvN of SBB kolomnaam opgegeven")
 
         return cls(gdf)
 
@@ -289,8 +360,9 @@ class Kartering:
         ), "Er is geen kolom met definitieve habitatvoorstellen"
 
         # Base dataframe conform Gegevens Leverings Protocol maken
-        base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatDefinitief"]]
-        base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
+        base = self.gdf[["Opmerking", "geometry", "HabitatDefinitief"]]
+        base = base.rename(columns={"Opmerking": "Opm"})
+        base["Area"] = base["geometry"].area
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final = reorder_columns_final_format(final)

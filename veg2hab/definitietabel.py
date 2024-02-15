@@ -13,8 +13,6 @@ from veg2hab.vegetatietypen import (
     VvN,
     convert_string_to_SBB,
     convert_string_to_VvN,
-    opschonen_SBB_pandas_series,
-    opschonen_VvN_pandas_series,
 )
 from veg2hab.vegkartering import HabitatVoorstel, VegTypeInfo
 
@@ -152,8 +150,8 @@ def opschonen_definitietabel(path_in: Path, path_out: Path):
     dt.loc[SBB_mask, "SBB"] = dt.loc[SBB_mask, "VvN"]
     dt.loc[SBB_mask, "VvN"] = pd.NA
 
-    dt["SBB"] = opschonen_SBB_pandas_series(dt["SBB"])
-    dt["VvN"] = opschonen_VvN_pandas_series(dt["VvN"])
+    dt["SBB"] = SBB.opschonen_series(dt["SBB"])
+    dt["VvN"] = VvN.opschonen_series(dt["VvN"])
 
     # Checken
     assert SBB.validate_pandas_series(
