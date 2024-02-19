@@ -111,7 +111,6 @@ class DefinitieTabel:
                     vegtypeinfo=None,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
-                    idx_opgeschoonde_dt=idx,
                     idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
                     mozaiek=None,  # TODO
@@ -182,6 +181,7 @@ def opschonen_definitietabel(
     # Reorder
     dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
+    # TODO: .json van maken
     json_definitions = pd.read_csv(path_in_json_def, sep="|")
 
     # Checken dat we alle mitsen in dt ook in json_definitions hebben
