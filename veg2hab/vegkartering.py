@@ -147,12 +147,16 @@ def hab_as_final_format(keuze: HabitatKeuze, idx: int, opp: float):
         voorstellen = keuze.habitatvoorstellen
         # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
         # NOTE: Wordt keuzestatus dan ook weer duidelijk? Moet deze check dan al in habitatkeuze_obv_mitsen gedaan worden?
-        voorgestelde_hab_en_kwal = [[voorstel.habtype, voorstel.kwaliteit] for voorstel in voorstellen]
+        voorgestelde_hab_en_kwal = [
+            [voorstel.habtype, voorstel.kwaliteit] for voorstel in voorstellen
+        ]
         if all(hab == voorgestelde_hab_en_kwal[0] for hab in voorgestelde_hab_en_kwal):
             voorgestelde_hab_en_kwal = [voorgestelde_hab_en_kwal[0]]
         return pd.Series(
             {
-                f"Habtype{idx}": str([voorstel[0] for voorstel in voorgestelde_hab_en_kwal]),
+                f"Habtype{idx}": str(
+                    [voorstel[0] for voorstel in voorgestelde_hab_en_kwal]
+                ),
                 f"Perc{idx}": str(voorstellen[0].percentage),
                 f"Opp{idx}": str(
                     [opp * voorstel.percentage for voorstel in voorstellen]
@@ -410,7 +414,9 @@ class Kartering:
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatKeuze"]].copy()
         # Sorteer de keuzes zodat H0000 als laatste is etc.
-        base["HabitatKeuze"] = base["HabitatKeuze"].apply(lambda x: sorted(x, key=rank_habitatkeuzes))
+        base["HabitatKeuze"] = base["HabitatKeuze"].apply(
+            lambda x: sorted(x, key=rank_habitatkeuzes)
+        )
         base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
