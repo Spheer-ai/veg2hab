@@ -108,14 +108,12 @@ class DefinitieTabel:
                 HabitatVoorstel(
                     onderbouwend_vegtype=code,
                     vegtype_in_dt=vegtype_in_dt,
-                    vegtypeinfo=None,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
                     idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
                     mozaiek=None,  # TODO
                     match_level=match_levels[idx],
-                    percentage=None,
                 )
             )
 
