@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import List, Optional, Union
 
-from veg2hab.criteria import BeperkendCriterium, GeenCriterium, Mozaiekregel
+from veg2hab.criteria import (
+    BeperkendCriterium,
+    GeenCriterium,
+    Mozaiekregel,
+    PlaceholderCriterium,
+)
 from veg2hab.enums import Kwaliteit, MaybeBoolean
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import MatchLevel
@@ -20,14 +25,12 @@ class HabitatVoorstel:
     # NOTE: Deze class is wel heel vol nu, maar veel van deze info is nodig om een duidelijke output te geven met voldoende debug info
     onderbouwend_vegtype: Union[_SBB, _VvN]
     vegtype_in_dt: Union[_SBB, _VvN]
-    vegtypeinfo: "VegTypeInfo"
     habtype: str
     kwaliteit: Kwaliteit
     idx_in_dt: int
     mits: BeperkendCriterium
     mozaiek: Optional[Mozaiekregel]
     match_level: MatchLevel
-    percentage: int
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -36,14 +39,12 @@ class HabitatVoorstel:
             if info.VvN
             else (info.SBB[0] if info.SBB else None),
             vegtype_in_dt=None,
-            vegtypeinfo=info,
             habtype="H0000",
             kwaliteit=None,
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=None,
             match_level=MatchLevel.NO_MATCH,
-            percentage=info.percentage,
         )
 
 
@@ -59,6 +60,9 @@ class KeuzeStatus(enum.Enum):
 
     # Meerdere even specifieke habitatvoorstellen met kloppende mitsen
     MEERDERE_KLOPPENDE_MITSEN = enum.auto()
+
+    # Er zijn PlaceholderCriteriums, dus handmatige controle
+    PLACEHOLDER_CRITERIA = enum.auto()
 
     HANDMATIGE_CONTROLE = enum.auto()
     WACHTEN_OP_MOZAIEK = enum.auto()
@@ -78,26 +82,29 @@ def is_criteria_type_present(voorstellen: List[List[HabitatVoorstel]], criteria_
     Geeft True als er in de lijst met Criteria eentje van crit_type is
     Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
     """
-    flat = [e[0] for e in voorstellen]
+    # if we are dealing with a list of lists, we flatten it
+    if any(isinstance(i, list) for i in voorstellen):
+        voorstellen = [e[0] for e in voorstellen]
     return any(
         (
             voorstel.mits.is_criteria_type_present(criteria_type)
             if voorstel.mits is not None
             else False
         )
-        for voorstel in flat
+        for voorstel in voorstellen
     )
 
 
-def rank_habitatkeuzes(keuze: HabitatKeuze) -> tuple:
+def rank_habitatkeuzes(combined_info: tuple) -> tuple:
     """
-    Returned een tuple voor het sorteren van een lijst habitatkeuzes voor in de outputtabel
+    Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit
     """
+    keuze, vegtypeinfo = combined_info
     voorgestelde_habtypen = [voorstel.habtype for voorstel in keuze.habitatvoorstellen]
     alleen_H0000 = all(habtype == "H0000" for habtype in voorgestelde_habtypen)
 
-    percentage = keuze.habitatvoorstellen[0].percentage
+    percentage = vegtypeinfo.percentage
 
     voorgestelde_kwaliteiten = [
         voorstel.kwaliteit for voorstel in keuze.habitatvoorstellen
@@ -133,7 +140,16 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
         return HabitatKeuze(
             status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             opmerking="",
-            debug_info=f"{str(habitatvoorstellen[0].vegtypeinfo)}",
+            debug_info="",
+            habitatvoorstellen=habitatvoorstellen,
+        )
+
+    # Als er een PlaceholderCriterium is, dan moet er handmatig gecontroleerd worden
+    if is_criteria_type_present([habitatvoorstellen], PlaceholderCriterium):
+        return HabitatKeuze(
+            status=KeuzeStatus.PLACEHOLDER_CRITERIA,
+            opmerking=f"Er zijn mitsen met nog niet geimplementeerde criteria. Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in habitatvoorstellen]}",
+            debug_info="",
             habitatvoorstellen=habitatvoorstellen,
         )
 
@@ -155,7 +171,7 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             return HabitatKeuze(
                 status=KeuzeStatus.DUIDELIJK,
                 opmerking=f"Er is een duidelijke keuze. Kloppende mits: {str(voorstel.mits)}",
-                debug_info=f"{str(voorstel.vegtypeinfo)}",
+                debug_info="",
                 habitatvoorstellen=[voorstel],
             )
 
@@ -163,19 +179,15 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
         if len(true_voorstellen) > 1:
             return HabitatKeuze(
                 status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-                opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen voldoen; Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), str(voorstel.mits)] for voorstel in true_voorstellen]}",
-                debug_info=f"{[str(voorstel.vegtypeinfo) for voorstel in true_voorstellen]}",
+                opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen voldoen; Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
+                debug_info="",
                 habitatvoorstellen=true_voorstellen,
             )
 
-    # Er zijn geen kloppende mitsen gevonden; Alle voorstellen stellen dan dus H0000 voor
-    # TODO: voorstellen niet veranderen, maar obv status H0000 printen in as_final in vegkartering
-    for voorstel in habitatvoorstellen:
-        voorstel.habtype = "H0000"
-        voorstel.kwaliteit = None
+    # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
         status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-        opmerking=f"Er zijn geen habitatvoorstellen waarvan de mitsen kloppen. Mitsen waaraan niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), str(voorstel.mits)] for voorstel in habitatvoorstellen]}",
-        debug_info=f"{[str(voorstel.vegtypeinfo) for voorstel in habitatvoorstellen]}",
+        opmerking=f"Er zijn geen habitatvoorstellen waarvan de mitsen kloppen. Mitsen waaraan niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in habitatvoorstellen]}",
+        debug_info="",
         habitatvoorstellen=habitatvoorstellen,
     )
