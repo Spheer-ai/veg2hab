@@ -1,11 +1,11 @@
 import enum
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import chain
 from typing import List, Optional, Union
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium, Mozaiekregel
 from veg2hab.enums import Kwaliteit, MaybeBoolean
-from veg2hab.utils import completely_flatten
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import MatchLevel
 from veg2hab.vegetatietypen import VvN as _VvN
@@ -23,9 +23,8 @@ class HabitatVoorstel:
     vegtypeinfo: "VegTypeInfo"
     habtype: str
     kwaliteit: Kwaliteit
-    idx_opgeschoonde_dt: int
     idx_in_dt: int
-    mits: Optional[BeperkendCriterium]
+    mits: BeperkendCriterium
     mozaiek: Optional[Mozaiekregel]
     match_level: MatchLevel
     percentage: int
@@ -40,7 +39,6 @@ class HabitatVoorstel:
             vegtypeinfo=info,
             habtype="H0000",
             kwaliteit=None,
-            idx_opgeschoonde_dt=None,
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=None,
@@ -80,11 +78,11 @@ def is_criteria_type_present(voorstellen: List[List[HabitatVoorstel]], criteria_
     Geeft True als er in de lijst met Criteria eentje van crit_type is
     Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
     """
-    flat = completely_flatten(voorstellen)
+    flat = [e[0] for e in voorstellen]
     return any(
         (
             voorstel.mits.is_criteria_type_present(criteria_type)
-            if isinstance(voorstel.mits, BeperkendCriterium)
+            if voorstel.mits is not None
             else False
         )
         for voorstel in flat
@@ -101,7 +99,9 @@ def rank_habitatkeuzes(keuze: HabitatKeuze) -> tuple:
 
     percentage = keuze.habitatvoorstellen[0].percentage
 
-    voorgestelde_kwaliteiten = [voorstel.kwaliteit for voorstel in keuze.habitatvoorstellen]
+    voorgestelde_kwaliteiten = [
+        voorstel.kwaliteit for voorstel in keuze.habitatvoorstellen
+    ]
     matig_kwaliteit = voorgestelde_kwaliteiten == [Kwaliteit.MATIG]
 
     return (alleen_H0000, 100 - percentage, matig_kwaliteit)
