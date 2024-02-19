@@ -3,9 +3,29 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import ClassVar, Optional, Union
 
 import pandas as pd
+
+
+class MatchLevel(IntEnum):
+    """
+    Enum voor de match levels van VvN en SBB
+    """
+
+    NO_MATCH = 0
+    KLASSE_VVN = 1
+    KLASSE_SBB = 2
+    ORDE_VVN = 3
+    VERBOND_VVN = 4
+    VERBOND_SBB = 5
+    ASSOCIATIE_VVN = 6
+    ASSOCIATIE_SBB = 7
+    SUBASSOCIATIE_VVN = 8
+    SUBASSOCIATIE_SBB = 9
+    GEMEENSCHAP_VVN = 10
+    GEMEENSCHAP_SBB = 11
 
 
 @dataclass()
@@ -34,7 +54,6 @@ class SBB:
     subassociatie: Optional[str]
     derivaatgemeenschap: Optional[str]
     rompgemeenschap: Optional[str]
-    max_match_level: int
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
@@ -62,13 +81,6 @@ class SBB:
             self.verbond = match.group("verbond")
             self.associatie = match.group("associatie")
             self.subassociatie = match.group("subassociatie")
-            # 1 voor elke matchende subgroep, of 1 als het een gemeenschap is
-            if not (self.derivaatgemeenschap or self.rompgemeenschap):
-                self.max_match_level = sum(
-                    1 for subgroup in self.base_SBB_as_tuple() if subgroup
-                )
-            else:
-                self.max_match_level = 1
             return
 
         raise ValueError()
@@ -79,12 +91,20 @@ class SBB:
         """
         return (self.klasse, self.verbond, self.associatie, self.subassociatie)
 
-    def match_up_to(self, other: Optional[SBB]):
+    def match_up_to(self, other: Optional[SBB]) -> MatchLevel:
         """
         Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere
         """
+        match_levels = [
+            MatchLevel.NO_MATCH,
+            MatchLevel.KLASSE_SBB,
+            MatchLevel.VERBOND_SBB,
+            MatchLevel.ASSOCIATIE_SBB,
+            MatchLevel.SUBASSOCIATIE_SBB,
+        ]
+
         if other is None:
-            return 0
+            return match_levels[0]
         assert isinstance(other, SBB), "Other is not an SBB"
 
         if (
@@ -94,20 +114,20 @@ class SBB:
             or other.rompgemeenschap
         ):
             # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
-            return int(self == other)
+            return MatchLevel.GEMEENSCHAP_SBB if self == other else MatchLevel.NO_MATCH
 
         self_tuple = self.base_SBB_as_tuple()
         other_tuple = other.base_SBB_as_tuple()
 
         for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
             if (self_group is None) and (other_group is None):
-                return i
+                return match_levels[i]
             if self_group == other_group:
                 continue
             if (self_group != other_group) and (other_group is None):
-                return i
-            return 0
-        return len(self_tuple)
+                return match_levels[i]
+            return match_levels[0]
+        return match_levels[len(self_tuple)]
 
     @staticmethod
     def validate(code: str):
@@ -192,7 +212,6 @@ class VvN:
     subassociatie: Optional[str]
     derivaatgemeenschap: Optional[str]
     rompgemeenschap: Optional[str]
-    max_match_level: int
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
@@ -204,7 +223,6 @@ class VvN:
             self.verbond = None
             self.associatie = None
             self.subassociatie = None
-            self.max_match_level = 1
             if match.group("type") == "dg":
                 self.derivaatgemeenschap = match.group("gemeenschap")
                 self.rompgemeenschap = None
@@ -227,18 +245,6 @@ class VvN:
             self.subassociatie = match.group("subassociatie")
             self.derivaatgemeenschap = None
             self.rompgemeenschap = None
-            # 1 voor elke niet None subgroep
-            self.max_match_level = sum(
-                1
-                for subgroup in [
-                    self.klasse,
-                    self.orde,
-                    self.verbond,
-                    self.associatie,
-                    self.subassociatie,
-                ]
-                if subgroup
-            )
             return
         raise ValueError()
 
@@ -253,12 +259,21 @@ class VvN:
             self.subassociatie,
         )
 
-    def match_up_to(self, other: Optional[VvN]):
+    def match_up_to(self, other: Optional[VvN]) -> MatchLevel:
         """
         Geeft het aantal subgroepen terug waarin deze VvN overeenkomt met de andere
         """
+        match_levels = [
+            MatchLevel.NO_MATCH,
+            MatchLevel.KLASSE_VVN,
+            MatchLevel.ORDE_VVN,
+            MatchLevel.VERBOND_VVN,
+            MatchLevel.ASSOCIATIE_VVN,
+            MatchLevel.SUBASSOCIATIE_VVN,
+        ]
+
         if other is None:
-            return 0
+            return match_levels[0]
         assert isinstance(other, VvN), "Other is not an VvN"
 
         if (
@@ -268,20 +283,20 @@ class VvN:
             or other.rompgemeenschap
         ):
             # Return 1 als ze dezelfde zijn, 0 als ze niet dezelfde zijn
-            return int(self == other)
+            return MatchLevel.GEMEENSCHAP_VVN if self == other else MatchLevel.NO_MATCH
 
         self_tuple = self.normal_VvN_as_tuple()
         other_tuple = other.normal_VvN_as_tuple()
 
         for i, (self_group, other_group) in enumerate(zip(self_tuple, other_tuple)):
             if (self_group is None) and (other_group is None):
-                return i
+                return match_levels[i]
             if self_group == other_group:
                 continue
             if (self_group != other_group) and (other_group is None):
-                return i
-            return 0
-        return len(self_tuple)
+                return match_levels[i]
+            return match_levels[0]
+        return match_levels[len(self_tuple)]
 
     @classmethod
     def validate(cls, code: str):
