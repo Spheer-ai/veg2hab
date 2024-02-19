@@ -1,6 +1,6 @@
 import pytest
 
-from veg2hab.vegetatietypen import SBB, VvN
+from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 
 
 def test_vvn_from_str():
@@ -12,7 +12,6 @@ def test_vvn_from_str():
     assert vvn.subassociatie == "e"
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 5
 
 
 def test_partial_vvn_from_str():
@@ -24,7 +23,6 @@ def test_partial_vvn_from_str():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 3
 
 
 def test_invalid_vvn_from_str():
@@ -41,7 +39,6 @@ def test_vvn_with_derivaat_gemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap == "2"
     assert vvn.rompgemeenschap is None
-    assert vvn.max_match_level == 1
 
 
 def test_vvn_with_rompgemeenschap():
@@ -53,7 +50,6 @@ def test_vvn_with_rompgemeenschap():
     assert vvn.subassociatie is None
     assert vvn.derivaatgemeenschap is None
     assert vvn.rompgemeenschap == "2"
-    assert vvn.max_match_level == 1
 
 
 def test_vvn_rompgemeenschap_is_only_possible_on_klasse():
@@ -66,14 +62,22 @@ def test_match_vvn_codes():
     vvn2 = VvN("42aa")
     vvn3 = VvN("42aa1f")
 
-    assert vvn.match_up_to(vvn) == 5, "Should match all subgroups"
-    assert vvn2.match_up_to(vvn2) == 3, "Should match all subgroups"
+    assert (
+        vvn.match_up_to(vvn) == MatchLevel.SUBASSOCIATIE_VVN
+    ), "Should match all subgroups"
+    assert (
+        vvn2.match_up_to(vvn2) == MatchLevel.VERBOND_VVN
+    ), "Should match all subgroups"
 
-    assert vvn.match_up_to(vvn2) == 3, "Should match to less specific VvN"
-    assert vvn2.match_up_to(vvn) == 0, "Should not match to more specific VvN"
+    assert (
+        vvn.match_up_to(vvn2) == MatchLevel.VERBOND_VVN
+    ), "Should match to less specific VvN"
+    assert (
+        vvn2.match_up_to(vvn) == MatchLevel.NO_MATCH
+    ), "Should not match to more specific VvN"
 
-    assert vvn.match_up_to(vvn3) == 0, "Should not match to unequal"
-    assert vvn3.match_up_to(vvn) == 0, "Should not match to unequal"
+    assert vvn.match_up_to(vvn3) == MatchLevel.NO_MATCH, "Should not match to unequal"
+    assert vvn3.match_up_to(vvn) == MatchLevel.NO_MATCH, "Should not match to unequal"
 
 
 def test_match_vvn_rompgemeenschap():
@@ -81,9 +85,9 @@ def test_match_vvn_rompgemeenschap():
     vvn2 = VvN("42rg3")
     vvn3 = VvN("42")
 
-    vvn.match_up_to(vvn2) == 0, "Does not match to other RG"
-    vvn.match_up_to(vvn3) == 0, "Does not match to not RG"
-    vvn.match_up_to(vvn) == 1, "Matches to itself"
+    vvn.match_up_to(vvn2) == MatchLevel.NO_MATCH, "Does not match to other RG"
+    vvn.match_up_to(vvn3) == MatchLevel.NO_MATCH, "Does not match to not RG"
+    vvn.match_up_to(vvn) == MatchLevel.GEMEENSCHAP_VVN, "Matches to itself"
 
 
 def test_basic_vvn_equality():
@@ -104,7 +108,6 @@ def test_sbb_from_str():
     assert sbb.subassociatie == "e"
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 4
 
 
 def test_partial_sbb_from_str():
@@ -115,7 +118,6 @@ def test_partial_sbb_from_str():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 2
 
 
 def test_invalid_sbb_from_str():
@@ -133,7 +135,6 @@ def test_sbb_with_derivaat_gemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap == "b"
     assert sbb.rompgemeenschap is None
-    assert sbb.max_match_level == 1
 
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
@@ -141,7 +142,6 @@ def test_sbb_with_derivaat_gemeenschap():
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap == "b"
     assert sbb2.rompgemeenschap is None
-    assert sbb2.max_match_level == 1
 
 
 def test_sbb_with_rompgemeenschap():
@@ -154,7 +154,6 @@ def test_sbb_with_rompgemeenschap():
     assert sbb.subassociatie is None
     assert sbb.derivaatgemeenschap is None
     assert sbb.rompgemeenschap == "b"
-    assert sbb.max_match_level == 1
 
     assert sbb2.klasse == "37"
     assert sbb2.verbond == "a"
@@ -162,7 +161,6 @@ def test_sbb_with_rompgemeenschap():
     assert sbb2.subassociatie == "a"
     assert sbb2.derivaatgemeenschap is None
     assert sbb2.rompgemeenschap == "b"
-    assert sbb2.max_match_level == 1
 
 
 def test_match_sbb_codes():
@@ -170,14 +168,22 @@ def test_match_sbb_codes():
     sbb2 = SBB("42a")
     sbb3 = SBB("42a1f")
 
-    assert sbb.match_up_to(sbb) == 4, "Should match all subgroups"
-    assert sbb2.match_up_to(sbb2) == 2, "Should match all subgroups"
+    assert (
+        sbb.match_up_to(sbb) == MatchLevel.SUBASSOCIATIE_SBB
+    ), "Should match all subgroups"
+    assert (
+        sbb2.match_up_to(sbb2) == MatchLevel.VERBOND_SBB
+    ), "Should match all subgroups"
 
-    assert sbb.match_up_to(sbb2) == 2, "Should match to less specific sbb"
-    assert sbb2.match_up_to(sbb) == 0, "Should not match to more specific sbb"
+    assert (
+        sbb.match_up_to(sbb2) == MatchLevel.VERBOND_SBB
+    ), "Should match to less specific sbb"
+    assert (
+        sbb2.match_up_to(sbb) == MatchLevel.NO_MATCH
+    ), "Should not match to more specific sbb"
 
-    assert sbb.match_up_to(sbb3) == 0, "Should not match to unequal"
-    assert sbb3.match_up_to(sbb) == 0, "Should not match to unequal"
+    assert sbb.match_up_to(sbb3) == MatchLevel.NO_MATCH, "Should not match to unequal"
+    assert sbb3.match_up_to(sbb) == MatchLevel.NO_MATCH, "Should not match to unequal"
 
 
 def test_match_sbb_rompgemeenschap():
@@ -190,11 +196,15 @@ def test_match_sbb_rompgemeenschap():
     #       geeft 5 zodat de ranking met minder specifieke ssb niet de
     #       voorkeur krijgt.
 
-    sbb.match_up_to(sbb2) == 0, "Does not match to other RG"
-    sbb.match_up_to(sbb3) == 0, "Does not match to not RG"
-    sbb.match_up_to(sbb) == 5, "Matches to itself"
-    sbb.match_up_to(sbb4) == 0, "Does not match to same RG but more specific sbb"
-    sbb4.match_up_to(sbb) == 1, "Does match to same RG but less specific sbb"
+    sbb.match_up_to(sbb2) == MatchLevel.NO_MATCH, "Does not match to other RG"
+    sbb.match_up_to(sbb3) == MatchLevel.NO_MATCH, "Does not match to not RG"
+    sbb.match_up_to(sbb) == MatchLevel.GEMEENSCHAP_SBB, "Matches to itself"
+    sbb.match_up_to(
+        sbb4
+    ) == MatchLevel.NO_MATCH, "Does not match to same RG but more specific sbb"
+    sbb4.match_up_to(
+        sbb
+    ) == MatchLevel.NO_MATCH, "Does not match to same RG but less specific sbb"
 
 
 def test_basic_ssb_equality():
