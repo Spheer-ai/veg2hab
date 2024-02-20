@@ -77,7 +77,7 @@ class HabitatKeuze:
     # TODO willen we dit nog opschonen?! Baseclass maken zonder mitsen?
 
 
-def is_criteria_type_present(voorstellen: List[List[HabitatVoorstel]], criteria_type):
+def is_criteria_type_present(voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]], criteria_type):
     """
     Geeft True als er in de lijst met Criteria eentje van crit_type is
     Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
