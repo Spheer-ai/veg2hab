@@ -21,7 +21,7 @@ from veg2hab.vegkartering import VegTypeInfo
 @pytest.fixture(scope="module")
 def dt():
     path_in = Path("data/definitietabel habitattypen (versie 24 maart 2009)_0.xls")
-    path_json = Path("data/definitietabel_json.csv")
+    path_json = Path("data/mitsjson.csv")
     path_out = Path("testing/opgeschoonde_definitietabel.xlsx")
     path_out.parent.mkdir(exist_ok=True)
     opschonen_definitietabel(path_in, path_json, path_out)

@@ -119,6 +119,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float):
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
             KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.WACHTEN_OP_MOZAIEK,
         ]:
             voorstel = keuze.habitatvoorstellen[0]
             series_dict = {
@@ -158,7 +159,10 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float):
             if keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
                 series_dict[f"Habtype{idx}"] = "H0000"
                 series_dict[f"Kwal{idx}"] = None
-            if keuze.status == KeuzeStatus.PLACEHOLDER_CRITERIA:
+            if (
+                keuze.status == KeuzeStatus.PLACEHOLDER_CRITERIA
+                or keuze.status == KeuzeStatus.WACHTEN_OP_MOZAIEK
+            ):
                 series_dict[f"Habtype{idx}"] = "HXXXX"
                 series_dict[f"Kwal{idx}"] = "Onbekend"
                 series_dict[f"_ChkNodig{idx}"] = True
@@ -173,6 +177,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float):
         KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
         KeuzeStatus.PLACEHOLDER_CRITERIA,
+        KeuzeStatus.WACHTEN_OP_MOZAIEK,
     ]:
         voorstellen = keuze.habitatvoorstellen
         # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
@@ -255,6 +260,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float):
         if keuze.status in [
             KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
             KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.WACHTEN_OP_MOZAIEK,
         ]:
             series_dict[f"Habtype{idx}"] = "HXXXX"
             series_dict[f"Kwal{idx}"] = "Onbekend"

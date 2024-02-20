@@ -200,5 +200,28 @@ class EnCriteria(BeperkendCriterium):
         return f"({en_crits})"
 
 
-class Mozaiekregel:
-    pass
+class Mozaiekregel(BaseModel):
+    def is_mozaiek_type_present(self, type):
+        return isinstance(self, type)
+
+
+class DummyMozaiekregel(Mozaiekregel):
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self):
+        self._evaluation = MaybeBoolean.FALSE
+
+    @property
+    def evaluation(self):
+        return self._evaluation
+
+
+class GeenMozaiekregel(Mozaiekregel):
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self):
+        self._evaluation = MaybeBoolean.TRUE
+
+    @property
+    def evaluation(self):
+        return self._evaluation
