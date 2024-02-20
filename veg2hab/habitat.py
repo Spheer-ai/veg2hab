@@ -6,7 +6,9 @@ from typing import List, Optional, Union
 
 from veg2hab.criteria import (
     BeperkendCriterium,
+    DummyMozaiekregel,
     GeenCriterium,
+    GeenMozaiekregel,
     Mozaiekregel,
     PlaceholderCriterium,
 )
@@ -29,7 +31,7 @@ class HabitatVoorstel:
     kwaliteit: Kwaliteit
     idx_in_dt: int
     mits: BeperkendCriterium
-    mozaiek: Optional[Mozaiekregel]
+    mozaiek: Mozaiekregel
     match_level: MatchLevel
 
     @classmethod
@@ -43,7 +45,7 @@ class HabitatVoorstel:
             kwaliteit=None,
             idx_in_dt=None,
             mits=GeenCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
         )
 
@@ -77,7 +79,10 @@ class HabitatKeuze:
     # TODO willen we dit nog opschonen?! Baseclass maken zonder mitsen?
 
 
-def is_criteria_type_present(voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]], criteria_type):
+def is_criteria_type_present(
+    voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]],
+    criteria_type,
+):
     """
     Geeft True als er in de lijst met Criteria eentje van crit_type is
     Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
@@ -89,6 +94,26 @@ def is_criteria_type_present(voorstellen: Union[List[List[HabitatVoorstel]], Lis
         (
             voorstel.mits.is_criteria_type_present(criteria_type)
             if voorstel.mits is not None
+            else False
+        )
+        for voorstel in voorstellen
+    )
+
+
+def is_mozaiek_type_present(
+    voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]], mozaiek_type
+):
+    """
+    Geeft True als er in de lijst met Criteria eentje van crit_type is
+    Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
+    """
+    # if we are dealing with a list of lists, we flatten it
+    if any(isinstance(i, list) for i in voorstellen):
+        voorstellen = [item for sublist in voorstellen for item in sublist]
+    return any(
+        (
+            voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type)
+            if voorstel.mozaiek is not None
             else False
         )
         for voorstel in voorstellen
@@ -144,7 +169,16 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             habitatvoorstellen=habitatvoorstellen,
         )
 
-    # Als er een PlaceholderCriterium is, dan moet er handmatig gecontroleerd worden
+    # NOTE: Tijdelijke dummy check voor mozaiek
+    if is_mozaiek_type_present(habitatvoorstellen, DummyMozaiekregel):
+        return HabitatKeuze(
+            status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
+            opmerking=f"Er zijn habitatvoorstellen met mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in habitatvoorstellen]}",
+            debug_info="",
+            habitatvoorstellen=habitatvoorstellen,
+        )
+
+    # Als er een PlaceholderCriterium dan moet er handmatig gecontroleerd worden
     if is_criteria_type_present([habitatvoorstellen], PlaceholderCriterium):
         return HabitatKeuze(
             status=KeuzeStatus.PLACEHOLDER_CRITERIA,
@@ -191,3 +225,6 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
         debug_info="",
         habitatvoorstellen=habitatvoorstellen,
     )
+
+
+# TODO: een habitatkeuze obv mitsen en mozaiek functie

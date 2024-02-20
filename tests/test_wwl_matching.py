@@ -50,7 +50,6 @@ def test_perfect_match_sbb_to_nonexistent_vvn(wwl):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1a"])
     post = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1a"], VvN_strings=[])
     a = wwl.toevoegen_VvN_aan_VegTypeInfo(pre)
-    print(a)
     assert wwl.toevoegen_VvN_aan_VegTypeInfo(pre) == post
 
 

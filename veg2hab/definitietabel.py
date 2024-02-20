@@ -7,7 +7,7 @@ from typing import List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium
+from veg2hab.criteria import BeperkendCriterium, DummyMozaiekregel, GeenMozaiekregel
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.vegetatietypen import (
@@ -32,13 +32,25 @@ class DefinitieTabel:
         self.df.SBB = self.df.SBB.apply(convert_string_to_SBB)
         self.df.VvN = self.df.VvN.apply(convert_string_to_VvN)
 
+        assert self.df.mitsjson.notnull().all()
+
+        # Mitsjson parsen
         self.df["Criteria"] = (
-            self.df["json"]
-            .loc[self.df["json"].notnull()]
+            self.df["mitsjson"]
+            .loc[self.df["mitsjson"].notnull()]
             .apply(BeperkendCriterium.parse_raw)
         )
-        self.df.loc[self.df.Criteria.isnull(), "Criteria"] = None
-        # TODO parse mozaiek
+
+        # Mozaiekjson parsen
+        # TODO: Voor nu voeg ik handmatig dummiemozaieken toe, dit moet net zo gaan werken als de mitsen;
+        # self.df["mozaiek"] = (
+        #     self.df["mozaiekjson"]
+        #     .loc[self.df["mozaiekjson"].notnull()]
+        #     .apply(Mozaiekregel.parse_raw)
+        # )
+        df["mozaiek"] = df["mozaiek"].apply(
+            lambda regel: GeenMozaiekregel() if pd.isna(regel) else DummyMozaiekregel()
+        )
 
     @classmethod
     def from_excel(cls, path):
@@ -58,11 +70,12 @@ class DefinitieTabel:
                 "VvN",
                 "mits",
                 "mozaiek",
-                "json",
+                "mitsjson",
+                # "mozaiekjson",
             ],
             dtype="string",
         )
-        # NOTE: Ik kan ook wel hierboven een dict meegeven maar dan wordt het lezen van de file zo lang
+
         df["DT regel"] = df["DT regel"].astype(int)
         return cls(df)
 
@@ -104,6 +117,7 @@ class DefinitieTabel:
         for idx, row in match_rows.iterrows():
             vegtype_in_dt = row["SBB"] if isinstance(row["SBB"], SBB) else row["VvN"]
             assert isinstance(vegtype_in_dt, (SBB, VvN))
+            
             voorstellen.append(
                 HabitatVoorstel(
                     onderbouwend_vegtype=code,
@@ -112,7 +126,7 @@ class DefinitieTabel:
                     kwaliteit=row["Kwaliteit"],
                     idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
-                    mozaiek=None,  # TODO
+                    mozaiek=row["mozaiek"],
                     match_level=match_levels[idx],
                 )
             )
@@ -121,7 +135,7 @@ class DefinitieTabel:
 
 
 def opschonen_definitietabel(
-    path_in_deftabel: Path, path_in_json_def: Path, path_out: Path
+    path_in_deftabel: Path, path_in_mitsjson: Path, path_out: Path
 ):
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst.
@@ -129,10 +143,11 @@ def opschonen_definitietabel(
     """
     assert path_in_deftabel.suffix == ".xls", "Input deftabel file is not an xls file"
     assert (
-        path_in_json_def.suffix == ".csv"
+        path_in_mitsjson.suffix == ".csv"
     ), "Input json definitions file is not an csv file"
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
+    ### Inladen
     dt = pd.read_excel(
         path_in_deftabel,
         engine="xlrd",
@@ -157,6 +172,7 @@ def opschonen_definitietabel(
     # Toevoegen index als kolom
     dt["DT regel"] = dt.index + 2
 
+    ### Opschonen
     # Verwijderen rijen met missende data in VvN
     dt = dt.dropna(subset=["VvN"])
 
@@ -179,14 +195,27 @@ def opschonen_definitietabel(
     # Reorder
     dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
+    ### Mits json definities toevoegen
     # TODO: .json van maken
-    json_definitions = pd.read_csv(path_in_json_def, sep="|")
+    mitsjson = pd.read_csv(path_in_mitsjson, sep="|")
 
-    # Checken dat we alle mitsen in dt ook in json_definitions hebben
+    # Checken dat we alle mitsen in dt ook in mitsjson hebben
     for mits in dt.mits.dropna().unique():
-        if mits not in json_definitions.mits.unique():
-            raise ValueError(f"Mits {mits} is niet gevonden in json_definitions")
+        if mits not in mitsjson.mits.unique():
+            raise ValueError(f"Mits {mits} is niet gevonden in mitsjson")
 
-    dt = dt.merge(json_definitions, on="mits", how="left")
+    dt = dt.merge(mitsjson, on="mits", how="left")
+
+    ### Mozaiek json definities toevoegen
+    # TODO: Voor nu voeg ik handmatig dummiemozaieken toe in de init;
+    #       dit moet net als mitsen met json gaan werken
+
+    # mozaiekjson = pd.read_csv(path_in_json_def, sep="|")
+
+    # for mozaiek in dt.mozaiek.dropna().unique():
+    #     if mozaiek not in mozaiekjson.mozaiek.unique():
+    #         raise ValueError(f"Mozaiek {mozaiek} is niet gevonden in mozaiekjson")
+
+    # dt = dt.merge(mozaiekjson, on="mozaiek", how="left")
 
     dt.to_excel(path_out, index=False)
