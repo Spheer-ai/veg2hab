@@ -84,7 +84,7 @@ def is_criteria_type_present(voorstellen: List[List[HabitatVoorstel]], criteria_
     """
     # if we are dealing with a list of lists, we flatten it
     if any(isinstance(i, list) for i in voorstellen):
-        voorstellen = [e[0] for e in voorstellen]
+        voorstellen = [item for sublist in voorstellen for item in sublist]
     return any(
         (
             voorstel.mits.is_criteria_type_present(criteria_type)
