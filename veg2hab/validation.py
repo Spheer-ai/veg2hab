@@ -12,6 +12,17 @@ def _calc_percentages_if_missing(
     habtypes: List[str],
     how_to_handle_missing_percentages: Literal[None, "split_equally", "select_first"],
 ) -> Dict[str, Number]:
+    """Calculates the percentages if they are missing
+
+    Example:
+        >>> _calc_percentages_if_missing(["H123", "H234", "H345"], "split_equally")
+        {"H123": 33.33, "H234": 33.33, "H345": 33.33}
+        >>> _calc_percentages_if_missing(["H123", "H234", "H345"], "select_first")
+        {"H123": 100}
+    """
+    if len(habtypes) == 0:
+        return dict()
+
     if how_to_handle_missing_percentages == "split_equally":
         return {hab: 100 / len(habtypes) for hab in habtypes}
 
@@ -22,7 +33,10 @@ def _calc_percentages_if_missing(
 
 
 def _convert_row_to_dict(
-    row, habtype_colnames: List[str], percentage_colnames: List[str] = None
+    row: pd.Series,
+    habtype_colnames: List[str],
+    percentage_colnames: Optional[List[str]],
+    how_to_handle_missing_percentages: Literal[None, "split_equally", "select_first"],
 ):
     """Converts a row of a dataframe into a dictionary of habitat types and their percentages
 
@@ -31,7 +45,6 @@ def _convert_row_to_dict(
         >>> _convert_row_to_dict(ser, ["Habtype1", "Habtype2", "Habtype3"], ["Perc1", "Perc2", "Perc3"])
         {"H123": 80, "H234": 20, "H345": 0}
     """
-    print(type(row))
     if percentage_colnames is not None and len(habtype_colnames) != len(
         percentage_colnames
     ):
@@ -45,7 +58,9 @@ def _convert_row_to_dict(
         }
     else:
         habs = [hab for hab in row[habtype_colnames] if pd.notnull(hab)]
-        ret_values = _calc_percentages_if_missing(habs)
+        ret_values = _calc_percentages_if_missing(
+            habs, how_to_handle_missing_percentages=how_to_handle_missing_percentages
+        )
 
     # TODO valideren dat alle habtypes anders zijn.
     if len(ret_values) == 0:
@@ -53,7 +68,9 @@ def _convert_row_to_dict(
         return {"H0000": 100}
 
     if abs(sum(ret_values.values()) - 100) > 0.1:
-        warnings.warn(f"Percentages do not add up to 100% for {row.index}")
+        warnings.warn(
+            f"Percentages do not add up to 100% for row: {row.name}, result: {ret_values}"
+        )
 
     return ret_values
 
@@ -81,19 +98,30 @@ def parse_habitat_percentages(
         )
 
     habtype_cols = [c for c in gdf.columns if re.fullmatch(f"{habtype_cols}\d+", c)]
-    percentage_cols = [
-        c for c in gdf.columns if re.fullmatch(f"{percentage_cols}\d+", c)
-    ]
-
-    if len(habtype_cols) != len(percentage_cols) or len(habtype_cols) == 0:
+    if len(habtype_cols) == 0:
         raise ValueError(
-            f"Expected nonzero of habitat and percentage columns, but found {len(habtype_cols)} hab columns and {len(percentage_cols)} percentage columns"
+            f"Expected nonzero of habitat and percentage columns, but found {len(habtype_cols)} hab columns"
         )
+    if percentage_cols is not None:
+        percentage_cols = [
+            c for c in gdf.columns if re.fullmatch(f"{percentage_cols}\d+", c)
+        ]
+        gdf[percentage_cols] = gdf[percentage_cols].apply(pd.to_numeric, errors="raise")
+
+        if len(habtype_cols) != len(percentage_cols):
+            raise ValueError(
+                f"Expected same number of habitat and percentage columns, but found {len(habtype_cols)} hab columns and {len(percentage_cols)} percentage columns"
+            )
 
     return gpd.GeoDataFrame(
         data={
             "hab_perc": gdf.apply(
-                lambda row: _convert_row_to_dict(row, habtype_cols, percentage_cols),
+                lambda row: _convert_row_to_dict(
+                    row,
+                    habtype_cols,
+                    percentage_cols,
+                    how_to_handle_missing_percentages,
+                ),
                 axis=1,
             )
         },
@@ -110,7 +138,9 @@ def spatial_join(gdf_pred, gdf_true, how: Literal["intersection", "include_uncha
     assert gdf_pred.notnull().all(axis=None) and gdf_true.notnull().all(axis=None)
 
     how = {"intersection": "intersection", "include_uncharted": "union"}[how]
-    overlayed = gpd.overlay(gdf_pred, gdf_true, how=how)
+    overlayed = gpd.overlay(
+        gdf_pred, gdf_true, how=how, keep_geom_type=False
+    )  # allow polygon => multipolygon
     overlayed = overlayed.rename(
         columns={"hab_perc_1": "pred_hab_perc", "hab_perc_2": "true_hab_perc"}
     )
