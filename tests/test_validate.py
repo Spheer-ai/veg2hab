@@ -68,9 +68,52 @@ def test_parse(gdf):
     ]
     assert isinstance(result, gpd.GeoDataFrame)
     assert result.columns.tolist() == ["hab_perc", "geometry"]
-    print(result["hab_perc"].tolist())
     assert result["hab_perc"].tolist() == expected
     assert result.geometry.equals(gdf.geometry)
+
+
+def test_parse_with_split_equally(gdf):
+    """Test that parsing returns a geodataframe with a single column, called hab_perc"""
+    result = parse_habitat_percentages(
+        gdf, percentage_cols=None, how_to_handle_missing_percentages="split_equally"
+    )
+    expected = [
+        {"H123": 50, "H234": 50},
+        {"H123": 50, "H234": 50},
+        {"H345": 100 / 3, "H123": 100 / 3, "H234": 100 / 3},
+        {"H456": 100},
+    ]
+    assert result["hab_perc"].tolist() == expected
+
+
+def test_parse_with_select_first(gdf):
+    """Test that parsing returns a geodataframe with a single column, called hab_perc"""
+    result = parse_habitat_percentages(
+        gdf, percentage_cols=None, how_to_handle_missing_percentages="select_first"
+    )
+    expected = [
+        {"H123": 100},
+        {"H123": 100},
+        {"H345": 100},
+        {"H456": 100},
+    ]
+    assert result["hab_perc"].tolist() == expected
+
+
+def test_with_no_habtypes(gdf):
+    """Test that it doesn't fail if all Habtypes are set to None."""
+    gdf.loc[0, ["Habtype1", "Habtype2", "Habtype3"]] = None
+    gdf.loc[0, ["Perc1", "Perc2", "Perc3"]] = 0
+    results = parse_habitat_percentages(gdf)
+    assert results.loc[0, "hab_perc"] == {"H0000": 100}
+    results = parse_habitat_percentages(
+        gdf, percentage_cols=None, how_to_handle_missing_percentages="select_first"
+    )
+    assert results.loc[0, "hab_perc"] == {"H0000": 100}
+    results = parse_habitat_percentages(
+        gdf, percentage_cols=None, how_to_handle_missing_percentages="split_equally"
+    )
+    assert results.loc[0, "hab_perc"] == {"H0000": 100}
 
 
 def test_spatial_join(gdf_single_square_1, gdf_single_square_2):
