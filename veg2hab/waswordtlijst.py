@@ -10,8 +10,6 @@ from veg2hab.vegetatietypen import (
     VvN,
     convert_string_to_SBB,
     convert_string_to_VvN,
-    opschonen_SBB_pandas_series,
-    opschonen_VvN_pandas_series,
 )
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -128,8 +126,8 @@ def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
     # Whitespace velden vervangen door NaN
     wwl = wwl.replace(r"^\s*$", pd.NA, regex=True)
 
-    wwl["VvN"] = opschonen_VvN_pandas_series(wwl["VvN"])
-    wwl["SBB"] = opschonen_SBB_pandas_series(wwl["SBB"])
+    wwl["VvN"] = VvN.opschonen_series(wwl["VvN"])
+    wwl["SBB"] = SBB.opschonen_series(wwl["SBB"])
 
     # Checken
     assert SBB.validate_pandas_series(

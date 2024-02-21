@@ -1,7 +1,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Type, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -19,7 +19,6 @@ from veg2hab.habitat import (
 )
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
-from veg2hab.vegetatietypen import opschonen_SBB_pandas_series
 
 
 @dataclass
@@ -51,18 +50,29 @@ class VegTypeInfo:
         )
 
     @classmethod
-    def create_list_from_access_rows(cls, rows: pd.DataFrame):
+    def create_list_from_access_rows(
+        cls,
+        rows: pd.DataFrame,
+        perc_col: str,
+        SBB_col: Optional[str] = None,
+        VvN_col: Optional[str] = None,
+    ):
         """
         Maakt van alle rijen met vegetatietypes (van een vlak) een lijst van VegetatieTypeInfo objecten
         """
+        assert (
+            SBB_col or VvN_col and not (SBB_col and VvN_col)
+        ), f"Er moet een SBB of VvN kolom zijn, maar niet beide. Nu is SBB_col={SBB_col} en VvN_col={VvN_col}"
+        vegtype_col = VvN_col if VvN_col else SBB_col
         lst = []
-        for row in rows.itertuples():
-            if pd.isnull(row.Sbb):
-                # NA SBB moet geen SBB object worden
-                lst.append(cls.from_str_vegtypes(row.Bedekking_num))
+
+        for _, row in rows.iterrows():
+            if pd.isnull(row[vegtype_col]):
+                # NA SBB moet geen VegTypeInfo object worden
+                lst.append(cls.from_str_vegtypes(row[perc_col]))
             else:
                 lst.append(
-                    cls.from_str_vegtypes(row.Bedekking_num, SBB_strings=[row.Sbb])
+                    cls.from_str_vegtypes(row[perc_col], SBB_strings=[row[vegtype_col]])
                 )
         return lst
 
@@ -82,6 +92,50 @@ class Geometrie:
 
     def __init__(self, data: gpd.GeoSeries):
         self.data = data
+
+
+def ingest_vegtype_column(
+    gdf: gpd.GeoDataFrame,
+    ElmID_col: str,
+    vegtype_col: str,
+    vegtype_cls: Union[Type[_SBB], Type[_VvN]],
+    vegtype_split_char: Optional[str] = None,
+    # percentage_col: Optional[str] = None, TODO: add support for already existing percentage_col
+):
+    gdf = gdf.copy()  # Needed to avoid SettingWithCopyWarning
+
+    if vegtype_split_char:
+        gdf["split_vegtypen"] = gdf[vegtype_col].str.split(vegtype_split_char)
+    else:
+        gdf["split_vegtypen"] = gdf[vegtype_col]
+    exploded = gdf.explode("split_vegtypen")
+    gdf = gdf.drop(columns=["split_vegtypen"])
+
+    # TODO: add support for already existing percentage_col
+    # If there is no percentage column, we add it by evenly dividing the space in each shape
+    if True:  # not percentage_col:
+        exploded["percentage"] = exploded.groupby(ElmID_col)[ElmID_col].transform(
+            lambda x: 100.0 / len(x)
+        )
+
+    exploded["split_vegtypen"] = vegtype_cls.opschonen_series(
+        exploded["split_vegtypen"]
+    )
+    vegtypeinfos = (
+        exploded.groupby(ElmID_col)
+        .apply(
+            VegTypeInfo.create_list_from_access_rows,
+            perc_col="percentage",
+            SBB_col="split_vegtypen" if vegtype_cls == _SBB else None,
+            VvN_col="split_vegtypen" if vegtype_cls == _VvN else None,
+        )
+        .reset_index(name="VegTypeInfo")
+        .VegTypeInfo
+    )
+
+    gdf["VegTypeInfo"] = vegtypeinfos
+
+    return gdf
 
 
 def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
@@ -289,7 +343,7 @@ def reorder_columns_final_format(df: pd.DataFrame):
     Result wil be:
     Area   Opm   geometry   Habtype1   Perc1   Opp1   Kwal1   VvN1   SBB1   Habtype2   Perc2   Opp2...
     """
-    new_columns = ["Area", "Opm", "geometry", "_ChkNodig"]
+    new_columns = ["Area", "Opm", "Datum", "geometry", "_ChkNodig"]
     n_habtype_blocks = len([i for i in df.columns if "Habtype" in i])
     for i in range(1, n_habtype_blocks + 1):
         new_columns = new_columns + [
@@ -321,7 +375,12 @@ class Kartering:
 
     @classmethod
     def from_access_db(
-        cls, shape_path: Path, shape_elm_id_column: str, access_csvs_path: Path
+        cls,
+        shape_path: Path,
+        shape_elm_id_column: str,
+        access_csvs_path: Path,
+        opmerkingen_column: Optional[str] = "Opmerking",
+        datum_column: Optional[str] = "Datum",
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile en
@@ -330,11 +389,29 @@ class Kartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
-        # NOTE: Willen we ook Opmerkingen mee? Die is er namelijk soms niet/kan vast ook een andere naam hebben
-        gdf = gpd.read_file(
-            shape_path,
-            usecols=[shape_elm_id_column, "geometry"],
-            dtype={shape_elm_id_column: int},
+        gdf = gpd.read_file(shape_path)
+
+        # Subsetten van kolommen
+        columns_to_keep = [
+            col
+            for col in [
+                shape_elm_id_column,
+                opmerkingen_column,
+                datum_column,
+                "geometry",
+            ]
+            if col in gdf.columns
+        ]
+        gdf = gdf[columns_to_keep]
+
+        # Als kolommen niet aanwezig zijn in de shapefile dan vullen we ze met None
+        for col in [opmerkingen_column, datum_column]:
+            if col not in gdf.columns:
+                gdf[col] = None
+
+        # Standardiseren van kolomnamen
+        gdf = gdf.rename(
+            columns={opmerkingen_column: "Opmerking", datum_column: "Datum"}
         )
         gdf["Opp"] = gdf["geometry"].area
 
@@ -381,12 +458,16 @@ class Kartering:
         )
 
         # Opschonen SBB codes
-        kart_veg["Sbb"] = opschonen_SBB_pandas_series(kart_veg["Sbb"])
+        kart_veg["Sbb"] = _SBB.opschonen_series(kart_veg["Sbb"])
 
         # Groeperen van alle verschillende SBBs per Locatie
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
-            .apply(VegTypeInfo.create_list_from_access_rows)
+            .apply(
+                VegTypeInfo.create_list_from_access_rows,
+                perc_col="Bedekking_num",
+                SBB_col="Sbb",
+            )
             .reset_index(name="VegTypeInfo")
         )
 
@@ -411,11 +492,59 @@ class Kartering:
         return cls(gdf)
 
     @classmethod
-    def from_shapefile(cls, shape_path):
+    def from_shapefile(
+        cls,
+        shape_path: Path,
+        ElmID_col: str,
+        VvN_col: Optional[str] = None,
+        SBB_col: Optional[str] = None,
+        vegtype_split_char: Optional[str] = None,
+        datum_col: Optional[str] = None,
+        opmerking_col: Optional[str] = None,
+        # percentage_col: Optional[str] = None, # TODO add support for already existing percentage_col
+    ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
         """
-        gdf = gpd.read_file(shape_path)
+        # TODO: Voor nu gemaakt enkel voor de Groningen non-access karteringen, die hebben geen percentage kolom
+        shapefile = gpd.read_file(shape_path)
+        # Selectie van de te bewaren kolommen; VvN of SBB afhankelijk van wat is opgegeven,
+        # datum en opmerking als deze er in zitten, en sowieso ElmID en geometry
+        cols = (
+            [col for col in [VvN_col, SBB_col] if col is not None]
+            + [col for col in [datum_col, opmerking_col] if col in shapefile.columns]
+            + [ElmID_col, "geometry"]
+        )
+
+        assert all(
+            col in shapefile.columns for col in cols
+        ), f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
+
+        gdf = shapefile[[col for col in cols if col in shapefile.columns]].copy()
+
+        # Als er geen datum of opmerking kolom is, dan vullen we deze met None
+        datum_col = "Datum" if datum_col is None else datum_col
+        opmerking_col = "Opmerking" if opmerking_col is None else opmerking_col
+        for col in [datum_col, opmerking_col]:
+            if col not in gdf.columns:
+                gdf[col] = None
+
+        # Standardiseren van kolomnamen
+        gdf = gdf.rename(columns={datum_col: "Datum", opmerking_col: "Opmerking"})
+        gdf["Opp"] = gdf["geometry"].area
+
+        if VvN_col:
+            gdf = ingest_vegtype_column(
+                gdf, ElmID_col, VvN_col, _VvN, vegtype_split_char
+            )
+        elif SBB_col:
+            # We pakken alleen SBB als er geen VvN is
+            gdf = ingest_vegtype_column(
+                gdf, ElmID_col, SBB_col, _SBB, vegtype_split_char
+            )
+        else:
+            raise ValueError("Er is geen VvN of SBB kolomnaam opgegeven")
+
         return cls(gdf)
 
     def apply_wwl(self, wwl: pd.DataFrame):
@@ -490,7 +619,7 @@ class Kartering:
 
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[
-            ["Opp", "Opmerking", "geometry", "VegTypeInfo", "HabitatKeuze"]
+            ["Opp", "Opmerking", "Datum", "geometry", "VegTypeInfo", "HabitatKeuze"]
         ].copy()
 
         # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
@@ -527,7 +656,6 @@ class Kartering:
         Slaat de kartering op in een shapefile
         """
         final = self.as_final_format()
-        #gdf = gpd.GeoDataFrame(final, geometry="geometry")
         path.parent.mkdir(parents=True, exist_ok=True)
         final.to_file(path)
 
