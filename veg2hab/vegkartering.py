@@ -91,59 +91,102 @@ def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
     return [func(complex) for complex in complexen]
 
 
-def hab_as_final_format(keuze: HabitatKeuze, idx: int, opp: float):
+def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries):
+    """
+    Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
+    Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos ook op de juiste volgorde worden gezet
+    Voor:
+        HabitatKeuze: [HK1(H0000, 15%), HK2(H1234, 80%), HK3(H0000, 5%)]
+        VegTypeInfo: [VT1(15%, SBB1), VT2(80%, SBB2), VT3(5%, SBB3)]
+    Na:
+        HabitatKeuze: [HK2(H1234, 80%), HK1(H0000, 15%), HK3(H0000, 5%)]
+        VegTypeInfo: [VT2(80%, SBB2), VT1(15%, SBB1), VT3(5%, SBB3)]
+    """
+    keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
+    # Sorteer op basis van de habitatkeuze (idx 0)
+    sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
+
+    row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
+    # Tuples uit zip omzetten naar lists
+    row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(
+        row["VegTypeInfo"]
+    )
+    return row
+
+
+def hab_as_final_format(print_info: tuple, idx: int, opp: float):
     # TODO: het 1 voorstel geval qua output unifien met meerdere voorstellen zodat het enkel afhangt van status wat er geprint wordt
+    # TODO: Dit kan allemaal naar HabitatKeuze (.as_final_form() ofzo)
+
+    keuze, vegtypeinfo = print_info
 
     # Er is 1 HabitatVoorstel
     if len(keuze.habitatvoorstellen) == 1:
-        if (
-            keuze.status == KeuzeStatus.DUIDELIJK
-            or keuze.status == KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL
-            or keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN
-        ):
+        if keuze.status in [
+            KeuzeStatus.DUIDELIJK,
+            KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
+            KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+            KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        ]:
             voorstel = keuze.habitatvoorstellen[0]
-            return pd.Series(
-                {
-                    f"Habtype{idx}": voorstel.habtype,
-                    f"Perc{idx}": voorstel.percentage,
-                    f"Opp{idx}": opp * voorstel.percentage,
-                    # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
-                    f"Kwal{idx}": voorstel.kwaliteit.as_letter()
-                    if isinstance(voorstel.kwaliteit, Kwaliteit)
-                    else None,
-                    f"Opm{idx}": keuze.opmerking,
-                    # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-                    # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
-                    f"VvN{idx}": str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                    else None,
-                    f"SBB{idx}": str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                    else None,
-                    # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
-                    # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
-                    f"_Status{idx}": str(keuze.status),
-                    f"_VvNdftbl{idx}": str(
-                        [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
-                    )
-                    if isinstance(voorstel.vegtype_in_dt, _VvN)
-                    else None,
-                    f"_SBBdftbl{idx}": str(
-                        [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
-                    )
-                    if isinstance(voorstel.vegtype_in_dt, _SBB)
-                    else None,
-                    f"_VgTypInf{idx}": str(voorstel.vegtypeinfo),
-                }
-            )
+            series_dict = {
+                f"Habtype{idx}": voorstel.habtype,
+                f"Perc{idx}": vegtypeinfo.percentage,
+                f"Opp{idx}": opp * vegtypeinfo.percentage,
+                # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
+                f"Kwal{idx}": voorstel.kwaliteit.as_letter()
+                if isinstance(voorstel.kwaliteit, Kwaliteit)
+                else None,
+                f"Opm{idx}": keuze.opmerking,
+                # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+                # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
+                f"VvN{idx}": str(voorstel.onderbouwend_vegtype)
+                if isinstance(voorstel.onderbouwend_vegtype, _VvN)
+                else None,
+                f"SBB{idx}": str(voorstel.onderbouwend_vegtype)
+                if isinstance(voorstel.onderbouwend_vegtype, _SBB)
+                else None,
+                # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
+                # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
+                f"_Status{idx}": str(keuze.status),
+                f"_VvNdftbl{idx}": str(
+                    [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
+                )
+                if isinstance(voorstel.vegtype_in_dt, _VvN)
+                else None,
+                f"_SBBdftbl{idx}": str(
+                    [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
+                )
+                if isinstance(voorstel.vegtype_in_dt, _SBB)
+                else None,
+                f"_VgTypInf{idx}": str(vegtypeinfo),
+                f"_ChkNodig{idx}": False,
+            }
+
+            if keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
+                series_dict[f"Habtype{idx}"] = "H0000"
+                series_dict[f"Kwal{idx}"] = None
+            if (
+                keuze.status == KeuzeStatus.PLACEHOLDER_CRITERIA
+                or keuze.status == KeuzeStatus.WACHTEN_OP_MOZAIEK
+            ):
+                series_dict[f"Habtype{idx}"] = "HXXXX"
+                series_dict[f"Kwal{idx}"] = "Onbekend"
+                series_dict[f"_ChkNodig{idx}"] = True
+
+            return pd.Series(series_dict)
+
         assert (
             False
         ), f"Er is 1 habitatkeuze maar KeuzeStatus {keuze.status} is niet DUIDELIJK, VEGTYPEN_NIET_IN_DEFTABEL of GEEN_KLOPPENDE_MITSEN"
 
-    if (
-        keuze.status == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN
-        or keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN
-    ):
+    if keuze.status in [
+        KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+        KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+        KeuzeStatus.PLACEHOLDER_CRITERIA,
+        KeuzeStatus.WACHTEN_OP_MOZAIEK,
+    ]:
         voorstellen = keuze.habitatvoorstellen
         # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
         # NOTE: Wordt keuzestatus dan ook weer duidelijk? Moet deze check dan al in habitatkeuze_obv_mitsen gedaan worden?
@@ -152,81 +195,100 @@ def hab_as_final_format(keuze: HabitatKeuze, idx: int, opp: float):
         ]
         if all(hab == voorgestelde_hab_en_kwal[0] for hab in voorgestelde_hab_en_kwal):
             voorgestelde_hab_en_kwal = [voorgestelde_hab_en_kwal[0]]
-        return pd.Series(
-            {
-                f"Habtype{idx}": str(
-                    [voorstel[0] for voorstel in voorgestelde_hab_en_kwal]
-                ),
-                f"Perc{idx}": str(voorstellen[0].percentage),
-                f"Opp{idx}": str(
-                    [opp * voorstel.percentage for voorstel in voorstellen]
-                ),
-                # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
-                f"Kwal{idx}": str(
-                    [
-                        (
-                            voorstel[1].as_letter()
-                            if isinstance(voorstel[1], Kwaliteit)
-                            else None
-                        )
-                        for voorstel in voorgestelde_hab_en_kwal
-                    ]
-                ),
-                f"Opm{idx}": keuze.opmerking,
-                # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
-                # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
-                f"VvN{idx}": str(
-                    [
-                        (
-                            str(voorstel.onderbouwend_vegtype)
-                            if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                            else None
-                        )
-                        for voorstel in voorstellen
-                    ]
-                ),
-                f"SBB{idx}": str(
-                    [
-                        (
-                            str(voorstel.onderbouwend_vegtype)
-                            if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                            else None
-                        )
-                        for voorstel in voorstellen
-                    ]
-                ),
-                # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
-                # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
-                f"_Status{idx}": str(keuze.status),
-                f"_VvNdftbl{idx}": str(
-                    [
-                        (
-                            str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
-                            if isinstance(voorstel.vegtype_in_dt, _VvN)
-                            else None
-                        )
-                        for voorstel in voorstellen
-                    ]
-                ),
-                f"_SBBdftbl{idx}": str(
-                    [
-                        (
-                            str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
-                            if isinstance(voorstel.vegtype_in_dt, _SBB)
-                            else None
-                        )
-                        for voorstel in voorstellen
-                    ]
-                ),
-                f"_VgTypInf{idx}": str(
-                    voorstellen[0].vegtypeinfo
-                ),  # VegTypeInfo is hetzelfde voor alle voorstellen
-            }
-        )
+        series_dict = {
+            f"Habtype{idx}": str(
+                [voorstel[0] for voorstel in voorgestelde_hab_en_kwal]
+            ),
+            f"Perc{idx}": str(vegtypeinfo.percentage),
+            f"Opp{idx}": str(opp * vegtypeinfo.percentage),
+            # f"ISHD{idx}" NOTE: Deze hoeft niet denk ik
+            f"Kwal{idx}": str(
+                [
+                    (
+                        voorstel[1].as_letter()
+                        if isinstance(voorstel[1], Kwaliteit)
+                        else None
+                    )
+                    for voorstel in voorgestelde_hab_en_kwal
+                ]
+            ),
+            f"Opm{idx}": keuze.opmerking,
+            # f"Bron{idx}" NOTE: Ik weet niet wat ik hier moet zetten
+            # f"HABcombi{idx}" NOTE: Deze hoeft niet denk ik
+            f"VvN{idx}": str(
+                [
+                    (
+                        str(voorstel.onderbouwend_vegtype)
+                        if isinstance(voorstel.onderbouwend_vegtype, _VvN)
+                        else None
+                    )
+                    for voorstel in voorstellen
+                ]
+            ),
+            f"SBB{idx}": str(
+                [
+                    (
+                        str(voorstel.onderbouwend_vegtype)
+                        if isinstance(voorstel.onderbouwend_vegtype, _SBB)
+                        else None
+                    )
+                    for voorstel in voorstellen
+                ]
+            ),
+            # f"P{idx}" NOTE: Deze is altijd hetzelfde als Perc toch?
+            # f"VEGlok{idx}" NOTE: Doen we voor nu nog even niet
+            f"_Status{idx}": str(keuze.status),
+            f"_VvNdftbl{idx}": str(
+                [
+                    (
+                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                        if isinstance(voorstel.vegtype_in_dt, _VvN)
+                        else None
+                    )
+                    for voorstel in voorstellen
+                ]
+            ),
+            f"_SBBdftbl{idx}": str(
+                [
+                    (
+                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                        if isinstance(voorstel.vegtype_in_dt, _SBB)
+                        else None
+                    )
+                    for voorstel in voorstellen
+                ]
+            ),
+            f"_VgTypInf{idx}": str(vegtypeinfo),
+            f"_ChkNodig{idx}": False,
+        }
+
+        if keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
+            series_dict[f"Habtype{idx}"] = "H0000"
+            series_dict[f"Kwal{idx}"] = None
+        if keuze.status in [
+            KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+            KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        ]:
+            series_dict[f"Habtype{idx}"] = "HXXXX"
+            series_dict[f"Kwal{idx}"] = "Onbekend"
+            series_dict[f"_ChkNodig{idx}"] = True
+
+        return pd.Series(series_dict)
 
     assert (
         False
     ), f"hab_as_final_form voor KeuzeStatus {keuze.status} is niet geimplementeerd"
+
+
+def bepaal_ChckNodig(row: gpd.GeoSeries):
+    """
+    Bepaalt of een rij een habitattypekartering een handmatige controle nodig heeft
+    """
+    check_nodigs = [col for col in row.index if "_ChkNodig" in col]
+    if any(row[check_nodig] == True for check_nodig in check_nodigs):
+        return True
+    return False
 
 
 def reorder_columns_final_format(df: pd.DataFrame):
@@ -235,7 +297,7 @@ def reorder_columns_final_format(df: pd.DataFrame):
     Result wil be:
     Area   Opm   geometry   Habtype1   Perc1   Opp1   Kwal1   VvN1   SBB1   Habtype2   Perc2   Opp2...
     """
-    new_columns = ["Area", "Opm", "geometry"]
+    new_columns = ["Area", "Opm", "geometry", "_ChkNodig"]
     n_habtype_blocks = len([i for i in df.columns if "Habtype" in i])
     for i in range(1, n_habtype_blocks + 1):
         new_columns = new_columns + [
@@ -250,6 +312,7 @@ def reorder_columns_final_format(df: pd.DataFrame):
             f"_VvNdftbl{i}",
             f"_SBBdftbl{i}",
             f"_VgTypInf{i}",
+            f"_ChkNodig{i}",
         ]
     return df[new_columns]
 
@@ -412,14 +475,17 @@ class Kartering:
         ), "Er is geen kolom met definitieve habitatvoorstellen"
 
         # Base dataframe conform Gegevens Leverings Protocol maken
-        base = self.gdf[["Opp", "Opmerking", "geometry", "HabitatKeuze"]].copy()
-        # Sorteer de keuzes zodat H0000 als laatste is etc.
-        base["HabitatKeuze"] = base["HabitatKeuze"].apply(
-            lambda x: sorted(x, key=rank_habitatkeuzes)
-        )
+        base = self.gdf[
+            ["Opp", "Opmerking", "geometry", "VegTypeInfo", "HabitatKeuze"]
+        ].copy()
+
+        # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
+        base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
+
         base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
+        final["_ChkNodig"] = final.apply(bepaal_ChckNodig, axis=1)
         final = reorder_columns_final_format(final)
         return final
 
@@ -428,12 +494,17 @@ class Kartering:
         Maakt van een rij een dataseries met blokken kolommen volgens het Gegevens Leverings Protocol (Bijlage 3a)
         """
         keuzes = row["HabitatKeuze"]
+        vegtypeinfos = row["VegTypeInfo"]
         assert len(keuzes) > 0, "Er vlakken zonder habitatkeuze"
+        assert len(keuzes) == len(
+            vegtypeinfos
+        ), "Er zijn niet evenveel habitatkeuzes als vegtypeinfos"
 
+        # NOTE: Misschien een class maken van print_info als er nog meer bijkomt?
         return pd.concat(
             [
-                hab_as_final_format(keuze, i + 1, row["Area"])
-                for i, keuze in enumerate(keuzes)
+                hab_as_final_format(print_info, i + 1, row["Area"])
+                for i, print_info in enumerate(zip(keuzes, vegtypeinfos))
             ]
         )
 
