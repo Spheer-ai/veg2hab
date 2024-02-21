@@ -5,6 +5,7 @@ import pytest
 from veg2hab.criteria import (
     EnCriteria,
     FGRCriterium,
+    GeenCriterium,
     NietCriterium,
     OfCriteria,
     PlaceholderCriterium,
@@ -20,7 +21,7 @@ from veg2hab.vegkartering import VegTypeInfo
 @pytest.fixture(scope="module")
 def dt():
     path_in = Path("data/definitietabel habitattypen (versie 24 maart 2009)_0.xls")
-    path_json = Path("data/definitietabel_json.csv")
+    path_json = Path("data/mitsjson.csv")
     path_out = Path("testing/opgeschoonde_definitietabel.xlsx")
     path_out.parent.mkdir(exist_ok=True)
     opschonen_definitietabel(path_in, path_json, path_out)
@@ -32,12 +33,13 @@ def test_perfect_match_VvN(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("25aa3"),
+            vegtype_in_dt=VvN("25aa3"),
             habtype="H1310_A",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=31,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.ASSOCIATIE_VVN,
-            percentage=100,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -45,8 +47,19 @@ def test_perfect_match_VvN(dt):
 
 def test_non_existing_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["99aa3a"])
-    # NOTE: Hier al H0000?
-    assert dt.find_habtypes(pre) == []
+    post = [
+        HabitatVoorstel(
+            onderbouwend_vegtype=VvN("99aa3a"),
+            vegtype_in_dt=None,
+            habtype="H0000",
+            kwaliteit=None,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=None,
+            match_level=MatchLevel.NO_MATCH,
+        )
+    ]
+    assert dt.find_habtypes(pre) == post
 
 
 def test_match_to_less_specific_VvN(dt):
@@ -54,12 +67,13 @@ def test_match_to_less_specific_VvN(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("5ca2a"),
+            vegtype_in_dt=VvN("5ca2"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=353,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.ASSOCIATIE_VVN,
-            percentage=100,
         )
     ]
     # Should match with 5ca2
@@ -71,12 +85,13 @@ def test_gemeenschap_perfect_match_VvN(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("5rg8"),
+            vegtype_in_dt=VvN("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
+            idx_in_dt=356,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.GEMEENSCHAP_VVN,
-            percentage=100,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -87,21 +102,23 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("14bb1a"),
+            vegtype_in_dt=VvN("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=276,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
-            percentage=100,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("14bb1a"),
+            vegtype_in_dt=VvN("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=404,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
-            percentage=100,
         ),
     ]
 
@@ -113,23 +130,25 @@ def test_perfect_and_less_specific_match_VvN(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("36aa2a"),
+            vegtype_in_dt=VvN("36aa2a"),
             habtype="H2180_B",
             kwaliteit=Kwaliteit.MATIG,
+            idx_in_dt=169,
             mits=EnCriteria(
                 sub_criteria=[FGRCriterium(fgrtype=FGRType.DU), PlaceholderCriterium()]
             ),
             mozaiek=None,
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
-            percentage=100,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("36aa2a"),
+            vegtype_in_dt=VvN("36aa2"),
             habtype="H91D0",
             kwaliteit=Kwaliteit.MATIG,
-            mits=None,
+            idx_in_dt=640,
+            mits=GeenCriterium(),
             mozaiek=None,
             match_level=MatchLevel.ASSOCIATIE_VVN,
-            percentage=100,
         ),
     ]
     assert dt.find_habtypes(pre) == post
@@ -140,12 +159,13 @@ def test_perfect_match_SBB(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=SBB("9b1"),
+            vegtype_in_dt=SBB("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=340,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.ASSOCIATIE_SBB,
-            percentage=100,
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -158,39 +178,43 @@ def test_matches_both_vvn_and_sbb(dt):
     post = [
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("5rg8"),
+            vegtype_in_dt=VvN("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
+            idx_in_dt=356,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.GEMEENSCHAP_VVN,
-            percentage=100,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("14bb1a"),
+            vegtype_in_dt=VvN("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=276,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
-            percentage=100,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN("14bb1a"),
+            vegtype_in_dt=VvN("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=404,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
-            percentage=100,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=SBB("9b1"),
+            vegtype_in_dt=SBB("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=340,
             mits=PlaceholderCriterium(),
             mozaiek=None,
             match_level=MatchLevel.ASSOCIATIE_SBB,
-            percentage=100,
         ),
     ]
     assert dt.find_habtypes(pre) == post
