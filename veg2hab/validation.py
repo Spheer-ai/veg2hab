@@ -189,9 +189,13 @@ def voeg_correctheid_toe_aan_df(df: gpd.GeoDataFrame):
 
 
 def bereken_percentage_confusion_matrix(
-    habs_pred: Dict[str, float], habs_true: Dict[str, float]
+    habs_pred: Dict[str, Number], habs_true: Dict[str, Number]
 ):
     """huilie huilie"""
+    # we'll be editing the dictionaries in place, so let's first make a copy
+    habs_pred = habs_pred.copy()
+    habs_true = habs_true.copy()
+
     outputs = []
     for pred_hab, pred_percentage in habs_pred.items():
         if pred_hab in habs_true:
@@ -220,17 +224,18 @@ def bereken_percentage_confusion_matrix(
                     "percentage": percentage,
                 }
             )
-            habs_true[true_hab] -= percentage_correct
-            pred_percentage -= percentage_correct
+            habs_true[true_hab] -= percentage
+            pred_percentage -= percentage
             if pred_percentage == 0:
                 break
 
-        if pred_percentage > 1e-10:
-            warnings.warn("Non matching percentages in conf matrix, too much pred %?")
-    if true_percentage > 1e-10:
-        warnings.warn("Non matching percentages in conf matrix, too much true %?")
+    # TODO add some validation here!!
+    #     if percentage > 1e-10:
+    #         warnings.warn("Non matching percentages in conf matrix, too much pred %?")
+    # if true_percentage > 1e-10:
+    #     warnings.warn("Non matching percentages in conf matrix, too much true %?")
 
-    return pd.DataFrame(outputs)
+    return pd.DataFrame(outputs, columns=["pred_hab", "true_hab", "percentage"])
 
 
 def bereken_volledige_conf_matrix(gdf, method: Literal["percentage", "area"] = "area"):
@@ -241,7 +246,7 @@ def bereken_volledige_conf_matrix(gdf, method: Literal["percentage", "area"] = "
             row["pred_hab_perc"], row["true_hab_perc"]
         )
         if method == "area":
-            df["percentage"] *= row.geometry.area
+            df["percentage"] *= row.geometry.area / 100
             df = df.rename(columns={"percentage": "oppervlakte"})
         return df
 
@@ -256,5 +261,10 @@ def bereken_volledige_conf_matrix(gdf, method: Literal["percentage", "area"] = "
     confusion_matrix = confusion_matrix.reindex(
         index=indices, columns=indices, fill_value=0
     )
+
+    if method == "percentage":
+        confusion_matrix /= 100  # return outputs in values from 0 to 1
+    if method == "area":
+        confusion_matrix /= 10_000  # return outputs in ha
 
     return confusion_matrix

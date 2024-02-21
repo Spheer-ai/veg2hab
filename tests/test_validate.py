@@ -184,6 +184,20 @@ def test_bereken_percentage_confusion_matrix():
     assert result.equals(expected)
 
 
+def test_bereken_percentage_confusion_matrix_with_invalid_inputs():
+    habs_pred = {"HXXXX": 10.0, "H0000": 10.0}
+    habs_true = {"H0000": 100}
+
+    expected = pd.DataFrame(
+        [
+            {"pred_hab": "H0000", "true_hab": "H0000", "percentage": 10.0},
+            {"pred_hab": "HXXXX", "true_hab": "H0000", "percentage": 10.0},
+        ]
+    )
+    result = bereken_percentage_confusion_matrix(habs_pred, habs_true)
+    assert result.equals(expected)
+
+
 def test_full_conf_matrix(gdf_single_square_1, gdf_single_square_2):
     gdf_pred = parse_habitat_percentages(gdf_single_square_1)
     gdf_true = parse_habitat_percentages(gdf_single_square_2)
@@ -192,9 +206,9 @@ def test_full_conf_matrix(gdf_single_square_1, gdf_single_square_2):
     result = bereken_volledige_conf_matrix(gdf_combined)
     expected = pd.DataFrame(
         {
-            "H123": [8000.0, 0],
+            "H123": [0.008, 0],
             "H234": [
-                2000.0,
+                0.002,
                 0,
             ],
         },
