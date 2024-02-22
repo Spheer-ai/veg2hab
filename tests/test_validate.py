@@ -116,6 +116,28 @@ def test_with_no_habtypes(gdf):
     assert results.loc[0, "hab_perc"] == {"H0000": 100}
 
 
+def test_with_duplicate_habtypes(gdf):
+    """Test that it doesn't fail if the same habtype is present multiple times
+    This could be the result of different quality or predicting HXXXX multiple times
+    """
+    gdf.loc[0, ["Habtype1", "Habtype2", "Habtype3"]] = ["H123", "H123", None]
+    gdf.loc[0, ["Perc1", "Perc2", "Perc3"]] = [60, 40, 0]
+    results = parse_habitat_percentages(gdf)
+    assert results.loc[0, "hab_perc"] == {"H123": 100}
+
+    gdf.loc[0, ["Habtype1", "Habtype2", "Habtype3"]] = ["H123", "H123", "H234"]
+    gdf.loc[0, ["Perc1", "Perc2", "Perc3"]] = [50, 40, 10]
+    results = parse_habitat_percentages(gdf)
+    assert results.loc[0, "hab_perc"] == {"H123": 90, "H234": 10}
+
+    gdf.loc[0, ["Habtype1", "Habtype2", "Habtype3"]] = ["H123", "H123", "H234"]
+    gdf.loc[0, ["Perc1", "Perc2", "Perc3"]] = [50, 40, 10]
+    results = parse_habitat_percentages(
+        gdf, percentage_cols=None, how_to_handle_missing_percentages="split_equally"
+    )
+    assert results.loc[0, "hab_perc"] == {"H123": 50, "H234": 50}
+
+
 def test_spatial_join(gdf_single_square_1, gdf_single_square_2):
     gdf_pred = parse_habitat_percentages(gdf_single_square_1)
     gdf_true = parse_habitat_percentages(gdf_single_square_2)

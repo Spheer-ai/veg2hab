@@ -1,6 +1,7 @@
 import os.path
 import re
 import warnings
+from collections import defaultdict
 from numbers import Number
 from typing import Dict, List, Literal, Optional
 
@@ -8,9 +9,14 @@ import geopandas as gpd
 import pandas as pd
 
 
+def _remove_duplicated_but_keep_order(lst: List[str]) -> List[str]:
+    seen = set()
+    return [x for x in lst if not (x in seen or seen.add(x))]
+
+
 def _calc_percentages_if_missing(
     habtypes: List[str],
-    how_to_handle_missing_percentages: Literal[None, "split_equally", "select_first"],
+    how_to_handle_missing_percentages: Literal["split_equally", "select_first"],
 ) -> Dict[str, Number]:
     """Calculates the percentages if they are missing
 
@@ -24,12 +30,15 @@ def _calc_percentages_if_missing(
         return dict()
 
     if how_to_handle_missing_percentages == "split_equally":
+        habtypes = _remove_duplicated_but_keep_order(habtypes)
         return {hab: 100 / len(habtypes) for hab in habtypes}
 
     if how_to_handle_missing_percentages == "select_first":
         return {habtypes[0]: 100}
 
-    raise ValueError("Missing percentages")
+    raise ValueError(
+        "how_to_handle_missing_percentages must be one of 'split_equally', 'select_first'"
+    )
 
 
 def _convert_row_to_dict(
@@ -50,12 +59,11 @@ def _convert_row_to_dict(
     ):
         raise ValueError("The number of habitat types and percentages must be equal")
 
+    ret_values = defaultdict(lambda: 0)
     if percentage_colnames is not None:
-        ret_values = {
-            hab: perc
-            for hab, perc in zip(row[habtype_colnames], row[percentage_colnames])
-            if pd.notnull(hab)
-        }
+        for hab, perc in zip(row[habtype_colnames], row[percentage_colnames]):
+            if pd.notnull(hab):
+                ret_values[hab] += perc
     else:
         habs = [hab for hab in row[habtype_colnames] if pd.notnull(hab)]
         ret_values = _calc_percentages_if_missing(
