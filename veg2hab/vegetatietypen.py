@@ -230,12 +230,12 @@ class VvN:
     # 37rg2                                          3    7               r  g                  2
 
     klasse: str
-    orde: Optional[str]
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
+    orde: Optional[str] = None
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"

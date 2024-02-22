@@ -102,7 +102,11 @@ def ingest_vegtype_column(
     vegtype_split_char: Optional[str] = None,
     # percentage_col: Optional[str] = None, TODO: add support for already existing percentage_col
 ):
-    gdf = gdf.copy()  # Needed to avoid SettingWithCopyWarning
+    """
+    Maakt van een kolom met alle vegetatietypen een kolom met VegTypeInfo objecten
+    """
+    # TODO: Add support for vegtypen over multiple columns.
+    gdf = gdf.copy() # Anders krijgen we een SettingWithCopyWarning
 
     if vegtype_split_char:
         gdf["split_vegtypen"] = gdf[vegtype_col].str.split(vegtype_split_char)
@@ -111,8 +115,8 @@ def ingest_vegtype_column(
     exploded = gdf.explode("split_vegtypen")
     gdf = gdf.drop(columns=["split_vegtypen"])
 
-    # TODO: add support for already existing percentage_col
-    # If there is no percentage column, we add it by evenly dividing the space in each shape
+    # TODO: voeg ondersteuning toe voor al bestaande percentage_col
+    # Als er geen percentagekolom is, voegen we deze toe door de ruimte in elke vorm gelijkmatig te verdelen
     if True:  # not percentage_col:
         exploded["percentage"] = exploded.groupby(ElmID_col)[ElmID_col].transform(
             lambda x: 100.0 / len(x)
@@ -340,7 +344,7 @@ def bepaal_ChckNodig(row: gpd.GeoSeries):
 def reorder_columns_final_format(df: pd.DataFrame):
     """
     Reorder de kolommen van een dataframe conform het Gegevens Leverings Protocol
-    Result wil be:
+    Resultaat zal zijn:
     Area   Opm   geometry   Habtype1   Perc1   Opp1   Kwal1   VvN1   SBB1   Habtype2   Perc2   Opp2...
     """
     new_columns = ["Area", "Opm", "Datum", "geometry", "_ChkNodig"]
@@ -476,16 +480,16 @@ class Kartering:
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
 
-        # We drop all NA vegtype info - these could be due to geom that are lines, not shapes,
-        # but also due to missing values in one of the csv files.
+        # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,
+        # maar ook aan ontbrekende waarden in een van de csv-bestanden.
         if gdf.VegTypeInfo.isnull().any():
-            # TODO: Once we have a nice logging system, we should log this instead of printing it.
-            # NOTE: Should this be a warning?
+            # TODO: Zodra we een mooi logsysteem hebben, moeten we dit loggen in plaats van het te printen.
+            # NOTE: Moet dit een warning zijn?
             print(
-                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo. Deze worden gedropt."
+                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo. Deze worden verwijderd."
             )
             print(
-                f"De eerste paar ElmID van de gedropte vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
+                f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
             )
             gdf = gdf.dropna(subset=["VegTypeInfo"])
 
@@ -501,7 +505,7 @@ class Kartering:
         vegtype_split_char: Optional[str] = None,
         datum_col: Optional[str] = None,
         opmerking_col: Optional[str] = None,
-        # percentage_col: Optional[str] = None, # TODO add support for already existing percentage_col
+        # percentage_col: Optional[str] = None, # TODO: toevoegen support voor al bestaande percentage kolom
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
