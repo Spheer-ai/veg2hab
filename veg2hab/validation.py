@@ -138,6 +138,9 @@ def parse_habitat_percentages(
 
 
 def spatial_join(gdf_pred, gdf_true, how: Literal["intersection", "include_uncharted"]):
+    """Joins the two dataframes
+    Use include uncharted to create a new Habtype "ONGEKARTEERD" with 100% for all uncharted areas
+    """
     assert (
         gdf_pred.columns.tolist()
         == gdf_true.columns.tolist()
@@ -179,13 +182,17 @@ def spatial_join(gdf_pred, gdf_true, how: Literal["intersection", "include_uncha
 
 
 def bereken_percentage_correct(
-    habs_pred: Dict[str, float], habs_true: Dict[str, float]
-):
+    habs_pred: Dict[str, Number], habs_true: Dict[str, Number]
+) -> Number:
+    """Berekent percentage correct"""
     keys_in_both = set(habs_pred.keys()) & set(habs_true.keys())
     return sum(min(habs_pred[k], habs_true[k]) for k in keys_in_both)
 
 
 def voeg_correctheid_toe_aan_df(df: gpd.GeoDataFrame):
+    """Voegt twee nieuwe kolommen toe aan de dataframe:
+    percentage_correct en oppervlakte_correct
+    """
     df["percentage_correct"] = df.apply(
         lambda row: bereken_percentage_correct(
             row["pred_hab_perc"], row["true_hab_perc"]
@@ -198,8 +205,16 @@ def voeg_correctheid_toe_aan_df(df: gpd.GeoDataFrame):
 
 def bereken_percentage_confusion_matrix(
     habs_pred: Dict[str, Number], habs_true: Dict[str, Number]
-):
-    """huilie huilie"""
+) -> pd.DataFrame:
+    """huilie huilie
+
+    Example:
+        >>> bereken_percentage_confusion_matrix({"H123": 80, "H234": 20}, {"H123": 50, "H234": 50})
+        pred_hab true_hab  percentage
+        H123     H123      50.0
+        H234     H234      20.0
+        H123     H234      30.0
+    """
     # we'll be editing the dictionaries in place, so let's first make a copy
     habs_pred = habs_pred.copy()
     habs_true = habs_true.copy()
@@ -238,6 +253,7 @@ def bereken_percentage_confusion_matrix(
                 break
 
     # TODO add some validation here!!
+    # willen we hier nog valideren met percentages?
     #     if percentage > 1e-10:
     #         warnings.warn("Non matching percentages in conf matrix, too much pred %?")
     # if true_percentage > 1e-10:
@@ -246,7 +262,16 @@ def bereken_percentage_confusion_matrix(
     return pd.DataFrame(outputs, columns=["pred_hab", "true_hab", "percentage"])
 
 
-def bereken_volledige_conf_matrix(gdf, method: Literal["percentage", "area"] = "area"):
+def bereken_volledige_conf_matrix(
+    gdf: gpd.GeoDataFrame, method: Literal["percentage", "area"] = "area"
+) -> pd.DataFrame:
+    """Berekent de volledige confusion matrix
+    Geeft een vierkant pandas dataframe terug met identieke kolommen en rijen
+
+    method="percentage" geeft het aantal shapes terug dat correct is geclassificeerd. Waarbij
+        wordt gekeken naar percentages
+    method="area" geeft het aantal hectaren terug dat correct is geclassificeerd.
+    """
     assert method in {"percentage", "area"}
 
     def _func(row, method):
@@ -270,6 +295,7 @@ def bereken_volledige_conf_matrix(gdf, method: Literal["percentage", "area"] = "
         index=indices, columns=indices, fill_value=0
     )
 
+    # scale outputs
     if method == "percentage":
         confusion_matrix /= 100  # return outputs in values from 0 to 1
     if method == "area":
