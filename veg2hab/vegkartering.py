@@ -151,13 +151,20 @@ def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
 
 def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries):
     """
-    Sorteert de habitatkeuze en vegtypeinfo van een rij op basis van de habitatkeuze
+    Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
+    Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos ook op de juiste volgorde worden gezet
+    Voor:
+        HabitatKeuze: [HK1(H0000, 15%), HK2(H1234, 80%), HK3(H0000, 5%)]
+        VegTypeInfo: [VT1(15%, SBB1), VT2(80%, SBB2), VT3(5%, SBB3)]
+    Na:
+        HabitatKeuze: [HK2(H1234, 80%), HK1(H0000, 15%), HK3(H0000, 5%)]
+        VegTypeInfo: [VT2(80%, SBB2), VT1(15%, SBB1), VT3(5%, SBB3)]
     """
-    combined = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
+    keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
     # Sorteer op basis van de habitatkeuze (idx 0)
-    sorted_combined = sorted(combined, key=rank_habitatkeuzes)
+    sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
 
-    row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_combined)
+    row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
     # Tuples uit zip omzetten naar lists
     row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(
         row["VegTypeInfo"]
@@ -167,6 +174,7 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries):
 
 def hab_as_final_format(print_info: tuple, idx: int, opp: float):
     # TODO: het 1 voorstel geval qua output unifien met meerdere voorstellen zodat het enkel afhangt van status wat er geprint wordt
+    # TODO: Dit kan allemaal naar HabitatKeuze (.as_final_form() ofzo)
 
     keuze, vegtypeinfo = print_info
 
