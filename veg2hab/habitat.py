@@ -2,7 +2,7 @@ import enum
 from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from veg2hab.criteria import (
     BeperkendCriterium,
@@ -120,12 +120,12 @@ def is_mozaiek_type_present(
     )
 
 
-def rank_habitatkeuzes(combined_info: tuple) -> tuple:
+def rank_habitatkeuzes(keuze_en_vegtypeinfo: Tuple[HabitatKeuze, "VegTypeInfo"]) -> tuple:
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit
     """
-    keuze, vegtypeinfo = combined_info
+    keuze, vegtypeinfo = keuze_en_vegtypeinfo
     voorgestelde_habtypen = [voorstel.habtype for voorstel in keuze.habitatvoorstellen]
     alleen_H0000 = all(habtype == "H0000" for habtype in voorgestelde_habtypen)
 
@@ -141,7 +141,7 @@ def rank_habitatkeuzes(combined_info: tuple) -> tuple:
 
 def sublist_per_match_level(
     voorstellen: List[HabitatVoorstel],
-) -> List[HabitatVoorstel]:
+) -> List[List[HabitatVoorstel]]:
     """
     Splitst een lijst met habitatvoorstellen op in sublijsten per match level
     """
