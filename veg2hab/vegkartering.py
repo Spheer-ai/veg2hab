@@ -103,7 +103,9 @@ def ingest_vegtype_column(
     # percentage_col: Optional[str] = None, TODO: add support for already existing percentage_col
 ):
     """
-    Maakt van een kolom met alle vegetatietypen een kolom met VegTypeInfo objecten
+    Leest een kolom met vegetatietypen in en maakt hier VegTypeInfo objecten van
+    De kolom wordt eerst gesplitst op een opgegeven karakter (voor complexen (bv "16aa2+15aa")))
+    Hierna wordt de kolom geexplode, worden er VegTypeInfo gemaakt van alle vegtypen en deze worden weer op ElmID samengevoegd
     """
     # TODO: Add support for vegtypen over multiple columns.
     gdf = gdf.copy() # Anders krijgen we een SettingWithCopyWarning
@@ -517,6 +519,14 @@ class Kartering:
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
+        Input:
+        - shape_path: het pad naar de shapefile
+        - ElmID_col: de kolomnaam van de ElementID in de Shapefile; uniek per vlak
+        - VvN_col: kolomnaam van de VvN vegetatietypen als deze er zijn
+        - SBB_col: kolomnaam van de SBB vegetatietypen als deze er zijn
+        - vegtype_split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa"))
+        - datum_col: kolomnaam van de datum als deze er is
+        - opmerking_col: kolomnaam van de opmerking als deze er is
         """
         # TODO: Voor nu gemaakt enkel voor de Groningen non-access karteringen, die hebben geen percentage kolom
         shapefile = gpd.read_file(shape_path)
@@ -528,11 +538,10 @@ class Kartering:
             + [ElmID_col, "geometry"]
         )
 
-        assert all(
-            col in shapefile.columns for col in cols
-        ), f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
+        if not all(col in shapefile.columns for col in cols):
+            raise ValueError(f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})")
 
-        gdf = shapefile[[col for col in cols if col in shapefile.columns]].copy()
+        gdf = shapefile[cols].copy()
 
         # Als er geen datum of opmerking kolom is, dan vullen we deze met None
         datum_col = "Datum" if datum_col is None else datum_col
