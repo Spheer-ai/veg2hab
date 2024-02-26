@@ -28,7 +28,7 @@ class MatchLevel(IntEnum):
     GEMEENSCHAP_SBB = 11
 
 
-@dataclass()
+@dataclass
 class SBB:
     """
     Format van SBB codes:
@@ -49,14 +49,17 @@ class SBB:
     # 16b/a                                        /                     a
 
     klasse: str
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
+        if code in ["100", "200", "300", "400"]:
+            self.klasse = "niet habitattypewaardig"
+            return
 
         # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
         self.derivaatgemeenschap = None
@@ -83,7 +86,7 @@ class SBB:
             self.subassociatie = match.group("subassociatie")
             return
 
-        raise ValueError()
+        raise ValueError(f"Invalid SBB code: {code}")
 
     def base_SBB_as_tuple(self):
         """
@@ -183,6 +186,27 @@ class SBB:
             )
         )
 
+    @staticmethod
+    def opschonen_series(series: pd.Series):
+        """
+        Voert een aantal opschoningen uit op een pandas series van SBB codes
+        Hierna zijn ze nog niet per se valide, dus check dat nog
+        """
+        series = series.astype("string")
+
+        # Verwijderen prefix (voor deftabel)
+        series = series.str.replace("SBB-", "")
+        # Verwijderen xxx suffix (voor deftabel)
+        series = series.str.replace("-xxx [08-f]", "", regex=False)
+        # Maak lowercase
+        series = series.str.lower()
+        # Verwijderen whitespace
+        series = series.str.replace(" ", "")
+        # Regex vervang 0[1-9] door [1-9]
+        series = series.str.replace(r"0([1-9])", r"\1", regex=True)
+
+        return series
+
 
 @dataclass()
 class VvN:
@@ -206,12 +230,12 @@ class VvN:
     # 37rg2                                          3    7               r  g                  2
 
     klasse: str
-    orde: Optional[str]
-    verbond: Optional[str]
-    associatie: Optional[str]
-    subassociatie: Optional[str]
-    derivaatgemeenschap: Optional[str]
-    rompgemeenschap: Optional[str]
+    orde: Optional[str] = None
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
@@ -246,7 +270,8 @@ class VvN:
             self.derivaatgemeenschap = None
             self.rompgemeenschap = None
             return
-        raise ValueError()
+
+        raise ValueError(f"Invalid VvN code: {code}")
 
     def normal_VvN_as_tuple(self):
         if self.derivaatgemeenschap or self.rompgemeenschap:
@@ -346,53 +371,29 @@ class VvN:
             )
         )
 
+    def opschonen_series(series: pd.Series):
+        """
+        Voert een aantal opschoningen uit op een pandas series van VvN codes
+        Hierna zijn ze nog niet per se valide, dus check dat nog
+        """
+        series = series.astype("string")
 
-def opschonen_SBB_pandas_series(series: pd.Series):
-    """
-    Voert een aantal opschoningen uit op een pandas series van SBB codes
-    Hierna zijn ze nog niet per se valide, dus check dat nog
-    """
-    series = series.astype("string")
+        # Maak lowercase
+        series = series.str.lower()
+        # Verwijderen whitespace uit VvN
+        series = series.str.replace(" ", "")
+        # Verwijderen '-' (voor deftabel)
+        series = series.str.replace("-", "")
+        # Converteren rompgemeenschappen en derivaaatgemeenschappen (voor deftabel)
+        series = series.str.replace(r"\[.*\]", "", regex=True)
+        # Verwijderen haakjes uit Vvn (voor wwl)
+        series = series.str.replace("[()]", "", regex=True)
+        # Verwijderen p.p. uit VvN (voor wwl)
+        series = series.str.replace("p.p.", "")
+        # regex vervang 0[1-9] door [1-9]
+        series = series.str.replace("0([1-9])", r"\1", regex=True)
 
-    # Verwijderen prefix (voor deftabel)
-    series = series.str.replace("SBB-", "")
-    # Verwijderen xxx suffix (voor deftabel)
-    series = series.str.replace("-xxx [08-f]", "", regex=False)
-    # Maak lowercase
-    series = series.str.lower()
-    # Verwijderen whitespace
-    series = series.str.replace(" ", "")
-    # Vervangen 300 / 400 door nan
-    series = series.replace(["300", "400"], pd.NA)
-    # Regex vervang 0[1-9] door [1-9]
-    series = series.str.replace(r"0([1-9])", r"\1", regex=True)
-
-    return series
-
-
-def opschonen_VvN_pandas_series(series: pd.Series):
-    """
-    Voert een aantal opschoningen uit op een pandas series van VvN codes
-    Hierna zijn ze nog niet per se valide, dus check dat nog
-    """
-    series = series.astype("string")
-
-    # Maak lowercase
-    series = series.str.lower()
-    # Verwijderen whitespace uit VvN
-    series = series.str.replace(" ", "")
-    # Verwijderen '-' (voor deftabel)
-    series = series.str.replace("-", "")
-    # Converteren rompgemeenschappen en derivaaatgemeenschappen (voor deftabel)
-    series = series.str.replace(r"\[.*\]", "", regex=True)
-    # Verwijderen haakjes uit Vvn (voor wwl)
-    series = series.str.replace("[()]", "", regex=True)
-    # Verwijderen p.p. uit VvN (voor wwl)
-    series = series.str.replace("p.p.", "")
-    # regex vervang 0[1-9] door [1-9]
-    series = series.str.replace("0([1-9])", r"\1", regex=True)
-
-    return series
+        return series
 
 
 def convert_string_to_VvN(code):
