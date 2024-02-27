@@ -108,7 +108,7 @@ def ingest_vegtype_column(
     Hierna wordt de kolom geexplode, worden er VegTypeInfo gemaakt van alle vegtypen en deze worden weer op ElmID samengevoegd
     """
     # TODO: Add support for vegtypen over multiple columns.
-    gdf = gdf.copy() # Anders krijgen we een SettingWithCopyWarning
+    gdf = gdf.copy()  # Anders krijgen we een SettingWithCopyWarning
 
     if vegtype_split_char:
         gdf["split_vegtypen"] = gdf[vegtype_col].str.split(vegtype_split_char)
@@ -539,7 +539,9 @@ class Kartering:
         )
 
         if not all(col in shapefile.columns for col in cols):
-            raise ValueError(f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})")
+            raise ValueError(
+                f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
+            )
 
         gdf = shapefile[cols].copy()
 
