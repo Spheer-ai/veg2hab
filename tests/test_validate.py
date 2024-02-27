@@ -17,7 +17,7 @@ from veg2hab.validation import (
 def gdf():
     return gpd.GeoDataFrame(
         # in principle this is invalid data.
-        # They should be ordered by percentage (and habtype 0 is alway first)
+        # They should be ordered by percentage (and habtype 0 is alway last)
         data={
             "Habtype1": ["H123", "H123", "H345", None],
             "Perc1": [80, 20, 40, 0],
@@ -43,7 +43,7 @@ def gdf_single_square_1():
 
 @fixture
 def gdf_single_square_2():
-    """Its translated 1, 1 from gdf_single_square_1
+    """Its translated 10, 10 from gdf_single_square_1
     Also this is only 80% H123
     """
     return gpd.GeoDataFrame(

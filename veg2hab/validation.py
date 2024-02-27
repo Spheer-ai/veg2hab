@@ -9,6 +9,8 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal
 
+MIN_AREA_THRESHOLD = 1
+
 
 def _remove_duplicated_but_keep_order(lst: List[str]) -> List[str]:
     seen = set()
@@ -30,6 +32,8 @@ def _calc_percentages_if_missing(
     if len(habtypes) == 0:
         return dict()
 
+    # TODO: If there are duplicates it now splits H1/H1/H2 into 50/50
+    # we might want to split this into 66%,33%
     if how_to_handle_missing_percentages == "split_equally":
         habtypes = _remove_duplicated_but_keep_order(habtypes)
         return {hab: 100 / len(habtypes) for hab in habtypes}
@@ -157,7 +161,7 @@ def spatial_join(gdf_pred, gdf_true, how: Literal["intersection", "include_uncha
         columns={"hab_perc_1": "pred_hab_perc", "hab_perc_2": "true_hab_perc"}
     )
 
-    mask = overlayed.area < 1
+    mask = overlayed.area < MIN_AREA_THRESHOLD
     if mask.sum() > 0:
         warnings.warn(
             f"Dropping {mask.sum()} rows based on area (presumed rounding errors) with a combined area of {overlayed[mask].area.sum()} m²"
