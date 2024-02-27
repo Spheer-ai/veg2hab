@@ -1,4 +1,68 @@
-﻿mits|json
+﻿mits|mitsjson
+mits in de grofzandige delen van FGR Getijdengebied of FGR Noordzee, voorzover gelegen tussen de -20 meter-dieptelijn en de op Lowest Astronomical Tide gebaseerde laagwaterlijn, inclusief de tussenliggende diepere laagten en geulen|"{
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
+}"
+mits in de grofzandige delen van FGR Getijdengebied of FGR Noordzee, voorzover gelegen tussen de op Lowest Astronomical Tide gebaseerde laagwaterlijn en de gemiddelde hoogwaterlijn|"{
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
+}"
+mits in de slikkige en fijnzandige delen van FGR Getijdengebied of FGR Noordzee, voorzover gelegen tussen de -20 meter-dieptelijn en de op Lowest Astronomical Tide gebaseerde laagwaterlijn, inclusief de tussenliggende diepere laagten en geulen, en mits geen onderdeel van H1130 en H1160|"{
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
+}"
+
 mits in de FGR Getijdengebied en mits gelegen in het verlengde van een rivier waarvan het water een sterke en continue invloed op het habitattype heeft, voorzover gelegen onder de gemiddelde hoogwaterlijn; potentieel|"{
     ""type"": ""EnCriteria"",
     ""sub_criteria"": [
@@ -515,6 +579,9 @@ alleen in mozaïek met zelfstandige vegetaties van H7140_A|"{
     ""type"": ""Placeholder""
 }"
 mits droogvallend|"{
+    ""type"": ""Placeholder""
+}"
+mits tufvorming plaatsvindt|"{
     ""type"": ""Placeholder""
 }"
 |"{
