@@ -3,10 +3,11 @@ import re
 import warnings
 from collections import defaultdict
 from numbers import Number
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Optional
 
 import geopandas as gpd
 import pandas as pd
+from typing_extensions import Literal
 
 
 def _remove_duplicated_but_keep_order(lst: List[str]) -> List[str]:
