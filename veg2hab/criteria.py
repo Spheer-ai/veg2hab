@@ -47,14 +47,14 @@ class BeperkendCriterium(BaseModel):
         return json.dumps(self.dict(*args, **kwargs))
 
     def check(self, row: gpd.GeoSeries):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def is_criteria_type_present(self, type):
         return isinstance(self, type)
 
     @property
     def evaluation(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class GeenCriterium(BeperkendCriterium):
@@ -65,7 +65,12 @@ class GeenCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.TRUE
 
     @property
+    # TODO: Deze base case van evaluation kan naar de base class
     def evaluation(self):
+        if self._evaluation is None:
+            raise RuntimeError(
+                "Evaluation value requested before criteria has been checked"
+            )
         return self._evaluation
 
     def __str__(self):
@@ -80,6 +85,7 @@ class PlaceholderCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.FALSE
 
     @property
+    # TODO: Deze base case van evaluation kan naar de base class
     def evaluation(self):
         if self._evaluation is None:
             raise RuntimeError(
@@ -103,6 +109,7 @@ class FGRCriterium(BeperkendCriterium):
             MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
         )
 
+    # TODO: Deze base case van evaluation kan naar de base class
     @property
     def evaluation(self):
         assert (
@@ -140,6 +147,7 @@ class OfCriteria(BeperkendCriterium):
 
     def check(self, row: gpd.GeoSeries):
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
+        #       (en deze logica verplaatsen naar MaybeBoolean)
         for crit in self.sub_criteria:
             crit.check(row)
 
@@ -151,6 +159,7 @@ class OfCriteria(BeperkendCriterium):
     @property
     def evaluation(self):
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
+        #       (en deze logica verplaatsen naar MaybeBoolean)
         return (
             MaybeBoolean.TRUE
             if any(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
@@ -168,6 +177,7 @@ class EnCriteria(BeperkendCriterium):
 
     def check(self, row: gpd.GeoSeries):
         # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
+        #       (en deze logica verplaatsen naar MaybeBoolean)
         for crit in self.sub_criteria:
             crit.check(row)
 
@@ -178,7 +188,7 @@ class EnCriteria(BeperkendCriterium):
 
     @property
     def evaluation(self):
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
+        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic (en deze logica verplaatsen naar MaybeBoolean)
         return (
             MaybeBoolean.TRUE
             if all(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
@@ -190,5 +200,28 @@ class EnCriteria(BeperkendCriterium):
         return f"({en_crits})"
 
 
-class Mozaiekregel:
-    pass
+class Mozaiekregel(BaseModel):
+    def is_mozaiek_type_present(self, type):
+        return isinstance(self, type)
+
+
+class DummyMozaiekregel(Mozaiekregel):
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self):
+        self._evaluation = MaybeBoolean.FALSE
+
+    @property
+    def evaluation(self):
+        return self._evaluation
+
+
+class GeenMozaiekregel(Mozaiekregel):
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self):
+        self._evaluation = MaybeBoolean.TRUE
+
+    @property
+    def evaluation(self):
+        return self._evaluation
