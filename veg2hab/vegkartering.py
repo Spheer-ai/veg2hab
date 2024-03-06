@@ -404,6 +404,18 @@ class Kartering:
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
         gdf = gpd.read_file(shape_path)
+        # gdf = gdf.set_crs(epsg=28992) NOTE: none ->  warning erbij
+
+        if gdf.crs is None:
+            warnings.warn(
+                f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992"
+            )
+            gdf = gdf.set_crs(epsg=28992)
+        elif gdf.crs.to_epsg() != 28992:
+            warnings.warn(
+                f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992"
+            )
+            gdf = gdf.to_crs(epsg=28992)
 
         # Subsetten van kolommen
         columns_to_keep = [
@@ -431,9 +443,12 @@ class Kartering:
 
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
-            usecols=["ElmID", "intern_id"],
-            dtype={"ElmID": int, "intern_id": int},
+            usecols=["ElmID", "intern_id", "Locatietype"],
+            dtype={"ElmID": int, "intern_id": int, "Locatietype": str},
         )
+        # Eruit filteren van lijnen
+        element["Locatietype"] = element["Locatietype"].str.lower()
+        element = element[element.Locatietype == "v"][["ElmID", "intern_id"]]
 
         kart_veg = pd.read_csv(
             access_csvs_path / "KarteringVegetatietype.csv",
@@ -459,9 +474,19 @@ class Kartering:
         sbbtype = sbbtype.rename(columns={"Code": "Sbb"})
 
         # Intern ID toevoegen aan de gdf
-        gdf = gdf.merge(
-            element, left_on=shape_elm_id_column, right_on="ElmID", how="left"
-        )
+        try:
+            gdf = gdf.merge(
+                element, left_on=shape_elm_id_column, right_on="ElmID", how="left", validate="one_to_one"
+            )
+        except pd.errors.MergeError:
+            message = f"Er is geen 1 op 1 relatie tussen {shape_elm_id_column} in de shapefile en ElmID in de Element.csv."
+            if not gdf[shape_elm_id_column].is_unique:
+                dubbele_elmid = gdf[shape_elm_id_column][gdf[shape_elm_id_column].duplicated()].to_list()[:10]
+                message += f" Er zitten dubbelingen in de shapefile, bijvoorbeeld {shape_elm_id_column}: {dubbele_elmid}."
+            if not element.ElmID.is_unique:
+                dubbele_elmid = element.ElmID[element.ElmID.duplicated()].to_list()[:10]
+                message += f" Er zitten dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid}."
+            raise ValueError(message)
 
         # SBB code toevoegen aan KarteringVegetatietype
         kart_veg = kart_veg.merge(
@@ -496,7 +521,7 @@ class Kartering:
             # TODO: Zodra we een mooi logsysteem hebben, moeten we dit loggen in plaats van het te printen.
             # NOTE: Moet dit een warning zijn?
             print(
-                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo. Deze worden verwijderd."
+                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo in {shape_path}. Deze worden verwijderd."
             )
             print(
                 f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
@@ -530,6 +555,12 @@ class Kartering:
         """
         # TODO: Voor nu gemaakt enkel voor de Groningen non-access karteringen, die hebben geen percentage kolom
         shapefile = gpd.read_file(shape_path)
+
+        if not gdf[ElmID_col].is_unique:
+            raise ValueError(
+                f"De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}"
+            )
+
         # Selectie van de te bewaren kolommen; VvN of SBB afhankelijk van wat is opgegeven,
         # datum en opmerking als deze er in zitten, en sowieso ElmID en geometry
         cols = (
