@@ -68,7 +68,7 @@ class VegTypeInfo:
         VvN_col: Optional[str] = None,
     ):
         """
-        Maakt van alle rijen met vegetatietypes van een vlak 
+        Maakt van alle rijen met vegetatietypes van een vlak
         (via groupby bv) een lijst van VegetatieTypeInfo objecten
         """
         assert (
@@ -197,8 +197,12 @@ def fill_in_percentages(
             row[perc_colname] = percentage
     elif vegtype_col_format == "single":
         # Uitzoeke hoeveel vegtypen er zijn
-        nr_of_vvn = len(row[vvn_col].split(split_char)) if vvn_col and row[vvn_col] else 0
-        nr_of_sbb = len(row[sbb_col].split(split_char)) if sbb_col and row[sbb_col] else 0
+        nr_of_vvn = (
+            len(row[vvn_col].split(split_char)) if vvn_col and row[vvn_col] else 0
+        )
+        nr_of_sbb = (
+            len(row[sbb_col].split(split_char)) if sbb_col and row[sbb_col] else 0
+        )
         max_veg_types = max(nr_of_vvn, nr_of_sbb)
 
         # Percentages berekenen en toekennen
@@ -494,19 +498,18 @@ def reorder_columns_final_format(df: pd.DataFrame):
         ]
     return df[new_columns]
 
+
 def fix_crs(gdf: gpd.GeoDataFrame, shape_path: Path = "onbekend.shp"):
     """
     Geeft voor gdfs zonder crs een warning en zet ze om naar EPSG:28992
     Zet gdfs met een andere crs dan EPSG:28992 om naar EPSG:28992
     """
     if gdf.crs is None:
-        warnings.warn(
-            f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992"
-        )
+        warnings.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
         gdf = gdf.set_crs(epsg=28992)
     elif gdf.crs.to_epsg() != 28992:
         # NOTE: @reviewer
-        # NOTE: @reviewer   Moet hier een warning bij? Lijkt me van niet, maar ik weet niet in hoeverre 
+        # NOTE: @reviewer   Moet hier een warning bij? Lijkt me van niet, maar ik weet niet in hoeverre
         # NOTE: @reviewer   het omzetten van crs eventuele problemen kan geven
         # NOTE: @reviewer
         # warnings.warn(
@@ -514,6 +517,7 @@ def fix_crs(gdf: gpd.GeoDataFrame, shape_path: Path = "onbekend.shp"):
         # )
         gdf = gdf.to_crs(epsg=28992)
     return gdf
+
 
 class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
@@ -673,9 +677,7 @@ class Kartering:
         SBB_col: Optional[str] = None,
         VvN_col: Optional[str] = None,
         split_char: Optional[str] = "+",
-        perc_col: Optional[
-            str
-        ] = None,
+        perc_col: Optional[str] = None,
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
@@ -773,7 +775,7 @@ class Kartering:
         ###############
         ##### Inlezen van de vegetatietypen
         ###############
-        
+
         if sbb_of_vvn in ["SBB", "beide"]:
             sbb_vegtypeinfos = ingest_vegtype_column(
                 gdf,
@@ -801,7 +803,7 @@ class Kartering:
             # Als het enkel VvN is zijn we klaar
             if sbb_of_vvn != "beide":
                 gdf["VegTypeInfo"] = vvn_vegtypeinfos
-        
+
         # Als we beide hebben moeten we de VegTypeInfos samenvoegen
         if sbb_of_vvn == "beide":
             gdf["VegTypeInfo"] = combine_vegtypeinfos_columns(
@@ -823,7 +825,7 @@ class Kartering:
         VvN_already_present = self.gdf["VegTypeInfo"].apply(
             lambda infos: any(len(info.VvN) > 0 for info in infos)
         )
-        if VvN_already_present.any() and not override_existing_VvN:            
+        if VvN_already_present.any() and not override_existing_VvN:
             warnings.warn(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )

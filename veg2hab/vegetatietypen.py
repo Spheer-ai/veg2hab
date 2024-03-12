@@ -213,7 +213,9 @@ class SBB:
         # Vervangen 0[1-9] door [1-9]
         series = series.str.replace(r"0([1-9])", r"\1", regex=True)
         # Vervangen enkel "-" of "x" vegtypen door None
-        series = series.apply(lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x)
+        series = series.apply(
+            lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
+        )
 
         return series
 
@@ -408,6 +410,8 @@ class VvN:
         # Vervangen 0[1-9] door [1-9]
         series = series.str.replace("0([1-9])", r"\1", regex=True)
         # Vervangen enkel "-" of "x" vegtypen door None
-        series = series.apply(lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x)
+        series = series.apply(
+            lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
+        )
 
         return series
