@@ -60,7 +60,7 @@ class VegTypeInfo:
         )
 
     @classmethod
-    def create_list_from_access_rows(
+    def create_vegtypen_list_from_rows(
         cls,
         rows: pd.DataFrame,
         perc_col: str,
@@ -154,7 +154,7 @@ def ingest_vegtype_column(
         )
 
     vegtypeinfos = combined.groupby(level=0).apply(
-        lambda rows: VegTypeInfo.create_list_from_access_rows(
+        lambda rows: VegTypeInfo.create_vegtypen_list_from_rows(
             rows,
             perc_col="perc_list",
             SBB_col="vegtypen_list" if vegtype_cls == _SBB else None,
@@ -638,7 +638,7 @@ class Kartering:
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
             .apply(
-                VegTypeInfo.create_list_from_access_rows,
+                VegTypeInfo.create_vegtypen_list_from_rows,
                 perc_col="Bedekking_num",
                 SBB_col="Sbb",
             )
@@ -700,7 +700,7 @@ class Kartering:
 
         shapefile = gpd.read_file(shape_path)
 
-        if not shapefile[ElmID_col].is_unique:
+        if ElmID_col and not shapefile[ElmID_col].is_unique:
             # NOTE: Als we ElmID nooit door hoeven te voeren tot in de habitattypekartering kan deze ook helemaal
             #       uit de spreadsheets gehaald worden; dan gebruiken we gewoon altijd onze eigen.
             warnings.warn(
@@ -729,9 +729,15 @@ class Kartering:
         ] + [ElmID_col, "geometry"]
         # Uitvinden welke vegtype kolommen er mee moeten
         if vegtype_col_format == "multi":
-            for col in [SBB_col, VvN_col, perc_col]:
-                if col:
-                    cols += col.split(split_char)
+            if SBB_col is not None:
+                SBB_col = SBB_col.split(split_char)
+                cols += SBB_col
+            if VvN_col is not None:
+                VvN_col = VvN_col.split(split_char)
+                cols += VvN_col
+            if perc_col is not None:
+                perc_col = perc_col.split(split_char)
+                cols += perc_col
         else:
             cols += [col for col in [VvN_col, SBB_col, perc_col] if col is not None]
         if not all(col in shapefile.columns for col in cols):
@@ -779,7 +785,6 @@ class Kartering:
         if sbb_of_vvn in ["SBB", "beide"]:
             sbb_vegtypeinfos = ingest_vegtype_column(
                 gdf,
-                ElmID_col,
                 vegtype_col_format,
                 SBB_col,
                 _SBB,
@@ -793,7 +798,6 @@ class Kartering:
         if sbb_of_vvn in ["VvN", "beide"]:
             vvn_vegtypeinfos = ingest_vegtype_column(
                 gdf,
-                ElmID_col,
                 vegtype_col_format,
                 VvN_col,
                 _VvN,

@@ -286,7 +286,7 @@ class VvN:
 
     @classmethod
     def from_string(cls, code):
-        if pd.isnull(code):
+        if pd.isnull(code) or code == "":
             return None
         return cls(code)
 
