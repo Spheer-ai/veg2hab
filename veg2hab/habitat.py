@@ -1,7 +1,6 @@
 import enum
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import chain
 from typing import List, Optional, Tuple, Union
 
 from veg2hab.criteria import (
@@ -120,7 +119,9 @@ def is_mozaiek_type_present(
     )
 
 
-def rank_habitatkeuzes(keuze_en_vegtypeinfo: Tuple[HabitatKeuze, "VegTypeInfo"]) -> tuple:
+def rank_habitatkeuzes(
+    keuze_en_vegtypeinfo: Tuple[HabitatKeuze, "VegTypeInfo"]
+) -> tuple:
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit

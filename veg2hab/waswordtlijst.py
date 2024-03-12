@@ -1,16 +1,10 @@
-import math
 from functools import lru_cache
 from pathlib import Path
 from typing import List
 
 import pandas as pd
 
-from veg2hab.vegetatietypen import (
-    SBB,
-    VvN,
-    convert_string_to_SBB,
-    convert_string_to_VvN,
-)
+from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
 
@@ -31,8 +25,8 @@ class WasWordtLijst:
         ), "Niet alle VvN codes zijn valid"
 
         # Omvormen naar SBB en VvN klasses
-        self.df["SBB"] = self.df["SBB"].apply(convert_string_to_SBB)
-        self.df["VvN"] = self.df["VvN"].apply(convert_string_to_VvN)
+        self.df["SBB"] = self.df["SBB"].apply(SBB.from_string)
+        self.df["VvN"] = self.df["VvN"].apply(VvN.from_string)
 
         # Replace pd.NA with None
         # NOTE: kunnen we ook alle rows met een NA gewoon verwijderen? Als we of geen VvN of
@@ -123,8 +117,8 @@ def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
     wwl["VvN"] = wwl["VvN"].str.split(",")
     wwl = wwl.explode("VvN")
 
-    # Whitespace velden vervangen door NaN
-    wwl = wwl.replace(r"^\s*$", pd.NA, regex=True)
+    # Whitespace velden vervangen door None
+    wwl = wwl.replace(r"^\s*$", None, regex=True)
 
     wwl["VvN"] = VvN.opschonen_series(wwl["VvN"])
     wwl["SBB"] = SBB.opschonen_series(wwl["SBB"])

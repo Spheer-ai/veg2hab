@@ -94,6 +94,12 @@ class SBB:
         """
         return (self.klasse, self.verbond, self.associatie, self.subassociatie)
 
+    @classmethod
+    def from_string(cls, code):
+        if pd.isnull(code):
+            return None
+        return cls(code)
+
     def match_up_to(self, other: Optional[SBB]) -> MatchLevel:
         """
         Geeft het aantal subgroepen terug waarin deze SBB overeenkomt met de andere
@@ -135,7 +141,7 @@ class SBB:
     @staticmethod
     def validate(code: str):
         """
-        Validate dat t een valide SBB code is
+        Checkt of een string voldoet aan de SBB opmaak
         """
         # Strippen van evt rompgemeenschap of derivaatgemeenschap
         code_gemeenschap = re.sub(SBB.gemeenschap, "", code)
@@ -193,7 +199,8 @@ class SBB:
         Hierna zijn ze nog niet per se valide, dus check dat nog
         """
         series = series.astype("string")
-
+        # Van alle smaken NA gewoon None maken
+        series = series.apply(lambda x: None if pd.isna(x) else x)
         # Verwijderen prefix (voor deftabel)
         series = series.str.replace("SBB-", "")
         # Verwijderen xxx suffix (voor deftabel)
@@ -202,8 +209,11 @@ class SBB:
         series = series.str.lower()
         # Verwijderen whitespace
         series = series.str.replace(" ", "")
-        # Regex vervang 0[1-9] door [1-9]
+        series = series.str.strip()
+        # Vervangen 0[1-9] door [1-9]
         series = series.str.replace(r"0([1-9])", r"\1", regex=True)
+        # Vervangen enkel "-" of "x" vegtypen door None
+        series = series.apply(lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x)
 
         return series
 
@@ -223,11 +233,11 @@ class VvN:
     normale_vvn: ClassVar = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<orde>[a-z])((?P<verbond>[a-z])((?P<associatie>[1-9][0-9]?)(?P<subassociatie>[a-z])?)?)?)?"
     )
-    # 42aa1e                                         4    2                a                  a                     1                             e
+    # 42aa1e          4    2                a                  a                     1                             e
     gemeenschap: ClassVar = re.compile(
         r"(?P<klasse>[1-9][0-9]?)(?P<type>[dr]g)(?P<gemeenschap>[1-9][0-9]?)"
     )
-    # 37rg2                                          3    7               r  g                  2
+    # 37rg2           3    7               r  g                  2
 
     klasse: str
     orde: Optional[str] = None
@@ -239,7 +249,6 @@ class VvN:
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
-
         match = self.gemeenschap.fullmatch(code)
         if match:
             self.klasse = match.group("klasse")
@@ -272,6 +281,12 @@ class VvN:
             return
 
         raise ValueError(f"Invalid VvN code: {code}")
+
+    @classmethod
+    def from_string(cls, code):
+        if pd.isnull(code):
+            return None
+        return cls(code)
 
     def normal_VvN_as_tuple(self):
         if self.derivaatgemeenschap or self.rompgemeenschap:
@@ -326,7 +341,7 @@ class VvN:
     @classmethod
     def validate(cls, code: str):
         """
-        Valideert dat het aan onze opmaak van VvN codes voldoet
+        Checkt of een string voldoet aan de VvN opmaak
         """
         return cls.normale_vvn.fullmatch(code) or cls.gemeenschap.fullmatch(code)
 
@@ -377,11 +392,11 @@ class VvN:
         Hierna zijn ze nog niet per se valide, dus check dat nog
         """
         series = series.astype("string")
-
         # Maak lowercase
         series = series.str.lower()
         # Verwijderen whitespace uit VvN
         series = series.str.replace(" ", "")
+        series = series.str.strip()
         # Verwijderen '-' (voor deftabel)
         series = series.str.replace("-", "")
         # Converteren rompgemeenschappen en derivaaatgemeenschappen (voor deftabel)
@@ -390,27 +405,9 @@ class VvN:
         series = series.str.replace("[()]", "", regex=True)
         # Verwijderen p.p. uit VvN (voor wwl)
         series = series.str.replace("p.p.", "")
-        # regex vervang 0[1-9] door [1-9]
+        # Vervangen 0[1-9] door [1-9]
         series = series.str.replace("0([1-9])", r"\1", regex=True)
+        # Vervangen enkel "-" of "x" vegtypen door None
+        series = series.apply(lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x)
 
         return series
-
-
-def convert_string_to_VvN(code):
-    """
-    Functie om pandas om te zetten naar VvN klasse
-    """
-    # Check dat het geen nan is
-    if pd.isnull(code):
-        return None
-    return VvN(code)
-
-
-def convert_string_to_SBB(code):
-    """
-    Functie om pandas om te zetten naar SBB klasse
-    """
-    # Check dat het een string is
-    if pd.isnull(code):
-        return None
-    return SBB(code)
