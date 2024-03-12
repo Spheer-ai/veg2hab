@@ -10,12 +10,7 @@ import pandas as pd
 from veg2hab.criteria import BeperkendCriterium, DummyMozaiekregel, GeenMozaiekregel
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
-from veg2hab.vegetatietypen import (
-    SBB,
-    VvN,
-    convert_string_to_SBB,
-    convert_string_to_VvN,
-)
+from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +22,8 @@ class DefinitieTabel:
         self.df = df
 
         self.df.Kwaliteit = self.df.Kwaliteit.apply(Kwaliteit.from_letter)
-        self.df.SBB = self.df.SBB.apply(convert_string_to_SBB)
-        self.df.VvN = self.df.VvN.apply(convert_string_to_VvN)
+        self.df.SBB = self.df.SBB.apply(SBB.from_string)
+        self.df.VvN = self.df.VvN.apply(VvN.from_string)
 
         assert self.df.mitsjson.notnull().all()
 
@@ -103,6 +98,9 @@ class DefinitieTabel:
         Maakt een lijst met habitattype voorstellen voor een gegeven code
         Wordt gecached om snelheid te verhogen
         """
+        if code is None:
+            return []
+
         voorstellen = []
         column = "VvN" if isinstance(code, VvN) else "SBB"
         match_levels = self.df[column].apply(code.match_up_to)
