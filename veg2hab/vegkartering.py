@@ -118,14 +118,9 @@ def ingest_vegtype_column(
     De kolom wordt eerst gesplitst op een opgegeven karakter (voor complexen (bv "16aa2+15aa")))
     Hierna wordt de kolom geexplode, worden er VegTypeInfo gemaakt van alle vegtypen en deze worden weer op ElmID samengevoegd
     """
-<<<<<<< HEAD
     assert (vegtype_col_format == "single") == (
         isinstance(vegtype_col, str)
     ), "Als vegtype_col_format 'single' is, moet vegtype_col een string zijn"
-=======
-    # TODO: Add support for vegtypen over multiple columns.
-    gdf = gdf.copy()  # Anders krijgen we een SettingWithCopyWarning
->>>>>>> master
 
     gdf = gdf.copy()  # Anders krijgen we een SettingWithCopyWarning
 
@@ -749,10 +744,6 @@ class Kartering:
             raise ValueError(
                 f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
             )
-<<<<<<< HEAD
-=======
-
->>>>>>> master
         gdf = shapefile[cols].copy()
 
         gdf = fix_crs(gdf, shape_path)
