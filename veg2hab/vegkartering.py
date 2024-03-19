@@ -5,12 +5,12 @@ from typing import List, Optional, Type, Union
 
 import geopandas as gpd
 import pandas as pd
+from typing_extensions import Literal
 
 from veg2hab.criteria import FGRCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
-    HabitatKeuze,
     HabitatVoorstel,
     KeuzeStatus,
     habitatkeuze_obv_mitsen,
@@ -33,24 +33,34 @@ class VegTypeInfo:
 
     def __post_init__(self):
         assert len(self.SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+        assert (
+            isinstance(self.percentage, int) or self.percentage is None
+        ), f"Percentage moet een integer of None zijn. Nu is het {self.percentage} {type(self.percentage)}"
 
     @classmethod
     def from_str_vegtypes(
-        cls, percentage: int, VvN_strings: List[str] = [], SBB_strings: List[str] = []
+        cls,
+        percentage: Union[int, float, None],
+        VvN_strings: List[str] = [],
+        SBB_strings: List[str] = [],
     ):
         """
         Aanmaken vanuit string vegetatietypen
         """
-        assert len(SBB_strings) <= 1, "Er kan niet meer dan 1 SBB type zijn"
+        if pd.isna(percentage):
+            percentage = 0
+        else:
+            # Via float naar int, want de string "100.0" kan niet direct naar int
+            percentage = int(float(percentage))
 
         return cls(
             percentage=percentage,
-            VvN=[_VvN(i) for i in VvN_strings],
-            SBB=[_SBB(i) for i in SBB_strings],
+            VvN=[_VvN.from_string(i) for i in VvN_strings],
+            SBB=[_SBB.from_string(i) for i in SBB_strings],
         )
 
     @classmethod
-    def create_list_from_access_rows(
+    def create_vegtypen_list_from_rows(
         cls,
         rows: pd.DataFrame,
         perc_col: str,
@@ -58,7 +68,8 @@ class VegTypeInfo:
         VvN_col: Optional[str] = None,
     ):
         """
-        Maakt van alle rijen met vegetatietypes (van een vlak) een lijst van VegetatieTypeInfo objecten
+        Maakt van alle rijen met vegetatietypes van een vlak
+        (via groupby bv) een lijst van VegetatieTypeInfo objecten
         """
         assert (
             SBB_col or VvN_col and not (SBB_col and VvN_col)
@@ -67,17 +78,17 @@ class VegTypeInfo:
         lst = []
 
         for _, row in rows.iterrows():
-            if pd.isnull(row[vegtype_col]):
-                # NA SBB moet geen VegTypeInfo object worden
-                lst.append(cls.from_str_vegtypes(row[perc_col]))
-            else:
-                lst.append(
-                    cls.from_str_vegtypes(row[perc_col], SBB_strings=[row[vegtype_col]])
+            lst.append(
+                cls.from_str_vegtypes(
+                    row[perc_col],
+                    VvN_strings=[row[VvN_col]] if VvN_col else [],
+                    SBB_strings=[row[SBB_col]] if SBB_col else [],
                 )
+            )
         return lst
 
     def __str__(self):
-        return f"({self.percentage}%, VvN: {[str(x) for x in self.VvN]}, SBB: {[str(x) for x in self.SBB]})"
+        return f"({self.percentage}%, SBB: {[str(x) for x in self.SBB]}, VvN: {[str(x) for x in self.VvN]})"
 
     def __hash__(self):
         return hash((self.percentage, tuple(self.VvN), tuple(self.SBB)))
@@ -96,52 +107,163 @@ class Geometrie:
 
 def ingest_vegtype_column(
     gdf: gpd.GeoDataFrame,
-    ElmID_col: str,
-    vegtype_col: str,
+    vegtype_col_format: str,
+    vegtype_col: Union[str, List[str]],
     vegtype_cls: Union[Type[_SBB], Type[_VvN]],
-    vegtype_split_char: Optional[str] = None,
-    # percentage_col: Optional[str] = None, TODO: add support for already existing percentage_col
-):
+    perc_col: Union[str, List[str]],
+    split_char: Optional[str] = None,
+) -> pd.Series:
     """
     Leest een kolom met vegetatietypen in en maakt hier VegTypeInfo objecten van
     De kolom wordt eerst gesplitst op een opgegeven karakter (voor complexen (bv "16aa2+15aa")))
     Hierna wordt de kolom geexplode, worden er VegTypeInfo gemaakt van alle vegtypen en deze worden weer op ElmID samengevoegd
     """
-    # TODO: Add support for vegtypen over multiple columns.
+    assert (vegtype_col_format == "single") == (
+        isinstance(vegtype_col, str)
+    ), "Als vegtype_col_format 'single' is, moet vegtype_col een string zijn"
+
     gdf = gdf.copy()  # Anders krijgen we een SettingWithCopyWarning
 
-    if vegtype_split_char:
-        gdf["split_vegtypen"] = gdf[vegtype_col].str.split(vegtype_split_char)
+    if vegtype_col_format == "multi":
+        vegtypen_list = (
+            gdf[vegtype_col]
+            .apply(lambda row: [row[col] for col in vegtype_col], axis=1)
+            .explode()
+        )
+        vegtypen_list = vegtype_cls.opschonen_series(vegtypen_list)
+        perc_list = (
+            gdf[perc_col]
+            .apply(lambda row: [row[col] for col in perc_col], axis=1)
+            .explode()
+        )
+        combined = pd.DataFrame(
+            {"vegtypen_list": vegtypen_list, "perc_list": perc_list}
+        )
+    elif vegtype_col_format == "single":
+        # Scheiden van complexen
+        vegtypen_list = gdf[vegtype_col].str.split(split_char).explode()
+        vegtypen_list = vegtype_cls.opschonen_series(vegtypen_list)
+        # Alle percentages in een lijst
+        perc_list = gdf[perc_col].str.split(split_char).explode()
+        combined = pd.DataFrame(
+            {"vegtypen_list": vegtypen_list, "perc_list": perc_list}
+        )
     else:
-        gdf["split_vegtypen"] = gdf[vegtype_col]
-    exploded = gdf.explode("split_vegtypen")
-    gdf = gdf.drop(columns=["split_vegtypen"])
-
-    # TODO: voeg ondersteuning toe voor al bestaande percentage_col
-    # Als er geen percentagekolom is, voegen we deze toe door de ruimte in elke vorm gelijkmatig te verdelen
-    if True:  # not percentage_col:
-        exploded["percentage"] = exploded.groupby(ElmID_col)[ElmID_col].transform(
-            lambda x: 100.0 / len(x)
+        raise ValueError(
+            f"vegtype_col_format moet 'single' of 'multi' zijn, maar is nu '{vegtype_col_format}'"
         )
 
-    exploded["split_vegtypen"] = vegtype_cls.opschonen_series(
-        exploded["split_vegtypen"]
-    )
-    vegtypeinfos = (
-        exploded.groupby(ElmID_col)
-        .apply(
-            VegTypeInfo.create_list_from_access_rows,
-            perc_col="percentage",
-            SBB_col="split_vegtypen" if vegtype_cls == _SBB else None,
-            VvN_col="split_vegtypen" if vegtype_cls == _VvN else None,
+    vegtypeinfos = combined.groupby(level=0).apply(
+        lambda rows: VegTypeInfo.create_vegtypen_list_from_rows(
+            rows,
+            perc_col="perc_list",
+            SBB_col="vegtypen_list" if vegtype_cls == _SBB else None,
+            VvN_col="vegtypen_list" if vegtype_cls == _VvN else None,
         )
-        .reset_index(name="VegTypeInfo")
-        .VegTypeInfo
     )
 
-    gdf["VegTypeInfo"] = vegtypeinfos
+    return vegtypeinfos
 
-    return gdf
+    # Weer in de goede volgorde zetten (na grouping is ElmID op alfabetische volgorde)
+    # return gdf.merge(vegtypeinfos, on=ElmID_col).VegTypeInfo
+
+
+def fill_in_percentages(
+    row: gpd.GeoSeries,
+    vegtype_col_format: Literal["single", "multi"],
+    split_char: Optional[str],
+    perc_col: Union[str, List[str]],
+    sbb_col: Union[str, List[str]] = None,
+    vvn_col: Union[str, List[str]] = None,
+):
+    """ """
+    if vegtype_col_format == "multi":
+        # Uitzoeken hoeveel vegtypen er zijn
+        vvn_present = row[vvn_col].notna().reset_index(drop=True) if vvn_col else False
+        sbb_present = row[sbb_col].notna().reset_index(drop=True) if sbb_col else False
+        vegtype_present = vvn_present | sbb_present
+        n_vegtypen = vegtype_present.sum()
+
+        # Percentages berekenen
+        if n_vegtypen == 0:
+            percentages = [0] * len(vegtype_present)
+        else:
+            percentages = [100 / n_vegtypen] * n_vegtypen + [0] * (
+                len(vegtype_present) - n_vegtypen
+            )
+
+        # Percentages toekennen
+        for perc_colname, percentage in zip(perc_col, percentages):
+            row[perc_colname] = percentage
+    elif vegtype_col_format == "single":
+        # Uitzoeke hoeveel vegtypen er zijn
+        nr_of_vvn = (
+            len(row[vvn_col].split(split_char)) if vvn_col and row[vvn_col] else 0
+        )
+        nr_of_sbb = (
+            len(row[sbb_col].split(split_char)) if sbb_col and row[sbb_col] else 0
+        )
+        max_veg_types = max(nr_of_vvn, nr_of_sbb)
+
+        # Percentages berekenen en toekennen
+        if max_veg_types == 0:
+            row[perc_col] = 0
+        else:
+            row[perc_col] = split_char.join([str(100 / max_veg_types)] * max_veg_types)
+    else:
+        raise ValueError(
+            f"vegtype_col_format moet 'single' of 'multi' zijn, maar is nu '{vegtype_col_format}'"
+        )
+    return row
+
+
+def combine_vegtypeinfos_columns(
+    sbb_vegtypeinfo: pd.Series, vvn_vegtypeinfo: pd.Series
+) -> pd.Series:
+    """
+    Combineert 2 series VegTypeInfo naar 1, waarbij de SBB van
+    de eerste series en de VvN van de tweede series worden behouden
+    """
+    df = pd.DataFrame({"SBB": sbb_vegtypeinfo, "VvN": vvn_vegtypeinfo})
+
+    combined = df.apply(
+        combine_vegtypeinfos_row,
+        axis=1,
+    )
+    return combined
+
+
+def combine_vegtypeinfos_row(row: gpd.GeoSeries):
+    """
+    Combineert de SBB en VvN VegTypeInfos uit een rij naar 1 VegTypeInfo
+    """
+    sbb_vegtypeinfo = row["SBB"]
+    vvn_vegtypeinfo = row["VvN"]
+
+    # Check dat er geen NaNs zijn
+    if not sbb_vegtypeinfo:
+        return vvn_vegtypeinfo
+    if not vvn_vegtypeinfo:
+        return sbb_vegtypeinfo
+
+    combined = list(zip(sbb_vegtypeinfo, vvn_vegtypeinfo))
+
+    # Check dat de percentages gelijk zijn
+    if not all(info[0].percentage == info[1].percentage for info in combined):
+        raise ValueError(
+            f"""Percentages in te combineren VegTypeInfos zijn niet gelijk.
+                         SBB: {sbb_vegtypeinfo}
+                         VvN: {vvn_vegtypeinfo}"""
+        )
+
+    return [
+        VegTypeInfo(
+            percentage=info[0].percentage,
+            SBB=info[0].SBB,
+            VvN=info[1].VvN,
+        )
+        for info in combined
+    ]
 
 
 def haal_complexen_door_functie(complexen: List[List[HabitatVoorstel]], func):
@@ -377,12 +499,29 @@ def reorder_columns_final_format(df: pd.DataFrame):
     return df[new_columns]
 
 
+def fix_crs(gdf: gpd.GeoDataFrame, shape_path: Path = "onbekend.shp"):
+    """
+    Geeft voor gdfs zonder crs een warning en zet ze om naar EPSG:28992
+    Zet gdfs met een andere crs dan EPSG:28992 om naar EPSG:28992
+    """
+    if gdf.crs is None:
+        warnings.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
+        gdf = gdf.set_crs(epsg=28992)
+    elif gdf.crs.to_epsg() != 28992:
+        # NOTE: @reviewer
+        # NOTE: @reviewer   Moet hier een warning bij? Lijkt me van niet, maar ik weet niet in hoeverre
+        # NOTE: @reviewer   het omzetten van crs eventuele problemen kan geven
+        # NOTE: @reviewer
+        # warnings.warn(
+        #     f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992"
+        # )
+        gdf = gdf.to_crs(epsg=28992)
+    return gdf
+
+
 class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
         self.gdf = gdf
-
-        # Validation van de gdf
-        self.validate()
 
         # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
         #       Misschien een dict met welke stappen gedaan zijn?
@@ -405,7 +544,9 @@ class Kartering:
         """
         gdf = gpd.read_file(shape_path)
 
-        # Subsetten van kolommen
+        gdf = fix_crs(gdf, shape_path)
+
+        # Selecteren van kolommen
         columns_to_keep = [
             col
             for col in [
@@ -431,9 +572,12 @@ class Kartering:
 
         element = pd.read_csv(
             access_csvs_path / "Element.csv",
-            usecols=["ElmID", "intern_id"],
-            dtype={"ElmID": int, "intern_id": int},
+            usecols=["ElmID", "intern_id", "Locatietype"],
+            dtype={"ElmID": int, "intern_id": int, "Locatietype": str},
         )
+        # Uitfilteren van lijnen
+        element["Locatietype"] = element["Locatietype"].str.lower()
+        element = element[element.Locatietype == "v"][["ElmID", "intern_id"]]
 
         kart_veg = pd.read_csv(
             access_csvs_path / "KarteringVegetatietype.csv",
@@ -459,9 +603,25 @@ class Kartering:
         sbbtype = sbbtype.rename(columns={"Code": "Sbb"})
 
         # Intern ID toevoegen aan de gdf
-        gdf = gdf.merge(
-            element, left_on=shape_elm_id_column, right_on="ElmID", how="left"
-        )
+        try:
+            gdf = gdf.merge(
+                element,
+                left_on=shape_elm_id_column,
+                right_on="ElmID",
+                how="left",
+                validate="one_to_one",
+            )
+        except pd.errors.MergeError:
+            message = f"Er is geen 1 op 1 relatie tussen {shape_elm_id_column} in de shapefile en ElmID in de Element.csv."
+            if not gdf[shape_elm_id_column].is_unique:
+                dubbele_elmid = gdf[shape_elm_id_column][
+                    gdf[shape_elm_id_column].duplicated()
+                ].to_list()[:10]
+                message += f" Er zitten dubbelingen in de shapefile, bijvoorbeeld {shape_elm_id_column}: {dubbele_elmid}."
+            if not element.ElmID.is_unique:
+                dubbele_elmid = element.ElmID[element.ElmID.duplicated()].to_list()[:10]
+                message += f" Er zitten dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid}."
+            raise ValueError(message)
 
         # SBB code toevoegen aan KarteringVegetatietype
         kart_veg = kart_veg.merge(
@@ -478,7 +638,7 @@ class Kartering:
         grouped_kart_veg = (
             kart_veg.groupby("Locatie")
             .apply(
-                VegTypeInfo.create_list_from_access_rows,
+                VegTypeInfo.create_vegtypen_list_from_rows,
                 perc_col="Bedekking_num",
                 SBB_col="Sbb",
             )
@@ -496,7 +656,7 @@ class Kartering:
             # TODO: Zodra we een mooi logsysteem hebben, moeten we dit loggen in plaats van het te printen.
             # NOTE: Moet dit een warning zijn?
             print(
-                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo. Deze worden verwijderd."
+                f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo in {shape_path}. Deze worden verwijderd."
             )
             print(
                 f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
@@ -510,42 +670,85 @@ class Kartering:
         cls,
         shape_path: Path,
         ElmID_col: str,
-        VvN_col: Optional[str] = None,
-        SBB_col: Optional[str] = None,
-        vegtype_split_char: Optional[str] = None,
+        vegtype_col_format: Literal["single", "multi"],
+        sbb_of_vvn: Literal["VvN", "SBB", "beide"],
         datum_col: Optional[str] = None,
         opmerking_col: Optional[str] = None,
-        # percentage_col: Optional[str] = None, # TODO: toevoegen support voor al bestaande percentage kolom
+        SBB_col: Optional[str] = None,
+        VvN_col: Optional[str] = None,
+        split_char: Optional[str] = "+",
+        perc_col: Optional[str] = None,
     ):
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
         Input:
         - shape_path: het pad naar de shapefile
         - ElmID_col: de kolomnaam van de ElementID in de Shapefile; uniek per vlak
-        - VvN_col: kolomnaam van de VvN vegetatietypen als deze er zijn
-        - SBB_col: kolomnaam van de SBB vegetatietypen als deze er zijn
-        - vegtype_split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa"))
+        - vegtype_col_format: "single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn
+        - sbb_of_vvn: "VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.
         - datum_col: kolomnaam van de datum als deze er is
         - opmerking_col: kolomnaam van de opmerking als deze er is
+        - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
+        - SBB_col: kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
+        - split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)
+        - percentage_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
         """
-        # TODO: Voor nu gemaakt enkel voor de Groningen non-access karteringen, die hebben geen percentage kolom
-        shapefile = gpd.read_file(shape_path)
-        # Selectie van de te bewaren kolommen; VvN of SBB afhankelijk van wat is opgegeven,
-        # datum en opmerking als deze er in zitten, en sowieso ElmID en geometry
-        cols = (
-            [col for col in [VvN_col, SBB_col] if col is not None]
-            + [col for col in [datum_col, opmerking_col] if col in shapefile.columns]
-            + [ElmID_col, "geometry"]
-        )
 
+        ###############
+        ##### Valideren, opschonen en aanvullen van de shapefile
+        ###############
+
+        shapefile = gpd.read_file(shape_path)
+
+        if ElmID_col and not shapefile[ElmID_col].is_unique:
+            # NOTE: Als we ElmID nooit door hoeven te voeren tot in de habitattypekartering kan deze ook helemaal
+            #       uit de spreadsheets gehaald worden; dan gebruiken we gewoon altijd onze eigen.
+            warnings.warn(
+                f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
+                Eerste paar dubbele waarden: 
+                {
+                    shapefile[ElmID_col][shapefile[ElmID_col].duplicated()].head().to_list()
+                }
+                Er worden nieuwe waarden voor {ElmID_col} gemaakt en gebruikt.
+                """
+            )
+            ElmID_col = None
+
+        # Nieuwe ElmID kolom maken als dat nodig is
+        if ElmID_col is None:
+            ElmID_col = "ElmID"
+            shapefile[ElmID_col] = range(len(shapefile))
+
+        # Om niet bij splitten steeds "if split_char is not None:" te hoeven doen
+        if split_char is None:
+            split_char = "+"
+
+        # Selectie van de te bewaren kolommen
+        cols = [
+            col for col in [datum_col, opmerking_col] if col in shapefile.columns
+        ] + [ElmID_col, "geometry"]
+        # Uitvinden welke vegtype kolommen er mee moeten
+        if vegtype_col_format == "multi":
+            if SBB_col is not None:
+                SBB_col = SBB_col.split(split_char)
+                cols += SBB_col
+            if VvN_col is not None:
+                VvN_col = VvN_col.split(split_char)
+                cols += VvN_col
+            if perc_col is not None:
+                perc_col = perc_col.split(split_char)
+                cols += perc_col
+        else:
+            cols += [col for col in [VvN_col, SBB_col, perc_col] if col is not None]
         if not all(col in shapefile.columns for col in cols):
             raise ValueError(
                 f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
             )
-
         gdf = shapefile[cols].copy()
 
-        # Als er geen datum of opmerking kolom is, dan vullen we deze met None
+        gdf = fix_crs(gdf, shape_path)
+
+        # Als er geen datum of opmerking kolom is, dan maken we die en vullen we deze met None
         datum_col = "Datum" if datum_col is None else datum_col
         opmerking_col = "Opmerking" if opmerking_col is None else opmerking_col
         for col in [datum_col, opmerking_col]:
@@ -553,28 +756,85 @@ class Kartering:
                 gdf[col] = None
 
         # Standardiseren van kolomnamen
+        # NOTE: Pandera..?
         gdf = gdf.rename(columns={datum_col: "Datum", opmerking_col: "Opmerking"})
         gdf["Opp"] = gdf["geometry"].area
 
-        if VvN_col:
-            gdf = ingest_vegtype_column(
-                gdf, ElmID_col, VvN_col, _VvN, vegtype_split_char
+        # Percentages invullen als die er niet zijn
+        if perc_col is None:
+            if vegtype_col_format == "multi":
+                perc_col = [
+                    f"perc_{n}"
+                    for n in range(
+                        max([len(col) for col in [SBB_col, VvN_col] if col is not None])
+                    )
+                ]
+            else:
+                perc_col = "perc"
+            gdf = gdf.apply(
+                lambda row: fill_in_percentages(
+                    row, vegtype_col_format, split_char, perc_col, SBB_col, VvN_col
+                ),
+                axis=1,
             )
-        elif SBB_col:
-            # We pakken alleen SBB als er geen VvN is
-            gdf = ingest_vegtype_column(
-                gdf, ElmID_col, SBB_col, _SBB, vegtype_split_char
+
+        ###############
+        ##### Inlezen van de vegetatietypen
+        ###############
+
+        if sbb_of_vvn in ["SBB", "beide"]:
+            sbb_vegtypeinfos = ingest_vegtype_column(
+                gdf,
+                vegtype_col_format,
+                SBB_col,
+                _SBB,
+                perc_col,
+                split_char,
             )
-        else:
-            raise ValueError("Er is geen VvN of SBB kolomnaam opgegeven")
+            # Als het enkel SBB is zijn we klaar
+            if sbb_of_vvn != "beide":
+                gdf["VegTypeInfo"] = sbb_vegtypeinfos
+
+        if sbb_of_vvn in ["VvN", "beide"]:
+            vvn_vegtypeinfos = ingest_vegtype_column(
+                gdf,
+                vegtype_col_format,
+                VvN_col,
+                _VvN,
+                perc_col,
+                split_char,
+            )
+            # Als het enkel VvN is zijn we klaar
+            if sbb_of_vvn != "beide":
+                gdf["VegTypeInfo"] = vvn_vegtypeinfos
+
+        # Als we beide hebben moeten we de VegTypeInfos samenvoegen
+        if sbb_of_vvn == "beide":
+            gdf["VegTypeInfo"] = combine_vegtypeinfos_columns(
+                sbb_vegtypeinfos, vvn_vegtypeinfos
+            )
 
         return cls(gdf)
 
-    def apply_wwl(self, wwl: pd.DataFrame):
+    def apply_wwl(self, wwl: pd.DataFrame, override_existing_VvN: bool = False):
         """
-        Pas een was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only
+        Pas een was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
+
+        # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
+        # NOTE: Als dit te langzaam blijkt is een steekproef wss ook voldoende
+        # NOTE NOTE: Als we zowel SBB en VvN uit de kartering hebben, willen we
+        #            dan nog wwl doen voor de SBB zonder al meegegeven VvN?
+        VvN_already_present = self.gdf["VegTypeInfo"].apply(
+            lambda infos: any(len(info.VvN) > 0 for info in infos)
+        )
+        if VvN_already_present.any() and not override_existing_VvN:
+            warnings.warn(
+                "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
+            )
+            return
+
         self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
             wwl.toevoegen_VvN_aan_List_VegTypeInfo
         )
@@ -584,7 +844,10 @@ class Kartering:
         Pas een definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
-        # NOTE: iets wat vast stelt dat er tenminste 1 VegTypeInfo met een VvN is, zo niet geef warning?
+        # NOTE: Hier iets wat vast stelt dat er tenminste 1 VegTypeInfo met een VvN is, zo niet geef warning? (want dan is wwl wss niet gedaan)
+        #       - klinkt wel logisch maar het is ook mogelijk dat geen van de SBB een VvN in de wwl hebben
+        #         dus dan is een warning geveb en niet de deftabel toepassen ook niet handig
+        # @ reviewer, goeie andere opties?
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
@@ -687,17 +950,3 @@ class Kartering:
 
     def __getitem__(self, item):
         return Geometrie(self.gdf.iloc[item])
-
-    def validate(self):
-        pass
-        # Validation error als t foute boel is
-
-        # Validate aanwezigheid benodigde kolommen
-
-        # Validate dat we of vvn of sbb hebben
-
-        # Validate dat de geometrie een 2D multipolygon is
-
-        # Validate dat de geometrie valide is (geen overlap, geen self intersection, etc)
-
-        # Validate dat t rijksdriehoek is
