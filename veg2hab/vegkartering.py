@@ -103,6 +103,49 @@ class Geometrie:
         self.data = data
 
 
+def ingest_vegtype(
+    gdf: gpd.GeoDataFrame,
+    ElmID_col: str,
+    sbb_cols: Optional[List[str]],
+    vvn_cols: Optional[List[str]],
+    perc_cols: List[str],
+) -> pd.Series:   
+    """
+    tekst
+    """
+    # Validatie
+    if sbb_cols is not None and len(sbb_cols) != len(perc_cols):
+        raise ValueError(
+            f"De lengte van sbb_cols ({len(sbb_cols)}) moet gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
+        )
+
+    if vvn_cols is not None and len(vvn_cols) != len(perc_cols):
+        raise ValueError(
+            f"De lengte van vvn_cols ({len(vvn_cols)}) moet gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
+        )
+    
+    assert sbb_cols or vvn_cols, "Er moet een SBB of VvN kolom zijn"
+
+    # Inlezen
+    if not sbb_cols:
+        sbb_cols = [None] * len(perc_cols)
+    if not vvn_cols:
+        vvn_cols = [None] * len(perc_cols)
+
+    def _row_to_vegtypeinfo_list(row: gpd.GeoSeries) -> List[VegTypeInfo]:
+        vegtype_list = []
+        for sbb_col, vvn_col, perc_col in zip(sbb_cols, vvn_cols, perc_cols):
+            vegtypeinfo = VegTypeInfo.from_str_vegtypes(
+                row[perc_col],
+                VvN_strings=[row[vvn_col]] if vvn_col else [],
+                SBB_strings=[row[sbb_col]] if sbb_col else [],
+            )
+            vegtype_list.append(vegtypeinfo)
+        return vegtype_list
+
+    return gdf.apply(_row_to_vegtypeinfo_list, axis=1)
+    
+
 def ingest_vegtype_column(
     gdf: gpd.GeoDataFrame,
     ElmID_col: str,
@@ -861,6 +904,18 @@ class Kartering:
         gdf = shapefile[cols].copy()
 
         gdf = fix_crs(gdf, shape_path)
+
+        # TODO: single -> multi
+
+        # TODO: opschonen hier doen ipv in ingest vegtype
+        # TODO: opschonen hier doen ipv in ingest vegtype
+        # TODO: opschonen hier doen ipv in ingest vegtype
+        # Opschonen
+        # if sbb_cols:
+        #     gdf[sbb_cols] = gdf[sbb_cols].apply(_SBB.opschonen_series)
+        
+        # if vvn_cols:
+        #     gdf[vvn_cols] = gdf[vvn_cols].apply(_VvN.opschonen_series)
 
         # Als er geen datum of opmerking kolom is, dan maken we die en vullen we deze met None
         datum_col = "Datum" if datum_col is None else datum_col
