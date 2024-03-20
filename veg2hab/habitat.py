@@ -1,4 +1,3 @@
-import enum
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
@@ -11,7 +10,7 @@ from veg2hab.criteria import (
     Mozaiekregel,
     PlaceholderCriterium,
 )
-from veg2hab.enums import Kwaliteit, MaybeBoolean
+from veg2hab.enums import KeuzeStatus, Kwaliteit, MaybeBoolean
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import MatchLevel
 from veg2hab.vegetatietypen import VvN as _VvN
@@ -23,7 +22,6 @@ class HabitatVoorstel:
     Een voorstel voor een habitattype voor een vegetatietype
     """
 
-    # NOTE: Deze class is wel heel vol nu, maar veel van deze info is nodig om een duidelijke output te geven met voldoende debug info
     onderbouwend_vegtype: Union[_SBB, _VvN]
     vegtype_in_dt: Union[_SBB, _VvN]
     habtype: str
@@ -49,44 +47,23 @@ class HabitatVoorstel:
         )
 
 
-class KeuzeStatus(enum.Enum):
-    # 1 Habitatvoorstel met kloppende mits
-    DUIDELIJK = enum.auto()
-
-    # Geen habitatvoorstel met kloppende mits, dus H0000
-    GEEN_KLOPPENDE_MITSEN = enum.auto()
-
-    # Vegtypen niet in deftabel gevonden, dus H0000
-    VEGTYPEN_NIET_IN_DEFTABEL = enum.auto()
-
-    # Meerdere even specifieke habitatvoorstellen met kloppende mitsen
-    MEERDERE_KLOPPENDE_MITSEN = enum.auto()
-
-    # Er zijn PlaceholderCriteriums, dus handmatige controle
-    PLACEHOLDER_CRITERIA = enum.auto()
-
-    HANDMATIGE_CONTROLE = enum.auto()
-    WACHTEN_OP_MOZAIEK = enum.auto()
-
-
 @dataclass
 class HabitatKeuze:
-    status: str
+    status: KeuzeStatus
     opmerking: str
     debug_info: Optional[str]
     habitatvoorstellen: List[HabitatVoorstel]
-    # TODO willen we dit nog opschonen?! Baseclass maken zonder mitsen?
 
 
 def is_criteria_type_present(
     voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]],
-    criteria_type,
-):
+    criteria_type: BeperkendCriterium,
+) -> bool:
     """
-    Geeft True als er in de lijst met Criteria eentje van crit_type is
+    Geeft True als er in de lijst met voorstellen eentje met een criteria van crit_type is
     Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
     """
-    # if we are dealing with a list of lists, we flatten it
+    # Als we een lijst van lijsten hebben, dan flattenen we die
     if any(isinstance(i, list) for i in voorstellen):
         voorstellen = [item for sublist in voorstellen for item in sublist]
     return any(
@@ -100,13 +77,15 @@ def is_criteria_type_present(
 
 
 def is_mozaiek_type_present(
-    voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]], mozaiek_type
-):
+    voorstellen: Union[List[List[HabitatVoorstel]], List[HabitatVoorstel]],
+    mozaiek_type: Mozaiekregel,
+) -> bool:
     """
-    Geeft True als er in de lijst met Criteria eentje van crit_type is
-    Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
+    Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is
+    NOTE: Op het moment wordt dit gebruikt om te kijken of er dummymozaiekregels zijn, en zo ja, dan wordt er HXXXX gegeven.
+    NOTE: Zodra mozaiekregels geimplementeerd zijn, kan deze functie mogelijk weg
     """
-    # if we are dealing with a list of lists, we flatten it
+    # Als we een lijst van lijsten hebben, dan flattenen we die
     if any(isinstance(i, list) for i in voorstellen):
         voorstellen = [item for sublist in voorstellen for item in sublist]
     return any(
@@ -125,10 +104,25 @@ def rank_habitatkeuzes(
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit
+    [habtype=="H0000", percentage, kwaliteit==Kwaliteit.MATIG]
     """
     keuze, vegtypeinfo = keuze_en_vegtypeinfo
     voorgestelde_habtypen = [voorstel.habtype for voorstel in keuze.habitatvoorstellen]
-    alleen_H0000 = all(habtype == "H0000" for habtype in voorgestelde_habtypen)
+
+    # Omdat HXXXX (altijd) en H0000 (in het geval van KeuzeStatus.GEEN_KLOPPENDE_MITSEN) pas toegekend
+    # worden tijdens het formatten van de outputtabel, moeten we die hier speciaal behandelen
+    # NOTE: Zou netjes zijn als dit niet zo hoeft, dus of HXXXX en H0000 eerder toekennen of het ordenen pas aan het eind doen
+    if keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
+        # Dit wordt H0000 bij het formatten van de outputtabel
+        alleen_H0000 = True
+    elif keuze.status in [
+        KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        KeuzeStatus.PLACEHOLDER_CRITERIA,
+    ]:
+        # Dit wordt HXXXX bij het formatten van de outputtabel
+        alleen_H0000 = False
+    else:
+        alleen_H0000 = all(habtype == "H0000" for habtype in voorgestelde_habtypen)
 
     percentage = vegtypeinfo.percentage
 
@@ -157,7 +151,8 @@ def sublist_per_match_level(
 
 def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> HabitatKeuze:
     """
-    Creeert een habitatkeuze obv ENKEL de mitsen van habitatvoorstellen
+    Creeert een habitatkeuze obv de mitsen van habitatvoorstellen
+    Als er mozaikegels zijn, dan wordt er een HabitatKeuze met status WACHTEN_OP_MOZAIEK gegeven
     """
     assert len(habitatvoorstellen) > 0, "Er zijn geen habitatvoorstellen"
 
@@ -199,7 +194,6 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             if voorstel.mits.evaluation == MaybeBoolean.TRUE
         ]
 
-        # TODO: het 1 voorstel geval qua output unifien met meerdere voorstellen
         # Er is 1 kloppende mits; Duidelijk
         if len(true_voorstellen) == 1:
             voorstel = true_voorstellen[0]

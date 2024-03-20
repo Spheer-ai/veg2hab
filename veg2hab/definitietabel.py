@@ -1,6 +1,5 @@
 import copy
 import logging
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Union
@@ -46,12 +45,11 @@ class DefinitieTabel:
         )
 
     @classmethod
-    def from_excel(cls, path):
+    def from_excel(cls, path: Path) -> "DefinitieTabel":
         """
         Maakt een DefinitieTabel object van een excel file.
         Deze method is bedoeld om om te gaan met de opgeschoonde definitietabel uit opschonen_definitietabel().
         """
-        # NOTE: Als ik toch de opgeschoonde definitietabel inlaad moet ik dan nog usecols specificeren?
         df = pd.read_excel(
             path,
             engine="openpyxl",
@@ -64,7 +62,7 @@ class DefinitieTabel:
                 "mits",
                 "mozaiek",
                 "mitsjson",
-                # "mozaiekjson",
+                # "mozaiekjson", TODO
             ],
             dtype="string",
         )
@@ -93,7 +91,9 @@ class DefinitieTabel:
         return voorstellen
 
     @lru_cache(maxsize=256)
-    def _find_habtypes_for_code(self, code: Union[SBB, VvN]):
+    def _find_habtypes_for_code(
+        self, code: Union[SBB, VvN, None]
+    ) -> List[HabitatVoorstel]:
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven code
         Wordt gecached om snelheid te verhogen
@@ -132,7 +132,7 @@ class DefinitieTabel:
 
 def opschonen_definitietabel(
     path_in_deftabel: Path, path_in_mitsjson: Path, path_out: Path
-):
+) -> None:
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst.
     Voegt ook json voor de mitsen toe vanuit path_in_json_def.
