@@ -26,7 +26,7 @@ class VegTypeInfo:
     Klasse met alle informatie over één vegetatietype van een vlak
     """
 
-    percentage: int
+    percentage: float
     SBB: List[_SBB]
     VvN: List[_VvN]
 
@@ -39,22 +39,25 @@ class VegTypeInfo:
     @classmethod
     def from_str_vegtypes(
         cls,
-        percentage: Union[Number, None],
-        VvN_strings: List[str] = [],
-        SBB_strings: List[str] = [],
+        percentage: Optional[Number],
+        VvN_strings: List[Optional[str]] = [],
+        SBB_strings: List[Optional[str]] = [],
     ) -> "VegTypeInfo":
         """
         Aanmaken vanuit string vegetatietypen
         """
         if pd.isna(percentage):
-            percentage = 0
+            percentage = 0.0
         else:
             percentage = float(percentage)
 
+        vvn = [_VvN.from_string(i) for i in VvN_strings]
+        sbb = [_SBB.from_string(i) for i in SBB_strings]
+
         return cls(
             percentage=percentage,
-            VvN=[_VvN.from_string(i) for i in VvN_strings],
-            SBB=[_SBB.from_string(i) for i in SBB_strings],
+            VvN=[v for v in vvn if v is not None],
+            SBB=[s for s in sbb if s is not None],
         )
 
     @classmethod
@@ -105,11 +108,10 @@ class Geometrie:
 
 def ingest_vegtype(
     gdf: gpd.GeoDataFrame,
-    ElmID_col: str,
     sbb_cols: Optional[List[str]],
     vvn_cols: Optional[List[str]],
     perc_cols: List[str],
-) -> pd.Series:   
+) -> pd.Series:
     """
     tekst
     """
@@ -123,7 +125,7 @@ def ingest_vegtype(
         raise ValueError(
             f"De lengte van vvn_cols ({len(vvn_cols)}) moet gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
         )
-    
+
     assert sbb_cols or vvn_cols, "Er moet een SBB of VvN kolom zijn"
 
     # Inlezen
@@ -135,16 +137,20 @@ def ingest_vegtype(
     def _row_to_vegtypeinfo_list(row: gpd.GeoSeries) -> List[VegTypeInfo]:
         vegtype_list = []
         for sbb_col, vvn_col, perc_col in zip(sbb_cols, vvn_cols, perc_cols):
+            if pd.isnull(row[perc_col]) or row[perc_col] == 0:
+                continue
+
             vegtypeinfo = VegTypeInfo.from_str_vegtypes(
                 row[perc_col],
                 VvN_strings=[row[vvn_col]] if vvn_col else [],
                 SBB_strings=[row[sbb_col]] if sbb_col else [],
             )
+
             vegtype_list.append(vegtypeinfo)
         return vegtype_list
 
     return gdf.apply(_row_to_vegtypeinfo_list, axis=1)
-    
+
 
 def ingest_vegtype_column(
     gdf: gpd.GeoDataFrame,
@@ -913,7 +919,7 @@ class Kartering:
         # Opschonen
         # if sbb_cols:
         #     gdf[sbb_cols] = gdf[sbb_cols].apply(_SBB.opschonen_series)
-        
+
         # if vvn_cols:
         #     gdf[vvn_cols] = gdf[vvn_cols].apply(_VvN.opschonen_series)
 
