@@ -819,7 +819,7 @@ class Kartering:
             #       uit de spreadsheets gehaald worden; dan gebruiken we gewoon altijd onze eigen.
             warnings.warn(
                 f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
-                Eerste paar dubbele waarden: 
+                Eerste paar dubbele waarden:
                 {
                     shapefile[ElmID_col][shapefile[ElmID_col].duplicated()].head().to_list()
                 }
