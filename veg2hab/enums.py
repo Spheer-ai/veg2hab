@@ -20,6 +20,8 @@ class MaybeBoolean(Enum):
 
 
 class Kwaliteit(Enum):
+    NVT = "Nvt" # bijvoorbeeld in het geval van H000
+    ONBEKEND = "Onbekend" # bijvoorbeeld in het geval van HXXXX
     GOED = "Goed"
     MATIG = "Matig"
 

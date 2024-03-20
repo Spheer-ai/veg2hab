@@ -50,9 +50,17 @@ class HabitatVoorstel:
 @dataclass
 class HabitatKeuze:
     status: KeuzeStatus
+    habtype: str # format = "H1123"
+    kwaliteit: Kwaliteit
     opmerking: str
     debug_info: Optional[str]
-    habitatvoorstellen: List[HabitatVoorstel]
+    habitatvoorstellen: List[HabitatVoorstel] # used as a refence
+
+    def __post__init__(self):
+        if self.status in {KeuzeStatus.DUIDELIJK, KeuzeStatus.GEEN_KLOPPENDE_MITSEN}:
+            assert self.habtype != "HXXXX"
+        else:
+            assert self.habtype == "HXXXX"
 
 
 def is_criteria_type_present(
