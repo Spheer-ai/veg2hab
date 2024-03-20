@@ -1,7 +1,22 @@
 import geopandas as gpd
+import pandas as pd
 import pytest
 
 from veg2hab.vegkartering import ingest_vegtype_column
+from veg2hab.vegkartering import VegTypeInfo
+
+
+from typing import Literal, List, Optional
+
+
+def ingest_vegtype(
+    gdf: gpd.GeoDataFrame,
+    ElmID_col: str,
+    sbb_cols: Optional[List[str]],
+    vvn_cols: Optional[List[str]],
+    perc_col: List[str],
+):
+    pass
 
 
 @pytest.fixture
@@ -20,54 +35,238 @@ def gdf():
 
 
 def test_single_SBB(gdf):
-    post = ingest_vegtype_column(
-        gdf = gdf, 
+    post = ingest_vegtype(
+        gdf=gdf,
         ElmID_col="ElmID",
-        sbb_of_vvn="beide",
         sbb_cols=["SBB1"],
         vnn_cols=None,
         perc_col=["perc1"],
     )
+    expected = pd.Series(
+        [
+            [VegTypeInfo.from_str_vegtypes(60, SBB_strings=["25a1"])],
+            [VegTypeInfo.from_str_vegtypes(50, SBB_strings=["25a2"])],
+            [VegTypeInfo.from_str_vegtypes(70, SBB_strings=["25a3"])],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-
-def test_single_VvN():
-    pass
-
-
-def test_both_SBB_and_VvN():
-    pass
-
-
-def test_multiple_SBB():
-    pass
-
-
-def test_multiple_SBB_and_VvN():
-    pass
-
-
-def test_SBB_with_some_VvN():
-    pass
+def test_single_VvN(gdf):
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=None,
+        vnn_cols=["VvN1"],
+        perc_col=["perc1"],
+    )
+    expected = pd.Series(
+        [
+            [VegTypeInfo.from_str_vegtypes(60, VvN_strings=["25aa1"])],
+            [VegTypeInfo.from_str_vegtypes(50, VvN_strings=["25aa2"])],
+            [VegTypeInfo.from_str_vegtypes(70, VvN_strings=["25aa3"])],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-def test_xor_SBB_and_VvN():
-    pass
+def test_both_SBB_and_VvN(gdf):
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=["SBB1"],
+        vnn_cols=["VvN1"],
+        perc_col=["perc1"],
+    )
+    expected = pd.Series(
+        [
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    60, SBB_strings=["25a1"], VvN_strings=["25aa1"]
+                )
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    50, SBB_strings=["25a2"], VvN_strings=["25aa2"]
+                )
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    70, SBB_strings=["25a3"], VvN_strings=["25aa3"]
+                )
+            ],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-def test_none_SBB():
-    pass
+def test_multiple_SBB(gdf):
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=["SBB1", "SBB2"],
+        vnn_cols=None,
+        perc_col=["perc1", "perc2"],
+    )
+    expected = pd.Series(
+        [
+            [
+                VegTypeInfo.from_str_vegtypes(60, SBB_strings=["25a1"]),
+                VegTypeInfo.from_str_vegtypes(40, SBB_strings=["26a1"]),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(50, SBB_strings=["25a2"]),
+                VegTypeInfo.from_str_vegtypes(50, SBB_strings=["26a2"]),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(70, SBB_strings=["25a3"]),
+                VegTypeInfo.from_str_vegtypes(30, SBB_strings=["26a3"]),
+            ],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-def test_none_SBB_and_VvN():
-    pass
+def test_multiple_SBB_and_VvN(gdf):
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=["SBB1", "SBB2"],
+        vnn_cols=["VvN1", "VvN2"],
+        perc_col=["perc1", "perc2"],
+    )
+    expected = pd.Series(
+        [
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    60, SBB_strings=["25a1"], VvN_strings=["25aa1"]
+                ),
+                VegTypeInfo.from_str_vegtypes(
+                    40, SBB_strings=["26a1"], VvN_strings=["26aa1"]
+                ),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    50, SBB_strings=["25a2"], VvN_strings=["25aa2"]
+                ),
+                VegTypeInfo.from_str_vegtypes(
+                    50, SBB_strings=["26a2"], VvN_strings=["26aa2"]
+                ),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    70, SBB_strings=["25a3"], VvN_strings=["25aa3"]
+                ),
+                VegTypeInfo.from_str_vegtypes(
+                    30, SBB_strings=["26a3"], VvN_strings=["26aa3"]
+                ),
+            ],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-def test_mismatch_num_vegtype_columns():
-    pass
+def test_SBB_with_some_VvN(gdf):
+    gdf["VvN1"] = [None, "25aa2", "25aa3"]
+    gdf["SBB2"] = ["26a1", None, "26a3"]
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=["SBB1", "SBB2"],
+        vnn_cols=["VvN1", "VvN2"],
+        perc_col=["perc1", "perc2"],
+    )
+    expected = pd.Series(
+        [
+            [
+                VegTypeInfo.from_str_vegtypes(60, SBB_strings=["25a1"]),
+                VegTypeInfo.from_str_vegtypes(
+                    40, SBB_strings=["26a1"], VvN_strings=["26aa1"]
+                ),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    50, SBB_strings=["25a2"], VvN_strings=["25aa2"]
+                ),
+                VegTypeInfo.from_str_vegtypes(50, VvN_strings=["26aa2"]),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    70, SBB_strings=["25a3"], VvN_strings=["25aa3"]
+                ),
+                VegTypeInfo.from_str_vegtypes(
+                    30, SBB_strings=["26a3"], VvN_strings=["26aa3"]
+                ),
+            ],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
-def test_columns_dont_exist():
-    pass
+def test_none_SBB(gdf):
+    gdf["VvN1"] = ["25aa1", None, None]
+    gdf["SBB1"] = ["25a1", None , None]
+    gdf["VvN2"] = [None] * 3
+    gdf["SBB2"] = [None] * 3
+    post = ingest_vegtype(
+        gdf=gdf,
+        ElmID_col="ElmID",
+        sbb_cols=["SBB1", "SBB2"],
+        vnn_cols=["VvN1", "VvN2"],
+        perc_col=["perc1", "perc2"],
+    )
+    expected = pd.Series(
+        [
+            [
+                VegTypeInfo.from_str_vegtypes(60, VvN_strings=["25aa1"]),
+                VegTypeInfo(40, [], []),
+            ],
+            [
+                VegTypeInfo(50, [], []),
+                VegTypeInfo(50, [], []),
+            ],
+            [
+                VegTypeInfo(70, [], []),
+                VegTypeInfo(30, [], []),
+            ],
+        ],
+        name="vegtype",
+    )
+    assert post.equals(expected)
 
 
+def test_mismatch_num_columns(gdf):
+    with pytest.raises(ValueError):
+        ingest_vegtype(
+            gdf=gdf,
+            ElmID_col="ElmID",
+            sbb_cols=["SBB1", "SBB2"],
+            vnn_cols=["VvN1"],
+            perc_col=["perc1", "perc2"],
+        )
+
+    with pytest.raises(ValueError):
+        ingest_vegtype(
+            gdf=gdf,
+            ElmID_col="ElmID",
+            sbb_cols=["SBB1"],
+            vnn_cols=None,
+            perc_col=["perc1", "perc2"],
+        )
+
+
+def test_columns_dont_exist(gdf):
+    with pytest.raises(KeyError):
+        ingest_vegtype(
+            gdf=gdf,
+            ElmID_col="ElmID",
+            sbb_cols=["SBB1", "SBB3"],
+            vnn_cols=None,
+            perc_col=["perc1", "perc2"],
+        )
