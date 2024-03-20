@@ -1,22 +1,10 @@
+from typing import List, Optional
+
 import geopandas as gpd
 import pandas as pd
 import pytest
 
-from veg2hab.vegkartering import ingest_vegtype_column
-from veg2hab.vegkartering import VegTypeInfo
-
-
-from typing import Literal, List, Optional
-
-
-def ingest_vegtype(
-    gdf: gpd.GeoDataFrame,
-    ElmID_col: str,
-    sbb_cols: Optional[List[str]],
-    vvn_cols: Optional[List[str]],
-    perc_col: List[str],
-):
-    pass
+from veg2hab.vegkartering import VegTypeInfo, ingest_vegtype
 
 
 @pytest.fixture
@@ -39,8 +27,8 @@ def test_single_SBB(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1"],
-        vnn_cols=None,
-        perc_col=["perc1"],
+        vvn_cols=None,
+        perc_cols=["perc1"],
     )
     expected = pd.Series(
         [
@@ -58,8 +46,8 @@ def test_single_VvN(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=None,
-        vnn_cols=["VvN1"],
-        perc_col=["perc1"],
+        vvn_cols=["VvN1"],
+        perc_cols=["perc1"],
     )
     expected = pd.Series(
         [
@@ -77,8 +65,8 @@ def test_both_SBB_and_VvN(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1"],
-        vnn_cols=["VvN1"],
-        perc_col=["perc1"],
+        vvn_cols=["VvN1"],
+        perc_cols=["perc1"],
     )
     expected = pd.Series(
         [
@@ -108,8 +96,8 @@ def test_multiple_SBB(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1", "SBB2"],
-        vnn_cols=None,
-        perc_col=["perc1", "perc2"],
+        vvn_cols=None,
+        perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
         [
@@ -136,8 +124,8 @@ def test_multiple_SBB_and_VvN(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1", "SBB2"],
-        vnn_cols=["VvN1", "VvN2"],
-        perc_col=["perc1", "perc2"],
+        vvn_cols=["VvN1", "VvN2"],
+        perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
         [
@@ -178,8 +166,8 @@ def test_SBB_with_some_VvN(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1", "SBB2"],
-        vnn_cols=["VvN1", "VvN2"],
-        perc_col=["perc1", "perc2"],
+        vvn_cols=["VvN1", "VvN2"],
+        perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
         [
@@ -218,8 +206,8 @@ def test_none_SBB(gdf):
         gdf=gdf,
         ElmID_col="ElmID",
         sbb_cols=["SBB1", "SBB2"],
-        vnn_cols=["VvN1", "VvN2"],
-        perc_col=["perc1", "perc2"],
+        vvn_cols=["VvN1", "VvN2"],
+        perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
         [
@@ -247,8 +235,8 @@ def test_mismatch_num_columns(gdf):
             gdf=gdf,
             ElmID_col="ElmID",
             sbb_cols=["SBB1", "SBB2"],
-            vnn_cols=["VvN1"],
-            perc_col=["perc1", "perc2"],
+            vvn_cols=["VvN1"],
+            perc_cols=["perc1", "perc2"],
         )
 
     with pytest.raises(ValueError):
@@ -256,8 +244,8 @@ def test_mismatch_num_columns(gdf):
             gdf=gdf,
             ElmID_col="ElmID",
             sbb_cols=["SBB1"],
-            vnn_cols=None,
-            perc_col=["perc1", "perc2"],
+            vvn_cols=None,
+            perc_cols=["perc1", "perc2"],
         )
 
 
@@ -267,6 +255,6 @@ def test_columns_dont_exist(gdf):
             gdf=gdf,
             ElmID_col="ElmID",
             sbb_cols=["SBB1", "SBB3"],
-            vnn_cols=None,
-            perc_col=["perc1", "perc2"],
+            vvn_cols=None,
+            perc_cols=["perc1", "perc2"],
         )
