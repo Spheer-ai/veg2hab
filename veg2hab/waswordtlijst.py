@@ -98,7 +98,6 @@ class WasWordtLijst:
         Voert alle elementen in een lijst door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
         Handig voor
         """
-        assert len(infos) > 0, "Lijst met VegTypeInfo is leeg"
         return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
 
 
