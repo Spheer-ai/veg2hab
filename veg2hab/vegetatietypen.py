@@ -201,6 +201,8 @@ class SBB:
         series = series.apply(
             lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
         )
+        # Vervang lege of door opschoningen hierboven leeg gemaakte strings door None
+        series = series.apply(lambda x: None if pd.isnull(x) or x == "" else x)
 
         return series
 
@@ -404,5 +406,7 @@ class VvN:
         series = series.apply(
             lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
         )
+        # Vervang lege of door opschoningen hierboven leeg gemaakte strings door None
+        series = series.apply(lambda x: None if pd.isnull(x) or x == "" else x)
 
         return series

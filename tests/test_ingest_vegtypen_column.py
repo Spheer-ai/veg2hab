@@ -193,7 +193,7 @@ def test_SBB_with_some_VvN(gdf):
 
 def test_none_SBB(gdf):
     gdf["VvN1"] = ["25aa1", None, None]
-    gdf["SBB1"] = ["25a1", None , None]
+    gdf["SBB1"] = ["25a1", None, None]
     gdf["VvN2"] = [None] * 3
     gdf["SBB2"] = [None] * 3
     post = ingest_vegtype(
@@ -205,7 +205,9 @@ def test_none_SBB(gdf):
     expected = pd.Series(
         [
             [
-                VegTypeInfo.from_str_vegtypes(60, SBB_strings=["25a1"], VvN_strings=["25aa1"]),
+                VegTypeInfo.from_str_vegtypes(
+                    60, SBB_strings=["25a1"], VvN_strings=["25aa1"]
+                ),
                 VegTypeInfo(40, [], []),
             ],
             [
@@ -230,7 +232,7 @@ def test_mixed_complex_and_non_complex(gdf):
 
     gdf.loc[1, "SBB2"] = None
     gdf.loc[1, "VvN2"] = None
-    gdf.loc[1, "perc2"] = 0 # both 0 and None should work
+    gdf.loc[1, "perc2"] = 0  # both 0 and None should work
     gdf.loc[1, "perc1"] = 100
 
     post = ingest_vegtype(
@@ -240,21 +242,30 @@ def test_mixed_complex_and_non_complex(gdf):
         perc_cols=["perc1", "perc2"],
     )
 
-    expected = pd.Series([
+    expected = pd.Series(
         [
-            VegTypeInfo.from_str_vegtypes(100, SBB_strings=["25a1"], VvN_strings=["25aa1"]),
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    100, SBB_strings=["25a1"], VvN_strings=["25aa1"]
+                ),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    100, SBB_strings=["25a2"], VvN_strings=["25aa2"]
+                ),
+            ],
+            [
+                VegTypeInfo.from_str_vegtypes(
+                    70, SBB_strings=["25a3"], VvN_strings=["25aa3"]
+                ),
+                VegTypeInfo.from_str_vegtypes(
+                    30, SBB_strings=["26a3"], VvN_strings=["26aa3"]
+                ),
+            ],
         ],
-        [
-            VegTypeInfo.from_str_vegtypes(100, SBB_strings=["25a2"], VvN_strings=["25aa2"]),
-        ],
-        [
-            VegTypeInfo.from_str_vegtypes(70, SBB_strings=["25a3"], VvN_strings=["25aa3"]),
-            VegTypeInfo.from_str_vegtypes(30, SBB_strings=["26a3"], VvN_strings=["26aa3"]),
-        ],
-    ], name="vegtype")
+        name="vegtype",
+    )
     assert expected.equals(post)
-
-
 
 
 def test_mismatch_num_columns(gdf):

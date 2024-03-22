@@ -46,20 +46,45 @@ class HabitatVoorstel:
             match_level=MatchLevel.NO_MATCH,
         )
 
+    @classmethod
+    def H0000_no_vegtype_present(cls):
+        return cls(
+            onderbouwend_vegtype=None,
+            vegtype_in_dt=None,
+            habtype="H0000",
+            kwaliteit=None,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=GeenMozaiekregel(),
+            match_level=MatchLevel.NO_MATCH,
+        )
+
 
 @dataclass
 class HabitatKeuze:
     status: KeuzeStatus
-    habtype: str # format = "H1123"
+    habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
     opmerking: str
     debug_info: Optional[str]
-    habitatvoorstellen: List[HabitatVoorstel] # used as a refence
+    habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
 
     def __post__init__(self):
-        if self.status in {KeuzeStatus.DUIDELIJK, KeuzeStatus.GEEN_KLOPPENDE_MITSEN}:
-            assert self.habtype != "HXXXX"
-        else:
+        if self.status in [
+            KeuzeStatus.DUIDELIJK,
+        ]:
+            assert self.habtype not in ["HXXXX", "H0000"]
+        elif self.status in [
+            KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+            KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
+            KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
+        ]:
+            assert self.habtype == "H0000"
+        elif self.status in [
+            KeuzeStatus.WACHTEN_OP_MOZAIEK,
+            KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+        ]:
             assert self.habtype == "HXXXX"
 
 
@@ -164,10 +189,23 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
     """
     assert len(habitatvoorstellen) > 0, "Er zijn geen habitatvoorstellen"
 
-    # Als er maar 1 habitatvoorstel is en dat is H0000, dan zat geen van de vegtypen in de deftabel
+    # Als er maar 1 habitatvoorstel is en dat is H0000, dan...
     if len(habitatvoorstellen) == 1 and habitatvoorstellen[0].habtype == "H0000":
+        # ...zat of geen van de vegtypen in de deftabel
+        if habitatvoorstellen[0].onderbouwend_vegtype:
+            return HabitatKeuze(
+                status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
+                habtype="H0000",
+                kwaliteit=Kwaliteit.NVT,
+                opmerking="",
+                debug_info="",
+                habitatvoorstellen=habitatvoorstellen,
+            )
+        # ...of zijn er geen vegetatietypen opgegeven voor dit vlak
         return HabitatKeuze(
-            status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
+            status=KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
+            habtype="H0000",
+            kwaliteit=Kwaliteit.NVT,
             opmerking="",
             debug_info="",
             habitatvoorstellen=habitatvoorstellen,
@@ -177,6 +215,8 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
     if is_mozaiek_type_present(habitatvoorstellen, DummyMozaiekregel):
         return HabitatKeuze(
             status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
+            habtype="HXXXX",
+            kwaliteit=Kwaliteit.ONBEKEND,
             opmerking=f"Er zijn habitatvoorstellen met mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in habitatvoorstellen]}",
             debug_info="",
             habitatvoorstellen=habitatvoorstellen,
@@ -186,6 +226,8 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
     if is_criteria_type_present([habitatvoorstellen], PlaceholderCriterium):
         return HabitatKeuze(
             status=KeuzeStatus.PLACEHOLDER_CRITERIA,
+            habtype="HXXXX",
+            kwaliteit=Kwaliteit.ONBEKEND,
             opmerking=f"Er zijn mitsen met nog niet geimplementeerde criteria. Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in habitatvoorstellen]}",
             debug_info="",
             habitatvoorstellen=habitatvoorstellen,
@@ -207,6 +249,8 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
             voorstel = true_voorstellen[0]
             return HabitatKeuze(
                 status=KeuzeStatus.DUIDELIJK,
+                habtype=voorstel.habtype,
+                kwaliteit=voorstel.kwaliteit,
                 opmerking=f"Er is een duidelijke keuze. Kloppende mits: {str(voorstel.mits)}",
                 debug_info="",
                 habitatvoorstellen=[voorstel],
@@ -216,6 +260,8 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
         if len(true_voorstellen) > 1:
             return HabitatKeuze(
                 status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+                habtype="HXXXX",
+                kwaliteit=Kwaliteit.ONBEKEND,
                 opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen voldoen; Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
                 debug_info="",
                 habitatvoorstellen=true_voorstellen,
@@ -224,6 +270,8 @@ def habitatkeuze_obv_mitsen(habitatvoorstellen: List[HabitatVoorstel]) -> Habita
     # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
         status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+        habtype="H0000",
+        kwaliteit=Kwaliteit.NVT,
         opmerking=f"Er zijn geen habitatvoorstellen waarvan de mitsen kloppen. Mitsen waaraan niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in habitatvoorstellen]}",
         debug_info="",
         habitatvoorstellen=habitatvoorstellen,
