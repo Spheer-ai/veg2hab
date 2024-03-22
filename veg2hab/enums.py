@@ -20,8 +20,8 @@ class MaybeBoolean(Enum):
 
 
 class Kwaliteit(Enum):
-    NVT = "Nvt" # bijvoorbeeld in het geval van H000
-    ONBEKEND = "Onbekend" # bijvoorbeeld in het geval van HXXXX
+    NVT = "Nvt"  # bijvoorbeeld in het geval van H000
+    ONBEKEND = "Onbekend"  # bijvoorbeeld in het geval van HXXXX
     GOED = "Goed"
     MATIG = "Matig"
 
@@ -39,6 +39,8 @@ class Kwaliteit(Enum):
             return "G"
         elif self == Kwaliteit.MATIG:
             return "M"
+        elif self in [Kwaliteit.NVT, Kwaliteit.ONBEKEND]:
+            return "X"
         else:
             raise ValueError("GoedMatig is niet Goed of Matig")
 
@@ -66,11 +68,14 @@ class KeuzeStatus(Enum):
     # 1 Habitatvoorstel met kloppende mits
     DUIDELIJK = auto()
 
-    # Geen habitatvoorstel met kloppende mits, dus H0000
+    # Geen habitatvoorstel met kloppende mits
     GEEN_KLOPPENDE_MITSEN = auto()
 
-    # Vegtypen niet in deftabel gevonden, dus H0000
+    # Vegtypen niet in deftabel gevonden
     VEGTYPEN_NIET_IN_DEFTABEL = auto()
+
+    # Vlak heeft uit de kartering geen vegetatietypen
+    GEEN_OPGEGEVEN_VEGTYPEN = auto()
 
     # Meerdere even specifieke habitatvoorstellen met kloppende mitsen
     MEERDERE_KLOPPENDE_MITSEN = auto()
@@ -84,3 +89,23 @@ class KeuzeStatus(Enum):
     # Er moet gewacht worden totdat alle zelfstandige habitatwaardige vegetaties
     # zijn bepaald, pas dan kunnen de mozaiekregels worden toegepast
     WACHTEN_OP_MOZAIEK = auto()
+
+    def toelichting(self):
+        if self == KeuzeStatus.DUIDELIJK:
+            return "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek."
+        elif self == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
+            return "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden."
+        elif self == KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL:
+            return "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype."
+        elif self == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
+            return "Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
+        elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
+            return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
+        elif self == KeuzeStatus.PLACEHOLDER_CRITERIA:
+            return "Er zijn placeholder criteria gevonden; deze kunnen (nog) niet door Veg2Hab worden gecontroleerd."
+        elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
+            assert (
+                False
+            ), "Bij KeuzeStatus.HANDMATIGE_CONTROLE moet nog een mooie toelichting, maar ik weet nu nog niet hoe of wat precies."
+        elif self == KeuzeStatus.WACHTEN_OP_MOZAIEK:
+            return "Veg2Hab kan nog geen mozaiekregels checken"
