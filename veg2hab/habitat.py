@@ -69,7 +69,7 @@ class HabitatKeuze:
     debug_info: Optional[str]
     habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
 
-    def __post__init__(self):
+    def __post_init__(self):
         if self.status in [
             KeuzeStatus.DUIDELIJK,
         ]:
@@ -137,34 +137,15 @@ def rank_habitatkeuzes(
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit
-    [habtype=="H0000", percentage, kwaliteit==Kwaliteit.MATIG]
+    Tuple waar op gesort wordt: [uiteindelijk habtype=="H0000", 100-percentage, kwaliteit==Kwaliteit.MATIG]
     """
     keuze, vegtypeinfo = keuze_en_vegtypeinfo
-    voorgestelde_habtypen = [voorstel.habtype for voorstel in keuze.habitatvoorstellen]
 
-    # Omdat HXXXX (altijd) en H0000 (in het geval van KeuzeStatus.GEEN_KLOPPENDE_MITSEN) pas toegekend
-    # worden tijdens het formatten van de outputtabel, moeten we die hier speciaal behandelen
-    # NOTE: Zou netjes zijn als dit niet zo hoeft, dus of HXXXX en H0000 eerder toekennen of het ordenen pas aan het eind doen
-    if keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
-        # Dit wordt H0000 bij het formatten van de outputtabel
-        alleen_H0000 = True
-    elif keuze.status in [
-        KeuzeStatus.WACHTEN_OP_MOZAIEK,
-        KeuzeStatus.PLACEHOLDER_CRITERIA,
-    ]:
-        # Dit wordt HXXXX bij het formatten van de outputtabel
-        alleen_H0000 = False
-    else:
-        alleen_H0000 = all(habtype == "H0000" for habtype in voorgestelde_habtypen)
-
+    habtype_is_H0000 = keuze.habtype == "H0000"
     percentage = vegtypeinfo.percentage
+    kwaliteit_is_matig = keuze.kwaliteit == [Kwaliteit.MATIG]
 
-    voorgestelde_kwaliteiten = [
-        voorstel.kwaliteit for voorstel in keuze.habitatvoorstellen
-    ]
-    matig_kwaliteit = voorgestelde_kwaliteiten == [Kwaliteit.MATIG]
-
-    return (alleen_H0000, 100 - percentage, matig_kwaliteit)
+    return (habtype_is_H0000, 100 - percentage, kwaliteit_is_matig)
 
 
 def sublist_per_match_level(

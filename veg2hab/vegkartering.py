@@ -28,7 +28,7 @@ class VegTypeInfo:
     Klasse met alle informatie over één vegetatietype van een vlak
     """
 
-    percentage: float
+    percentage: Number
     SBB: List[_SBB]
     VvN: List[_VvN]
 
@@ -41,17 +41,16 @@ class VegTypeInfo:
     @classmethod
     def from_str_vegtypes(
         cls,
-        percentage: Optional[Number],
+        percentage: Union[None, str, Number],
         VvN_strings: List[Optional[str]] = [],
         SBB_strings: List[Optional[str]] = [],
     ) -> "VegTypeInfo":
         """
         Aanmaken vanuit string vegetatietypen
         """
-        if pd.isna(percentage):
-            percentage = 0.0
-        else:
-            percentage = float(percentage)
+        if isinstance(percentage, str):
+            percentage = float(percentage.replace(",", "."))
+        assert isinstance(percentage, Number), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
 
         vvn = [_VvN.from_string(i) for i in VvN_strings]
         sbb = [_SBB.from_string(i) for i in SBB_strings]
@@ -76,6 +75,12 @@ class VegTypeInfo:
         lst = []
 
         for _, row in rows.iterrows():
+            # Als er geen percentage is, willen we ook geen VegTypeInfo,
+            if pd.isna(row[perc_col]) or row[perc_col] == 0:
+                continue
+            # Als er geen vegtypen zijn, willen we ook geen VegTypeInfo,
+            if pd.isna(row[SBB_col]):
+                continue
             lst.append(
                 cls.from_str_vegtypes(
                     row[perc_col],
@@ -92,17 +97,6 @@ class VegTypeInfo:
         return hash((self.percentage, tuple(self.VvN), tuple(self.SBB)))
 
 
-# class Geometrie:
-#     """Een shape/rij uit de vegetatiekartering.
-#     Deze bevat of een VvN of een SBB code en een geometrie.
-#     """
-
-#     data: gpd.GeoSeries  # (pandas series?)
-
-#     def __init__(self, data: gpd.GeoSeries):
-#         self.data = data
-
-
 def ingest_vegtype(
     gdf: gpd.GeoDataFrame,
     sbb_cols: Optional[List[str]],
@@ -110,7 +104,8 @@ def ingest_vegtype(
     perc_cols: List[str],
 ) -> pd.Series:
     """
-    tekst
+    Leest de vegetatietypen van een vlak in en maakt er een lijst van VegTypeInfo objecten van
+    Vlakken zonder percentage 
     """
     # Validatie
     if sbb_cols is not None and len(sbb_cols) != len(perc_cols):
@@ -221,8 +216,7 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
     # Sorteer op basis van de habitatkeuze (idx 0)
     sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
-    if len(row["VegTypeInfo"]) == 0:
-        print(row)
+    
     row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
     # Tuples uit zip omzetten naar lists
     row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(
@@ -254,34 +248,44 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking,
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-                f"VvN{idx}": str(voorstel.onderbouwend_vegtype)
-                if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                else None,
-                f"SBB{idx}": str(voorstel.onderbouwend_vegtype)
-                if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                else None,
+                f"VvN{idx}": (
+                    str(voorstel.onderbouwend_vegtype)
+                    if isinstance(voorstel.onderbouwend_vegtype, _VvN)
+                    else None
+                ),
+                f"SBB{idx}": (
+                    str(voorstel.onderbouwend_vegtype)
+                    if isinstance(voorstel.onderbouwend_vegtype, _SBB)
+                    else None
+                ),
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting(),
-                f"_VvNdftbl{idx}": str(
-                    [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
-                )
-                if isinstance(voorstel.vegtype_in_dt, _VvN)
-                else None,
-                f"_SBBdftbl{idx}": str(
-                    [str(voorstel.vegtype_in_dt), voorstel.idx_in_dt]
-                )
-                if isinstance(voorstel.vegtype_in_dt, _SBB)
-                else None,
+                f"_VvNdftbl{idx}": (
+                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                    if isinstance(voorstel.vegtype_in_dt, _VvN)
+                    else None
+                ),
+                f"_SBBdftbl{idx}": (
+                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                    if isinstance(voorstel.vegtype_in_dt, _SBB)
+                    else None
+                ),
                 # Als de status GEEN_OPGEGEVEN_VEGTYPEN is, dan willen we bij VgTypInf niks invullen
-                f"_VgTypInf{idx}": str(vegtypeinfo) if keuze.status != KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN else None,
-                f"_ChkNodig{idx}": True
-                if keuze.status
-                in [
-                    KeuzeStatus.PLACEHOLDER_CRITERIA,
-                    KeuzeStatus.WACHTEN_OP_MOZAIEK,
-                ]
-                else False,
+                f"_VgTypInf{idx}": (
+                    str(vegtypeinfo)
+                    if keuze.status != KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN
+                    else None
+                ),
+                f"_ChkNodig{idx}": (
+                    True
+                    if keuze.status
+                    in [
+                        KeuzeStatus.PLACEHOLDER_CRITERIA,
+                        KeuzeStatus.WACHTEN_OP_MOZAIEK,
+                    ]
+                    else False
+                ),
             }
 
             return pd.Series(series_dict)
@@ -355,14 +359,16 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 ]
             ),
             f"_VgTypInf{idx}": str(vegtypeinfo),
-            f"_ChkNodig{idx}": True
-            if keuze.status
-            in [
-                KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-                KeuzeStatus.PLACEHOLDER_CRITERIA,
-                KeuzeStatus.WACHTEN_OP_MOZAIEK,
-            ]
-            else False,
+            f"_ChkNodig{idx}": (
+                True
+                if keuze.status
+                in [
+                    KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+                    KeuzeStatus.PLACEHOLDER_CRITERIA,
+                    KeuzeStatus.WACHTEN_OP_MOZAIEK,
+                ]
+                else False
+            ),
         }
 
         return pd.Series(series_dict)
@@ -470,7 +476,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def fix_crs(
-    gdf: gpd.GeoDataFrame, shape_path: Path = "onbekend.shp"
+    gdf: gpd.GeoDataFrame, shape_path: Path = "onbekende locatie"
 ) -> gpd.GeoDataFrame:
     """
     Geeft voor gdfs zonder crs een warning en zet ze om naar EPSG:28992
@@ -1008,7 +1014,7 @@ class Kartering:
                 len(keuzes) == 1
                 and keuzes[0].status == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN
             ), "Geen opgegeven vegtypen maar status is niet GEEN_OPGEGEVEN_VEGTYPEN"
-            # In dit geval geven we een dummy vegtypeinfo mee, dan hoeven we niet nog een extra
+            # In dit geval geven we een dummy/padding vegtypeinfo mee, dan hoeven we niet nog een extra
             # versie van hab_as_final_format te maken die geen vegtypeinfo nodig heeft
             vegtypeinfos = [
                 VegTypeInfo(
