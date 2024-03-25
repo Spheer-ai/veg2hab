@@ -196,7 +196,24 @@ mits geen onderdeel van H7110_A|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""OfCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""FGRCriterium"",
+            ""fgrtype"": ""Noordzee""
+        },
+        {
+            ""type"": ""FGRCriterium"",
+            ""fgrtype"": ""Getijdengebied""
+        },
+        {
+            ""type"": ""FGRCriterium"",
+            ""fgrtype"": ""Duinen""
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in kwelgebied|"{
     ""type"": ""Placeholder""
@@ -205,13 +222,88 @@ mits minstens één van de volgende plantensoorten aanwezig is: breed wollegras,
     ""type"": ""Placeholder""
 }"
 mits niet in het kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""NietCriterium"",
+    ""sub_criterium"":
+    {
+        ""type"": ""OfCriteria"",
+        ""sub_criteria"": [
+            {
+                ""type"": ""FGRCriterium"",
+                ""fgrtype"": ""Noordzee""
+            },
+            {
+                ""type"": ""FGRCriterium"",
+                ""fgrtype"": ""Getijdengebied""
+            },
+            {
+                ""type"": ""FGRCriterium"",
+                ""fgrtype"": ""Duinen""
+            },
+            {
+                ""type"": ""Placeholder""
+            }
+        ]
+    }
 }"
 mits op vochtige plaatsen in het kustgebied en kruipwilg dominant|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in het kustgebied en kruipwilg niet dominant|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""Placeholder""
+            }
+        }
+    ]
 }"
 mits in vennen|"{
     ""type"": ""Placeholder""
@@ -251,10 +343,64 @@ mits in FGR Hogere zandgronden zonder hoogveen|"{
     ]
 }"
 mits in het kustgebied en kraaihei aanwezig|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in het kustgebied en kraaihei afwezig|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""Placeholder""
+            }
+        }
+    ]
 }"
 mits het onderdeel van een hoogveenlandschap is en een acrotelm aanwezig is|"{
     ""type"": ""Placeholder""
@@ -269,19 +415,123 @@ mits op oeverwallen van rivieren of riviertjes|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied en niet in mozaïek met zelfstandige vegetaties van H2130_A|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""Placeholder""
+            }
+        }
+    ]
 }"
 mits langs rivieren of riviertjes|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied, op een standplaats als van andere vegetaties van H2130_A|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in het kustgebied, op een standplaats als van andere vegetaties van H2130_B|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in het kustgebied en op een standplaats als van andere vegetaties van H2130_B|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits langs rivieren of riviertjes en minstens twee van de volgende kenmerkende typische plantensoorten aanwezig zijn: brede ereprijs, cipreswolfsmelk, handjesgras, kaal breukkruid, kleine ruit, liggende ereprijs, rivierduinzegge, rode bremraap, sikkelklaver, steenanjer, tripmadam, veldsalie, wilde averuit, zacht vetkruid, zandwolfsmelk|"{
     ""type"": ""Placeholder""
@@ -290,16 +540,95 @@ mits kruipwilg niet dominant|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied en op een standplaats als van andere vegetaties van H2130_A en niet in struweel|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in het kustgebied en op een standplaats als van andere vegetaties van H2130_B en niet in struweel|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits niet voldoend aan de criteria voor H7230|"{
     ""type"": ""Placeholder""
 }"
 mits in kwelgebied en niet in het kustgebied en minstens drie van de volgende plantensoorten aanwezig zijn: armbloemige waterbies, bonte paardenstaart, groenknolorchis, grote muggenorchis, knopbies, moeraswespenorchis, parnassia, rechte rus, vleeskleurige orchis, vetblad; echt vetmos, geveerd diknerfmos, goudsikkelmos, groen schorpioenmos, groot staartjesmos, kammos, sterrengoudmos, trilveenveenmos, vierkantsmos, wolfsklauwmos|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""OfCriteria"",
+                ""sub_criteria"": [
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Noordzee""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Getijdengebied""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Duinen""
+                    },
+                    {
+                        ""type"": ""Placeholder""
+                    }
+                ]
+            }
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits minstens drie van de volgende plantensoorten aanwezig zijn: blauwe knoop, blauwe zegge, gevlekte orchis, ruw walstro, tormentil, veelbloemige veldbies|"{
     ""type"": ""Placeholder""
@@ -334,16 +663,128 @@ mits bochtige smele minder dan 25%|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied en niet in mozaïek met vegetaties van H6230|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits op vaaggronden en niet in het kustgebied en kraaihei niet dominant|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""OfCriteria"",
+                ""sub_criteria"": [
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Noordzee""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Getijdengebied""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Duinen""
+                    },
+                    {
+                        ""type"": ""Placeholder""
+                    }
+                ]
+            }
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits niet op vaaggronden en niet in het kustgebied en kraaihei niet dominant|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""OfCriteria"",
+                ""sub_criteria"": [
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Noordzee""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Getijdengebied""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Duinen""
+                    },
+                    {
+                        ""type"": ""Placeholder""
+                    }
+                ]
+            }
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits kraaihei dominant en niet in het kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""NietCriterium"",
+            ""sub_criterium"":
+            {
+                ""type"": ""OfCriteria"",
+                ""sub_criteria"": [
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Noordzee""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Getijdengebied""
+                    },
+                    {
+                        ""type"": ""FGRCriterium"",
+                        ""fgrtype"": ""Duinen""
+                    },
+                    {
+                        ""type"": ""Placeholder""
+                    }
+                ]
+            }
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits op vaaggronden en kraaihei niet dominant|"{
     ""type"": ""Placeholder""
@@ -361,10 +802,60 @@ mits op een standplaats als van andere vegetaties van H2130_B en kraaihei afwezi
     ""type"": ""Placeholder""
 }"
 mits op droge plaatsen in het kustgebied en kraaihei aanwezig|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits op vochtige plaatsen in het kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits in de buitenduinen|"{
     ""type"": ""Placeholder""
@@ -373,10 +864,42 @@ mits in de buitenduinen en mits niet in mozaïek met vegetaties van H2130|"{
     ""type"": ""Placeholder""
 }"
 mits in het buitendijkse kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""OfCriteria"",
+    ""sub_criteria"": [
+        {
+            ""type"": ""FGRCriterium"",
+            ""fgrtype"": ""Duinen""
+        },
+        {
+            ""type"": ""FGRCriterium"",
+            ""fgrtype"": ""Getijdengebied""
+        }
+    ]
 }"
 mits in het binnendijkse kustgebied|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria""
+    ""sub_criteria"": [
+        {
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Laagveengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Zeekleigebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Afgesloten Zeearmen""
+                },
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits minstens één niet-algemene plantensoort van zoom of ruigte aanwezig is|"{
     ""type"": ""Placeholder""
@@ -403,7 +926,32 @@ mits het struweel minimaal 1 are groot is, met minimaal 10 jeneverbesstruiken di
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied en duindoorn aanwezig|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 mits op alluviale bodem en onder invloed van beek of rivier|"{
     ""type"": ""Placeholder""
@@ -573,7 +1121,32 @@ mits in vochtige duinvalleien en niet droogvallend|"{
     ""type"": ""Placeholder""
 }"
 mits in het kustgebied en droogvallend|"{
-    ""type"": ""Placeholder""
+    ""type"": ""EnCriteria"",
+    ""sub_criteria"": [
+        {      
+            ""type"": ""OfCriteria"",
+            ""sub_criteria"": [
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Noordzee""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Getijdengebied""
+                },
+                {
+                    ""type"": ""FGRCriterium"",
+                    ""fgrtype"": ""Duinen""
+                },
+                {
+                    ""type"": ""Placeholder""
+                }
+            ]
+        },
+        {
+            ""type"": ""Placeholder""
+        }
+    ]
 }"
 alleen in mozaïek met zelfstandige vegetaties van H7140_A|"{
     ""type"": ""Placeholder""
