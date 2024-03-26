@@ -1,31 +1,12 @@
 from __future__ import annotations
 
-import math
 import re
 from dataclasses import dataclass
-from enum import IntEnum
 from typing import ClassVar, Optional, Union
 
 import pandas as pd
 
-
-class MatchLevel(IntEnum):
-    """
-    Enum voor de match levels van VvN en SBB
-    """
-
-    NO_MATCH = 0
-    KLASSE_VVN = 1
-    KLASSE_SBB = 2
-    ORDE_VVN = 3
-    VERBOND_VVN = 4
-    VERBOND_SBB = 5
-    ASSOCIATIE_VVN = 6
-    ASSOCIATIE_SBB = 7
-    SUBASSOCIATIE_VVN = 8
-    SUBASSOCIATIE_SBB = 9
-    GEMEENSCHAP_VVN = 10
-    GEMEENSCHAP_SBB = 11
+from veg2hab.enums import MatchLevel
 
 
 @dataclass
@@ -36,7 +17,7 @@ class SBB:
     x is lowercase letter ('a', 'b', 'c' etc)
     Normale SBB: ##x##x: zoals 14e1a
     Behalve klasse is elke taxonomiegroep optioneel, zolang de meer specifieke ook
-    afwezig zijn (klasse-verbond-associatie is valid, klasse-associatie-subassociatie niet)
+    afwezig zijn (klasse-verbond-associatie (##x##) is valid, klasse-associatie-subassociatie (####x) niet)
     Derivaatgemeenschappen: {normale sbb}/x, zoals 16b/a
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
     """
@@ -88,14 +69,16 @@ class SBB:
 
         raise ValueError(f"Invalid SBB code: {code}")
 
-    def base_SBB_as_tuple(self):
+    def base_SBB_as_tuple(
+        self,
+    ) -> tuple[str, Union[str, None], Union[str, None], Union[str, None]]:
         """
         Returns the base part of the SBB code as a tuple
         """
         return (self.klasse, self.verbond, self.associatie, self.subassociatie)
 
     @classmethod
-    def from_string(cls, code):
+    def from_string(cls, code: Union[str, None]) -> Union[SBB, None]:
         if pd.isnull(code):
             return None
         return cls(code)
@@ -139,7 +122,7 @@ class SBB:
         return match_levels[len(self_tuple)]
 
     @staticmethod
-    def validate(code: str):
+    def validate(code: str) -> bool:
         """
         Checkt of een string voldoet aan de SBB opmaak
         """
@@ -151,7 +134,9 @@ class SBB:
         )
 
     @classmethod
-    def validate_pandas_series(cls, series: pd.Series, print_invalid: bool = False):
+    def validate_pandas_series(
+        cls, series: pd.Series, print_invalid: bool = False
+    ) -> bool:
         """
         Valideert een pandas series van SBB codes
         NATypes worden als valide beschouwd
@@ -193,7 +178,7 @@ class SBB:
         )
 
     @staticmethod
-    def opschonen_series(series: pd.Series):
+    def opschonen_series(series: pd.Series) -> pd.Series:
         """
         Voert een aantal opschoningen uit op een pandas series van SBB codes
         Hierna zijn ze nog niet per se valide, dus check dat nog
@@ -216,6 +201,8 @@ class SBB:
         series = series.apply(
             lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
         )
+        # Vervang lege of door opschoningen hierboven leeg gemaakte strings door None
+        series = series.apply(lambda x: None if pd.isnull(x) or x == "" else x)
 
         return series
 
@@ -285,12 +272,16 @@ class VvN:
         raise ValueError(f"Invalid VvN code: {code}")
 
     @classmethod
-    def from_string(cls, code):
+    def from_string(cls, code) -> Union[VvN, None]:
         if pd.isnull(code) or code == "":
             return None
         return cls(code)
 
-    def normal_VvN_as_tuple(self):
+    def normal_VvN_as_tuple(
+        self,
+    ) -> tuple[
+        str, Union[str, None], Union[str, None], Union[str, None], Union[str, None]
+    ]:
         if self.derivaatgemeenschap or self.rompgemeenschap:
             raise ValueError("Dit is geen normale (niet derivaat-/rompgemeenschap) VvN")
         return (
@@ -341,14 +332,16 @@ class VvN:
         return match_levels[len(self_tuple)]
 
     @classmethod
-    def validate(cls, code: str):
+    def validate(cls, code: str) -> bool:
         """
         Checkt of een string voldoet aan de VvN opmaak
         """
         return cls.normale_vvn.fullmatch(code) or cls.gemeenschap.fullmatch(code)
 
     @classmethod
-    def validate_pandas_series(cls, series: pd.Series, print_invalid: bool = False):
+    def validate_pandas_series(
+        cls, series: pd.Series, print_invalid: bool = False
+    ) -> bool:
         """
         Valideert een pandas series van VvN codes
         NATypes worden als valide beschouwd
@@ -388,7 +381,7 @@ class VvN:
             )
         )
 
-    def opschonen_series(series: pd.Series):
+    def opschonen_series(series: pd.Series) -> pd.Series:
         """
         Voert een aantal opschoningen uit op een pandas series van VvN codes
         Hierna zijn ze nog niet per se valide, dus check dat nog
@@ -413,5 +406,7 @@ class VvN:
         series = series.apply(
             lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
         )
+        # Vervang lege of door opschoningen hierboven leeg gemaakte strings door None
+        series = series.apply(lambda x: None if pd.isnull(x) or x == "" else x)
 
         return series

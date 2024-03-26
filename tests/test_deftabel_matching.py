@@ -6,8 +6,7 @@ from veg2hab.criteria import (
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
-    NietCriterium,
-    OfCriteria,
+    GeenMozaiekregel,
     PlaceholderCriterium,
 )
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
@@ -38,7 +37,7 @@ def test_perfect_match_VvN(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=31,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         )
     ]
@@ -55,7 +54,7 @@ def test_non_existing_VvN(dt):
             kwaliteit=None,
             idx_in_dt=None,
             mits=GeenCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
         )
     ]
@@ -72,7 +71,7 @@ def test_match_to_less_specific_VvN(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=353,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         )
     ]
@@ -90,7 +89,7 @@ def test_gemeenschap_perfect_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=356,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.GEMEENSCHAP_VVN,
         )
     ]
@@ -107,7 +106,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
@@ -117,7 +116,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=404,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
     ]
@@ -137,7 +136,7 @@ def test_perfect_and_less_specific_match_VvN(dt):
             mits=EnCriteria(
                 sub_criteria=[FGRCriterium(fgrtype=FGRType.DU), PlaceholderCriterium()]
             ),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
@@ -147,7 +146,7 @@ def test_perfect_and_less_specific_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=640,
             mits=GeenCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
@@ -164,7 +163,7 @@ def test_perfect_match_SBB(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
         )
     ]
@@ -183,7 +182,7 @@ def test_matches_both_vvn_and_sbb(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=356,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.GEMEENSCHAP_VVN,
         ),
         HabitatVoorstel(
@@ -193,7 +192,7 @@ def test_matches_both_vvn_and_sbb(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
@@ -203,7 +202,7 @@ def test_matches_both_vvn_and_sbb(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=404,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
@@ -213,7 +212,7 @@ def test_matches_both_vvn_and_sbb(dt):
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
             mits=PlaceholderCriterium(),
-            mozaiek=None,
+            mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
         ),
     ]
