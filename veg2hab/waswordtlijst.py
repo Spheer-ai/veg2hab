@@ -34,24 +34,24 @@ class WasWordtLijst:
         self.df = self.df.where(self.df.notnull(), None)
 
     @classmethod
-    def from_excel(cls, path: Path):
+    def from_excel(cls, path: Path) -> "WasWordtLijst":
         # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
         df = pd.read_excel(
             path, engine="openpyxl", usecols=["VvN", "SBB"], dtype="string"
         )
         return cls(df)
 
-    def check_validity_SBB(self, print_invalid: bool = False):
+    def check_validity_SBB(self, print_invalid: bool = False) -> bool:
         """
-        Checkt of de SBB codes valide zijn.
+        Checkt of de SBB codes in de wwl valide zijn.
         """
         wwl_SBB = self.df["SBB"].astype("string")
 
         return SBB.validate_pandas_series(wwl_SBB, print_invalid=print_invalid)
 
-    def check_validity_VvN(self, print_invalid: bool = False):
+    def check_validity_VvN(self, print_invalid: bool = False) -> bool:
         """
-        Checkt of de VvN valide zijn.
+        Checkt of de VvN valide in de wwl zijn.
         """
         wwl_VvN = self.df["VvN"].astype("string")
 
@@ -62,16 +62,15 @@ class WasWordtLijst:
         """
         Zoekt de VvN codes die bij een SBB code horen
         """
-
         assert isinstance(code, SBB), "Code is geen SBB object"
 
         matching_VvN = self.df[self.df.SBB == code].VvN
         # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
         return matching_VvN.dropna().to_list()
 
-    def toevoegen_VvN_aan_VegTypeInfo(self, info: VegTypeInfo):
+    def toevoegen_VvN_aan_VegTypeInfo(self, info: VegTypeInfo) -> VegTypeInfo:
         """
-        Zoekt adhv SBB codes de bijbehorende VvN codes en voegt deze toe aan de VegetatieTypeInfo
+        Zoekt adhv SBB codes de bijbehorende VvN codes in de WWL en voegt deze toe aan de VegTypeInfo
         """
         if info is None:
             raise ValueError("VegTypeInfo is None")
@@ -92,17 +91,19 @@ class WasWordtLijst:
             VvN=new_VvN,
         )
 
-    def toevoegen_VvN_aan_List_VegTypeInfo(self, infos: List[VegTypeInfo]):
+    def toevoegen_VvN_aan_List_VegTypeInfo(
+        self, infos: List[VegTypeInfo]
+    ) -> List[VegTypeInfo]:
         """
-        Voert elke rij door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
+        Voert alle elementen in een lijst door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
+        Handig voor
         """
-        assert len(infos) > 0, "Lijst met VegTypeInfo is leeg"
         return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
 
 
-def opschonen_was_wordt_lijst(path_in: Path, path_out: Path):
+def opschonen_was_wordt_lijst(path_in: Path, path_out: Path) -> None:
     """
-    Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst
+    Ontvangt een path_in naar de ruwe was-wordt lijst, schoont deze op en slaat het resultaat op in path_out.
     """
     # assert path in is an xlsx file
     assert path_in.suffix == ".xlsx", "Input file is not an xlsx file"
