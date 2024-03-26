@@ -11,7 +11,7 @@ from veg2hab.fgr import FGRType
 class BeperkendCriterium(BaseModel):
     """
     Superclass voor alle beperkende criteria.
-    Subclasses implementeren hun eigen check en evaluation methodes.
+    Subclasses implementeren hun eigen check en non-standaard evaluation methodes.
     Niet-logic sublasses (dus niet EnCriteria, OfCriteria, NietCriterium) moeten een
     _evaluation parameter hebben waar het resultaat van check gecached wordt.
     """
@@ -32,7 +32,9 @@ class BeperkendCriterium(BaseModel):
         if cls == BeperkendCriterium:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
-        return super().__new__(cls)  # NOTE: wanneer is het niet een beperkendcriterium?
+        return super().__new__(
+            cls
+        )  # NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
 
     def dict(self, *args, **kwargs):
         """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
@@ -53,25 +55,23 @@ class BeperkendCriterium(BaseModel):
         return isinstance(self, type)
 
     @property
-    def evaluation(self):
-        raise NotImplementedError()
+    def evaluation(self) -> MaybeBoolean:
+        """
+        Standaard evaluation method
+        """
+        if self._evaluation is None:
+            raise RuntimeError(
+                "Evaluation value requested before criteria has been checked"
+            )
+        return self._evaluation
 
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def check(self, row: gpd.GeoSeries):
+    def check(self, row: gpd.GeoSeries) -> None:
         self._evaluation = MaybeBoolean.TRUE
-
-    @property
-    # TODO: Deze base case van evaluation kan naar de base class
-    def evaluation(self):
-        if self._evaluation is None:
-            raise RuntimeError(
-                "Evaluation value requested before criteria has been checked"
-            )
-        return self._evaluation
 
     def __str__(self):
         return "geen mits (altijd waar)"
@@ -81,17 +81,8 @@ class PlaceholderCriterium(BeperkendCriterium):
     type: ClassVar[str] = "Placeholder"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def check(self, row: gpd.GeoSeries):
+    def check(self, row: gpd.GeoSeries) -> None:
         self._evaluation = MaybeBoolean.FALSE
-
-    @property
-    # TODO: Deze base case van evaluation kan naar de base class
-    def evaluation(self):
-        if self._evaluation is None:
-            raise RuntimeError(
-                "Evaluation value requested before criteria has been checked"
-            )
-        return self._evaluation
 
     def __str__(self):
         return "placeholder"
@@ -102,20 +93,12 @@ class FGRCriterium(BeperkendCriterium):
     fgrtype: FGRType
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def check(self, row: gpd.GeoSeries):
+    def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
         self._evaluation = (
             MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
         )
-
-    # TODO: Deze base case van evaluation kan naar de base class
-    @property
-    def evaluation(self):
-        assert (
-            self._evaluation is not None
-        ), "Evaluation value requested before criteria has been checked"
-        return self._evaluation
 
     def __str__(self):
         return f"FGR is {self.fgrtype.value}"
@@ -125,16 +108,16 @@ class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
     sub_criterium: BeperkendCriterium
 
-    def check(self, row: gpd.GeoSeries):
+    def check(self, row: gpd.GeoSeries) -> None:
         self.sub_criterium.check(row)
 
-    def is_criteria_type_present(self, type):
+    def is_criteria_type_present(self, type) -> bool:
         return self.sub_criterium.is_criteria_type_present(type) or isinstance(
             self, type
         )
 
     @property
-    def evaluation(self):
+    def evaluation(self) -> MaybeBoolean:
         return ~self.sub_criterium.evaluation
 
     def __str__(self):
@@ -145,21 +128,17 @@ class OfCriteria(BeperkendCriterium):
     type: ClassVar[str] = "OfCriteria"
     sub_criteria: List[BeperkendCriterium]
 
-    def check(self, row: gpd.GeoSeries):
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
-        #       (en deze logica verplaatsen naar MaybeBoolean)
+    def check(self, row: gpd.GeoSeries) -> None:
         for crit in self.sub_criteria:
             crit.check(row)
 
-    def is_criteria_type_present(self, type):
+    def is_criteria_type_present(self, type) -> bool:
         return any(
             crit.is_criteria_type_present(type) for crit in self.sub_criteria
         ) or isinstance(self, type)
 
     @property
-    def evaluation(self):
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
-        #       (en deze logica verplaatsen naar MaybeBoolean)
+    def evaluation(self) -> MaybeBoolean:
         return (
             MaybeBoolean.TRUE
             if any(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
@@ -175,20 +154,17 @@ class EnCriteria(BeperkendCriterium):
     type: ClassVar[str] = "EnCriteria"
     sub_criteria: List[BeperkendCriterium]
 
-    def check(self, row: gpd.GeoSeries):
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
-        #       (en deze logica verplaatsen naar MaybeBoolean)
+    def check(self, row: gpd.GeoSeries) -> None:
         for crit in self.sub_criteria:
             crit.check(row)
 
-    def is_criteria_type_present(self, type):
+    def is_criteria_type_present(self, type) -> bool:
         return any(
             crit.is_criteria_type_present(type) for crit in self.sub_criteria
         ) or isinstance(self, type)
 
     @property
-    def evaluation(self):
-        # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic (en deze logica verplaatsen naar MaybeBoolean)
+    def evaluation(self) -> MaybeBoolean:
         return (
             MaybeBoolean.TRUE
             if all(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
@@ -201,27 +177,27 @@ class EnCriteria(BeperkendCriterium):
 
 
 class Mozaiekregel(BaseModel):
-    def is_mozaiek_type_present(self, type):
+    def is_mozaiek_type_present(self, type) -> bool:
         return isinstance(self, type)
 
 
 class DummyMozaiekregel(Mozaiekregel):
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def check(self):
+    def check(self) -> None:
         self._evaluation = MaybeBoolean.FALSE
 
     @property
-    def evaluation(self):
+    def evaluation(self) -> MaybeBoolean:
         return self._evaluation
 
 
 class GeenMozaiekregel(Mozaiekregel):
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def check(self):
+    def check(self) -> None:
         self._evaluation = MaybeBoolean.TRUE
 
     @property
-    def evaluation(self):
+    def evaluation(self) -> MaybeBoolean:
         return self._evaluation

@@ -26,7 +26,7 @@ class FGR:
         # omzetten naar enum (validatie)
         self.gdf["fgr"] = self.gdf["fgr"].apply(FGRType)
 
-    def fgr_for_geometry(self, other_gdf: gpd.GeoDataFrame):
+    def fgr_for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
         """
         Returns fgr codes voor de gegeven geometrie
         """
