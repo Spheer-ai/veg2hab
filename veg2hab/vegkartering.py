@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 
 import geopandas as gpd
 import pandas as pd
-from typing_extensions import Literal
+from typing_extensions import Literal, Self
 
 from veg2hab.criteria import FGRCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit
@@ -50,7 +50,12 @@ class VegTypeInfo:
         """
         if isinstance(percentage, str):
             percentage = float(percentage.replace(",", "."))
-        assert isinstance(percentage, Number), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
+        assert isinstance(
+            percentage, Number
+        ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
+        assert (
+            len(VvN_strings + SBB_strings) > 0
+        ), "Er moet minstens 1 vegetatietype zijn"
 
         vvn = [_VvN.from_string(i) for i in VvN_strings]
         sbb = [_SBB.from_string(i) for i in SBB_strings]
@@ -105,7 +110,7 @@ def ingest_vegtype(
 ) -> pd.Series:
     """
     Leest de vegetatietypen van een vlak in en maakt er een lijst van VegTypeInfo objecten van
-    Vlakken zonder percentage 
+    Vlakken zonder percentage
     """
     # Validatie
     if sbb_cols is not None and len(sbb_cols) != len(perc_cols):
@@ -216,7 +221,7 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
     # Sorteer op basis van de habitatkeuze (idx 0)
     sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
-    
+
     row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
     # Tuples uit zip omzetten naar lists
     row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(
@@ -498,7 +503,7 @@ def fix_crs(
 
 
 def _split_list_to_columns(
-    row: pd.Series,
+    row: Optional[pd.Series],
     new_col_prefix: str,
 ) -> pd.Series:
     """
@@ -602,7 +607,7 @@ class Kartering:
         access_csvs_path: Path,
         opmerkingen_column: Optional[str] = "Opmerking",
         datum_column: Optional[str] = "Datum",
-    ) -> "Kartering":
+    ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile en
         een access database die al is opgedeeld in losse csv bestanden.
@@ -681,15 +686,15 @@ class Kartering:
                 validate="one_to_one",
             )
         except pd.errors.MergeError as e:
-            message = f"Er is geen 1 op 1 relatie tussen {shape_elm_id_column} in de shapefile en ElmID in de Element.csv."
+            message = f"Er is geen 1 op 1 relatie tussen {shape_elm_id_column} in de shapefile en ElmID in de Element.csv. "
             if not gdf[shape_elm_id_column].is_unique:
                 dubbele_elmid = gdf[shape_elm_id_column][
                     gdf[shape_elm_id_column].duplicated()
-                ].to_list()[:10]
-                message += f" Er zitten dubbelingen in de shapefile, bijvoorbeeld {shape_elm_id_column}: {dubbele_elmid}."
+                ].to_list()
+                message += f"Er zitten {len(dubbele_elmid)} dubbelingen in de shapefile, bijvoorbeeld {shape_elm_id_column}: {dubbele_elmid[:10]}. "
             if not element.ElmID.is_unique:
                 dubbele_elmid = element.ElmID[element.ElmID.duplicated()].to_list()[:10]
-                message += f" Er zitten dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid}."
+                message += f"Er zitten {len(dubbele_elmid)} dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid[:10]}. "
             raise ValueError(message) from e
 
         # SBB code toevoegen aan KarteringVegetatietype
@@ -747,7 +752,7 @@ class Kartering:
         VvN_col: Optional[str] = None,
         split_char: Optional[str] = "+",
         perc_col: Optional[str] = None,
-    ) -> "Kartering":
+    ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
         Input:
@@ -956,8 +961,10 @@ class Kartering:
                     voorstel.mits.check(mits_info_row)
 
         ### Habitatkeuzes bepalen
-        self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
-            haal_complexen_door_functie, args=[habitatkeuze_obv_mitsen]
+        self.gdf["HabitatKeuze2"] = self.gdf["HabitatVoorstel"].apply(
+            lambda voorstellen: [
+                habitatkeuze_obv_mitsen(voorstel) for voorstel in voorstellen
+            ]
         )
 
     def as_final_format(self) -> pd.DataFrame:
