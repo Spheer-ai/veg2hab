@@ -877,7 +877,7 @@ mits in het buitendijkse kustgebied|"{
     ]
 }"
 mits in het binnendijkse kustgebied|"{
-    ""type"": ""EnCriteria""
+    ""type"": ""EnCriteria"",
     ""sub_criteria"": [
         {
             ""type"": ""OfCriteria"",
@@ -893,7 +893,7 @@ mits in het binnendijkse kustgebied|"{
                 {
                     ""type"": ""FGRCriterium"",
                     ""fgrtype"": ""Afgesloten Zeearmen""
-                },
+                }
             ]
         },
         {

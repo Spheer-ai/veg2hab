@@ -208,16 +208,9 @@ def test_none_SBB(gdf):
                 VegTypeInfo.from_str_vegtypes(
                     60, SBB_strings=["25a1"], VvN_strings=["25aa1"]
                 ),
-                VegTypeInfo(40, [], []),
             ],
-            [
-                VegTypeInfo(50, [], []),
-                VegTypeInfo(50, [], []),
-            ],
-            [
-                VegTypeInfo(70, [], []),
-                VegTypeInfo(30, [], []),
-            ],
+            [],
+            [],
         ],
         name="vegtype",
     )

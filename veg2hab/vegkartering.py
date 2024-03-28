@@ -50,7 +50,9 @@ class VegTypeInfo:
         """
         if isinstance(percentage, str):
             percentage = float(percentage.replace(",", "."))
-        assert isinstance(percentage, Number), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
+        assert isinstance(
+            percentage, Number
+        ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
 
         vvn = [_VvN.from_string(i) for i in VvN_strings]
         sbb = [_SBB.from_string(i) for i in SBB_strings]
@@ -105,7 +107,7 @@ def ingest_vegtype(
 ) -> pd.Series:
     """
     Leest de vegetatietypen van een vlak in en maakt er een lijst van VegTypeInfo objecten van
-    Vlakken zonder percentage 
+    Vlakken zonder percentage
     """
     # Validatie
     if sbb_cols is not None and len(sbb_cols) != len(perc_cols):
@@ -216,7 +218,7 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
     # Sorteer op basis van de habitatkeuze (idx 0)
     sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
-    
+
     row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
     # Tuples uit zip omzetten naar lists
     row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(

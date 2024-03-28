@@ -2,13 +2,17 @@ from enum import Enum, IntEnum, auto
 
 
 class MaybeBoolean(Enum):
-    TRUE = "TRUE"
-    FALSE = "FALSE"
-    MAYBE = "MAYBE"
-    # POSTPONE = "POSTPONE" # Used for when evaluation needs to be postponed
-    # CANNOT_BE_AUTOMATED = "CANNOT_BE_AUTOMATED"  # Used when manual action is required
+    FALSE = 1
+    
+    # MAYBE = 2
 
-    # TODO: kloppende MaybeBoolean.MAYBE en MaybeBoolean.CANNOT_BE_AUTOMATED logic
+    # Voor als evaluatie uitgesteld moet worden
+    # POSTPONE = 3
+
+    # Voor dingen die niet geautomatiseerd kunnen worden (bijv. placeholder criteria)
+    CANNOT_BE_AUTOMATED = 4
+
+    TRUE = 5
 
     def __invert__(self):
         if self == MaybeBoolean.TRUE:
@@ -17,6 +21,19 @@ class MaybeBoolean(Enum):
             return MaybeBoolean.TRUE
         else:
             return self
+
+    def __bool__(self):
+        raise RuntimeError("Cannot convert MaybeBoolean to bool")
+
+    def __and__(self, other):
+        if not isinstance(other, MaybeBoolean):
+            return NotImplemented
+        return MaybeBoolean(min(self.value, other.value))
+
+    def __or__(self, other):
+        if not isinstance(other, MaybeBoolean):
+            return NotImplemented
+        return MaybeBoolean(max(self.value, other.value))
 
 
 class Kwaliteit(Enum):
