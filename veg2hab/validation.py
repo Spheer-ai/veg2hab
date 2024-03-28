@@ -1,4 +1,3 @@
-import os.path
 import re
 import warnings
 from collections import defaultdict
@@ -21,9 +20,10 @@ def _calc_percentages_if_missing(
     habtypes: List[str],
     how_to_handle_missing_percentages: Literal["split_equally", "select_first"],
 ) -> Dict[str, Number]:
-    """Calculates the percentages if they are missing
+    """
+    Berekend missende percentages
 
-    Example:
+    Voorbeeld:
         >>> _calc_percentages_if_missing(["H123", "H234", "H345"], "split_equally")
         {"H123": 33.33, "H234": 33.33, "H345": 33.33}
         >>> _calc_percentages_if_missing(["H123", "H234", "H345"], "select_first")
@@ -51,10 +51,11 @@ def _convert_row_to_dict(
     habtype_colnames: List[str],
     percentage_colnames: Optional[List[str]],
     how_to_handle_missing_percentages: Literal[None, "split_equally", "select_first"],
-):
-    """Converts a row of a dataframe into a dictionary of habitat types and their percentages
+) -> Dict[str, Number]:
+    """
+    Schrijft de habitat types en percentages van een rij van een dataframe naar een dictionary
 
-    Example:
+    Voorbeeld:
         >>> ser = gpd.GeoSeries(data = {"Habtype1": "H123", "Habtype2": "H234", "Habtype3": "H345", "Perc1": 80, "Perc2": 20, "Perc3": 0})
         >>> _convert_row_to_dict(ser, ["Habtype1", "Habtype2", "Habtype3"], ["Perc1", "Perc2", "Perc3"])
         {"H123": 80, "H234": 20, "H345": 0}
@@ -95,13 +96,21 @@ def parse_habitat_percentages(
     how_to_handle_missing_percentages: Literal[
         None, "split_equally", "select_first"
     ] = None,
-):
+) -> gpd.GeoDataFrame:
     """
     Args:
         gdf: A GeoDataFrame containing habitat types and their percentages
         habtype_cols: The name that the column should start with e.g. Habtype to match Habtype1, Habtype2, Habtype3
         percentage_cols: The name that percentage column should start
         how_to_handle_missing_percentages: How to handle missing percentages. If None, the function will raise an error if there are missing percentages. If "split_equally", the function will split the remaining percentage equally among the missing percentages.
+    Args:
+        gdf: Een geodataframe met kolommen voor de habitat types en hun percentages
+        habtype_cols: De string waarmee de habitattypekolommen moeten beginnen, bijvoorbeeld Habtype voor Habtype1, Habtype2, Habtype3
+        percentage_cols: De string waarmee de percentagekolommen moeten beginnen
+        how_to_handle_missing_percentages: Hoe om te gaan met ontbrekende percentages.
+                                           Bij None zal de functie een foutmelding geven als er ontbrekende percentages zijn.
+                                           Bij "split_equally" zal de ieder habitattype een gelijk percentage krijgen (100/n_habtypes).
+                                           Bij "select_first" zal enkel het eerste habitattype gebruikt worden; deze krijgt dan ook 100%.
     """
     if (percentage_cols is not None) == (
         how_to_handle_missing_percentages is not None
@@ -142,9 +151,15 @@ def parse_habitat_percentages(
     )
 
 
-def spatial_join(gdf_pred, gdf_true, how: Literal["intersection", "include_uncharted"]):
-    """Joins the two dataframes
-    Use include uncharted to create a new Habtype "ONGEKARTEERD" with 100% for all uncharted areas
+def spatial_join(
+    gdf_pred: gpd.GeoDataFrame,
+    gdf_true: gpd.GeoDataFrame,
+    how: Literal["intersection", "include_uncharted"],
+) -> gpd.GeoDataFrame:
+    """
+    Joint twee geodataframes zodat ze op het overlappende deel dezelfde geometrieen hebben
+    Als how "intersection" is, dan komt alleen het overlappende deel in de output
+    Als how "include_uncharted" is, dan komt ook het niet-overlappende deel in de output - ongekarteerde gebieden krijgen dan voor 100% habitattype "ONGEKARTEERD"
     """
     assert (
         gdf_pred.columns.tolist()
@@ -194,7 +209,7 @@ def bereken_percentage_correct(
     return sum(min(habs_pred[k], habs_true[k]) for k in keys_in_both)
 
 
-def voeg_correctheid_toe_aan_df(df: gpd.GeoDataFrame):
+def voeg_correctheid_toe_aan_df(df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """Voegt twee nieuwe kolommen toe aan de dataframe:
     percentage_correct en oppervlakte_correct
     """
@@ -213,14 +228,14 @@ def bereken_percentage_confusion_matrix(
 ) -> pd.DataFrame:
     """huilie huilie
 
-    Example:
+    Voorbeeld:
         >>> bereken_percentage_confusion_matrix({"H123": 80, "H234": 20}, {"H123": 50, "H234": 50})
         pred_hab true_hab  percentage
         H123     H123      50.0
         H234     H234      20.0
         H123     H234      30.0
     """
-    # we'll be editing the dictionaries in place, so let's first make a copy
+    # We passen de dictionaries in place aan, dus we maken eerst een kopie
     habs_pred = habs_pred.copy()
     habs_true = habs_true.copy()
 
@@ -237,9 +252,9 @@ def bereken_percentage_confusion_matrix(
             )
             habs_pred[pred_hab] -= percentage_correct
             habs_true[pred_hab] -= percentage_correct
-    # alle matchende zitten nu in de outputes
+    # Alle matchende zitten nu in de outputes
 
-    # we houden de volgorde aan van onze prediction
+    # We houden de volgorde aan van onze prediction
     habs_pred = {k: v for k, v in habs_pred.items() if v > 0}
     for pred_hab, pred_percentage in habs_pred.items():
         habs_true = {k: v for k, v in habs_true.items() if v > 0}
