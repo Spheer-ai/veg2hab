@@ -141,7 +141,11 @@ class OfCriteria(BeperkendCriterium):
     @property
     def evaluation(self) -> MaybeBoolean:
         assert len(self.sub_criteria) > 0, "OrCriteria zonder subcriteria"
-        return reduce(lambda x, y: x | y, (crit.evaluation for crit in self.sub_criteria), MaybeBoolean.FALSE)
+        return reduce(
+            lambda x, y: x | y,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.FALSE,
+        )
 
     def __str__(self):
         of_crits = " of ".join(str(crit) for crit in self.sub_criteria)
@@ -164,8 +168,12 @@ class EnCriteria(BeperkendCriterium):
     @property
     def evaluation(self) -> MaybeBoolean:
         assert len(self.sub_criteria) > 0, "EnCriteria zonder subcriteria"
-        return reduce(lambda x, y: x & y, (crit.evaluation for crit in self.sub_criteria), MaybeBoolean.TRUE)
-        
+        return reduce(
+            lambda x, y: x & y,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.TRUE,
+        )
+
     def __str__(self):
         en_crits = " en ".join(str(crit) for crit in self.sub_criteria)
         return f"({en_crits})"
