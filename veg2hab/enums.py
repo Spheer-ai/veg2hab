@@ -3,7 +3,7 @@ from enum import Enum, IntEnum, auto
 
 class MaybeBoolean(Enum):
     FALSE = 1
-    
+
     # MAYBE = 2
 
     # Voor als evaluatie uitgesteld moet worden
