@@ -208,11 +208,12 @@ def habitatkeuze_obv_mitsen(all_voorstellen: List[HabitatVoorstel]) -> HabitatKe
 
     # Per MatchLevel checken of er kloppende mitsen zijn
     for current_voorstellen in sublisted_voorstellen:
-        
         truth_values = [voorstel.mits.evaluation for voorstel in current_voorstellen]
 
         # Als er enkel TRUE en FALSE zijn, dan...
-        if all([value in [MaybeBoolean.TRUE, MaybeBoolean.FALSE] for value in truth_values]):
+        if all(
+            [value in [MaybeBoolean.TRUE, MaybeBoolean.FALSE] for value in truth_values]
+        ):
             true_voorstellen = [
                 voorstel
                 for voorstel in current_voorstellen
@@ -241,28 +242,32 @@ def habitatkeuze_obv_mitsen(all_voorstellen: List[HabitatVoorstel]) -> HabitatKe
                     debug_info="",
                     habitatvoorstellen=true_voorstellen,
                 )
-            
+
             # ...of zijn er geen kloppende mitsen op het huidige match_level
             continue
-            
+
         # Er is een niet-TRUE/FALSE waarde aanwezig. Op het moment van schrijven kan dit enkel
         # MaybeBoolean.CANNOT_BE_AUTOMATED zijn, wat altijd het gevolg is van een PlaceholderCriterium.
         # Als we later meer MaybeBoolean waarden toevoegen klapt hij er hier uit zodat ik niet vergeet om dit te updaten
-        assert MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values, "Er is een onbekende (niet TRUE, FALSE of CANNOT_BE_AUTOMATED) waarde in de mitsen"
-        assert is_criteria_type_present([current_voorstellen], PlaceholderCriterium), "Er is een CANNOT_BE_AUTOMATED waarde in de mitsen, maar er is geen PlaceholderCriterium"
+        assert (
+            MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values
+        ), "Er is een onbekende (niet TRUE, FALSE of CANNOT_BE_AUTOMATED) waarde in de mitsen"
+        assert is_criteria_type_present(
+            [current_voorstellen], PlaceholderCriterium
+        ), "Er is een CANNOT_BE_AUTOMATED waarde in de mitsen, maar er is geen PlaceholderCriterium"
 
         # Op het huidige matchlevel zijn er mitsen die niet geautomatiseerd kunnen worden.
-        # We kunnen dus niet bepalen welke van de huidige en nog te behandelen 
+        # We kunnen dus niet bepalen welke van de huidige en nog te behandelen
         # voorstellen moet leiden tot een Habitattype.
-            
-        # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van 
+
+        # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
         # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
         return_voorstellen = [
             voorstel
             for voorstel in all_voorstellen
             if voorstel.match_level <= current_voorstellen[0].match_level
         ]
-        
+
         return HabitatKeuze(
             status=KeuzeStatus.PLACEHOLDER_CRITERIA,
             habtype="HXXXX",
@@ -271,7 +276,7 @@ def habitatkeuze_obv_mitsen(all_voorstellen: List[HabitatVoorstel]) -> HabitatKe
             debug_info="",
             habitatvoorstellen=return_voorstellen,
         )
-    
+
     # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
         status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
@@ -281,6 +286,6 @@ def habitatkeuze_obv_mitsen(all_voorstellen: List[HabitatVoorstel]) -> HabitatKe
         debug_info="",
         habitatvoorstellen=all_voorstellen,
     )
-            
+
 
 # TODO: een habitatkeuze obv mitsen en mozaiek functie
