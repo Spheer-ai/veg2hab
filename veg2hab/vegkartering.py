@@ -50,9 +50,11 @@ class VegTypeInfo:
         """
         if isinstance(percentage, str):
             percentage = float(percentage.replace(",", "."))
+            
         assert isinstance(
             percentage, Number
         ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
+
         assert (
             len(VvN_strings + SBB_strings) > 0
         ), "Er moet minstens 1 vegetatietype zijn"

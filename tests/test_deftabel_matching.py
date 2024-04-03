@@ -7,6 +7,7 @@ from veg2hab.criteria import (
     FGRCriterium,
     GeenCriterium,
     GeenMozaiekregel,
+    OfCriteria,
     PlaceholderCriterium,
 )
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
@@ -36,7 +37,14 @@ def test_perfect_match_VvN(dt):
             habtype="H1310_A",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=31,
-            mits=PlaceholderCriterium(),
+            mits=OfCriteria(
+                sub_criteria=[
+                    FGRCriterium(fgrtype=FGRType.NZ),
+                    FGRCriterium(fgrtype=FGRType.GG),
+                    FGRCriterium(fgrtype=FGRType.DU),
+                    PlaceholderCriterium(),
+                ]
+            ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         )
@@ -51,7 +59,7 @@ def test_non_existing_VvN(dt):
             onderbouwend_vegtype=VvN("99aa3a"),
             vegtype_in_dt=None,
             habtype="H0000",
-            kwaliteit=None,
+            kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
