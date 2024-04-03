@@ -1,3 +1,5 @@
+import pytest
+
 from veg2hab.enums import MaybeBoolean
 
 
@@ -21,11 +23,11 @@ def test_true_false_invert():
 
 
 def test_cast_to_bool():
-    try:
+    with pytest.raises(RuntimeError):
         bool(MaybeBoolean.TRUE)
-        assert False
-    except RuntimeError:
-        assert True
+
+    with pytest.raises(RuntimeError):
+        not MaybeBoolean.TRUE
 
 
 def test_cannot_be_automated_and():
