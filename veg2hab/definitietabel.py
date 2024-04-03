@@ -6,9 +6,10 @@ from typing import List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium, DummyMozaiekregel, GeenMozaiekregel
+from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.mozaiek import DummyMozaiekregel, GeenMozaiekregel
 from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
