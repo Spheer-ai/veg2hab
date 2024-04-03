@@ -961,7 +961,7 @@ class Kartering:
                     voorstel.mits.check(mits_info_row)
 
         ### Habitatkeuzes bepalen
-        self.gdf["HabitatKeuze2"] = self.gdf["HabitatVoorstel"].apply(
+        self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
             lambda voorstellen: [
                 habitatkeuze_obv_mitsen(voorstel) for voorstel in voorstellen
             ]
