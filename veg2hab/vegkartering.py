@@ -44,13 +44,13 @@ class VegTypeInfo:
         percentage: Union[None, str, Number],
         VvN_strings: List[Optional[str]] = [],
         SBB_strings: List[Optional[str]] = [],
-    ) -> "VegTypeInfo":
+    ) -> Self:
         """
         Aanmaken vanuit string vegetatietypen
         """
         if isinstance(percentage, str):
             percentage = float(percentage.replace(",", "."))
-            
+
         assert isinstance(
             percentage, Number
         ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
