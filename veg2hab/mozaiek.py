@@ -34,7 +34,7 @@ class GeenMozaiekregel(Mozaiekregel):
     def evaluation(self) -> MaybeBoolean:
         return self._evaluation
 
-        
+
 def calc_mozaiek_habtypen(
     gdf: gpd.GeoDataFrame,
     buffer: Number = 0.1,
