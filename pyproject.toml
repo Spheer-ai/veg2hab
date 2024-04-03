@@ -26,6 +26,9 @@ pytest = ">=7.0.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.setuptools.package_data]
+veg2hab = ["veg2hab/package_data/*"]
+
 [tool.black]
 line-length = 88
 
