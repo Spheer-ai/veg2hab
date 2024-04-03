@@ -6,7 +6,6 @@ from veg2hab.criteria import (
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
-    GeenMozaiekregel,
     OfCriteria,
     PlaceholderCriterium,
 )
@@ -14,6 +13,7 @@ from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
 from veg2hab.enums import Kwaliteit
 from veg2hab.fgr import FGRType
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.mozaiek import GeenMozaiekregel
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
