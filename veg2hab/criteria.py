@@ -1,4 +1,6 @@
 import json
+from functools import reduce
+from operator import and_, or_
 from typing import ClassVar, List, Optional
 
 import geopandas as gpd
@@ -82,7 +84,7 @@ class PlaceholderCriterium(BeperkendCriterium):
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
-        self._evaluation = MaybeBoolean.FALSE
+        self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return "placeholder"
@@ -139,10 +141,22 @@ class OfCriteria(BeperkendCriterium):
 
     @property
     def evaluation(self) -> MaybeBoolean:
-        return (
-            MaybeBoolean.TRUE
-            if any(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
-            else MaybeBoolean.FALSE
+        assert len(self.sub_criteria) > 0, "OrCriteria zonder subcriteria"
+        test = reduce(
+            lambda x, y: x | y,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.FALSE,
+        )
+        test2 = reduce(
+            or_,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.FALSE,
+        )
+        assert test == test2
+        return reduce(
+            lambda x, y: x | y,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.FALSE,
         )
 
     def __str__(self):
@@ -165,10 +179,11 @@ class EnCriteria(BeperkendCriterium):
 
     @property
     def evaluation(self) -> MaybeBoolean:
-        return (
-            MaybeBoolean.TRUE
-            if all(crit.evaluation == MaybeBoolean.TRUE for crit in self.sub_criteria)
-            else MaybeBoolean.FALSE
+        assert len(self.sub_criteria) > 0, "EnCriteria zonder subcriteria"
+        return reduce(
+            and_,
+            (crit.evaluation for crit in self.sub_criteria),
+            MaybeBoolean.TRUE,
         )
 
     def __str__(self):
