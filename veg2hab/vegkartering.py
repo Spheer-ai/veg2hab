@@ -50,7 +50,7 @@ class VegTypeInfo:
         """
         if isinstance(percentage, str):
             percentage = float(percentage.replace(",", "."))
-            
+
         assert isinstance(
             percentage, Number
         ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"

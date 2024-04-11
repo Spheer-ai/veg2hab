@@ -1,11 +1,13 @@
 import pytest
-from veg2hab.io.common import Interface
+
 from veg2hab.io.arcgis import ArcGISInterface
+from veg2hab.io.common import Interface
 
 
 def test_abstract_base_class():
     with pytest.raises(TypeError):
         i = Interface()
+
 
 # TODO: order of tests matter here. It would be nice
 # if the different tests would run in different
