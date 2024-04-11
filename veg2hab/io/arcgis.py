@@ -37,7 +37,7 @@ class ArcGISInterface(Interface):
         if status.status != 4:
             raise RuntimeError(f"Failed to convert shapefile to GeoPackage: {status}")
 
-        return gpkg_file
+        return filename
 
     def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
         # TODO use shapefile_id as output
@@ -47,10 +47,21 @@ class ArcGISInterface(Interface):
 
         gdf.to_file(filename, driver="GPKG", layer="main")
 
-        arcpy.MakeFeatureLayer_management(
+        logging.info(f"Output is weggeschreven naar {filename}")
+
+        layer = arcpy.MakeFeatureLayer_management(
             in_features=filename + "/main",
             out_layer=os.path.splitext(os.path.basename(filename))[0],
         )
+
+        try:
+            aprx = arcpy.mp.ArcGISProject("CURRENT")
+            current_map = aprx.listMaps()[0]
+            current_map.addLayer(layer)
+        except:
+            logging.warning(
+                f"Kon de output niet toevoegen aan de kaart. Lees deze handmatig in vanaf {filename}"
+            )
 
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
@@ -87,7 +98,8 @@ class ArcGISParameters(InputParameters):
         import arcpy
 
         outputs = []
-        for field_name, field_info in cls.schema()["properties"].items():
+        param_schema = cls.schema()
+        for field_name, field_info in param_schema["properties"].items():
             if field_name == "shapefile":
                 datatype = "GPFeatureLayer"
             elif field_name.endswith("_col"):
@@ -95,12 +107,14 @@ class ArcGISParameters(InputParameters):
             else:
                 datatype = "GPString"
 
+            is_required = field_name in param_schema["required"]
+
             # get the description from the field
             param = arcpy.Parameter(
                 name=field_name,
                 displayName=field_info["description"],
                 datatype=datatype,
-                parameterType="Required",
+                parameterType="Required" if is_required else "Optional",
                 direction="Input",
             )
 
