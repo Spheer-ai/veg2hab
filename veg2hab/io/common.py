@@ -27,11 +27,11 @@ class InputParameters(BaseModel):
     )
     SBB_col: Optional[str] = Field(
         default=None,
-        description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
+        description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )
     VvN_col: Optional[str] = Field(
         default=None,
-        description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
+        description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )
     split_char: Optional[str] = Field(
         default="+",
