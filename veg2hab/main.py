@@ -1,12 +1,12 @@
 from textwrap import dedent
 
-from pkg_resources import resource_filename
 import geopandas as gpd
+from pkg_resources import resource_filename
 
 from veg2hab.definitietabel import DefinitieTabel
+from veg2hab.io.common import InputParameters, Interface
 from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
-from veg2hab.io.common import InputParameters, Interface
 
 
 def installation_instructions():
