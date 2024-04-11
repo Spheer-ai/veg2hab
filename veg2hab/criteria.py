@@ -1,7 +1,7 @@
 import json
 from functools import reduce
 from operator import and_, or_
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Optional, Union
 
 import geopandas as gpd
 from pydantic import BaseModel, PrivateAttr
@@ -179,3 +179,24 @@ class EnCriteria(BeperkendCriterium):
     def __str__(self):
         en_crits = " en ".join(str(crit) for crit in self.sub_criteria)
         return f"({en_crits})"
+
+
+def is_criteria_type_present(
+    voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
+    criteria_type: BeperkendCriterium,
+) -> bool:
+    """
+    Geeft True als er in de lijst met voorstellen eentje met een criteria van crit_type is
+    Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
+    """
+    # Als we een lijst van lijsten hebben, dan flattenen we die
+    if any(isinstance(i, list) for i in voorstellen):
+        voorstellen = [item for sublist in voorstellen for item in sublist]
+    return any(
+        (
+            voorstel.mits.is_criteria_type_present(criteria_type)
+            if voorstel.mits is not None
+            else False
+        )
+        for voorstel in voorstellen
+    )
