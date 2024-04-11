@@ -1,14 +1,11 @@
-from textwrap import dedent
-from pathlib import Path
-from pkg_resources import resource_filename
-from typing_extensions import Literal
-
-from pydantic import BaseModel, Field
-from pydantic.fields import ModelField
 import logging
-import geopandas as gpd
+from typing import List
 
-from .common import Interface
+import geopandas as gpd
+from typing_extensions import Self
+
+from .common import InputParameters, Interface
+
 
 class ArcGISInterface(Interface):
     def read_shapefile(self, shapefile_id: str) -> gpd.GeoDataFrame:
@@ -21,6 +18,7 @@ class ArcGISInterface(Interface):
 
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
+
         class ArcpyAddMessageHandler(logging.Handler):
             def emit(self, record: logging.LogRecord):
                 import arcpy
@@ -38,49 +36,45 @@ class ArcGISInterface(Interface):
         logging.basicConfig(
             format="%(asctime)s - %(levelname)s - %(message)s",
             level=logging.INFO,
-            handlers=[ArcpyAddMessageHandler()]
+            handlers=[ArcpyAddMessageHandler()],
         )
 
     def get_parameter_class(self):
-        # TODO
+        # TODO is this really neccesary?
         pass
 
 
-
-# TODO move a basemodel into a common folder
-# and make a specific arcgis / qgis model
-class Parameters(BaseModel):
-    """ TODO i want these arcgis specific stuff into its own file """
-    shapefile: str = Field(
-        description="Path to the shapefile",
-    )
-    ElmID_col: str = Field(
-        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
-    )
-    vegtype_col_format: Literal["single", "multi"] = Field(
-        description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
-    )
-
-
+class ArcGISParameters(InputParameters):
     @classmethod
-    def from_parameter_list(cls, parameters):
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
         return cls(**as_dict)
 
     @classmethod
-    def to_parameter_list(cls):
-        # import arcpy
+    def to_parameter_list(cls) -> List["arcpy.Parameter"]:
+        import arcpy
 
         outputs = []
-        for field_name, field_info in cls.__fields__.items():
+        for field_name, field_info in cls.schema()["properties"].items():
+            if field_name == "shapefile":
+                datatype = "GPFeatureLayer"
+            elif field_name.endswith("_col"):
+                datatype = "Field"
+            else:
+                datatype = "GPString"
 
-            outputs.append(
-                # arcpy.Parameter
-                dict(
-                    name=field_name,
-                    displayName=field_info.description,
-                    datatype="Field",
-                    parameterType="Required",
-                    direction="Input"
-                )
+            # get the description from the field
+            param = arcpy.Parameter(
+                name=field_name,
+                displayName=field_info["description"],
+                datatype=datatype,
+                parameterType="Required",
+                direction="Input",
             )
+
+            if "enum" in field_info.keys():
+                param.filter.type = "ValueList"
+                param.filter.list = field_info["enum"]
+
+            outputs.append(param)
+        return outputs

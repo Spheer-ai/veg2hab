@@ -1,13 +1,46 @@
 from abc import ABCMeta, abstractmethod
-from typing import Type, ClassVar
-
-from typing_extensions import Self
+from typing import ClassVar, Optional, Type
 
 import geopandas as gpd
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing_extensions import Literal, Self
 
-class Parameters(BaseModel):
-    pass
+
+class InputParameters(BaseModel):
+    shapefile: str = Field(
+        description="Path to the shapefile",
+    )
+    ElmID_col: str = Field(
+        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
+    )
+    vegtype_col_format: Literal["single", "multi"] = Field(
+        description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
+    )
+    sbb_of_vvn: Literal["VvN", "SBB", "beide"] = Field(
+        description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    )
+    datum_col: Optional[str] = Field(
+        default=None, description="kolomnaam van de datum als deze er is"
+    )
+    opmerking_col: Optional[str] = Field(
+        default=None, description="kolomnaam van de opmerking als deze er is"
+    )
+    SBB_col: Optional[str] = Field(
+        default=None,
+        description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
+    )
+    VvN_col: Optional[str] = Field(
+        default=None,
+        description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
+    )
+    split_char: Optional[str] = Field(
+        default="+",
+        description='karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)',
+    )
+    perc_col: Optional[str] = Field(
+        default=None,
+        description="kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
+    )
 
 
 class Interface(metaclass=ABCMeta):
@@ -15,7 +48,9 @@ class Interface(metaclass=ABCMeta):
 
     # make the constructor private
     def __new__(cls):
-        raise TypeError("Interface is a singleton class and cannot only be accessed through get_instance")
+        raise TypeError(
+            "Interface is a singleton class and cannot only be accessed through get_instance"
+        )
 
     @classmethod
     def get_instance(cls) -> Self:
@@ -38,5 +73,5 @@ class Interface(metaclass=ABCMeta):
         """Instantiate the loggers for the module."""
 
     @abstractmethod
-    def get_parameter_class(self) -> Type[Parameters]:
+    def get_parameter_class(self) -> Type[InputParameters]:
         """Get the class that holds the parameters the main function"""
