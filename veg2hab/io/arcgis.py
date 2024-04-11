@@ -1,20 +1,56 @@
 import logging
+import random
+import string
 from typing import List
+import os.path
 
 import geopandas as gpd
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 from .common import InputParameters, Interface
 
 
 class ArcGISInterface(Interface):
-    def read_shapefile(self, shapefile_id: str) -> gpd.GeoDataFrame:
-        # TODO
-        pass
+    def _generate_random_gpkg_name(self, basename: str) -> str:
+        import arcpy
+
+        file_location = os.path.abspath(os.path.join(arcpy.env.scratchWorkspace, ".."))
+
+        random_name = f"{basename}_{''.join(random.choices(string.ascii_letters + string.digits, k=8))}.gpkg"
+        return os.path.join(file_location, random_name)
+
+    @override
+    def shape_id_to_filename(self, shapefile_id: str) -> str:
+        import arcpy
+
+        filename = self._generate_random_gpkg_name("vegkart")
+
+        gpkg_file = arcpy.management.CreateSQLiteDatabase(
+            out_database_name=filename,
+            spatial_type="GEOPACKAGE_1.3",
+        )
+
+        status = arcpy.conversion.FeatureClassToFeatureClass(
+            in_features=shapefile_id, out_path=gpkg_file, out_name="main"
+        )
+
+        if status.status != 4:
+            raise RuntimeError(f"Failed to convert shapefile to GeoPackage: {status}")
+
+        return gpkg_file
 
     def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
-        # TODO
-        pass
+        # TODO use shapefile_id as output
+        import arcpy
+
+        filename = self._generate_random_gpkg_name("habkart")
+
+        gdf.to_file(filename, driver="GPKG", layer="main")
+
+        arcpy.MakeFeatureLayer_management(
+            in_features=filename + "/main",
+            out_layer=os.path.splitext(os.path.basename(filename))[0],
+        )
 
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
@@ -38,10 +74,6 @@ class ArcGISInterface(Interface):
             level=logging.INFO,
             handlers=[ArcpyAddMessageHandler()],
         )
-
-    def get_parameter_class(self):
-        # TODO is this really neccesary?
-        pass
 
 
 class ArcGISParameters(InputParameters):

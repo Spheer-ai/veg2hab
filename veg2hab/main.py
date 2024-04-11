@@ -1,14 +1,12 @@
-from pathlib import Path
 from textwrap import dedent
 
 from pkg_resources import resource_filename
-from pydantic import BaseModel, Field
-from pydantic.fields import ModelField
-from typing_extensions import Literal
+import geopandas as gpd
 
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
+from veg2hab.io.common import InputParameters, Interface
 
 
 def installation_instructions():
@@ -23,7 +21,7 @@ def installation_instructions():
     )
 
 
-def run():
+def run(params: InputParameters):
     wwl_filepath = resource_filename(
         "veg2hab", "package_data/opgeschoonde_waswordt.xlsx"
     )
@@ -35,14 +33,22 @@ def run():
     deftabel = DefinitieTabel.from_excel(def_filepath)
 
     kartering = Kartering.from_shapefile(
-        shp_path,
-        "elmid",
-        vegtype_col_format="single",
-        sbb_of_vvn="sbb",
-        SBB_col="SBBTYPE",
-        split_char="+",
-    ).gdf
+        shape_path=params.shapefile,
+        ElmID_col=params.ElmID_col,
+        vegtype_col_format=params.vegtype_col_format,
+        sbb_of_vvn=params.sbb_of_vvn,
+        datum_col=params.datum_col,
+        opmerking_col=params.opmerking_col,
+        SBB_col=params.SBB_col,
+        VvN_col=params.VvN_col,
+        split_char=params.split_char,
+        perc_col=params.perc_col,
+    )
 
+    kartering.apply_wwl(wwl)
 
-if __name__ == "__main__":
-    run()
+    kartering.apply_deftabel(deftabel)
+
+    final_format = kartering.as_final_format()
+
+    Interface.get_instance().output_shapefile("output_name", final_format)

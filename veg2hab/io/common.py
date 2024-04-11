@@ -44,6 +44,8 @@ class InputParameters(BaseModel):
 
 
 class Interface(metaclass=ABCMeta):
+    """Singleton class that defines the interface for the different UI systems."""
+
     __instance = None
 
     # make the constructor private
@@ -58,9 +60,9 @@ class Interface(metaclass=ABCMeta):
             Interface.__instance = object.__new__(cls)
         return Interface.__instance
 
-    @abstractmethod
-    def read_shapefile(self, shapefile_id: str) -> gpd.GeoDataFrame:
-        """Read the shapefile with the given id."""
+    def shape_id_to_filename(self, shapefile_id: str) -> str:
+        """Convert the shapefile id to a (temporary) file and returns the filename"""
+        return shapefile_id
 
     @abstractmethod
     def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
@@ -71,7 +73,3 @@ class Interface(metaclass=ABCMeta):
     @abstractmethod
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
-
-    @abstractmethod
-    def get_parameter_class(self) -> Type[InputParameters]:
-        """Get the class that holds the parameters the main function"""
