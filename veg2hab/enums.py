@@ -6,11 +6,12 @@ class MaybeBoolean(Enum):
 
     # MAYBE = 2
 
-    # Voor als evaluatie uitgesteld moet worden
-    # POSTPONE = 3
-
     # Voor dingen die niet geautomatiseerd kunnen worden (bijv. placeholder criteria)
-    CANNOT_BE_AUTOMATED = 4
+    CANNOT_BE_AUTOMATED = 3
+
+    # Voor als evaluatie later nog eens geprobeerd moet worden (bijv. mozaiekregels waar nog  
+    # onvoldoende omliggende vlakken een habitattype hebben)
+    POSTPONE = 4
 
     TRUE = 5
 
