@@ -50,6 +50,16 @@ class Mozaiekregel(BaseModel):
     def is_mozaiek_type_present(self, type) -> bool:
         return isinstance(self, type)
 
+    def check(self, habtype_percentage_dict: Dict) -> None:
+        raise NotImplementedError()
+
+    @property
+    def evaluation(self) -> MaybeBoolean:
+        raise NotImplementedError()
+
+    def __str__(self):
+        raise NotImplementedError()
+
 
 class PlaceholderMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "PlaceholderMozaiekregel"
@@ -61,6 +71,9 @@ class PlaceholderMozaiekregel(Mozaiekregel):
     @property
     def evaluation(self) -> MaybeBoolean:
         return self._evaluation
+
+    def __str__(self):
+        return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
 
 
 # class DummyMozaiekregel(Mozaiekregel):
@@ -78,7 +91,7 @@ class PlaceholderMozaiekregel(Mozaiekregel):
 
 class GeenMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "GeenMozaiekregel"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
     def check(self, habtype_percentage_dict: Dict) -> None:
         self._evaluation = MaybeBoolean.TRUE
@@ -86,6 +99,9 @@ class GeenMozaiekregel(Mozaiekregel):
     @property
     def evaluation(self) -> MaybeBoolean:
         return self._evaluation
+
+    def __str__(self):
+        return "Geen mozaiekregel (altijd waar)"
 
 
 class StandaardMozaiekregel(Mozaiekregel):
@@ -96,10 +112,16 @@ class StandaardMozaiekregel(Mozaiekregel):
     alleen_goede_kwaliteit: bool
 
     keys: List[Tuple[str, bool, Kwaliteit]] = []
+    habtype_percentage_dict: Dict = None
 
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
-    def determine_keys(self):
+    def determine_keys(self) -> None:
+        assert not self.habtype in [
+            "H0000",
+            "HXXXX",
+        ], "Habtype van een mozaiekregel mag niet H0000 of HXXXX zijn"
+
         # Keys zijn (habtype: str, zelfstandig: bool, kwaliteit: Kwaliteit)
         self.keys = []
 
@@ -125,12 +147,17 @@ class StandaardMozaiekregel(Mozaiekregel):
             self._evaluation = MaybeBoolean.TRUE
             return
 
-        unknown_habtype_percentage = habtype_percentage_dict[("HXXXX", True, Kwaliteit.NVT)]
+        unknown_habtype_percentage = habtype_percentage_dict[
+            ("HXXXX", True, Kwaliteit.NVT)
+        ]
         # Threshold kan nog behaald worden, dus POSTPONE
-        if requested_habtype_percentage + unknown_habtype_percentage >= self.mozaiek_threshold:
+        if (
+            requested_habtype_percentage + unknown_habtype_percentage
+            >= self.mozaiek_threshold
+        ):
             self._evaluation = MaybeBoolean.POSTPONE
             return
-        
+
         # Threshold kan niet meer behaald worden, dus FALSE
         self._evaluation = MaybeBoolean.FALSE
 
@@ -138,11 +165,14 @@ class StandaardMozaiekregel(Mozaiekregel):
     def evaluation(self) -> MaybeBoolean:
         return self._evaluation
 
+    def __str__(self):
+        return f"{'Enkel zelfstandige vegetaties' if self.alleen_zelfstandig else 'Zowel zelfstandige als mozaiekvegetaties'} van {'goede' if self.alleen_goede_kwaliteit else 'goede en matige'} kwaliteit van {self.habtype}. Threshold: {self.mozaiek_threshold}. Geldig voor {self.keys}"
+
 
 def make_buffered_boundary_overlay_gdf(
     gdf: gpd.GeoDataFrame,
     buffer: Number = 0.1,
-) -> gpd.GeoDataFrame:
+) -> Union[None, gpd.GeoDataFrame]:
     """
     Trekt om elk vlak met een mozaiekregel een lijn met afstand "buffer" tot het vlak.
     Deze lijnen worden vervolgens over de originele gdf gelegd en opgeknipt per vlak waar ze over heen liggen.
@@ -171,9 +201,13 @@ def make_buffered_boundary_overlay_gdf(
         )
     )
 
+    if not mozaiek_present.any():
+        return None
+
     # Eerst trekken we een lijn om alle shapes met mozaiekregels
     buffered_boundary = gdf[mozaiek_present].buffer(buffer).boundary.to_frame()
     buffered_boundary.columns = ["geometry"]
+    buffered_boundary.crs = gdf.crs
 
     # NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay_gdf gebruikt
     buffered_boundary["buffered_ElmID"] = gdf["ElmID"]
@@ -222,13 +256,16 @@ def calc_mozaiek_percentages_from_overlay_gdf(
         # TODO: pak de grootste keuze als er meerdere zijn
         #       Wat als de grootste nog None is en de kleinere wel een keuze heeft?
         key_tuples = group.HabitatKeuze.apply(
-            lambda keuzes: (
+            lambda keuzes:
+            # Als len(keuzes) == 0, dan is er geen vegtype opgegeven, dus H0000
+            ("H0000", True, Kwaliteit.NVT) if len(keuzes) == 0 else
+            # Als de keuze None is, dan is deze nog niet bepaald, dus HXXXX
+            ("HXXXX", True, Kwaliteit.NVT) if keuzes[0] is None else
+            (
                 keuzes[0].habtype,
                 keuzes[0].zelfstandig,
                 keuzes[0].kwaliteit,
             )
-            if not (keuzes[0] is None)
-            else ("HXXXX", True, Kwaliteit.NVT)
         )
         habtype_percentage_dict = defaultdict(int)
         for key, percentage in zip(key_tuples, habtype_percentages):

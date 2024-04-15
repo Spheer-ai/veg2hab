@@ -2,19 +2,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-from veg2hab.criteria import (
-    BeperkendCriterium,
-    GeenCriterium,
-    PlaceholderCriterium,
-    is_criteria_type_present,
-)
+from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MaybeBoolean
-from veg2hab.mozaiek import (  # DummyMozaiekregel,
-    GeenMozaiekregel,
-    Mozaiekregel,
-    PlaceholderMozaiekregel,
-    is_mozaiek_type_present,
-)
+from veg2hab.mozaiek import GeenMozaiekregel, Mozaiekregel  # DummyMozaiekregel,
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import MatchLevel
 from veg2hab.vegetatietypen import VvN as _VvN
@@ -34,6 +24,7 @@ class HabitatVoorstel:
     mits: BeperkendCriterium
     mozaiek: Mozaiekregel
     match_level: MatchLevel
+    mozaiek_dict: Optional[dict] = None
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -71,6 +62,8 @@ class HabitatKeuze:
     kwaliteit: Kwaliteit
     zelfstandig: bool
     opmerking: str
+    mits_opmerking: str
+    mozaiek_opmerking: str
     debug_info: Optional[str]
     habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
 
@@ -87,7 +80,7 @@ class HabitatKeuze:
             assert self.habtype == "H0000"
         elif self.status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
-            KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.PLACEHOLDER,
             KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         ]:
             assert self.habtype == "HXXXX"
@@ -145,7 +138,9 @@ def try_to_determine_habkeuze(
                 habtype="H0000",
                 kwaliteit=all_voorstellen[0].kwaliteit,
                 zelfstandig=True,
-                opmerking="",
+                opmerking="Geen van de opgegeven vegetatietypen is teruggevonden in de definitietabel.",
+                mits_opmerking="",
+                mozaiek_opmerking="",
                 debug_info="",
                 habitatvoorstellen=all_voorstellen,
             )
@@ -156,15 +151,14 @@ def try_to_determine_habkeuze(
             habtype="H0000",
             kwaliteit=all_voorstellen[0].kwaliteit,
             zelfstandig=True,
-            opmerking="",
+            opmerking="Er zijn geen vegetatietypen opgegeven voor dit vlak.",
+            mits_opmerking="",
+            mozaiek_opmerking="",
             debug_info="",
             habitatvoorstellen=all_voorstellen,
         )
 
     sublisted_voorstellen = sublist_per_match_level(all_voorstellen)
-
-
-
 
     # Per MatchLevel checken of er kloppende mitsen zijn
     for current_voorstellen in sublisted_voorstellen:
@@ -195,7 +189,9 @@ def try_to_determine_habkeuze(
                     habtype=voorstel.habtype,
                     kwaliteit=voorstel.kwaliteit,
                     zelfstandig=True,
-                    opmerking=f"Er is een duidelijke keuze. Kloppende mits: {str(voorstel.mits)}",
+                    opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek.",
+                    mits_opmerking=str(voorstel.mits),
+                    mozaiek_opmerking=str(voorstel.mozaiek),
                     debug_info="",
                     habitatvoorstellen=[voorstel],
                 )
@@ -207,7 +203,9 @@ def try_to_determine_habkeuze(
                     habtype="HXXXX",
                     kwaliteit=Kwaliteit.ONBEKEND,
                     zelfstandig=True,
-                    opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen voldoen; Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
+                    opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek]",
+                    mits_opmerking=f"Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
+                    mozaiek_opmerking=f"Kloppende mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in true_voorstellen]}",
                     debug_info="",
                     habitatvoorstellen=true_voorstellen,
                 )
@@ -230,11 +228,13 @@ def try_to_determine_habkeuze(
             ]
 
             return HabitatKeuze(
-                status=KeuzeStatus.PLACEHOLDER_CRITERIA,
+                status=KeuzeStatus.PLACEHOLDER,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.ONBEKEND,
                 zelfstandig=True,
-                opmerking=f"Er zijn mitsen met nog niet geimplementeerde criteria. Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
+                opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek]",
+                mits_opmerking=f"Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
+                mozaiek_opmerking=f"Alle mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
                 debug_info="",
                 habitatvoorstellen=return_voorstellen,
             )
@@ -244,14 +244,16 @@ def try_to_determine_habkeuze(
             # ...dan komt dat door een mozaiekregel waar nog te weinig info over omliggende vlakken voor is
             # We returnen dan None, zodat we later nog een keer kunnen proberen.
             return None
-            
+
     # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
         status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
         habtype="H0000",
         kwaliteit=Kwaliteit.NVT,
         zelfstandig=True,
-        opmerking=f"Er zijn geen habitatvoorstellen waarvan de mitsen kloppen. Mitsen waaraan niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
+        opmerking=f"Er zijn geen habitatvoorstellen waarvan en de mitsen en de mozaiekregels kloppen. Zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek].",
+        mits_opmerking=f"Mitsen waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
+        mozaiek_opmerking=f"Mozaiekregels waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
         debug_info="",
         habitatvoorstellen=all_voorstellen,
     )
