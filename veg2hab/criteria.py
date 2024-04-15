@@ -76,7 +76,7 @@ class GeenCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
-        return "geen mits (altijd waar)"
+        return "Geen mits (altijd waar)"
 
 
 class PlaceholderCriterium(BeperkendCriterium):
@@ -87,7 +87,7 @@ class PlaceholderCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
-        return "placeholder"
+        return "Placeholder mits (nog niet geimplementeerd) (nooit waar)"
 
 
 class FGRCriterium(BeperkendCriterium):

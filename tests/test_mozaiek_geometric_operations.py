@@ -43,6 +43,8 @@ def gdf():
                         kwaliteit=Kwaliteit.GOED,
                         zelfstandig=True,
                         opmerking="",
+                        mits_opmerking="",
+                        mozaiek_opmerking="",
                         debug_info="",
                         habitatvoorstellen=[],
                     )
@@ -54,6 +56,8 @@ def gdf():
                         kwaliteit=Kwaliteit.GOED,
                         zelfstandig=True,
                         opmerking="",
+                        mits_opmerking="",
+                        mozaiek_opmerking="",
                         debug_info="",
                         habitatvoorstellen=[],
                     )
@@ -65,6 +69,8 @@ def gdf():
                         kwaliteit=Kwaliteit.GOED,
                         zelfstandig=True,
                         opmerking="",
+                        mits_opmerking="",
+                        mozaiek_opmerking="",
                         debug_info="",
                         habitatvoorstellen=[],
                     )
@@ -76,6 +82,8 @@ def gdf():
                         kwaliteit=Kwaliteit.GOED,
                         zelfstandig=True,
                         opmerking="",
+                        mits_opmerking="",
+                        mozaiek_opmerking="",
                         debug_info="",
                         habitatvoorstellen=[],
                     )
@@ -85,56 +93,64 @@ def gdf():
             "mozaiek_present": [True, False, False, False],
             "HabitatVoorstel": [
                 [
-                    [HabitatVoorstel(
-                        onderbouwend_vegtype=None,
-                        vegtype_in_dt=None,
-                        habtype="H1",
-                        kwaliteit=Kwaliteit.GOED,
-                        idx_in_dt=None,
-                        mits=GeenCriterium(),
-                        mozaiek=StandaardMozaiekregel(
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
                             habtype="H1",
-                            alleen_zelfstandig=True,
-                            alleen_goede_kwaliteit=True,
-                        ),
-                        match_level=None,
-                    )]
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=StandaardMozaiekregel(
+                                habtype="H1",
+                                alleen_zelfstandig=True,
+                                alleen_goede_kwaliteit=True,
+                            ),
+                            match_level=None,
+                        )
+                    ]
                 ],
                 [
-                    [HabitatVoorstel(
-                        onderbouwend_vegtype=None,
-                        vegtype_in_dt=None,
-                        habtype="H2",
-                        kwaliteit=Kwaliteit.GOED,
-                        idx_in_dt=None,
-                        mits=GeenCriterium(),
-                        mozaiek=GeenMozaiekregel(),
-                        match_level=None,
-                    )]
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H2",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
                 ],
                 [
-                    [HabitatVoorstel(
-                        onderbouwend_vegtype=None,
-                        vegtype_in_dt=None,
-                        habtype="H2",
-                        kwaliteit=Kwaliteit.GOED,
-                        idx_in_dt=None,
-                        mits=GeenCriterium(),
-                        mozaiek=GeenMozaiekregel(),
-                        match_level=None,
-                    )]
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H2",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
                 ],
                 [
-                    [HabitatVoorstel(
-                        onderbouwend_vegtype=None,
-                        vegtype_in_dt=None,
-                        habtype="H3",
-                        kwaliteit=Kwaliteit.GOED,
-                        idx_in_dt=None,
-                        mits=GeenCriterium(),
-                        mozaiek=GeenMozaiekregel(),
-                        match_level=None,
-                    )]
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H3",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
                 ],
             ],
             "geometry": [
