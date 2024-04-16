@@ -91,12 +91,12 @@ def test_postpone_invert():
 
 
 def test_postpone_cannot_be_automated_interactions():
-    # Postpone and cannot be automated should be cannot be automated, since it will never resolve to true
+    # Postpone and cannot be automated should be postpone, since it still might resolve to false if postponed (FALSE & CBA = FALSE)
     assert (
         MaybeBoolean.POSTPONE & MaybeBoolean.CANNOT_BE_AUTOMATED
-        == MaybeBoolean.CANNOT_BE_AUTOMATED
+        == MaybeBoolean.POSTPONE
     )
-    # Postpone or cannot be automated should be postpone, since it still might resolve to true if postponed
+    # Postpone or cannot be automated should be postpone, since it still might resolve to true if postponed (TRUE | CBA = TRUE)
     assert (
         MaybeBoolean.POSTPONE | MaybeBoolean.CANNOT_BE_AUTOMATED
         == MaybeBoolean.POSTPONE
