@@ -6,8 +6,7 @@ from typing import ClassVar, List, Optional, Union
 import geopandas as gpd
 from pydantic import BaseModel, PrivateAttr
 
-from veg2hab.enums import MaybeBoolean
-from veg2hab.fgr import FGRType
+from veg2hab.enums import FGRType, MaybeBoolean
 
 
 class BeperkendCriterium(BaseModel):

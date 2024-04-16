@@ -3,10 +3,9 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
-from veg2hab.enums import KeuzeStatus, Kwaliteit, MaybeBoolean
-from veg2hab.mozaiek import GeenMozaiekregel, Mozaiekregel  # DummyMozaiekregel,
+from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
+from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel
 from veg2hab.vegetatietypen import SBB as _SBB
-from veg2hab.vegetatietypen import MatchLevel
 from veg2hab.vegetatietypen import VvN as _VvN
 
 
@@ -22,7 +21,7 @@ class HabitatVoorstel:
     kwaliteit: Kwaliteit
     idx_in_dt: Optional[int]
     mits: BeperkendCriterium
-    mozaiek: Mozaiekregel
+    mozaiek: MozaiekRegel
     match_level: MatchLevel
     mozaiek_dict: Optional[dict] = None
 
@@ -103,7 +102,7 @@ def rank_habitatkeuzes(
     return (habtype_is_H0000, 100 - percentage, kwaliteit_is_matig)
 
 
-def sublist_per_match_level(
+def _sublist_per_match_level(
     voorstellen: List[HabitatVoorstel],
 ) -> List[List[HabitatVoorstel]]:
     """
@@ -158,7 +157,7 @@ def try_to_determine_habkeuze(
             habitatvoorstellen=all_voorstellen,
         )
 
-    sublisted_voorstellen = sublist_per_match_level(all_voorstellen)
+    sublisted_voorstellen = _sublist_per_match_level(all_voorstellen)
 
     # Per MatchLevel checken of er kloppende mitsen zijn
     for current_voorstellen in sublisted_voorstellen:
@@ -257,139 +256,3 @@ def try_to_determine_habkeuze(
         debug_info="",
         habitatvoorstellen=all_voorstellen,
     )
-
-
-def habitatkeuze_obv_mitsen(all_voorstellen: List[HabitatVoorstel]) -> HabitatKeuze:
-    pass
-    # """
-    # Creeert een habitatkeuze obv de mitsen van habitatvoorstellen
-    # Als er mozaikegels zijn, dan wordt er een HabitatKeuze met status WACHTEN_OP_MOZAIEK gegeven
-    # """
-    # assert len(all_voorstellen) > 0, "Er zijn geen habitatvoorstellen"
-
-    # # Als er maar 1 habitatvoorstel is en dat is H0000, dan...
-    # if len(all_voorstellen) == 1 and all_voorstellen[0].habtype == "H0000":
-    #     # ...zat of geen van de vegtypen in de deftabel
-    #     if all_voorstellen[0].onderbouwend_vegtype:
-    #         return HabitatKeuze(
-    #             status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
-    #             habtype="H0000",
-    #             kwaliteit=all_voorstellen[0].kwaliteit,
-    #             zelfstandig=True,
-    #             opmerking="",
-    #             debug_info="",
-    #             habitatvoorstellen=all_voorstellen,
-    #         )
-    #     # ...of zijn er geen vegetatietypen opgegeven voor dit vlak
-    #     assert all_voorstellen[0].onderbouwend_vegtype is None
-    #     return HabitatKeuze(
-    #         status=KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
-    #         habtype="H0000",
-    #         kwaliteit=all_voorstellen[0].kwaliteit,
-    #         zelfstandig=True,
-    #         opmerking="",
-    #         debug_info="",
-    #         habitatvoorstellen=all_voorstellen,
-    #     )
-
-    # # NOTE: Tijdelijke dummy check voor mozaiek
-    # if is_mozaiek_type_present(all_voorstellen, DummyMozaiekregel):
-    #     return HabitatKeuze(
-    #         status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
-    #         habtype="HXXXX",
-    #         kwaliteit=Kwaliteit.ONBEKEND,
-    #         zelfstandig=True,
-    #         opmerking=f"Er zijn habitatvoorstellen met mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
-    #         debug_info="",
-    #         habitatvoorstellen=all_voorstellen,
-    #     )
-
-    # sublisted_voorstellen = sublist_per_match_level(all_voorstellen)
-
-    # # Per MatchLevel checken of er kloppende mitsen zijn
-    # for current_voorstellen in sublisted_voorstellen:
-    #     truth_values = [voorstel.mits.evaluation for voorstel in current_voorstellen]
-
-    #     # Als er enkel TRUE en FALSE zijn, dan...
-    #     if all(
-    #         [value in [MaybeBoolean.TRUE, MaybeBoolean.FALSE] for value in truth_values]
-    #     ):
-    #         true_voorstellen = [
-    #             voorstel
-    #             for voorstel in current_voorstellen
-    #             if voorstel.mits.evaluation == MaybeBoolean.TRUE
-    #         ]
-
-    #         # ...is er 1 kloppende mits; Duidelijk
-    #         if len(true_voorstellen) == 1:
-    #             voorstel = true_voorstellen[0]
-    #             return HabitatKeuze(
-    #                 status=KeuzeStatus.DUIDELIJK,
-    #                 habtype=voorstel.habtype,
-    #                 kwaliteit=voorstel.kwaliteit,
-    #                 zelfstandig=True,
-    #                 opmerking=f"Er is een duidelijke keuze. Kloppende mits: {str(voorstel.mits)}",
-    #                 debug_info="",
-    #                 habitatvoorstellen=[voorstel],
-    #             )
-
-    #         # ...of zijn er meerdere kloppende mitsen; Alle info van de kloppende mitsen meegeven
-    #         if len(true_voorstellen) > 1:
-    #             return HabitatKeuze(
-    #                 status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-    #                 habtype="HXXXX",
-    #                 kwaliteit=Kwaliteit.ONBEKEND,
-    #                 zelfstandig=True,
-    #                 opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen voldoen; Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
-    #                 debug_info="",
-    #                 habitatvoorstellen=true_voorstellen,
-    #             )
-
-    #         # ...of zijn er geen kloppende mitsen op het huidige match_level
-    #         continue
-
-    #     # Er is een niet-TRUE/FALSE waarde aanwezig. Op het moment van schrijven kan dit enkel
-    #     # MaybeBoolean.CANNOT_BE_AUTOMATED zijn, wat altijd het gevolg is van een PlaceholderCriterium.
-    #     # Als we later meer MaybeBoolean waarden toevoegen klapt hij er hier uit zodat ik niet vergeet om dit te updaten
-    #     assert (
-    #         MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values
-    #     ), "Er is een onbekende (niet TRUE, FALSE of CANNOT_BE_AUTOMATED) waarde in de mitsen"
-    #     assert is_criteria_type_present(
-    #         [current_voorstellen], PlaceholderCriterium
-    #     ), "Er is een CANNOT_BE_AUTOMATED waarde in de mitsen, maar er is geen PlaceholderCriterium"
-
-    #     # Op het huidige matchlevel zijn er mitsen die niet geautomatiseerd kunnen worden.
-    #     # We kunnen dus niet bepalen welke van de huidige en nog te behandelen
-    #     # voorstellen moet leiden tot een Habitattype.
-
-    #     # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-    #     # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-    #     return_voorstellen = [
-    #         voorstel
-    #         for voorstel in all_voorstellen
-    #         if voorstel.match_level <= current_voorstellen[0].match_level
-    #     ]
-
-    #     return HabitatKeuze(
-    #         status=KeuzeStatus.PLACEHOLDER_CRITERIA,
-    #         habtype="HXXXX",
-    #         kwaliteit=Kwaliteit.ONBEKEND,
-    #         zelfstandig=True,
-    #         opmerking=f"Er zijn mitsen met nog niet geimplementeerde criteria. Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
-    #         debug_info="",
-    #         habitatvoorstellen=return_voorstellen,
-    #     )
-
-    # # Er zijn geen kloppende mitsen gevonden;
-    # return HabitatKeuze(
-    #     status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-    #     habtype="H0000",
-    #     kwaliteit=Kwaliteit.NVT,
-    #     zelfstandig=True,
-    #     opmerking=f"Er zijn geen habitatvoorstellen waarvan de mitsen kloppen. Mitsen waaraan niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
-    #     debug_info="",
-    #     habitatvoorstellen=all_voorstellen,
-    # )
-
-
-# TODO: een habitatkeuze obv mitsen en mozaiek functie

@@ -10,7 +10,7 @@ from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.mozaiek import (  # DummyMozaiekregel,; GeenMozaiekregel,
-    Mozaiekregel,
+    MozaiekRegel,
     StandaardMozaiekregel,
 )
 from veg2hab.vegetatietypen import SBB, VvN
@@ -41,8 +41,10 @@ class DefinitieTabel:
         self.df["Mozaiekregel"] = (
             self.df["mozaiekjson"]
             .loc[self.df["mozaiekjson"].notnull()]
-            .apply(Mozaiekregel.parse_raw)
+            .apply(MozaiekRegel.parse_raw)
         )
+        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken
+        # TODO: Om deze isinstance heenwerken voor modulariteit
         self.df["Mozaiekregel"].apply(
             lambda regel: regel.determine_keys()
             if isinstance(regel, StandaardMozaiekregel)
