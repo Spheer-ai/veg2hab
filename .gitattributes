@@ -1,0 +1,2 @@
+veg2hab/package_data/opgeschoonde_definitietabel.xlsx filter=lfs diff=lfs merge=lfs -text
+veg2hab/package_data/opgeschoonde_waswordt.xlsx filter=lfs diff=lfs merge=lfs -text
