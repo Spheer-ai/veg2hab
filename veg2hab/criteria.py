@@ -1,13 +1,12 @@
 import json
 from functools import reduce
 from operator import and_, or_
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Optional, Union
 
 import geopandas as gpd
 from pydantic import BaseModel, PrivateAttr
 
-from veg2hab.enums import MaybeBoolean
-from veg2hab.fgr import FGRType
+from veg2hab.enums import FGRType, MaybeBoolean
 
 
 class BeperkendCriterium(BaseModel):
@@ -76,7 +75,7 @@ class GeenCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
-        return "geen mits (altijd waar)"
+        return "Geen mits (altijd waar)"
 
 
 class PlaceholderCriterium(BeperkendCriterium):
@@ -87,7 +86,7 @@ class PlaceholderCriterium(BeperkendCriterium):
         self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
-        return "placeholder"
+        return "Placeholder mits (nog niet geimplementeerd) (nooit waar)"
 
 
 class FGRCriterium(BeperkendCriterium):
@@ -142,19 +141,9 @@ class OfCriteria(BeperkendCriterium):
     @property
     def evaluation(self) -> MaybeBoolean:
         assert len(self.sub_criteria) > 0, "OrCriteria zonder subcriteria"
-        test = reduce(
-            lambda x, y: x | y,
-            (crit.evaluation for crit in self.sub_criteria),
-            MaybeBoolean.FALSE,
-        )
-        test2 = reduce(
-            or_,
-            (crit.evaluation for crit in self.sub_criteria),
-            MaybeBoolean.FALSE,
-        )
-        assert test == test2
+
         return reduce(
-            lambda x, y: x | y,
+            or_,
             (crit.evaluation for crit in self.sub_criteria),
             MaybeBoolean.FALSE,
         )
@@ -191,28 +180,22 @@ class EnCriteria(BeperkendCriterium):
         return f"({en_crits})"
 
 
-class Mozaiekregel(BaseModel):
-    def is_mozaiek_type_present(self, type) -> bool:
-        return isinstance(self, type)
-
-
-class DummyMozaiekregel(Mozaiekregel):
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
-
-    def check(self) -> None:
-        self._evaluation = MaybeBoolean.FALSE
-
-    @property
-    def evaluation(self) -> MaybeBoolean:
-        return self._evaluation
-
-
-class GeenMozaiekregel(Mozaiekregel):
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
-
-    def check(self) -> None:
-        self._evaluation = MaybeBoolean.TRUE
-
-    @property
-    def evaluation(self) -> MaybeBoolean:
-        return self._evaluation
+def is_criteria_type_present(
+    voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
+    criteria_type: BeperkendCriterium,
+) -> bool:
+    """
+    Geeft True als er in de lijst met voorstellen eentje met een criteria van crit_type is
+    Nodig om te bepalen waarmee de gdf verrijkt moet worden (FGR etc)
+    """
+    # Als we een lijst van lijsten hebben, dan flattenen we die
+    if any(isinstance(i, list) for i in voorstellen):
+        voorstellen = [item for sublist in voorstellen for item in sublist]
+    return any(
+        (
+            voorstel.mits.is_criteria_type_present(criteria_type)
+            if voorstel.mits is not None
+            else False
+        )
+        for voorstel in voorstellen
+    )
