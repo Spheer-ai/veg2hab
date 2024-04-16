@@ -6,14 +6,13 @@ from veg2hab.criteria import (
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
-    GeenMozaiekregel,
     OfCriteria,
     PlaceholderCriterium,
 )
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
-from veg2hab.enums import Kwaliteit
-from veg2hab.fgr import FGRType
+from veg2hab.enums import FGRType, Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.mozaiek import GeenMozaiekregel, PlaceholderMozaiekregel
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -21,10 +20,11 @@ from veg2hab.vegkartering import VegTypeInfo
 @pytest.fixture(scope="module")
 def dt():
     path_in = Path("data/definitietabel habitattypen (versie 24 maart 2009)_0.xls")
-    path_json = Path("data/mitsjson.csv")
+    path_mitsjson = Path("data/mitsjson.csv")
+    path_mozaiekjson = Path("data/mozaiekjson.csv")
     path_out = Path("testing/opgeschoonde_definitietabel.xlsx")
     path_out.parent.mkdir(exist_ok=True)
-    opschonen_definitietabel(path_in, path_json, path_out)
+    opschonen_definitietabel(path_in, path_mitsjson, path_mozaiekjson, path_out)
     return DefinitieTabel.from_excel(path_out)
 
 
@@ -154,7 +154,7 @@ def test_perfect_and_less_specific_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=640,
             mits=GeenCriterium(),
-            mozaiek=GeenMozaiekregel(),
+            mozaiek=PlaceholderMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
