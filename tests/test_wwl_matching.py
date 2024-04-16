@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from veg2hab.vegkartering import VegTypeInfo
-from veg2hab.waswordtlijst import WasWordtLijst, opschonen_was_wordt_lijst
+from veg2hab.waswordtlijst import WasWordtLijst, opschonen_waswordtlijst
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +16,7 @@ def wwl():
     )
     path_out = Path("testing/opgeschoonde_waswordt.xlsx")
     path_out.parent.mkdir(exist_ok=True)
-    opschonen_was_wordt_lijst(path_in, path_out)
+    opschonen_waswordtlijst(path_in, path_out)
     return WasWordtLijst.from_excel(path_out)
 
 
