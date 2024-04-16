@@ -14,12 +14,10 @@ from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
-    habitatkeuze_obv_mitsen,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
 )
 from veg2hab.mozaiek import (
-    GeenMozaiekregel,
     calc_mozaiek_percentages_from_overlay_gdf,
     make_buffered_boundary_overlay_gdf,
 )
@@ -168,7 +166,6 @@ def ingest_vegtype(
 def fill_in_percentages(
     row: gpd.GeoSeries,
     vegtype_col_format: Literal["single", "multi"],
-    split_char: Optional[str],
     perc_col: Union[str, List[str]],
     sbb_col: Union[str, List[str], None] = None,
     vvn_col: Union[str, List[str], None] = None,
@@ -201,13 +198,6 @@ def fill_in_percentages(
         row[perc_colname] = percentage
 
     return row
-
-
-def haal_complexen_door_functie(complexen: List[List], func) -> List[List]:
-    """
-    Haal alle habitatvoorstellen door een functie heen
-    """
-    return [func(complex) for complex in complexen]
 
 
 def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
@@ -930,7 +920,7 @@ class Kartering:
                 perc_col = "perc"
             gdf = gdf.apply(
                 lambda row: fill_in_percentages(
-                    row, vegtype_col_format, split_char, perc_col, SBB_col, VvN_col
+                    row, vegtype_col_format, perc_col, SBB_col, VvN_col
                 ),
                 axis=1,
             )
