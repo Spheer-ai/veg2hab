@@ -1,20 +1,8 @@
-from enum import Enum
 from pathlib import Path
 
 import geopandas as gpd
 
-
-class FGRType(Enum):
-    DU = "Duinen"
-    GG = "Getijdengebied"
-    HL = "Heuvelland"
-    HZ = "Hogere Zandgronden"
-    LV = "Laagveengebied"
-    NI = "Niet indeelbaar"
-    RI = "Rivierengebied"
-    ZK = "Zeekleigebied"
-    AZ = "Afgesloten Zeearmen"
-    NZ = "Noordzee"
+from veg2hab.enums import FGRType
 
 
 class FGR:

@@ -101,7 +101,7 @@ class WasWordtLijst:
         return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
 
 
-def opschonen_was_wordt_lijst(path_in: Path, path_out: Path) -> None:
+def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
     """
     Ontvangt een path_in naar de ruwe was-wordt lijst, schoont deze op en slaat het resultaat op in path_out.
     """

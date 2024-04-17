@@ -6,11 +6,12 @@ class MaybeBoolean(Enum):
 
     # MAYBE = 2
 
-    # Voor als evaluatie uitgesteld moet worden
-    # POSTPONE = 3
-
     # Voor dingen die niet geautomatiseerd kunnen worden (bijv. placeholder criteria)
-    CANNOT_BE_AUTOMATED = 4
+    CANNOT_BE_AUTOMATED = 3
+
+    # Voor als evaluatie later nog eens geprobeerd moet worden (bijv. mozaiekregels waar nog
+    # onvoldoende omliggende vlakken een habitattype hebben)
+    POSTPONE = 4
 
     TRUE = 5
 
@@ -26,14 +27,18 @@ class MaybeBoolean(Enum):
         raise RuntimeError("Cannot convert MaybeBoolean to bool")
 
     def __and__(self, other):
+        and_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.POSTPONE: 2, MaybeBoolean.CANNOT_BE_AUTOMATED: 3, MaybeBoolean.TRUE: 4}
+        and_resolver = {1: MaybeBoolean.FALSE, 2: MaybeBoolean.POSTPONE, 3: MaybeBoolean.CANNOT_BE_AUTOMATED, 4: MaybeBoolean.TRUE}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
-        return MaybeBoolean(min(self.value, other.value))
+        return and_resolver[min(and_order[self], and_order[other])]
 
     def __or__(self, other):
+        or_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.CANNOT_BE_AUTOMATED: 2, MaybeBoolean.POSTPONE: 3, MaybeBoolean.TRUE: 4}
+        or_resolver = {1: MaybeBoolean.FALSE, 2: MaybeBoolean.CANNOT_BE_AUTOMATED, 3: MaybeBoolean.POSTPONE, 4: MaybeBoolean.TRUE}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
-        return MaybeBoolean(max(self.value, other.value))
+        return or_resolver[max(or_order[self], or_order[other])]
 
 
 class Kwaliteit(Enum):
@@ -98,7 +103,7 @@ class KeuzeStatus(Enum):
     MEERDERE_KLOPPENDE_MITSEN = auto()
 
     # Er zijn PlaceholderCriteriums, dus handmatige controle
-    PLACEHOLDER_CRITERIA = auto()
+    PLACEHOLDER = auto()
 
     # Dit gaat Veg2Hab niet op kunnen lossen
     HANDMATIGE_CONTROLE = auto()
@@ -118,7 +123,7 @@ class KeuzeStatus(Enum):
             return "Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
         elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
             return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
-        elif self == KeuzeStatus.PLACEHOLDER_CRITERIA:
+        elif self == KeuzeStatus.PLACEHOLDER:
             return "Er zijn placeholder criteria gevonden; deze kunnen (nog) niet door Veg2Hab worden gecontroleerd."
         elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
             assert (
@@ -126,3 +131,16 @@ class KeuzeStatus(Enum):
             ), "Bij KeuzeStatus.HANDMATIGE_CONTROLE moet nog een mooie toelichting, maar ik weet nu nog niet hoe of wat precies."
         elif self == KeuzeStatus.WACHTEN_OP_MOZAIEK:
             return "Veg2Hab kan nog geen mozaiekregels checken"
+
+
+class FGRType(Enum):
+    DU = "Duinen"
+    GG = "Getijdengebied"
+    HL = "Heuvelland"
+    HZ = "Hogere Zandgronden"
+    LV = "Laagveengebied"
+    NI = "Niet indeelbaar"
+    RI = "Rivierengebied"
+    ZK = "Zeekleigebied"
+    AZ = "Afgesloten Zeearmen"
+    NZ = "Noordzee"
