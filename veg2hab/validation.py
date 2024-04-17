@@ -89,10 +89,21 @@ def _convert_row_to_dict(
     return ret_values
 
 
+def clean_up_habtypen(gdf: gpd.GeoDataFrame, habtype_cols: List[str]):
+    """
+    Schoont habitattypecodes op
+
+    Haalt _ weg zodat H2130_B en H2130B als dezelfde worden gezien
+    """
+    for col in habtype_cols:
+        gdf[col] = gdf[col].str.replace("_", "")
+    return gdf
+
+
 def parse_habitat_percentages(
     gdf: gpd.GeoDataFrame,
-    habtype_cols: str = "Habtype",
-    percentage_cols: Optional[str] = "Perc",
+    habtype_cols_regex: str = "Habtype\d+",
+    percentage_cols_regex: Optional[str] = "Perc\d+",
     how_to_handle_missing_percentages: Literal[
         None, "split_equally", "select_first"
     ] = None,
@@ -112,21 +123,21 @@ def parse_habitat_percentages(
                                            Bij "split_equally" zal de ieder habitattype een gelijk percentage krijgen (100/n_habtypes).
                                            Bij "select_first" zal enkel het eerste habitattype gebruikt worden; deze krijgt dan ook 100%.
     """
-    if (percentage_cols is not None) == (
+    if (percentage_cols_regex is not None) == (
         how_to_handle_missing_percentages is not None
     ):  # xor
         raise ValueError(
             "You should specify exactly one of percentage_cols or how_to_handle_missing_percentages, not both"
         )
 
-    habtype_cols = [c for c in gdf.columns if re.fullmatch(f"{habtype_cols}\d+", c)]
+    habtype_cols = [c for c in gdf.columns if re.fullmatch(habtype_cols_regex, c)]
     if len(habtype_cols) == 0:
         raise ValueError(
             f"Expected nonzero of habitat and percentage columns, but found {len(habtype_cols)} hab columns"
         )
-    if percentage_cols is not None:
+    if percentage_cols_regex is not None:
         percentage_cols = [
-            c for c in gdf.columns if re.fullmatch(f"{percentage_cols}\d+", c)
+            c for c in gdf.columns if re.fullmatch(percentage_cols_regex, c)
         ]
         gdf[percentage_cols] = gdf[percentage_cols].apply(pd.to_numeric, errors="raise")
 
@@ -134,6 +145,10 @@ def parse_habitat_percentages(
             raise ValueError(
                 f"Expected same number of habitat and percentage columns, but found {len(habtype_cols)} hab columns and {len(percentage_cols)} percentage columns"
             )
+    else:
+        percentage_cols = None
+
+    gdf = clean_up_habtypen(gdf, habtype_cols)
 
     return gpd.GeoDataFrame(
         data={
