@@ -1,5 +1,6 @@
 import json
 from functools import reduce
+from itertools import chain
 from operator import and_, or_
 from typing import ClassVar, List, Optional, Union
 
@@ -190,7 +191,7 @@ def is_criteria_type_present(
     """
     # Als we een lijst van lijsten hebben, dan flattenen we die
     if any(isinstance(i, list) for i in voorstellen):
-        voorstellen = [item for sublist in voorstellen for item in sublist]
+        voorstellen = list(chain.from_iterable(voorstellen))
     return any(
         (
             voorstel.mits.is_criteria_type_present(criteria_type)
