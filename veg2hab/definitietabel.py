@@ -6,9 +6,13 @@ from typing import List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium, DummyMozaiekregel, GeenMozaiekregel
+from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.mozaiek import (  # DummyMozaiekregel,; GeenMozaiekregel,
+    MozaiekRegel,
+    StandaardMozaiekregel,
+)
 from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -34,14 +38,17 @@ class DefinitieTabel:
         )
 
         # Mozaiekjson parsen
-        # TODO: Voor nu voeg ik handmatig dummiemozaieken toe, dit moet net zo gaan werken als de mitsen;
-        # self.df["mozaiek"] = (
-        #     self.df["mozaiekjson"]
-        #     .loc[self.df["mozaiekjson"].notnull()]
-        #     .apply(Mozaiekregel.parse_raw)
-        # )
-        df["mozaiek"] = df["mozaiek"].apply(
-            lambda regel: GeenMozaiekregel() if pd.isna(regel) else DummyMozaiekregel()
+        self.df["Mozaiekregel"] = (
+            self.df["mozaiekjson"]
+            .loc[self.df["mozaiekjson"].notnull()]
+            .apply(MozaiekRegel.parse_raw)
+        )
+        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken
+        # TODO: Om deze isinstance heenwerken voor modulariteit
+        self.df["Mozaiekregel"].apply(
+            lambda regel: regel.determine_keys()
+            if isinstance(regel, StandaardMozaiekregel)
+            else None
         )
 
     @classmethod
@@ -62,7 +69,7 @@ class DefinitieTabel:
                 "mits",
                 "mozaiek",
                 "mitsjson",
-                # "mozaiekjson", TODO
+                "mozaiekjson",
             ],
             dtype="string",
         )
@@ -122,7 +129,7 @@ class DefinitieTabel:
                     kwaliteit=row["Kwaliteit"],
                     idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
-                    mozaiek=row["mozaiek"],
+                    mozaiek=row["Mozaiekregel"],
                     match_level=match_levels[idx],
                 )
             )
@@ -131,7 +138,10 @@ class DefinitieTabel:
 
 
 def opschonen_definitietabel(
-    path_in_deftabel: Path, path_in_mitsjson: Path, path_out: Path
+    path_in_deftabel: Path,
+    path_in_mitsjson: Path,
+    path_in_mozaiekjson: Path,
+    path_out: Path,
 ) -> None:
     """
     Ontvangt een was-wordt lijst en output een opgeschoonde was-wordt lijst.
@@ -203,15 +213,12 @@ def opschonen_definitietabel(
     dt = dt.merge(mitsjson, on="mits", how="left")
 
     ### Mozaiek json definities toevoegen
-    # TODO: Voor nu voeg ik handmatig dummiemozaieken toe in de init;
-    #       dit moet net als mitsen met json gaan werken
+    mozaiekjson = pd.read_csv(path_in_mozaiekjson, sep="|")
 
-    # mozaiekjson = pd.read_csv(path_in_json_def, sep="|")
+    for mozaiek in dt.mozaiek.dropna().unique():
+        if mozaiek not in mozaiekjson.mozaiek.unique():
+            raise ValueError(f"Mozaiek {mozaiek} is niet gevonden in mozaiekjson")
 
-    # for mozaiek in dt.mozaiek.dropna().unique():
-    #     if mozaiek not in mozaiekjson.mozaiek.unique():
-    #         raise ValueError(f"Mozaiek {mozaiek} is niet gevonden in mozaiekjson")
-
-    # dt = dt.merge(mozaiekjson, on="mozaiek", how="left")
+    dt = dt.merge(mozaiekjson, on="mozaiek", how="left")
 
     dt.to_excel(path_out, index=False)

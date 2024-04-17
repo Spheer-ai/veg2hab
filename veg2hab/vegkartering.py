@@ -9,14 +9,17 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal, Self
 
-from veg2hab.criteria import FGRCriterium
+from veg2hab.criteria import FGRCriterium, is_criteria_type_present
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
-    habitatkeuze_obv_mitsen,
-    is_criteria_type_present,
     rank_habitatkeuzes,
+    try_to_determine_habkeuze,
+)
+from veg2hab.mozaiek import (
+    calc_mozaiek_percentages_from_overlay_gdf,
+    make_buffered_boundary_overlay_gdf,
 )
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
@@ -44,7 +47,7 @@ class VegTypeInfo:
         percentage: Union[None, str, Number],
         VvN_strings: List[Optional[str]] = [],
         SBB_strings: List[Optional[str]] = [],
-    ) -> "VegTypeInfo":
+    ) -> Self:
         """
         Aanmaken vanuit string vegetatietypen
         """
@@ -163,7 +166,6 @@ def ingest_vegtype(
 def fill_in_percentages(
     row: gpd.GeoSeries,
     vegtype_col_format: Literal["single", "multi"],
-    split_char: Optional[str],
     perc_col: Union[str, List[str]],
     sbb_col: Union[str, List[str], None] = None,
     vvn_col: Union[str, List[str], None] = None,
@@ -198,13 +200,6 @@ def fill_in_percentages(
     return row
 
 
-def haal_complexen_door_functie(complexen: List[List], func) -> List[List]:
-    """
-    Haal alle habitatvoorstellen door een functie heen
-    """
-    return [func(complex) for complex in complexen]
-
-
 def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     """
     Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
@@ -232,6 +227,33 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     return row
 
 
+def mozaiekregel_habtype_percentage_dict_to_string(habtype_percentage_dict: Union[None, dict]) -> str:
+    """
+    Maakt een mooie output-ready string van een habtype_percentage_dict voor mozaiekregels
+    Dict heeft als keys (habtype (str), zelfstandig (bool), kwaliteit (Kwaliteit))
+
+    Van:
+    {
+        ("H1234", True, Kwaliteit.GOED): 70.0,
+        ("H5678", False, Kwaliteit.MATIG): 20.0,
+        ("HXXXX", True, Kwaliteit.NVT): 10.0
+    }
+
+    Naar:
+    "70.00% goed zelfstandig H1234, 20.00% matig mozaiek H5678, 10.00% zelfstandig HXXXX"
+
+    """
+    # Als er nergens mozaiekregels zijn, is er ook geen dict
+    if habtype_percentage_dict is None:
+        return ""
+
+    return ", ".join(
+        f"{v:.2f}% {'goed ' if k[2] == Kwaliteit.GOED else 'matig ' if k[2] == Kwaliteit.MATIG else ''}{'zelfstandig' if k[1] else 'mozaiek'} {k[0]}"
+        for k, v in habtype_percentage_dict.items()
+        if v > 0
+    )
+
+
 def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     """ """
 
@@ -243,7 +265,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.DUIDELIJK,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-            KeuzeStatus.PLACEHOLDER_CRITERIA,
+            KeuzeStatus.PLACEHOLDER,
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
@@ -254,6 +276,11 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Opp{idx}": opp * vegtypeinfo.percentage,
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking,
+                f"Mits_opm{idx}": keuze.mits_opmerking,
+                f"Mozk_opm{idx}": keuze.mozaiek_opmerking,
+                f"MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+                    keuze.habitatvoorstellen[0].mozaiek_dict
+                ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
                 f"VvN{idx}": (
                     str(voorstel.onderbouwend_vegtype)
@@ -288,7 +315,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     True
                     if keuze.status
                     in [
-                        KeuzeStatus.PLACEHOLDER_CRITERIA,
+                        KeuzeStatus.PLACEHOLDER,
                         KeuzeStatus.WACHTEN_OP_MOZAIEK,
                     ]
                     else False
@@ -304,7 +331,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     if keuze.status in [
         KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-        KeuzeStatus.PLACEHOLDER_CRITERIA,
+        KeuzeStatus.PLACEHOLDER,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
     ]:
         voorstellen = keuze.habitatvoorstellen
@@ -321,6 +348,11 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Opp{idx}": str(opp * vegtypeinfo.percentage),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
             f"Opm{idx}": keuze.opmerking,
+            f"Mits_opm{idx}": keuze.mits_opmerking,
+            f"Mozk_opm{idx}": keuze.mozaiek_opmerking,
+            f"MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+                keuze.habitatvoorstellen[0].mozaiek_dict
+            ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
             f"VvN{idx}": str(
                 [
@@ -371,7 +403,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 if keuze.status
                 in [
                     KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-                    KeuzeStatus.PLACEHOLDER_CRITERIA,
+                    KeuzeStatus.PLACEHOLDER,
                     KeuzeStatus.WACHTEN_OP_MOZAIEK,
                 ]
                 else False
@@ -457,6 +489,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "Area",
         "Opm",
         "Datum",
+        "ElmID",
         "geometry",
         "_ChkNodig",
         "_Samnvttng",
@@ -470,6 +503,9 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opp{i}",
             f"Kwal{i}",
             f"Opm{i}",
+            f"Mits_opm{i}",
+            f"Mozk_opm{i}",
+            f"MozkDict{i}",
             f"VvN{i}",
             f"SBB{i}",
             f"_Status{i}",
@@ -597,6 +633,13 @@ def _single_to_multi(
 class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
         self.gdf = gdf
+
+        # Alle VegTypeInfo sorteren op percentage van hoog naar laag
+        # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
+        #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
+        self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
+            lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
+        )
 
         # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
         #       Misschien een dict met welke stappen gedaan zijn?
@@ -785,7 +828,7 @@ class Kartering:
                 {
                     shapefile[ElmID_col][shapefile[ElmID_col].duplicated()].head().to_list()
                 }
-                Er worden nieuwe waarden voor {ElmID_col} gemaakt en gebruikt.
+                Er worden nieuwe waarden voor {ElmID_col} gemaakt en vanaf nu gebruikt.
                 """
             )
             ElmID_col = None
@@ -821,6 +864,14 @@ class Kartering:
                 f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
             )
         gdf = shapefile[cols].copy()
+
+        # Standardiseren van kolomnamen
+        gdf = gdf.rename(
+            columns={ElmID_col: "ElmID", opmerking_col: "Opmerking", datum_col: "Datum"}
+        )
+        ElmID_col = "ElmID"
+        opmerking_col = "Opmerking"
+        datum_col = "Datum"
 
         gdf = fix_crs(gdf, shape_path)
 
@@ -869,7 +920,7 @@ class Kartering:
                 perc_col = "perc"
             gdf = gdf.apply(
                 lambda row: fill_in_percentages(
-                    row, vegtype_col_format, split_char, perc_col, SBB_col, VvN_col
+                    row, vegtype_col_format, perc_col, SBB_col, VvN_col
                 ),
                 axis=1,
             )
@@ -887,7 +938,9 @@ class Kartering:
 
         return cls(gdf)
 
-    def apply_wwl(self, wwl: pd.DataFrame, override_existing_VvN: bool = False) -> None:
+    def apply_wwl(
+        self, wwl: "WasWordtLijst", override_existing_VvN: bool = False
+    ) -> None:
         """
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
@@ -910,7 +963,7 @@ class Kartering:
             wwl.toevoegen_VvN_aan_List_VegTypeInfo
         )
 
-    def apply_deftabel(self, dt: pd.DataFrame) -> None:
+    def apply_deftabel(self, dt: "DefinitieTabel") -> None:
         """
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
@@ -962,12 +1015,142 @@ class Kartering:
                         raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
-        ### Habitatkeuzes bepalen
-        self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
-            lambda voorstellen: [
-                habitatkeuze_obv_mitsen(voorstel) for voorstel in voorstellen
-            ]
+        # NOTE: Kan weg zo als dit in bepaal_habtitatkeuzes gebeurt
+        # ### Habitatkeuzes bepalen
+        # self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
+        #     lambda voorstellen: [
+        #         habitatkeuze_obv_mitsen(voorstel) for voorstel in voorstellen
+        #     ]
+        # )
+
+    def bepaal_habitatkeuzes(self, fgr: FGR, max_iter: int = 20) -> None:
+        """ """
+        # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
+        self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
+            lambda voorstellen_list: [None for sublist in voorstellen_list]
         )
+        self.gdf["finished_on_iteration"] = 0
+
+        ### Checken mitsen
+        self.check_mitsen(fgr)
+
+        ### Verkrijgen overlay gdf
+        # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
+        # Als er geen vlakken met mozaiekregels zijn of als deze vlakken allemaal nergens aan grenzen is overlayed None
+        overlayed = make_buffered_boundary_overlay_gdf(self.gdf)
+
+        for i in range(max_iter):
+            keuzes_still_to_determine_pre = self.gdf.HabitatKeuze.apply(
+                lambda keuzes: keuzes.count(None)
+            )
+            n_keuzes_still_to_determine_pre = keuzes_still_to_determine_pre.sum()
+
+
+            #####
+            # Mozaiekregels checken
+            #####
+            # We hoeven geen mozaiekdingen te doen als we geen vlakken met mozaiekregels hebben
+            if overlayed is not None:
+                # Vlakken waar alle HabitatKeuzes al bepaald zijn kunnen uit de mozaiekregel overlayed gdf
+                finished_ElmID = self.gdf[
+                    keuzes_still_to_determine_pre == 0
+                ].ElmID.to_list()
+                overlayed = overlayed[~overlayed.buffered_ElmID.isin(finished_ElmID)]
+
+                # obtain a series with 1 if there is at least 1 None habitatkeuze and 0 otherwise
+                finished_on_iteration_increment = self.gdf.HabitatKeuze.apply(
+                    lambda keuzes: 1 if keuzes.count(None) > 0 else 0
+                )
+                self.gdf["finished_on_iteration"] += finished_on_iteration_increment
+
+                # Mergen HabitatVoorstel met overlayed
+                # Nu hebben we dus per mozaiekregelvlak voor hoeveel procent het aan welke HabitatKeuzes grenst
+                augmented_overlayed = overlayed.merge(
+                    self.gdf[["ElmID", "HabitatKeuze"]],
+                    on="ElmID",
+                    how="left",
+                )
+                
+                # Deze info zetten we per ElmID om in een defaultdict
+                habtype_percentages = calc_mozaiek_percentages_from_overlay_gdf(
+                    augmented_overlayed
+                )
+
+                # Met deze dicts kunnen we dan de mozaiekregels checken
+                self.check_mozaiekregels(habtype_percentages)
+
+            #####
+            # Habitatkeuze proberen te bepalen per list habitatvoorstellen van een vegtypeingo
+            #####
+            self.gdf["HabitatKeuze"] = self.gdf.HabitatVoorstel.apply(
+                lambda voorstellen: [
+                    try_to_determine_habkeuze(voorstel) for voorstel in voorstellen
+                ]
+            )
+
+            n_keuzes_still_to_determine_post = self.gdf.HabitatKeuze.apply(
+                lambda keuzes: keuzes.count(None)
+            ).sum()
+
+            print(
+                f"Iteratie {i}: van {n_keuzes_still_to_determine_pre} naar {n_keuzes_still_to_determine_post} keuzes nog te bepalen"
+            )
+
+            if (
+                n_keuzes_still_to_determine_pre == n_keuzes_still_to_determine_post
+                or n_keuzes_still_to_determine_post == 0
+            ):
+                break
+        else:
+            warnings.warn(
+                f"Maximaal aantal iteraties ({max_iter}) bereikt voor het bepalen van de habitatkeuzes."
+            )
+
+        # Of we hebben overal een keuze, of we komen niet verder met nog meer iteraties,
+        # of we hebben max_iter bereikt
+
+        if n_keuzes_still_to_determine_post > 0:
+            warnings.warn(
+                f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
+            )
+        
+
+    def check_mozaiekregels(self, habtype_percentages):
+        for row in self.gdf.itertuples():
+            for idx, voorstel_list in enumerate(row.HabitatVoorstel):
+                # Als er geen habitatkeuzes zijn (want geen vegtypen opgegeven), 
+                # dan hoeven we ook geen mozaiekregels te checken
+                if len(row.HabitatKeuze) == 0:
+                    continue
+
+                # Als we voor deze voorstellen al een HabitatKeuze hebben hoeven we niet weer
+                # de mozaiekregels te checken
+                if row.HabitatKeuze[idx] is not None:
+                    continue
+
+                percentages_dict = habtype_percentages[
+                    habtype_percentages["ElmID"] == row.ElmID
+                ].dict
+
+                if len(percentages_dict) == 1:
+                    percentages_dict = percentages_dict.iloc[0]
+                elif len(percentages_dict) == 0:
+                    # Vlakken die niet tegen andere vlakken aan liggen zijn er in make_buffered_boundary_overlay_gdf
+                    # uitgefilterd door het droppen van lijnen die niet over een vlak liggen.
+                    # Deze moeten dus nog even een (lege) dict krijgen
+
+                    # Het kan ook dat dit vlak geen mozaiek nodig heeft (en dus een geenmozaiekregel heeft)
+                    percentages_dict = defaultdict(int)
+                else:
+                    assert (
+                        False
+                    ), "Er zijn meerdere rijen met hetzelfde ElmID in de habtype_percentages gdf"
+
+                for voorstel in voorstel_list:
+                    voorstel.mozaiek.check(percentages_dict)
+
+                    # We bewaren de dict voor bij de output
+                    voorstel.mozaiek_dict = percentages_dict
 
     def as_final_format(self) -> pd.DataFrame:
         """
@@ -984,6 +1167,7 @@ class Kartering:
                 "Opp",
                 "Opmerking",
                 "Datum",
+                "ElmID",
                 "geometry",
                 "VegTypeInfo",
                 "HabitatKeuze",
