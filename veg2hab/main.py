@@ -74,7 +74,7 @@ def run(params: InputParameters):
 
     logging.info(f"Definitietabel is toegepast op de vegetatie kartering")
 
-    kartering.check_mitsen(fgr)
+    kartering.bepaal_habitatkeuzes(fgr)
 
     logging.info(f"Mitsen zijn gecheckt")
 
