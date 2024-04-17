@@ -11,7 +11,6 @@ from typing import Any, Dict, Tuple, Union
 import pandas as pd
 import pyodbc
 
-
 # __all__ = ["read_access_tables"]
 
 
@@ -96,9 +95,9 @@ def unpack_access_db(access_db_path: str, output_folder: Path):
                 f"Er is iets fout gegaan bij het uitpakken van de access database: {e.stderr.decode()}"
             ) from e
 
+
 def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """ Read the tables from the access database and return them as pandas dataframes
-    """
+    """Read the tables from the access database and return them as pandas dataframes"""
     # TODO fix circular imports
     from veg2hab.vegetatietypen import SBB as _SBB
     from veg2hab.vegkartering import VegTypeInfo

@@ -10,6 +10,7 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal, Self
 
+from veg2hab.acces_db import read_access_tables
 from veg2hab.criteria import FGRCriterium, is_criteria_type_present
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
@@ -18,7 +19,6 @@ from veg2hab.habitat import (
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
 )
-from veg2hab.acces_db import read_access_tables
 from veg2hab.mozaiek import (
     calc_mozaiek_percentages_from_overlay_gdf,
     make_buffered_boundary_overlay_gdf,
@@ -229,7 +229,9 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     return row
 
 
-def mozaiekregel_habtype_percentage_dict_to_string(habtype_percentage_dict: Union[None, dict]) -> str:
+def mozaiekregel_habtype_percentage_dict_to_string(
+    habtype_percentage_dict: Union[None, dict]
+) -> str:
     """
     Maakt een mooie output-ready string van een habtype_percentage_dict voor mozaiekregels
     Dict heeft als keys (habtype (str), zelfstandig (bool), kwaliteit (Kwaliteit))
@@ -531,7 +533,9 @@ def fix_crs(
         logging.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
         gdf = gdf.set_crs(epsg=28992)
     elif gdf.crs.to_epsg() != 28992:
-        logging.info(f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992")
+        logging.info(
+            f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992"
+        )
         gdf = gdf.to_crs(epsg=28992)
     return gdf
 
@@ -987,7 +991,6 @@ class Kartering:
             )
             n_keuzes_still_to_determine_pre = keuzes_still_to_determine_pre.sum()
 
-
             #####
             # Mozaiekregels checken
             #####
@@ -1055,7 +1058,6 @@ class Kartering:
             warnings.warn(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
-
 
     def check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
