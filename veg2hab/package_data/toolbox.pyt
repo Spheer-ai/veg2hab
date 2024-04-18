@@ -81,4 +81,4 @@ class Tool1(BaseTool):
 
 class Tool2(BaseTool):
     def __init__(self):
-        super().__init__(veg2hab.io.arcgis.ShapefileInputs)
+        super().__init__(veg2hab.io.arcgis.ArcGISShapefileInputs)

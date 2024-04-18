@@ -147,10 +147,18 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     # SBB code toevoegen aan KarteringVegetatietype
     kart_veg = kart_veg.merge(
-        vegetatietype, left_on="Vegetatietype", right_on="Code", how="left"
+        # TODO validate="one_to_one"?
+        vegetatietype,
+        left_on="Vegetatietype",
+        right_on="Code",
+        how="left",
     )
     kart_veg = kart_veg.merge(
-        sbbtype, left_on="SbbType", right_on="Cata_ID", how="left"
+        # TODO: validate="one_to_one"?
+        sbbtype,
+        left_on="SbbType",
+        right_on="Cata_ID",
+        how="left",
     )
 
     # Opschonen SBB codes

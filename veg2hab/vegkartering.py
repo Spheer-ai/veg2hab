@@ -673,19 +673,20 @@ class Kartering:
                 datum_column,
                 "geometry",
             ]
-            if col in gdf.columns
+            if col is not None
         ]
         gdf = gdf[columns_to_keep]
 
         # Als kolommen niet aanwezig zijn in de shapefile dan vullen we ze met None
-        for col in [opmerkingen_column, datum_column]:
-            if col not in gdf.columns:
-                gdf[col] = None
+        for old_col, new_col in [
+            (opmerkingen_column, "Opmerking"),
+            (datum_column, "Datum"),
+        ]:
+            if old_col is None:
+                gdf[new_col] = None
+            else:
+                gdf = gdf.rename(columns={old_col: new_col})
 
-        # Standardiseren van kolomnamen
-        gdf = gdf.rename(
-            columns={opmerkingen_column: "Opmerking", datum_column: "Datum"}
-        )
         gdf["Opp"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
 
