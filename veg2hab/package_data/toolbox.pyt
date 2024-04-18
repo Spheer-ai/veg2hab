@@ -4,9 +4,11 @@ from typing import Type, Union
 import veg2hab.io.arcgis
 import veg2hab.main
 
+
+VERSION = "0.1.0"
+
 # this instantiates the arcgis interface and configures the logging
 veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
-
 
 class Toolbox:
     def __init__(self):
@@ -61,6 +63,9 @@ class BaseTool:
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+        # TODO this would be a nice additional check
+        # veg2hab.io.arcgis.ArcGISInterface.get_instance().check_version(VERSION)
+
         input_params = self.param_type.from_parameter_list(parameters)
         veg2hab.main.run(input_params)
 
