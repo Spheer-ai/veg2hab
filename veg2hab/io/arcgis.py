@@ -96,6 +96,8 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             datatype = "GPFeatureLayer"
         elif field_name.endswith("_col"):
             datatype = "Field"
+        elif field_info.get("format", "") == "path":
+            datatype = "DEFile"
         else:
             datatype = "GPString"
 
