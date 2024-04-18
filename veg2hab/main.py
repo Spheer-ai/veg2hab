@@ -1,13 +1,14 @@
 import logging
 from pathlib import Path
 from textwrap import dedent
+from typing import Union
 
 import geopandas as gpd
 from pkg_resources import resource_filename
 
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.fgr import FGR
-from veg2hab.io.common import InputParameters, Interface
+from veg2hab.io.common import AccessDBInputs, Interface, ShapefileInputs
 from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
 
@@ -24,7 +25,7 @@ def installation_instructions():
     )
 
 
-def run(params: InputParameters):
+def run(params: Union[AccessDBInputs, ShapefileInputs]):
     logging.info(f"Starting veg2hab met input parameters: {params.json()}")
 
     wwl_filepath = resource_filename(
@@ -47,22 +48,34 @@ def run(params: InputParameters):
 
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
-    logging.info(
-        f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
-    )
+    if filename != params.shapefile:
+        logging.info(
+            f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
+        )
 
-    kartering = Kartering.from_shapefile(
-        shape_path=filename,
-        ElmID_col=params.ElmID_col,
-        vegtype_col_format=params.vegtype_col_format,
-        sbb_of_vvn=params.sbb_of_vvn,
-        datum_col=params.datum_col,
-        opmerking_col=params.opmerking_col,
-        SBB_col=params.SBB_col,
-        VvN_col=params.VvN_col,
-        split_char=params.split_char,
-        perc_col=params.perc_col,
-    )
+    if isinstance(params, AccessDBInputs):
+        kartering = Kartering.from_access_db(
+            shape_path=Path(filename),
+            shape_elm_id_column=params.ElmID_col,
+            access_mdb_path=params.access_mdb_path,
+            opmerkingen_column=params.opmerkingen_column,
+            datum_column=params.datum_column,
+        )
+    elif isinstance(params, ShapefileInputs):
+        kartering = Kartering.from_shapefile(
+            shape_path=Path(filename),
+            ElmID_col=params.ElmID_col,
+            vegtype_col_format=params.vegtype_col_format,
+            sbb_of_vvn=params.sbb_of_vvn,
+            datum_col=params.datum_col,
+            opmerking_col=params.opmerking_col,
+            SBB_col=params.SBB_col,
+            VvN_col=params.VvN_col,
+            split_char=params.split_char,
+            perc_col=params.perc_col,
+        )
+    else:
+        raise RuntimeError("Something went wrong with the input parameters")
 
     logging.info(f"Vegetatie kartering is succesvol ingelezen")
 

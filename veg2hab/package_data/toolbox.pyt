@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
+from typing import Type, Union
 
-import arcpy
-import logging
 import veg2hab.io.arcgis
 import veg2hab.main
 
-interface = veg2hab.io.arcgis.ArcGISInterface.get_instance()
-interface.instantiate_loggers()
+# this instantiates the arcgis interface and configures the logging
+veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
 
 
 class Toolbox:
@@ -17,18 +16,24 @@ class Toolbox:
         self.alias = "veg2hab toolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Tool]
+        self.tools = [Tool1, Tool2]
 
 
-class Tool:
-    def __init__(self):
-        """Define the tool (tool name is the name of the class)."""
-        self.label = "draai_veg2hab"
-        self.description = "Draai veg2hab"
+class BaseTool:
+    def __init__(
+        self,
+        param_type: Union[
+            Type[veg2hab.io.arcgis.ArcGISAccessDBInputs],
+            Type[veg2hab.io.arcgis.ArcGISShapefileInputs],
+        ],
+    ) -> None:
+        self.param_type = param_type
+        self.label = param_type.label
+        self.description = param_type.description
 
     def getParameterInfo(self):
         """Define the tool parameters."""
-        return veg2hab.io.arcgis.ArcGISParameters.to_parameter_list()
+        return self.param_type.to_parameter_list()
 
     def isLicensed(self):
         """Set whether the tool is licensed to execute."""
@@ -56,9 +61,19 @@ class Tool:
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        input_params = veg2hab.io.arcgis.ArcGISParameters.from_parameter_list(parameters)
+        input_params = self.param_type.from_parameter_list(parameters)
         veg2hab.main.run(input_params)
 
     def postExecute(self, parameters):
         """This method takes place after outputs are processed and
         added to the display."""
+
+
+class Tool1(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ArcGISAccessDBInputs)
+
+
+class Tool2(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ShapefileInputs)
