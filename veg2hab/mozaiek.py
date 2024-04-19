@@ -166,7 +166,8 @@ class StandaardMozaiekregel(MozaiekRegel):
         return self._evaluation
 
     def __str__(self):
-        return f"{'Enkel zelfstandige vegetaties' if self.alleen_zelfstandig else 'Zowel zelfstandige als mozaiekvegetaties'} van {'goede' if self.alleen_goede_kwaliteit else 'goede en matige'} kwaliteit van {self.habtype}. Threshold: {self.mozaiek_threshold}. Geldig voor {self.keys}"
+        # return f"{'Enkel zelfstandige vegetaties' if self.alleen_zelfstandig else 'Zowel zelfstandige als mozaiekvegetaties'} van {'goede' if self.alleen_goede_kwaliteit else 'goede en matige'} kwaliteit van {self.habtype}. Threshold: {self.mozaiek_threshold}."
+        return f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} {'G' if self.alleen_goede_kwaliteit else 'G/M'} {self.habtype}."
 
 
 def make_buffered_boundary_overlay_gdf(
@@ -259,10 +260,13 @@ def calc_mozaiek_percentages_from_overlay_gdf(
         key_tuples = group.HabitatKeuze.apply(
             lambda keuzes:
             # Als len(keuzes) == 0, dan is er geen vegtype opgegeven, dus H0000
-            ("H0000", True, Kwaliteit.NVT) if len(keuzes) == 0 else
+            ("H0000", True, Kwaliteit.NVT)
+            if len(keuzes) == 0
+            else
             # Als de keuze None is, dan is deze nog niet bepaald, dus HXXXX
-            ("HXXXX", True, Kwaliteit.NVT) if keuzes[0] is None else
-            (
+            ("HXXXX", True, Kwaliteit.NVT)
+            if keuzes[0] is None
+            else (
                 keuzes[0].habtype,
                 keuzes[0].zelfstandig,
                 keuzes[0].kwaliteit,
