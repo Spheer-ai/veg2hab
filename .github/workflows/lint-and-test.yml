@@ -1,0 +1,40 @@
+name: Lint and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.7"
+
+    - name: Install dependencies
+      run: |
+        pip install poetry==1.6.1
+        poetry install
+
+    - name: Lint
+      run: |
+        poetry run black --check veg2hab
+        poetry run isort --check veg2hab
+
+    - name: Test with pytest
+      run: |
+        poetry run pytest -v tests
+
+    # TODO dit zou nog een keer netjes zijn
+    # - name: Pyright
+    #   run: |
+    #     poetry run pyright veg2hab

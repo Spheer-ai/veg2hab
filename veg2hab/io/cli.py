@@ -3,7 +3,7 @@ import logging
 from geopandas.geodataframe import GeoDataFrame
 from typing_extensions import override
 
-from .common import InputParameters, Interface
+from .common import AccessDBInputs, Interface, ShapefileInputs
 
 
 class CLIInterface(Interface):
@@ -14,7 +14,3 @@ class CLIInterface(Interface):
     @override
     def instantiate_loggers(self) -> None:
         logging.basicConfig(level=logging.INFO)
-
-
-class CLIParameters(InputParameters):
-    pass
