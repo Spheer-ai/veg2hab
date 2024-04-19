@@ -206,9 +206,8 @@ def make_buffered_boundary_overlay_gdf(
         return None
 
     # Eerst trekken we een lijn om alle shapes met mozaiekregels
-    buffered_boundary = gdf[mozaiek_present].buffer(buffer).boundary.to_frame()
-    buffered_boundary.columns = ["geometry"]
-    buffered_boundary.crs = gdf.crs
+    buffered_boundary = gdf[mozaiek_present].buffer(buffer).boundary.to_frame(name="geometry")
+    assert buffered_boundary.crs == gdf.crs
 
     # NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay_gdf gebruikt
     buffered_boundary["buffered_ElmID"] = gdf["ElmID"]
