@@ -27,23 +27,34 @@ class MaybeBoolean(Enum):
         raise RuntimeError("Cannot convert MaybeBoolean to bool")
 
     def __and__(self, other):
-        and_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.POSTPONE: 2, MaybeBoolean.CANNOT_BE_AUTOMATED: 3, MaybeBoolean.TRUE: 4}
-        and_resolver = {v:k for k,v in and_order.items()}
+        and_order = {
+            MaybeBoolean.FALSE: 1,
+            MaybeBoolean.POSTPONE: 2,
+            MaybeBoolean.CANNOT_BE_AUTOMATED: 3,
+            MaybeBoolean.TRUE: 4,
+        }
+        and_resolver = {v: k for k, v in and_order.items()}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
         return and_resolver[min(and_order[self], and_order[other])]
 
     def __or__(self, other):
-        or_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.CANNOT_BE_AUTOMATED: 2, MaybeBoolean.POSTPONE: 3, MaybeBoolean.TRUE: 4}
-        or_resolver = {v:k for k,v in or_order.items()}
+        or_order = {
+            MaybeBoolean.FALSE: 1,
+            MaybeBoolean.CANNOT_BE_AUTOMATED: 2,
+            MaybeBoolean.POSTPONE: 3,
+            MaybeBoolean.TRUE: 4,
+        }
+        or_resolver = {v: k for k, v in or_order.items()}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
         return or_resolver[max(or_order[self], or_order[other])]
 
 
 class Kwaliteit(Enum):
-    NVT = "Nvt"  # bijvoorbeeld in het geval van H000
-    ONBEKEND = "Onbekend"  # bijvoorbeeld in het geval van HXXXX
+    NVT = "Nvt"  # bijvoorbeeld in het geval van H0000 en HXXXX
+    # NOTE: Ik heb dit weggehaald want ik ben NVT en ONBEKEND door mekaar wezen halen, en eigenlijk past NVT ook wel bij HXXXX
+    # ONBEKEND = "Onbekend"  # bijvoorbeeld in het geval van HXXXX
     GOED = "Goed"
     MATIG = "Matig"
 
@@ -61,7 +72,7 @@ class Kwaliteit(Enum):
             return "G"
         elif self == Kwaliteit.MATIG:
             return "M"
-        elif self in [Kwaliteit.NVT, Kwaliteit.ONBEKEND]:
+        elif self in [Kwaliteit.NVT]:
             return "X"
         else:
             raise ValueError("GoedMatig is niet Goed of Matig")
@@ -105,11 +116,10 @@ class KeuzeStatus(Enum):
     # Er zijn PlaceholderCriteriums, dus handmatige controle
     PLACEHOLDER = auto()
 
-    # Dit gaat Veg2Hab niet op kunnen lossen
-    HANDMATIGE_CONTROLE = auto()
+    # # Dit gaat Veg2Hab niet op kunnen lossen
+    # HANDMATIGE_CONTROLE = auto()
 
-    # Er moet gewacht worden totdat alle zelfstandige habitatwaardige vegetaties
-    # zijn bepaald, pas dan kunnen de mozaiekregels worden toegepast
+    # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
     def toelichting(self):
@@ -120,17 +130,17 @@ class KeuzeStatus(Enum):
         elif self == KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL:
             return "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype."
         elif self == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
-            return "Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
+            return "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
         elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
             return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
         elif self == KeuzeStatus.PLACEHOLDER:
-            return "Er zijn placeholder criteria gevonden; deze kunnen (nog) niet door Veg2Hab worden gecontroleerd."
-        elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
-            assert (
-                False
-            ), "Bij KeuzeStatus.HANDMATIGE_CONTROLE moet nog een mooie toelichting, maar ik weet nu nog niet hoe of wat precies."
+            return "Er zijn placeholder mitsen/mozaiekregels gevonden; deze kunnen (nog) niet door Veg2Hab worden gecontroleerd."
+        # elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
+        #     assert (
+        #         False
+        #     ), "Bij KeuzeStatus.HANDMATIGE_CONTROLE moet nog een mooie toelichting, maar ik weet nu nog niet hoe of wat precies, want deze KeuzeStatus is nog niet in gebruik."
         elif self == KeuzeStatus.WACHTEN_OP_MOZAIEK:
-            return "Veg2Hab kan nog geen mozaiekregels checken"
+            return "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)"
 
 
 class FGRType(Enum):
