@@ -112,11 +112,20 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             direction="Input",
         )
 
+        if field_name == "shapefile":
+            shapefile_param = param
+
         if "enum" in field_info.keys():
             param.filter.type = "ValueList"
             param.filter.list = field_info["enum"]
 
         outputs.append(param)
+
+    # TODO: fix this for multi field inputs
+    for param in outputs:
+        if param.name.endswith("_col"):
+            param.parameterDependencies = [shapefile_param.name]
+
     return outputs
 
 
