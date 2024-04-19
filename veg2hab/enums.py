@@ -28,14 +28,14 @@ class MaybeBoolean(Enum):
 
     def __and__(self, other):
         and_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.POSTPONE: 2, MaybeBoolean.CANNOT_BE_AUTOMATED: 3, MaybeBoolean.TRUE: 4}
-        and_resolver = {1: MaybeBoolean.FALSE, 2: MaybeBoolean.POSTPONE, 3: MaybeBoolean.CANNOT_BE_AUTOMATED, 4: MaybeBoolean.TRUE}
+        and_resolver = {v:k for k,v in and_order.items()}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
         return and_resolver[min(and_order[self], and_order[other])]
 
     def __or__(self, other):
         or_order = {MaybeBoolean.FALSE: 1, MaybeBoolean.CANNOT_BE_AUTOMATED: 2, MaybeBoolean.POSTPONE: 3, MaybeBoolean.TRUE: 4}
-        or_resolver = {1: MaybeBoolean.FALSE, 2: MaybeBoolean.CANNOT_BE_AUTOMATED, 3: MaybeBoolean.POSTPONE, 4: MaybeBoolean.TRUE}
+        or_resolver = {v:k for k,v in or_order.items()}
         if not isinstance(other, MaybeBoolean):
             return NotImplemented
         return or_resolver[max(or_order[self], or_order[other])]
