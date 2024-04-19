@@ -166,7 +166,6 @@ class StandaardMozaiekregel(MozaiekRegel):
         return self._evaluation
 
     def __str__(self):
-        # return f"{'Enkel zelfstandige vegetaties' if self.alleen_zelfstandig else 'Zowel zelfstandige als mozaiekvegetaties'} van {'goede' if self.alleen_goede_kwaliteit else 'goede en matige'} kwaliteit van {self.habtype}. Threshold: {self.mozaiek_threshold}."
         return f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} {'G' if self.alleen_goede_kwaliteit else 'G/M'} {self.habtype}."
 
 
