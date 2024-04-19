@@ -20,10 +20,12 @@ class AccessDBInputs(BaseModel):
         description="Locatie van de .mdb file van de digitale standaard",
     )
     opmerkingen_column: Optional[str] = Field(
-        default=None, description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven"
+        default=None,
+        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
     datum_column: Optional[str] = Field(
-        default=None, description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven"
+        default=None,
+        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
 
 
@@ -43,10 +45,12 @@ class ShapefileInputs(BaseModel):
         description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
     )
     datum_col: Optional[str] = Field(
-        default=None, description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven"
+        default=None,
+        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
     opmerking_col: Optional[str] = Field(
-        default=None, description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven"
+        default=None,
+        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
     SBB_col: Optional[str] = Field(
         default=None,

@@ -11,8 +11,6 @@ from typing import Any, Dict, Tuple, Union
 import pandas as pd
 import pyodbc
 
-# __all__ = ["read_access_tables"]
-
 
 class TableNames(enum.Enum):
     ELEMENT = "Element"
@@ -32,32 +30,32 @@ def list_tables(conn: pyodbc.Connection):
 
 
 @functools.singledispatch
-def read_table(location, table_name: str, col_names: Dict[str, Any]) -> pd.DataFrame:
+def read_table(
+    location, table_name: TableNames, col_names: Dict[str, Any]
+) -> pd.DataFrame:
     """Read a table from the access_db"""
-    pass
+    raise NotImplementedError(f"invalide {location}")
 
 
 @read_table.register
 def _(
-    conn: pyodbc.Connection, table_name: str, col_names: Dict[str, Any]
+    conn: pyodbc.Connection, table_name: TableNames, col_names: Dict[str, Any]
 ) -> pd.DataFrame:
     # the pyodb is not officially suppported by pandas, so we suppress that
     # warning:
     with warnings.catch_warnings():
         warnings.simplefilter(action="ignore", category=UserWarning)
         return pd.read_sql(
-            f"SELECT {','.join(col_names.keys())} FROM {table_name}",
+            f"SELECT {','.join(col_names.keys())} FROM {table_name.value}",
             conn,
             dtype=col_names,
         )
 
 
 @read_table.register
-def _(folder: Path, table_name: str, col_names: Dict[str, Any]) -> pd.DataFrame:
-    # the pyodb is not officially suppported by pandas, so we suppress that
-    # warning:
+def _(folder: Path, table_name: TableNames, col_names: Dict[str, Any]) -> pd.DataFrame:
     return pd.read_csv(
-        folder / f"{table_name}.csv",
+        folder / f"{table_name.value}.csv",
         usecols=list(col_names.keys()),
         dtype=col_names,
     )
@@ -115,7 +113,7 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     element = read_table(
         locatie,
-        "Element",
+        TableNames.ELEMENT,
         {"ElmID": int, "intern_id": int, "Locatietype": str},
     )
     # Uitfilteren van lijnen, selecteer alleen vlakken
@@ -124,7 +122,7 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     kart_veg = read_table(
         locatie,
-        "KarteringVegetatietype",
+        TableNames.KARTERINGVEGETATIETYPE,
         {"Locatie": int, "Vegetatietype": str, "Bedekking_num": int},
     )
     # BV voor GM2b -> Gm2b (elmid 10219 in ruitenaa2020)
@@ -132,14 +130,14 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     vegetatietype = read_table(
         locatie,
-        "VegetatieType",
+        TableNames.VEGETATIETYPE,
         {"Code": str, "SbbType": int},
     )
     vegetatietype.Code = vegetatietype.Code.str.lower()
 
     sbbtype = read_table(
         locatie,
-        "SbbType",
+        TableNames.SBBTYPE,
         {"Cata_ID": int, "Code": str},
     )
     # Code hernoemen want er zit al een "Code" in Vegetatietype.csv
