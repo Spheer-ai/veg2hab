@@ -115,6 +115,9 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
         if field_name == "shapefile":
             shapefile_param = param
 
+        if field_name == "access_mdb_path":
+            param.filter.list = ["mdb", "accdb"]
+
         if "enum" in field_info.keys():
             param.filter.type = "ValueList"
             param.filter.list = field_info["enum"]
