@@ -49,19 +49,19 @@ class ArcGISInterface(Interface):
 
         logging.info(f"Output is weggeschreven naar {filename}")
 
-        layer = arcpy.MakeFeatureLayer_management(
-            in_features=filename + "/main",
-            out_layer=os.path.splitext(os.path.basename(filename))[0],
-        )
-
         try:
+            result = arcpy.MakeFeatureLayer_management(
+                in_features=filename + "/main",
+                out_layer=os.path.splitext(os.path.basename(filename))[0],
+            )
+            layer = result.getOutput(0)
             aprx = arcpy.mp.ArcGISProject("CURRENT")
-            current_map = aprx.listMaps()[0]
-            current_map.addLayer(layer)
-        except:
+            aprx.activeMap.addLayer(layer)
+        except Exception as e:
             logging.warning(
                 f"Kon de output niet toevoegen aan de kaart. Lees deze handmatig in vanaf {filename}"
             )
+            logging.error(str(e))
 
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
