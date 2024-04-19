@@ -84,6 +84,26 @@ class HabitatKeuze:
         ]:
             assert self.habtype == "HXXXX"
 
+        if self.habtype in ["H0000", "HXXXX"]:
+            assert self.kwaliteit == Kwaliteit.NVT
+            assert self.zelfstandig
+
+    @classmethod
+    def habitatkeuze_for_postponed_mozaiekregel(
+        cls, habitatvoorstellen: List[HabitatVoorstel]
+    ):
+        return cls(
+            status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
+            habtype="HXXXX",
+            kwaliteit=Kwaliteit.NVT,
+            zelfstandig=True,
+            opmerking="Er is een mozaiekregel waarvoor nog te weinig info is om een keuze te maken.",
+            mits_opmerking="",
+            mozaiek_opmerking="",
+            debug_info="",
+            habitatvoorstellen=habitatvoorstellen,
+        )
+
 
 def rank_habitatkeuzes(
     keuze_en_vegtypeinfo: Tuple[HabitatKeuze, "VegTypeInfo"]
@@ -188,7 +208,7 @@ def try_to_determine_habkeuze(
                     habtype=voorstel.habtype,
                     kwaliteit=voorstel.kwaliteit,
                     zelfstandig=True,
-                    opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek.",
+                    opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                     mits_opmerking=str(voorstel.mits),
                     mozaiek_opmerking=str(voorstel.mozaiek),
                     debug_info="",
@@ -200,9 +220,9 @@ def try_to_determine_habkeuze(
                 return HabitatKeuze(
                     status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
                     habtype="HXXXX",
-                    kwaliteit=Kwaliteit.ONBEKEND,
+                    kwaliteit=Kwaliteit.NVT,
                     zelfstandig=True,
-                    opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek]",
+                    opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                     mits_opmerking=f"Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
                     mozaiek_opmerking=f"Kloppende mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in true_voorstellen]}",
                     debug_info="",
@@ -213,6 +233,7 @@ def try_to_determine_habkeuze(
             continue
 
         # Er is een niet-TRUE/FALSE truth value aanwezig. Dit kan of een CANNOT_BE_AUTOMATED zijn of een POSTPONE (of beide).
+        # We gaan eerst kijken of er een CANNOT_BE_AUTOMATED is, want dan kan de keuze in latere iteraties nog steeds niet gemaakt worden
 
         # Als er een CANNOT_BE_AUTOMATED is...
         if MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values:
@@ -220,20 +241,25 @@ def try_to_determine_habkeuze(
 
             # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
             # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
             return_voorstellen = [
                 voorstel
                 for voorstel in all_voorstellen
                 if voorstel.match_level <= current_voorstellen[0].match_level
+                and (
+                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
+                    != MaybeBoolean.FALSE
+                )
             ]
 
             return HabitatKeuze(
                 status=KeuzeStatus.PLACEHOLDER,
                 habtype="HXXXX",
-                kwaliteit=Kwaliteit.ONBEKEND,
+                kwaliteit=Kwaliteit.NVT,
                 zelfstandig=True,
-                opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek]",
-                mits_opmerking=f"Alle mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
-                mozaiek_opmerking=f"Alle mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
+                opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
+                mits_opmerking=f"Alle niet false mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in return_voorstellen]}",
+                mozaiek_opmerking=f"Alle niet false mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in return_voorstellen]}",
                 debug_info="",
                 habitatvoorstellen=return_voorstellen,
             )
@@ -241,8 +267,33 @@ def try_to_determine_habkeuze(
         # Als er een POSTPONE is...
         if MaybeBoolean.POSTPONE in truth_values:
             # ...dan komt dat door een mozaiekregel waar nog te weinig info over omliggende vlakken voor is
-            # We returnen dan None, zodat we later nog een keer kunnen proberen.
-            return None
+
+            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
+            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
+            return_voorstellen = [
+                voorstel
+                for voorstel in all_voorstellen
+                if voorstel.match_level <= current_voorstellen[0].match_level
+                and (
+                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
+                    != MaybeBoolean.FALSE
+                )
+            ]
+
+            # Deze keuze komt volgende iteratieronde terug
+            # Als de huidige iteratie de laatste is (bv omdat er geen voortang is gemaakt), dan komt deze keuze in de output terecht.
+            return HabitatKeuze(
+                status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
+                habtype="HXXXX",
+                kwaliteit=Kwaliteit.NVT,
+                zelfstandig=True,
+                opmerking="Dit vlak heeft mozaiekregels waarvoor nog te weinig info is om een keuze te maken. Dit gebeurt als het vlak omringd wordt door meer dan 90% HXXXX. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
+                mits_opmerking=f"Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in return_voorstellen]}",
+                mozaiek_opmerking=f"Mozaiekregel(s) met te weinig info: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in return_voorstellen]}",
+                debug_info="",
+                habitatvoorstellen=return_voorstellen,
+            )
 
     # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
@@ -250,9 +301,26 @@ def try_to_determine_habkeuze(
         habtype="H0000",
         kwaliteit=Kwaliteit.NVT,
         zelfstandig=True,
-        opmerking=f"Er zijn geen habitatvoorstellen waarvan en de mitsen en de mozaiekregels kloppen. Zie mits/mozk_opm voor meer info in format [opgegevenvegtype, potentieel habtype, mits/mozaiek].",
+        opmerking=f"Er zijn geen habitatvoorstellen waarvan zowel de mits als de mozaiekregel klopt. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek].",
         mits_opmerking=f"Mitsen waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
         mozaiek_opmerking=f"Mozaiekregels waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
         debug_info="",
         habitatvoorstellen=all_voorstellen,
+    )
+
+
+def calc_nr_of_unresolved_habitatkeuzes_per_row(gdf):
+    """
+    Telt het aantal nog niet gemaakte habitatkeuzes. Dit zijn None habkeuzes en
+    uitgestelde mozaiek-habitatkeuzes (die met status=KeuzeStatus.WACHTEN_OP_MOZAIEK per rij)
+    """
+    assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
+
+    return gdf.HabitatKeuze.apply(
+        lambda keuzes: sum(
+            [
+                (keuze is None or keuze.status == KeuzeStatus.WACHTEN_OP_MOZAIEK)
+                for keuze in keuzes
+            ]
+        )
     )
