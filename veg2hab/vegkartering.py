@@ -10,7 +10,7 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal, Self
 
-from veg2hab.acces_db import read_access_tables
+from veg2hab.access_db import read_access_tables
 from veg2hab.criteria import FGRCriterium, is_criteria_type_present
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
