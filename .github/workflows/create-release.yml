@@ -11,9 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  lint-and-test:
-    uses: ./.github/workflows/lint-and-test.yml
-
   create-release:
     needs: [lint-and-test]
     runs-on: ubuntu-latest
