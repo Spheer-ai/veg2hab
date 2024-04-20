@@ -75,7 +75,9 @@ def test_parse(gdf):
 def test_parse_with_split_equally(gdf):
     """Test that parsing returns a geodataframe with a single column, called hab_perc"""
     result = parse_habitat_percentages(
-        gdf, percentage_cols_regex=None, how_to_handle_missing_percentages="split_equally"
+        gdf,
+        percentage_cols_regex=None,
+        how_to_handle_missing_percentages="split_equally",
     )
     expected = [
         {"H123": 50, "H234": 50},
@@ -89,7 +91,9 @@ def test_parse_with_split_equally(gdf):
 def test_parse_with_select_first(gdf):
     """Test that parsing returns a geodataframe with a single column, called hab_perc"""
     result = parse_habitat_percentages(
-        gdf, percentage_cols_regex=None, how_to_handle_missing_percentages="select_first"
+        gdf,
+        percentage_cols_regex=None,
+        how_to_handle_missing_percentages="select_first",
     )
     expected = [
         {"H123": 100},
@@ -107,11 +111,15 @@ def test_with_no_habtypes(gdf):
     results = parse_habitat_percentages(gdf)
     assert results.loc[0, "hab_perc"] == {"H0000": 100}
     results = parse_habitat_percentages(
-        gdf, percentage_cols_regex=None, how_to_handle_missing_percentages="select_first"
+        gdf,
+        percentage_cols_regex=None,
+        how_to_handle_missing_percentages="select_first",
     )
     assert results.loc[0, "hab_perc"] == {"H0000": 100}
     results = parse_habitat_percentages(
-        gdf, percentage_cols_regex=None, how_to_handle_missing_percentages="split_equally"
+        gdf,
+        percentage_cols_regex=None,
+        how_to_handle_missing_percentages="split_equally",
     )
     assert results.loc[0, "hab_perc"] == {"H0000": 100}
 
@@ -133,7 +141,9 @@ def test_with_duplicate_habtypes(gdf):
     gdf.loc[0, ["Habtype1", "Habtype2", "Habtype3"]] = ["H123", "H123", "H234"]
     gdf.loc[0, ["Perc1", "Perc2", "Perc3"]] = [50, 40, 10]
     results = parse_habitat_percentages(
-        gdf, percentage_cols_regex=None, how_to_handle_missing_percentages="split_equally"
+        gdf,
+        percentage_cols_regex=None,
+        how_to_handle_missing_percentages="split_equally",
     )
     assert results.loc[0, "hab_perc"] == {"H123": 50, "H234": 50}
 

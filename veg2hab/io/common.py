@@ -82,7 +82,7 @@ class Interface(metaclass=ABCMeta):
         )
 
     @classmethod
-    def get_instance(cls) -> Self:
+    def get_instance(cls):
         if Interface.__instance is None:
             Interface.__instance = object.__new__(cls)
         return Interface.__instance
