@@ -11,38 +11,38 @@ permissions:
   contents: read
 
 jobs:
-  strategy:
-    matrix:
-      version: ["3.7", "3.8"]
-      os: [ubuntu-latest, windows-latest]
+  lint-and-test:
+    strategy:
+      matrix:
+        version: ["3.7", "3.8"]
+        os: [ubuntu-latest, windows-latest]
 
-    lint-and-test:
-      runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
-      steps:
-      - uses: actions/checkout@v4
+    steps:
+    - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.version }}
+    - name: Set up Python ${{ matrix.version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.version }}
 
-      # TODO: update poetry version (will require newer version of python)
-      - name: Install dependencies
-        run: |
-          pip install poetry==1.5.1
-          poetry install
+    # TODO: update poetry version (will require newer version of python)
+    - name: Install dependencies
+      run: |
+        pip install poetry==1.5.1
+        poetry install
 
-      - name: Lint
-        run: |
-          poetry run black --check veg2hab
-          poetry run isort --check veg2hab
+    - name: Lint
+      run: |
+        poetry run black --check veg2hab
+        poetry run isort --check veg2hab
 
-      - name: Test with pytest
-        run: |
-          poetry run pytest -v tests
+    - name: Test with pytest
+      run: |
+        poetry run pytest -v tests
 
-      # TODO dit zou nog een keer netjes zijn
-      # - name: Pyright
-      #   run: |
-      #     poetry run pyright veg2hab
+    # TODO dit zou nog een keer netjes zijn
+    # - name: Pyright
+    #   run: |
+    #     poetry run pyright veg2hab
