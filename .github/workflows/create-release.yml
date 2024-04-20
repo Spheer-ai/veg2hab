@@ -19,14 +19,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get Tag
-        id: tag
-        run: |
-          if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
-          else
-            echo "::set-output name=tag::${{ github.ref }}"
-          fi
+    - name: Get Tag
+      id: tag
+      run: |
+        if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
+          echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+        else
+          echo "::set-output name=tag::${{ github.ref }}"
+        fi
 
     - uses: actions/checkout@v4
 
