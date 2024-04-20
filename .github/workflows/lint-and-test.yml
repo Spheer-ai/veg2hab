@@ -11,16 +11,21 @@ permissions:
   contents: read
 
 jobs:
+  strategy:
+    matrix:
+      version: ["3.7", "3.8"]
+      os: [ubuntu-latest, windows-latest]
+
   lint-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Set up Python 3.7
+    - name: Set up Python ${{ matrix.version }}
       uses: actions/setup-python@v3
       with:
-        python-version: "3.7"
+        python-version: ${{ matrix.version }}
 
     # TODO: update poetry version (will require newer version of python)
     - name: Install dependencies
