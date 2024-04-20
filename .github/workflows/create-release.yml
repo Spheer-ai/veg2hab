@@ -5,7 +5,11 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # todo remove workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
 
 permissions:
   contents: read
@@ -15,6 +19,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Get Tag
+        id: tag
+        run: |
+          if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
+            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          else
+            echo "::set-output name=tag::${{ github.ref }}"
+          fi
+
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.7
@@ -25,14 +38,15 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry==1.5.1
+        poetry install --only-root
 
-    - name: Get tag
-      id: tag
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+    # - name: Check versions
+    #   run: |
+    #     poetry verison == ${{ steps.tag.outputs.tag }}
 
-    - name: Build
-      # poetry version ${{ steps.tag.outputs.tag }}
+    - name: Build wheel
       run: |
+        poetry version ${{ steps.tag.outputs.tag }}
         poetry build
 
     - name: Release
@@ -40,7 +54,8 @@ jobs:
       with:
         files: |
           ./dist/*
-        # tag_name: ${{ steps.tag.outputs.tag }}
+          ./veg2hab/package_data/*
+        tag_name: ${{ steps.tag.outputs.tag }}
         prerelease: false
         generate_release_notes: true
         target_commitish: ${{ github.sha }}
