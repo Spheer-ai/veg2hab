@@ -5,13 +5,14 @@ on:
   push:
     tags:
       - 'v*'
-    workflow_dispatch:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  lint-and-test: ./.github/workflows/lint-and-test.yml
+  lint-and-test:
+    uses: ./.github/workflows/lint-and-test.yml
 
   create-release:
     needs: [lint-and-test]
