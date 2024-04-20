@@ -5,14 +5,13 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
+  workflow_dispatch: # todo remove workflow_dispatch
 
 permissions:
   contents: read
 
 jobs:
   create-release:
-    needs: [lint-and-test]
     runs-on: ubuntu-latest
 
     steps:
