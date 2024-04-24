@@ -16,6 +16,7 @@ from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
+    calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
 )
@@ -280,9 +281,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Opp{idx}": opp * vegtypeinfo.percentage,
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking,
-                f"Mits_opm{idx}": keuze.mits_opmerking,
-                f"Mozk_opm{idx}": keuze.mozaiek_opmerking,
-                f"MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+                f"_Mits_opm{idx}": keuze.mits_opmerking,
+                f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
+                f"_MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
@@ -300,12 +301,24 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting(),
                 f"_VvNdftbl{idx}": (
-                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                    str(
+                        [
+                            str(voorstel.vegtype_in_dt),
+                            voorstel.idx_in_dt,
+                            voorstel.habtype,
+                        ]
+                    )
                     if isinstance(voorstel.vegtype_in_dt, _VvN)
                     else None
                 ),
                 f"_SBBdftbl{idx}": (
-                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                    str(
+                        [
+                            str(voorstel.vegtype_in_dt),
+                            voorstel.idx_in_dt,
+                            voorstel.habtype,
+                        ]
+                    )
                     if isinstance(voorstel.vegtype_in_dt, _SBB)
                     else None
                 ),
@@ -314,15 +327,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     str(vegtypeinfo)
                     if keuze.status != KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN
                     else None
-                ),
-                f"_ChkNodig{idx}": (
-                    True
-                    if keuze.status
-                    in [
-                        KeuzeStatus.PLACEHOLDER,
-                        KeuzeStatus.WACHTEN_OP_MOZAIEK,
-                    ]
-                    else False
                 ),
             }
 
@@ -352,9 +356,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Opp{idx}": str(opp * vegtypeinfo.percentage),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
             f"Opm{idx}": keuze.opmerking,
-            f"Mits_opm{idx}": keuze.mits_opmerking,
-            f"Mozk_opm{idx}": keuze.mozaiek_opmerking,
-            f"MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+            f"_Mits_opm{idx}": keuze.mits_opmerking,
+            f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
+            f"_MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
@@ -384,7 +388,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_VvNdftbl{idx}": str(
                 [
                     (
-                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                        str(
+                            [
+                                str(voorstel.vegtype_in_dt),
+                                voorstel.idx_in_dt,
+                                voorstel.habtype,
+                            ]
+                        )
                         if isinstance(voorstel.vegtype_in_dt, _VvN)
                         else None
                     )
@@ -394,7 +404,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_SBBdftbl{idx}": str(
                 [
                     (
-                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt])
+                        str(
+                            [
+                                str(voorstel.vegtype_in_dt),
+                                voorstel.idx_in_dt,
+                                voorstel.habtype,
+                            ]
+                        )
                         if isinstance(voorstel.vegtype_in_dt, _SBB)
                         else None
                     )
@@ -402,16 +418,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 ]
             ),
             f"_VgTypInf{idx}": str(vegtypeinfo),
-            f"_ChkNodig{idx}": (
-                True
-                if keuze.status
-                in [
-                    KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-                    KeuzeStatus.PLACEHOLDER,
-                    KeuzeStatus.WACHTEN_OP_MOZAIEK,
-                ]
-                else False
-            ),
         }
 
         return pd.Series(series_dict)
@@ -419,16 +425,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     assert (
         False
     ), f"hab_as_final_form voor KeuzeStatus {keuze.status} is niet geimplementeerd"
-
-
-def bepaal_ChckNodig(row: gpd.GeoSeries) -> bool:
-    """
-    Bepaalt of een rij een habitattypekartering een handmatige controle nodig heeft
-    """
-    check_nodigs = [col for col in row.index if "_ChkNodig" in col]
-    if any(row[check_nodig] == True for check_nodig in check_nodigs):
-        return True
-    return False
 
 
 def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
@@ -495,7 +491,6 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "Datum",
         "ElmID",
         "geometry",
-        "_ChkNodig",
         "_Samnvttng",
         "_LokVrtNar",
     ]
@@ -507,17 +502,16 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opp{i}",
             f"Kwal{i}",
             f"Opm{i}",
-            f"Mits_opm{i}",
-            f"Mozk_opm{i}",
-            f"MozkDict{i}",
             f"VvN{i}",
             f"SBB{i}",
             f"_Status{i}",
             f"_Uitleg{i}",
+            f"_VgTypInf{i}",
+            f"_Mits_opm{i}",
+            f"_Mozk_opm{i}",
+            f"_MozkDict{i}",
             f"_VvNdftbl{i}",
             f"_SBBdftbl{i}",
-            f"_VgTypInf{i}",
-            f"_ChkNodig{i}",
         ]
     return gdf[new_columns]
 
@@ -962,14 +956,6 @@ class Kartering:
                         raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
-        # NOTE: Kan weg zo als dit in bepaal_habtitatkeuzes gebeurt
-        # ### Habitatkeuzes bepalen
-        # self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
-        #     lambda voorstellen: [
-        #         habitatkeuze_obv_mitsen(voorstel) for voorstel in voorstellen
-        #     ]
-        # )
-
     def bepaal_habitatkeuzes(self, fgr: FGR, max_iter: int = 20) -> None:
         """ """
         # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
@@ -987,8 +973,8 @@ class Kartering:
         overlayed = make_buffered_boundary_overlay_gdf(self.gdf)
 
         for i in range(max_iter):
-            keuzes_still_to_determine_pre = self.gdf.HabitatKeuze.apply(
-                lambda keuzes: keuzes.count(None)
+            keuzes_still_to_determine_pre = calc_nr_of_unresolved_habitatkeuzes_per_row(
+                self.gdf
             )
             n_keuzes_still_to_determine_pre = keuzes_still_to_determine_pre.sum()
 
@@ -1023,7 +1009,7 @@ class Kartering:
                 )
 
                 # Met deze dicts kunnen we dan de mozaiekregels checken
-                self.check_mozaiekregels(habtype_percentages)
+                self._check_mozaiekregels(habtype_percentages)
 
             #####
             # Habitatkeuze proberen te bepalen per list habitatvoorstellen van een vegtypeingo
@@ -1034,9 +1020,9 @@ class Kartering:
                 ]
             )
 
-            n_keuzes_still_to_determine_post = self.gdf.HabitatKeuze.apply(
-                lambda keuzes: keuzes.count(None)
-            ).sum()
+            n_keuzes_still_to_determine_post = (
+                calc_nr_of_unresolved_habitatkeuzes_per_row(self.gdf).sum()
+            )
 
             print(
                 f"Iteratie {i}: van {n_keuzes_still_to_determine_pre} naar {n_keuzes_still_to_determine_post} keuzes nog te bepalen"
@@ -1056,11 +1042,18 @@ class Kartering:
         # of we hebben max_iter bereikt
 
         if n_keuzes_still_to_determine_post > 0:
+            # NOTE
+            # NOTE: @reviewer Moet dit een warning zijn vind je? Of gewoon een print?
+            # NOTE: Het is iets wat niet alarmerend is maar wel nuttig om te weten.
+            # NOTE
             warnings.warn(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
 
-    def check_mozaiekregels(self, habtype_percentages):
+        print(self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum())
+        print(self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).max())
+
+    def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
                 # Als er geen habitatkeuzes zijn (want geen vegtypen opgegeven),
@@ -1068,9 +1061,16 @@ class Kartering:
                 if len(row.HabitatKeuze) == 0:
                     continue
 
-                # Als we voor deze voorstellen al een HabitatKeuze hebben hoeven we niet weer
-                # de mozaiekregels te checken
-                if row.HabitatKeuze[idx] is not None:
+                # Als we voor deze voorstellen al een HabitatKeuze hebben hoeven
+                # we niet weer de mozaiekregels te checken
+                # TODO: Nu check ik hier heel handmatig of de keuze gemaakt is, en dat moet op dezelfde manier als in
+                #       calc_nr_of_unresolved_habitatkeuzes_per_row gedaan worden :/
+                #       Na de demo moet dit even netten, een extra kolommetje in de gdf ofzo
+                #       Voor nu zijn er belangrijker dingen te doen :)
+                if (
+                    row.HabitatKeuze[idx] is not None
+                    and row.HabitatKeuze[idx].status != KeuzeStatus.WACHTEN_OP_MOZAIEK
+                ):
                     continue
 
                 percentages_dict = habtype_percentages[
@@ -1126,9 +1126,9 @@ class Kartering:
         base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
-        final["_ChkNodig"] = final.apply(bepaal_ChckNodig, axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
         final = finalize_final_format(final)
+
         return final
 
     def row_to_final_format(self, row) -> pd.Series:
