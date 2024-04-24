@@ -495,9 +495,8 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "geometry",
         "_ChkNodig",
         "_Samnvttng",
-        "_LokVrtNar",
         "_LokVegTyp",
-
+        "_LokVrtNar",
     ]
     n_habtype_blocks = len([i for i in gdf.columns if "Habtype" in i])
     for i in range(1, n_habtype_blocks + 1):
