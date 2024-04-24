@@ -60,10 +60,10 @@ class HabitatKeuze:
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
     zelfstandig: bool
-    opmerking: str
-    mits_opmerking: str
-    mozaiek_opmerking: str
-    debug_info: Optional[str]
+    opmerking: str = ""
+    mits_opmerking: str = ""
+    mozaiek_opmerking: str = ""
+    debug_info: Optional[str] = ""
     habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
 
     def __post_init__(self):
