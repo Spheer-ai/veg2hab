@@ -299,12 +299,24 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting(),
                 f"_VvNdftbl{idx}": (
-                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt, voorstel.habtype])
+                    str(
+                        [
+                            str(voorstel.vegtype_in_dt),
+                            voorstel.idx_in_dt,
+                            voorstel.habtype,
+                        ]
+                    )
                     if isinstance(voorstel.vegtype_in_dt, _VvN)
                     else None
                 ),
                 f"_SBBdftbl{idx}": (
-                    str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt, voorstel.habtype])
+                    str(
+                        [
+                            str(voorstel.vegtype_in_dt),
+                            voorstel.idx_in_dt,
+                            voorstel.habtype,
+                        ]
+                    )
                     if isinstance(voorstel.vegtype_in_dt, _SBB)
                     else None
                 ),
@@ -374,7 +386,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_VvNdftbl{idx}": str(
                 [
                     (
-                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt, voorstel.habtype])
+                        str(
+                            [
+                                str(voorstel.vegtype_in_dt),
+                                voorstel.idx_in_dt,
+                                voorstel.habtype,
+                            ]
+                        )
                         if isinstance(voorstel.vegtype_in_dt, _VvN)
                         else None
                     )
@@ -384,7 +402,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_SBBdftbl{idx}": str(
                 [
                     (
-                        str([str(voorstel.vegtype_in_dt), voorstel.idx_in_dt, voorstel.habtype])
+                        str(
+                            [
+                                str(voorstel.vegtype_in_dt),
+                                voorstel.idx_in_dt,
+                                voorstel.habtype,
+                            ]
+                        )
                         if isinstance(voorstel.vegtype_in_dt, _SBB)
                         else None
                     )
