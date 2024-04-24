@@ -644,8 +644,8 @@ class Kartering:
         shape_path: Path,
         shape_elm_id_column: str,
         access_mdb_path: Path,
-        opmerkingen_column: Optional[str] = "Opmerking",
-        datum_column: Optional[str] = "Datum",
+        opmerkingen_column: Optional[str] = None,
+        datum_column: Optional[str] = None,
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile en
@@ -1049,9 +1049,10 @@ class Kartering:
             warnings.warn(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
-
-        print(self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum())
-        print(self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).max())
+            
+        assert (
+            self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
+        ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
