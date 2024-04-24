@@ -1,3 +1,4 @@
+import logging
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal, Self
 
+from veg2hab.access_db import read_access_tables
 from veg2hab.criteria import FGRCriterium, is_criteria_type_present
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
@@ -522,16 +524,12 @@ def fix_crs(
     Zet gdfs met een andere crs dan EPSG:28992 om naar EPSG:28992
     """
     if gdf.crs is None:
-        warnings.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
+        logging.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
         gdf = gdf.set_crs(epsg=28992)
     elif gdf.crs.to_epsg() != 28992:
-        # NOTE: @reviewer
-        # NOTE: @reviewer   Moet hier een warning bij? Lijkt me van niet, maar ik weet niet in hoeverre
-        # NOTE: @reviewer   het omzetten van crs eventuele problemen kan geven
-        # NOTE: @reviewer
-        # warnings.warn(
-        #     f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992"
-        # )
+        logging.info(
+            f"CRS van {shape_path} was EPSG:{gdf.crs.to_epsg()} en is nu omgezet naar EPSG:28992"
+        )
         gdf = gdf.to_crs(epsg=28992)
     return gdf
 
@@ -645,7 +643,7 @@ class Kartering:
         cls,
         shape_path: Path,
         shape_elm_id_column: str,
-        access_csvs_path: Path,
+        access_mdb_path: Path,
         opmerkingen_column: Optional[str] = "Opmerking",
         datum_column: Optional[str] = "Datum",
     ) -> Self:
@@ -669,53 +667,24 @@ class Kartering:
                 datum_column,
                 "geometry",
             ]
-            if col in gdf.columns
+            if col is not None
         ]
         gdf = gdf[columns_to_keep]
 
         # Als kolommen niet aanwezig zijn in de shapefile dan vullen we ze met None
-        for col in [opmerkingen_column, datum_column]:
-            if col not in gdf.columns:
-                gdf[col] = None
+        for old_col, new_col in [
+            (opmerkingen_column, "Opmerking"),
+            (datum_column, "Datum"),
+        ]:
+            if old_col is None:
+                gdf[new_col] = None
+            else:
+                gdf = gdf.rename(columns={old_col: new_col})
 
-        # Standardiseren van kolomnamen
-        gdf = gdf.rename(
-            columns={opmerkingen_column: "Opmerking", datum_column: "Datum"}
-        )
         gdf["Opp"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
 
-        element = pd.read_csv(
-            access_csvs_path / "Element.csv",
-            usecols=["ElmID", "intern_id", "Locatietype"],
-            dtype={"ElmID": int, "intern_id": int, "Locatietype": str},
-        )
-        # Uitfilteren van lijnen
-        element["Locatietype"] = element["Locatietype"].str.lower()
-        element = element[element.Locatietype == "v"][["ElmID", "intern_id"]]
-
-        kart_veg = pd.read_csv(
-            access_csvs_path / "KarteringVegetatietype.csv",
-            usecols=["Locatie", "Vegetatietype", "Bedekking_num"],
-            dtype={"Locatie": int, "Vegetatietype": str, "Bedekking_num": int},
-        )
-        # BV voor GM2b -> Gm2b (elmid 10219 in ruitenaa2020)
-        kart_veg.Vegetatietype = kart_veg.Vegetatietype.str.lower()
-
-        vegetatietype = pd.read_csv(
-            access_csvs_path / "VegetatieType.csv",
-            usecols=["Code", "SbbType"],
-            dtype={"Code": str, "SbbType": int},
-        )
-        vegetatietype.Code = vegetatietype.Code.str.lower()
-
-        sbbtype = pd.read_csv(
-            access_csvs_path / "SbbType.csv",
-            usecols=["Cata_ID", "Code"],
-            dtype={"Cata_ID": int, "Code": str},
-        )
-        # Code hernoemen want er zit al een "Code" in Vegetatietype.csv
-        sbbtype = sbbtype.rename(columns={"Code": "Sbb"})
+        element, grouped_kart_veg = read_access_tables(access_mdb_path)
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -738,28 +707,6 @@ class Kartering:
                 message += f"Er zitten {len(dubbele_elmid)} dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid[:10]}. "
             raise ValueError(message) from e
 
-        # SBB code toevoegen aan KarteringVegetatietype
-        kart_veg = kart_veg.merge(
-            vegetatietype, left_on="Vegetatietype", right_on="Code", how="left"
-        )
-        kart_veg = kart_veg.merge(
-            sbbtype, left_on="SbbType", right_on="Cata_ID", how="left"
-        )
-
-        # Opschonen SBB codes
-        kart_veg["Sbb"] = _SBB.opschonen_series(kart_veg["Sbb"])
-
-        # Groeperen van alle verschillende SBBs per Locatie
-        grouped_kart_veg = (
-            kart_veg.groupby("Locatie")
-            .apply(
-                VegTypeInfo.create_vegtypen_list_from_access_rows,
-                perc_col="Bedekking_num",
-                SBB_col="Sbb",
-            )
-            .reset_index(name="VegTypeInfo")
-        )
-
         # Joinen van de SBBs aan de gdf
         gdf = gdf.merge(
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
@@ -768,12 +715,10 @@ class Kartering:
         # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,
         # maar ook aan ontbrekende waarden in een van de csv-bestanden.
         if gdf.VegTypeInfo.isnull().any():
-            # TODO: Zodra we een mooi logsysteem hebben, moeten we dit loggen in plaats van het te printen.
-            # NOTE: Moet dit een warning zijn?
-            print(
+            logging.warn(
                 f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo in {shape_path}. Deze worden verwijderd."
             )
-            print(
+            logging.warn(
                 f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
             )
             gdf = gdf.dropna(subset=["VegTypeInfo"])
