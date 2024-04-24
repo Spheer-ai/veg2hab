@@ -227,7 +227,9 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
     return row
 
 
-def mozaiekregel_habtype_percentage_dict_to_string(habtype_percentage_dict: Union[None, dict]) -> str:
+def mozaiekregel_habtype_percentage_dict_to_string(
+    habtype_percentage_dict: Union[None, dict]
+) -> str:
     """
     Maakt een mooie output-ready string van een habtype_percentage_dict voor mozaiekregels
     Dict heeft als keys (habtype (str), zelfstandig (bool), kwaliteit (Kwaliteit))
@@ -494,6 +496,8 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "_ChkNodig",
         "_Samnvttng",
         "_LokVrtNar",
+        "_LokVegTyp",
+
     ]
     n_habtype_blocks = len([i for i in gdf.columns if "Habtype" in i])
     for i in range(1, n_habtype_blocks + 1):
@@ -538,6 +542,23 @@ def fix_crs(
         # )
         gdf = gdf.to_crs(epsg=28992)
     return gdf
+
+
+def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
+    """
+    Ontvangt een setje rijen van 1 locatie (vlak) met lokale vegetatietypen en bedekkingspercentages.
+    Hier wordt een string van gemaakt uiteindelijk in de output komt zonder verdere bewerkingen.
+    """
+    assert all(
+        col in rows.columns for col in ["Locatie", "Vegetatietype", "Bedekking_num"]
+    ), "Locatie, Vegetatietype en Bedekking_num moeten kolommen zijn in _group_lokale_vegtypen_en_bedekking_to_str"
+
+    assert (
+        rows["Locatie"].nunique() == 1
+    ), "_group_lokale_vegtypen_en_bedekking_to_str moet op een groupby over Locatie uitgevoerd worden; nu is locatie niet hetzelfde in 1 group"
+
+    return_strings = [f"{row['Vegetatietype']} ({row['Bedekking_num']}%)" for _, row in rows.iterrows()]
+    return ", ".join(return_strings)
 
 
 def _split_list_to_columns(
@@ -769,6 +790,16 @@ class Kartering:
             grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
         )
 
+        # Bewaren van de lokale vegetatietypen voor in de output
+        lokale_vegtypen = kart_veg.groupby("Locatie").apply(
+            _group_lokale_vegtypen_en_bedekking_to_str
+        )
+        lokale_vegtypen.name = "_LokVegTyp"
+
+        gdf = gdf.merge(
+            lokale_vegtypen, left_on="intern_id", right_on="Locatie", how="left"
+        )
+
         # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,
         # maar ook aan ontbrekende waarden in een van de csv-bestanden.
         if gdf.VegTypeInfo.isnull().any():
@@ -797,6 +828,7 @@ class Kartering:
         VvN_col: Optional[str] = None,
         split_char: Optional[str] = "+",
         perc_col: Optional[str] = None,
+        lok_vegtypen_col: Optional[str] = None,
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
@@ -810,7 +842,8 @@ class Kartering:
         - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         - SBB_col: kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         - split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)
-        - percentage_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
+        - perc_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
+        - lok_vegtypen_col: kolomnaam van de lokale vegetatietypen als deze er zijn (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         """
 
         ###############
@@ -842,10 +875,17 @@ class Kartering:
         if split_char is None:
             split_char = "+"
 
+        # Vastleggen lokale vegtypen voor in de output
+        if lok_vegtypen_col is not None:
+            shapefile["_LokVegTyp"] = shapefile.apply(lambda row: ", ".join([str(row[col]) for col in lok_vegtypen_col.split(split_char)]), axis=1)
+        else:
+            shapefile["_LokVegTyp"] = "Geen kolommen opgegeven voor lokale vegetatietypen"
+
         # Selectie van de te bewaren kolommen
         cols = [
             col for col in [datum_col, opmerking_col] if col in shapefile.columns
-        ] + [ElmID_col, "geometry"]
+        ] + [ElmID_col, "_LokVegTyp", "geometry"]
+
         # Uitvinden welke vegtype kolommen er mee moeten
         if vegtype_col_format == "multi":
             if SBB_col is not None:
@@ -1045,7 +1085,6 @@ class Kartering:
             )
             n_keuzes_still_to_determine_pre = keuzes_still_to_determine_pre.sum()
 
-
             #####
             # Mozaiekregels checken
             #####
@@ -1070,7 +1109,7 @@ class Kartering:
                     on="ElmID",
                     how="left",
                 )
-                
+
                 # Deze info zetten we per ElmID om in een defaultdict
                 habtype_percentages = calc_mozaiek_percentages_from_overlay_gdf(
                     augmented_overlayed
@@ -1113,12 +1152,11 @@ class Kartering:
             warnings.warn(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
-        
 
     def check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
-                # Als er geen habitatkeuzes zijn (want geen vegtypen opgegeven), 
+                # Als er geen habitatkeuzes zijn (want geen vegtypen opgegeven),
                 # dan hoeven we ook geen mozaiekregels te checken
                 if len(row.HabitatKeuze) == 0:
                     continue
@@ -1171,6 +1209,7 @@ class Kartering:
                 "geometry",
                 "VegTypeInfo",
                 "HabitatKeuze",
+                "_LokVegTyp",
                 "_LokVrtNar",
             ]
         ].copy()

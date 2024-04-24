@@ -259,10 +259,13 @@ def calc_mozaiek_percentages_from_overlay_gdf(
         key_tuples = group.HabitatKeuze.apply(
             lambda keuzes:
             # Als len(keuzes) == 0, dan is er geen vegtype opgegeven, dus H0000
-            ("H0000", True, Kwaliteit.NVT) if len(keuzes) == 0 else
+            ("H0000", True, Kwaliteit.NVT)
+            if len(keuzes) == 0
+            else
             # Als de keuze None is, dan is deze nog niet bepaald, dus HXXXX
-            ("HXXXX", True, Kwaliteit.NVT) if keuzes[0] is None else
-            (
+            ("HXXXX", True, Kwaliteit.NVT)
+            if keuzes[0] is None
+            else (
                 keuzes[0].habtype,
                 keuzes[0].zelfstandig,
                 keuzes[0].kwaliteit,
