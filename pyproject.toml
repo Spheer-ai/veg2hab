@@ -21,10 +21,14 @@ ipykernel = ">=6.0.0"
 black = ">=23.0.0"
 isort = ">=5.0.0"
 pytest = ">=7.0.0"
+pyright = "^1.1.359"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.setuptools.package_data]
+veg2hab = ["veg2hab/package_data/*"]
 
 [tool.black]
 line-length = 88
