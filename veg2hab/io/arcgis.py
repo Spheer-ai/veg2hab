@@ -7,7 +7,7 @@ from typing import List
 import geopandas as gpd
 from typing_extensions import Self, override
 
-from .common import InputParameters, Interface
+from .common import AccessDBInputs, Interface, ShapefileInputs
 
 
 class ArcGISInterface(Interface):
@@ -49,19 +49,19 @@ class ArcGISInterface(Interface):
 
         logging.info(f"Output is weggeschreven naar {filename}")
 
-        layer = arcpy.MakeFeatureLayer_management(
-            in_features=filename + "/main",
-            out_layer=os.path.splitext(os.path.basename(filename))[0],
-        )
-
         try:
+            result = arcpy.MakeFeatureLayer_management(
+                in_features=filename + "/main",
+                out_layer=os.path.splitext(os.path.basename(filename))[0],
+            )
+            layer = result.getOutput(0)
             aprx = arcpy.mp.ArcGISProject("CURRENT")
-            current_map = aprx.listMaps()[0]
-            current_map.addLayer(layer)
-        except:
+            aprx.activeMap.addLayer(layer)
+        except Exception as e:
             logging.warning(
                 f"Kon de output niet toevoegen aan de kaart. Lees deze handmatig in vanaf {filename}"
             )
+            logging.error(str(e))
 
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
@@ -87,7 +87,52 @@ class ArcGISInterface(Interface):
         )
 
 
-class ArcGISParameters(InputParameters):
+def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
+    import arcpy
+
+    outputs = []
+    for field_name, field_info in param_schema["properties"].items():
+        if field_name == "shapefile":
+            datatype = "GPFeatureLayer"
+        elif field_name.endswith("_col"):
+            datatype = "Field"
+        elif field_info.get("format", "") == "path":
+            datatype = "DEFile"
+        else:
+            datatype = "GPString"
+
+        is_required = field_name in param_schema["required"]
+
+        # get the description from the field
+        param = arcpy.Parameter(
+            name=field_name,
+            displayName=field_info["description"],
+            datatype=datatype,
+            parameterType="Required" if is_required else "Optional",
+            direction="Input",
+        )
+
+        if field_name == "shapefile":
+            shapefile_param = param
+
+        if field_name == "access_mdb_path":
+            param.filter.list = ["mdb", "accdb"]
+
+        if "enum" in field_info.keys():
+            param.filter.type = "ValueList"
+            param.filter.list = field_info["enum"]
+
+        outputs.append(param)
+
+    # TODO: fix this for multi field inputs
+    for param in outputs:
+        if param.name.endswith("_col"):
+            param.parameterDependencies = [shapefile_param.name]
+
+    return outputs
+
+
+class ArcGISAccessDBInputs(AccessDBInputs):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
@@ -95,32 +140,15 @@ class ArcGISParameters(InputParameters):
 
     @classmethod
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
-        import arcpy
+        return _schema_to_param_list(cls.schema())
 
-        outputs = []
-        param_schema = cls.schema()
-        for field_name, field_info in param_schema["properties"].items():
-            if field_name == "shapefile":
-                datatype = "GPFeatureLayer"
-            elif field_name.endswith("_col"):
-                datatype = "Field"
-            else:
-                datatype = "GPString"
 
-            is_required = field_name in param_schema["required"]
+class ArcGISShapefileInputs(ShapefileInputs):
+    @classmethod
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
+        as_dict = {p.name: p.valueAsText for p in parameters}
+        return cls(**as_dict)
 
-            # get the description from the field
-            param = arcpy.Parameter(
-                name=field_name,
-                displayName=field_info["description"],
-                datatype=datatype,
-                parameterType="Required" if is_required else "Optional",
-                direction="Input",
-            )
-
-            if "enum" in field_info.keys():
-                param.filter.type = "ValueList"
-                param.filter.list = field_info["enum"]
-
-            outputs.append(param)
-        return outputs
+    @classmethod
+    def to_parameter_list(cls) -> List["arcpy.Parameter"]:
+        return _schema_to_param_list(cls.schema())
