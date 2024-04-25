@@ -98,5 +98,5 @@ class Interface(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def instantiate_loggers(self) -> None:
+    def instantiate_loggers(self, log_level: int) -> None:
         """Instantiate the loggers for the module."""

@@ -12,5 +12,5 @@ class CLIInterface(Interface):
         gdf.to_file(shapefile_id, driver="GPKG", layer="main")
 
     @override
-    def instantiate_loggers(self) -> None:
-        logging.basicConfig(level=logging.INFO)
+    def instantiate_loggers(self, log_level: int) -> None:
+        logging.basicConfig(level=log_level)
