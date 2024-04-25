@@ -556,7 +556,10 @@ def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
         rows["Locatie"].nunique() == 1
     ), "_group_lokale_vegtypen_en_bedekking_to_str moet op een groupby over Locatie uitgevoerd worden; nu is locatie niet hetzelfde in 1 group"
 
-    return_strings = [f"{row['Vegetatietype']} ({row['Bedekking_num']}%)" for _, row in rows.iterrows()]
+    return_strings = [
+        f"{row['Vegetatietype']} ({row['Bedekking_num']}%)"
+        for _, row in rows.iterrows()
+    ]
     return ", ".join(return_strings)
 
 
@@ -876,9 +879,16 @@ class Kartering:
 
         # Vastleggen lokale vegtypen voor in de output
         if lok_vegtypen_col is not None:
-            shapefile["_LokVegTyp"] = shapefile.apply(lambda row: ", ".join([str(row[col]) for col in lok_vegtypen_col.split(split_char)]), axis=1)
+            shapefile["_LokVegTyp"] = shapefile.apply(
+                lambda row: ", ".join(
+                    [str(row[col]) for col in lok_vegtypen_col.split(split_char)]
+                ),
+                axis=1,
+            )
         else:
-            shapefile["_LokVegTyp"] = "Geen kolommen opgegeven voor lokale vegetatietypen"
+            shapefile[
+                "_LokVegTyp"
+            ] = "Geen kolommen opgegeven voor lokale vegetatietypen"
 
         # Selectie van de te bewaren kolommen
         cols = [
