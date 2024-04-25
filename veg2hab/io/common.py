@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from typing import ClassVar, Optional, Type
 
 import geopandas as gpd
@@ -6,9 +7,33 @@ from pydantic import BaseModel, Field
 from typing_extensions import Literal, Self
 
 
-class InputParameters(BaseModel):
+class AccessDBInputs(BaseModel):
+    label: ClassVar[str] = "digitale_standaard"
+    description: ClassVar[str] = "Draai veg2hab o.b.v. de digitale standaard"
     shapefile: str = Field(
-        description="Path to the shapefile",
+        description="Locatie van de vegetatiekartering",
+    )
+    ElmID_col: str = Field(
+        description="De kolomnaam van de ElementID in de Shapefile; deze wordt gematched aan de Element tabel in de AccessDB",
+    )
+    access_mdb_path: Path = Field(
+        description="Locatie van de .mdb file van de digitale standaard",
+    )
+    opmerkingen_column: Optional[str] = Field(
+        default=None,
+        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+    )
+    datum_column: Optional[str] = Field(
+        default=None,
+        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+    )
+
+
+class ShapefileInputs(BaseModel):
+    label: ClassVar[str] = "vector_bestand"
+    description: ClassVar[str] = "Draai veg2hab o.b.v. een vector bestand"
+    shapefile: str = Field(
+        description="Locatie van de vegetatiekartering",
     )
     ElmID_col: str = Field(
         description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
@@ -20,10 +45,12 @@ class InputParameters(BaseModel):
         description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
     )
     datum_col: Optional[str] = Field(
-        default=None, description="kolomnaam van de datum als deze er is"
+        default=None,
+        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
     opmerking_col: Optional[str] = Field(
-        default=None, description="kolomnaam van de opmerking als deze er is"
+        default=None,
+        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
     SBB_col: Optional[str] = Field(
         default=None,
@@ -55,7 +82,7 @@ class Interface(metaclass=ABCMeta):
         )
 
     @classmethod
-    def get_instance(cls) -> Self:
+    def get_instance(cls):
         if Interface.__instance is None:
             Interface.__instance = object.__new__(cls)
         return Interface.__instance
