@@ -26,9 +26,9 @@ jobs:
       id: tag
       run: |
         if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-          echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=tag::${{ github.ref_name }}"
+          echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         fi
 
     - uses: actions/checkout@v4
