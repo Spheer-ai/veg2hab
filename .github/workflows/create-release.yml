@@ -6,9 +6,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    # branches:
+    #   - master
     inputs:
       tag:
         description: 'Tag to release'
+        default: 'v*.*.*'
         required: true
 
 permissions:
@@ -46,9 +49,8 @@ jobs:
 
     - name: Publish release to pypi
       run: |
+        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
         poetry publish --build
-      env:
-        POETRY_PYPI_TOKEN_VEG2HAB: ${{ secrets.PYPI_TOKEN }}
 
     - name: Create github release
       uses: softprops/action-gh-release@v2
