@@ -58,7 +58,6 @@ def _get_argument_description(description: str, param_schema: Dict):
     return description
 
 
-
 class CLIAccessDBInputs(AccessDBInputs):
     @classmethod
     def click_decorator(cls, func):

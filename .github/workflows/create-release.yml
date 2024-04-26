@@ -40,21 +40,21 @@ jobs:
         pip install poetry==1.5.1
         poetry install --only-root
 
-    # - name: Check versions
-    #   run: |
-    #     poetry verison == ${{ steps.tag.outputs.tag }}
-
-    - name: Build wheel
+    - name: Check versions
       run: |
-        poetry version ${{ steps.tag.outputs.tag }}
-        poetry build
+        poetry run python release.py check-versions ${{ steps.tag.outputs.tag }}
 
-    - name: Release
+    - name: Publish release to pypi
+      run: |
+        poetry publish --build
+      env:
+        POETRY_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+    - name: Create github release
       uses: softprops/action-gh-release@v2
       with:
         files: |
           ./dist/*
-          ./veg2hab/package_data/*
         tag_name: ${{ steps.tag.outputs.tag }}
         prerelease: false
         generate_release_notes: true
