@@ -19,7 +19,7 @@ De applicatie staat nu op PyPi. Installatie vanaf PyPi is veruit het eenvoudigst
  6. Veg2hab komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
 
 ### Installatie op linux
-Op linux heeft veg2hab een extra dependency. Pyodb kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
+Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
 ```sh
 apt install mdbtools
 ```
@@ -53,7 +53,7 @@ poetry run pytest tests/
 1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run release.py create_package_data`
 2. Maak een nieuwe versie met poetry (minor, major, patch): `poetry version {{rule}}`
 3. Pas de [__init__.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version
-4. Pas toolbox.pyt zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
+4. Pas [toolbox.pyt](veg2hab/package_data/toolbox.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
 5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
 6. Maak een nieuwe tag: `git tag v$(poetry version -s)`
 7. Push de tag naar git `git push origin tag v$(poetry version -s)`
