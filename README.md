@@ -1,7 +1,7 @@
 # veg2hab
 **veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen.
 
-Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar.:
+Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
  - WasWordtLijst, dit bestand zet SBB vegetatietypes om naar VvN vegetatietypes
  - DefinitieTabel, dit is een samenvatting van de profieldocumenten.
  - FGR kaart, Fysisch-Geografische Regio's
