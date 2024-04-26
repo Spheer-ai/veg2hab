@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import click
 
@@ -15,8 +16,15 @@ def veg2hab_internal():
 
 
 @veg2hab_internal.command()
-def check_versions():
+@click.argument("tag_version", required=False, default=None)
+def check_versions(tag_version: Optional[str]):
     """Check that the versions in poetry, toolbox.py and __version__ match"""
+    if tag_version is not None:
+        if tag_version != f"v{veg2hab.__version__}":
+            raise ValueError(
+                f"Tag {tag_version} does not match veg2hab.__version__ v{veg2hab.__version__}"
+            )
+
     # get the version of the software from poetry
     poetry_version = (
         subprocess.check_output(["poetry", "version", "--short"])
@@ -71,7 +79,6 @@ def create_package_data():
     opschonen_definitietabel(
         path_in_dt, path_in_mitsjson, path_in_mozaiekjson, path_out_dt
     )
-
 
 
 if __name__ == "__main__":
