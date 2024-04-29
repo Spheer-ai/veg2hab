@@ -68,6 +68,10 @@ class ShapefileInputs(BaseModel):
         default=None,
         description="kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
     )
+    lok_vegtypen_col: Optional[str] = Field(
+        default=None,
+        description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
+    )
 
 
 class Interface(metaclass=ABCMeta):
