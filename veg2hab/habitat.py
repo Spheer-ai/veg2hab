@@ -222,8 +222,8 @@ def try_to_determine_habkeuze(
                     kwaliteit=voorstel.kwaliteit,
                     habitatvoorstellen=[voorstel],
                     opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                    mits_opmerking=f"{str(voorstel.mits)}, {str(voorstel.mits.evaluation)}",
-                    mozaiek_opmerking=f"{str(voorstel.mozaiek)}, {str(voorstel.mozaiek.evaluation)}",
+                    mits_opmerking=f"Mits: {str(voorstel.mits)}, {str(voorstel.mits.evaluation)}",
+                    mozaiek_opmerking=f"Mozaiekregel: {str(voorstel.mozaiek)}, {str(voorstel.mozaiek.evaluation)}",
                     debug_info="",
                 )
 
@@ -300,7 +300,7 @@ def try_to_determine_habkeuze(
                 habitatvoorstellen=return_voorstellen,
                 opmerking="Dit vlak heeft mozaiekregels waarvoor nog te weinig info is om een keuze te maken. Dit gebeurt als het vlak omringd wordt door meer dan 90% HXXXX. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                 mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in return_voorstellen]}",
-                mozaiek_opmerking=f"Mozaiekregel(s) met te weinig info: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
+                mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
                 debug_info="",
             )
 
