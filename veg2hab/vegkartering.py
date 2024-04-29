@@ -535,26 +535,6 @@ def fix_crs(
     return gdf
 
 
-def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
-    """
-    Ontvangt een setje rijen van 1 locatie (vlak) met lokale vegetatietypen en bedekkingspercentages.
-    Hier wordt een string van gemaakt uiteindelijk in de output komt zonder verdere bewerkingen.
-    """
-    assert all(
-        col in rows.columns for col in ["Locatie", "Vegetatietype", "Bedekking_num"]
-    ), "Locatie, Vegetatietype en Bedekking_num moeten kolommen zijn in _group_lokale_vegtypen_en_bedekking_to_str"
-
-    assert (
-        rows["Locatie"].nunique() == 1
-    ), "_group_lokale_vegtypen_en_bedekking_to_str moet op een groupby over Locatie uitgevoerd worden; nu is locatie niet hetzelfde in 1 group"
-
-    return_strings = [
-        f"{row['Vegetatietype']} ({row['Bedekking_num']}%)"
-        for _, row in rows.iterrows()
-    ]
-    return ", ".join(return_strings)
-
-
 def _split_list_to_columns(
     row: Optional[pd.Series],
     new_col_prefix: str,
@@ -705,7 +685,7 @@ class Kartering:
         gdf["Opp"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
 
-        element, grouped_kart_veg = read_access_tables(access_mdb_path)
+        element, veginfo_per_locatie = read_access_tables(access_mdb_path)
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -730,17 +710,17 @@ class Kartering:
 
         # Joinen van de SBBs aan de gdf
         gdf = gdf.merge(
-            grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
+            veginfo_per_locatie[["Locatie", "VegTypeInfo"]],
+            left_on="intern_id",
+            right_on="Locatie",
+            how="left",
         )
-
-        # Bewaren van de lokale vegetatietypen voor in de output
-        lokale_vegtypen = kart_veg.groupby("Locatie").apply(
-            _group_lokale_vegtypen_en_bedekking_to_str
-        )
-        lokale_vegtypen.name = "_LokVegTyp"
 
         gdf = gdf.merge(
-            lokale_vegtypen, left_on="intern_id", right_on="Locatie", how="left"
+            veginfo_per_locatie[["Locatie", "_LokVegTyp"]],
+            left_on="intern_id",
+            right_on="Locatie",
+            how="left",
         )
 
         # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,

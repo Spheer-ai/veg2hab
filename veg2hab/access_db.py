@@ -61,7 +61,7 @@ def _(folder: Path, table_name: TableNames, col_names: Dict[str, Any]) -> pd.Dat
     )
 
 
-def unpack_access_db(access_db_path: str, output_folder: Path):
+def _unpack_access_db(access_db_path: str, output_folder: Path):
     assert output_folder.is_dir()
     try:
         subprocess.run(
@@ -94,6 +94,26 @@ def unpack_access_db(access_db_path: str, output_folder: Path):
             ) from e
 
 
+def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
+    """
+    Ontvangt een setje rijen van 1 locatie (vlak) met lokale vegetatietypen en bedekkingspercentages.
+    Hier wordt een string van gemaakt uiteindelijk in de output komt zonder verdere bewerkingen.
+    """
+    assert all(
+        col in rows.columns for col in ["Locatie", "Vegetatietype", "Bedekking_num"]
+    ), "Locatie, Vegetatietype en Bedekking_num moeten kolommen zijn in _group_lokale_vegtypen_en_bedekking_to_str"
+
+    assert (
+        rows["Locatie"].nunique() == 1
+    ), "_group_lokale_vegtypen_en_bedekking_to_str moet op een groupby over Locatie uitgevoerd worden; nu is locatie niet hetzelfde in 1 group"
+
+    return_strings = [
+        f"{row['Vegetatietype']} ({row['Bedekking_num']}%)"
+        for _, row in rows.iterrows()
+    ]
+    return ", ".join(return_strings)
+
+
 def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Read the tables from the access database and return them as pandas dataframes"""
     # TODO fix circular imports
@@ -109,7 +129,7 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     elif sys.platform.startswith("linux"):
         temp_dir = tempfile.TemporaryDirectory()
         locatie: Union[pyodbc.Connection, Path] = Path(temp_dir.name)
-        unpack_access_db(acces_mdb, locatie)
+        _unpack_access_db(acces_mdb, locatie)
 
     element = read_table(
         locatie,
@@ -172,6 +192,14 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
         )
         .reset_index(name="VegTypeInfo")
     )
+
+    lokale_vegtypen = (
+        kart_veg.groupby("Locatie")
+        .apply(_group_lokale_vegtypen_en_bedekking_to_str)
+        .reset_index(name="_LokVegTyp")
+    )
+
+    grouped_kart_veg = grouped_kart_veg.merge(lokale_vegtypen, on="Locatie")
 
     if temp_dir:
         temp_dir.cleanup()
