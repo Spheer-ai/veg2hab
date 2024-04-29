@@ -50,9 +50,6 @@ class MaybeBoolean(Enum):
             return NotImplemented
         return or_resolver[max(or_order[self], or_order[other])]
 
-    def __str__(self):
-        return self.name
-
 
 class Kwaliteit(Enum):
     NVT = "Nvt"  # bijvoorbeeld in het geval van H0000 en HXXXX
