@@ -283,7 +283,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Opm{idx}": keuze.opmerking,
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
                 f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
-                f"_MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+                f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
@@ -358,7 +358,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Opm{idx}": keuze.opmerking,
             f"_Mits_opm{idx}": keuze.mits_opmerking,
             f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
-            f"_MozkDict{idx}": mozaiekregel_habtype_percentage_dict_to_string(
+            f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
@@ -510,7 +510,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"_VgTypInf{i}",
             f"_Mits_opm{i}",
             f"_Mozk_opm{i}",
-            f"_MozkDict{i}",
+            f"_MozkPerc{i}",
             f"_VvNdftbl{i}",
             f"_SBBdftbl{i}",
         ]
@@ -774,8 +774,6 @@ class Kartering:
         shapefile = gpd.read_file(shape_path)
 
         if ElmID_col and not shapefile[ElmID_col].is_unique:
-            # NOTE: Als we ElmID nooit door hoeven te voeren tot in de habitattypekartering kan deze ook helemaal
-            #       uit de spreadsheets gehaald worden; dan gebruiken we gewoon altijd onze eigen.
             warnings.warn(
                 f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
                 Eerste paar dubbele waarden:
