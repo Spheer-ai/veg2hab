@@ -298,6 +298,7 @@ def is_mozaiek_type_present(
     # Als we een lijst van lijsten hebben, dan flattenen we die
     if any(isinstance(i, list) for i in voorstellen):
         voorstellen = [item for sublist in voorstellen for item in sublist]
+
     return any(
         (
             voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type)
