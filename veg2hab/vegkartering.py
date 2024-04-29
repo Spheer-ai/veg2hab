@@ -492,6 +492,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "ElmID",
         "geometry",
         "_Samnvttng",
+        "_LokVegTyp",
         "_LokVrtNar",
     ]
     n_habtype_blocks = len([i for i in gdf.columns if "Habtype" in i])
@@ -684,7 +685,7 @@ class Kartering:
         gdf["Opp"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
 
-        element, grouped_kart_veg = read_access_tables(access_mdb_path)
+        element, veginfo_per_locatie = read_access_tables(access_mdb_path)
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -709,7 +710,17 @@ class Kartering:
 
         # Joinen van de SBBs aan de gdf
         gdf = gdf.merge(
-            grouped_kart_veg, left_on="intern_id", right_on="Locatie", how="left"
+            veginfo_per_locatie[["Locatie", "VegTypeInfo"]],
+            left_on="intern_id",
+            right_on="Locatie",
+            how="left",
+        )
+
+        gdf = gdf.merge(
+            veginfo_per_locatie[["Locatie", "_LokVegTyp"]],
+            left_on="intern_id",
+            right_on="Locatie",
+            how="left",
         )
 
         # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,
@@ -738,6 +749,7 @@ class Kartering:
         VvN_col: Optional[str] = None,
         split_char: Optional[str] = "+",
         perc_col: Optional[str] = None,
+        lok_vegtypen_col: Optional[str] = None,
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
@@ -751,7 +763,8 @@ class Kartering:
         - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         - SBB_col: kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         - split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)
-        - percentage_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
+        - perc_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
+        - lok_vegtypen_col: kolomnaam van de lokale vegetatietypen als deze er zijn (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
         """
 
         ###############
@@ -783,10 +796,24 @@ class Kartering:
         if split_char is None:
             split_char = "+"
 
+        # Vastleggen lokale vegtypen voor in de output
+        if lok_vegtypen_col is not None:
+            shapefile["_LokVegTyp"] = shapefile.apply(
+                lambda row: ", ".join(
+                    [str(row[col]) for col in lok_vegtypen_col.split(split_char)]
+                ),
+                axis=1,
+            )
+        else:
+            shapefile[
+                "_LokVegTyp"
+            ] = "Geen kolommen opgegeven voor lokale vegetatietypen"
+
         # Selectie van de te bewaren kolommen
         cols = [
             col for col in [datum_col, opmerking_col] if col in shapefile.columns
-        ] + [ElmID_col, "geometry"]
+        ] + [ElmID_col, "_LokVegTyp", "geometry"]
+
         # Uitvinden welke vegtype kolommen er mee moeten
         if vegtype_col_format == "multi":
             if SBB_col is not None:
@@ -1117,6 +1144,7 @@ class Kartering:
                 "geometry",
                 "VegTypeInfo",
                 "HabitatKeuze",
+                "_LokVegTyp",
                 "_LokVrtNar",
             ]
         ].copy()
