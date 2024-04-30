@@ -79,7 +79,7 @@ class HabitatKeuze:
             assert self.habtype == "H0000"
         elif self.status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
-            KeuzeStatus.PLACEHOLDER,
+            KeuzeStatus.NIET_GEAUTOMATISEERD,
             KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         ]:
             assert self.habtype == "HXXXX"
@@ -241,7 +241,7 @@ def try_to_determine_habkeuze(
 
             # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
             # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
             return_voorstellen = [
                 voorstel
                 for voorstel in all_voorstellen
@@ -253,7 +253,7 @@ def try_to_determine_habkeuze(
             ]
 
             return HabitatKeuze(
-                status=KeuzeStatus.PLACEHOLDER,
+                status=KeuzeStatus.NIET_GEAUTOMATISEERD,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 zelfstandig=True,
@@ -270,7 +270,7 @@ def try_to_determine_habkeuze(
 
             # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
             # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
             return_voorstellen = [
                 voorstel
                 for voorstel in all_voorstellen
