@@ -270,7 +270,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.DUIDELIJK,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-            KeuzeStatus.PLACEHOLDER,
+            KeuzeStatus.NIET_GEAUTOMATISEERD,
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
@@ -339,7 +339,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     if keuze.status in [
         KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-        KeuzeStatus.PLACEHOLDER,
+        KeuzeStatus.NIET_GEAUTOMATISEERD,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
     ]:
         voorstellen = keuze.habitatvoorstellen

@@ -6,7 +6,7 @@ class MaybeBoolean(Enum):
 
     # MAYBE = 2
 
-    # Voor dingen die niet geautomatiseerd kunnen worden (bijv. placeholder criteria)
+    # Voor dingen die niet geautomatiseerd kunnen worden (bijv. NietGeautomatiseerdCriterium)
     CANNOT_BE_AUTOMATED = 3
 
     # Voor als evaluatie later nog eens geprobeerd moet worden (bijv. mozaiekregels waar nog
@@ -113,8 +113,8 @@ class KeuzeStatus(Enum):
     # Meerdere even specifieke habitatvoorstellen met kloppende mitsen
     MEERDERE_KLOPPENDE_MITSEN = auto()
 
-    # Er zijn PlaceholderCriteriums, dus handmatige controle
-    PLACEHOLDER = auto()
+    # Er zijn NietGeautomatiseerdCriteriums, dus handmatige controle
+    NIET_GEAUTOMATISEERD = auto()
 
     # # Dit gaat Veg2Hab niet op kunnen lossen
     # HANDMATIGE_CONTROLE = auto()
@@ -133,8 +133,8 @@ class KeuzeStatus(Enum):
             return "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
         elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
             return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
-        elif self == KeuzeStatus.PLACEHOLDER:
-            return "Er zijn placeholder mitsen/mozaiekregels gevonden; deze kunnen (nog) niet door Veg2Hab worden gecontroleerd."
+        elif self == KeuzeStatus.NIET_GEAUTOMATISEERD:
+            return "Er zijn niet geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd."
         # elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
         #     assert (
         #         False
