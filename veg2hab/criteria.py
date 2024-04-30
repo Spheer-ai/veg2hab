@@ -79,15 +79,16 @@ class GeenCriterium(BeperkendCriterium):
         return "Geen mits (altijd waar)"
 
 
-class PlaceholderCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "Placeholder"
+class NietGeautomatiseerdCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "NietGeautomatiseerd"
+    toelichting: str
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
         self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
-        return "Placeholder mits (nog niet geimplementeerd) (nooit waar)"
+        return f"(Niet geautomatiseerd: {self.toelichting})"
 
 
 class FGRCriterium(BeperkendCriterium):
