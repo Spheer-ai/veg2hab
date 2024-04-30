@@ -505,14 +505,14 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opm{i}",
             f"VvN{i}",
             f"SBB{i}",
+            f"_VgTypInf{i}",
             f"_Status{i}",
             f"_Uitleg{i}",
-            f"_VgTypInf{i}",
+            f"_VvNdftbl{i}",
+            f"_SBBdftbl{i}",
             f"_Mits_opm{i}",
             f"_Mozk_opm{i}",
             f"_MozkDict{i}",
-            f"_VvNdftbl{i}",
-            f"_SBBdftbl{i}",
         ]
     return gdf[new_columns]
 
