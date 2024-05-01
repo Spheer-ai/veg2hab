@@ -11,11 +11,13 @@ from pydantic import BaseModel, PrivateAttr
 from veg2hab.enums import Kwaliteit, MaybeBoolean
 
 
-class MozaiekRegel(BaseModel):
+class Mozaiekregel(BaseModel):
     # NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
+
+    # TODO: Deze thresholds moeten uiteindelijk naar een config file
     mozaiek_threshold = 95
     rand_threshold = 30
 
@@ -29,7 +31,7 @@ class MozaiekRegel(BaseModel):
 
     def __new__(cls, *args, **kwargs):
         # Maakt de juiste subclass aan op basis van de type parameter
-        if cls == MozaiekRegel:
+        if cls == Mozaiekregel:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
         return super().__new__(
@@ -62,7 +64,7 @@ class MozaiekRegel(BaseModel):
         raise NotImplementedError()
 
 
-class PlaceholderMozaiekregel(MozaiekRegel):
+class PlaceholderMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "PlaceholderMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
@@ -77,7 +79,7 @@ class PlaceholderMozaiekregel(MozaiekRegel):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
 
 
-class GeenMozaiekregel(MozaiekRegel):
+class GeenMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "GeenMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
@@ -92,7 +94,7 @@ class GeenMozaiekregel(MozaiekRegel):
         return "Geen mozaiekregel (altijd waar)"
 
 
-class StandaardMozaiekregel(MozaiekRegel):
+class StandaardMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "StandaardMozaiekregel"
     # Habtype waarmee gematcht moet worden
     habtype: str
@@ -287,7 +289,7 @@ def calc_mozaiek_percentages_from_overlay_gdf(
 
 def is_mozaiek_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    mozaiek_type: MozaiekRegel,
+    mozaiek_type: Mozaiekregel,
 ) -> bool:
     """
     Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is

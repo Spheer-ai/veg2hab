@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple, Union
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
-from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel
+from veg2hab.mozaiek import GeenMozaiekregel, Mozaiekregel
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
@@ -21,7 +21,7 @@ class HabitatVoorstel:
     kwaliteit: Kwaliteit
     idx_in_dt: Optional[int]
     mits: BeperkendCriterium
-    mozaiek: MozaiekRegel
+    mozaiek: Mozaiekregel
     match_level: MatchLevel
     mozaiek_dict: Optional[dict] = None
 
