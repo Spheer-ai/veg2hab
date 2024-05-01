@@ -6,7 +6,10 @@ from veg2hab.mozaiek import StandaardMozaiekregel
 
 def test_key_determination_zelfstandig_goed():
     regel = StandaardMozaiekregel(
-        habtype="H1", alleen_zelfstandig=True, alleen_goede_kwaliteit=True, threshold=90
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     assert regel.keys == [("H1", True, Kwaliteit.GOED)]
@@ -17,7 +20,7 @@ def test_key_determination_mozaiek_matig():
         habtype="H1",
         alleen_zelfstandig=False,
         alleen_goede_kwaliteit=False,
-        threshold=90,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     assert regel.keys == [
@@ -30,7 +33,10 @@ def test_key_determination_mozaiek_matig():
 
 def test_100_percent_requested_true():
     regel = StandaardMozaiekregel(
-        habtype="H1", alleen_zelfstandig=True, alleen_goede_kwaliteit=True, threshold=90
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     habtype_percentage_dict = defaultdict(int)
@@ -41,7 +47,10 @@ def test_100_percent_requested_true():
 
 def test_50_percent_requested_50_percent_unknown_postpone():
     regel = StandaardMozaiekregel(
-        habtype="H1", alleen_zelfstandig=True, alleen_goede_kwaliteit=True, threshold=90
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     habtype_percentage_dict = defaultdict(int)
@@ -55,7 +64,10 @@ def test_50_percent_requested_50_percent_unknown_postpone():
 
 def test_100_percent_unrequested_false():
     regel = StandaardMozaiekregel(
-        habtype="H1", alleen_zelfstandig=True, alleen_goede_kwaliteit=True, threshold=90
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     habtype_percentage_dict = defaultdict(int)
@@ -68,7 +80,10 @@ def test_100_percent_unrequested_false():
 
 def test_50_percent_requested_50_percent_unrequested_false():
     regel = StandaardMozaiekregel(
-        habtype="H1", alleen_zelfstandig=True, alleen_goede_kwaliteit=True, threshold=90
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     habtype_percentage_dict = defaultdict(int)
@@ -85,7 +100,7 @@ def test_matig_mozaiek_true():
         habtype="H1",
         alleen_zelfstandig=False,
         alleen_goede_kwaliteit=False,
-        threshold=90,
+        ook_als_rand_langs=False,
     )
     regel.determine_keys()
     habtype_percentage_dict = defaultdict(int)
@@ -99,7 +114,7 @@ def test_addition_of_acceptable_habtypen():
         habtype="H1",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=False,
-        threshold=90,
+        ook_als_rand_langs=False,
     )
     habtype_percentage_dict = defaultdict(int)
     habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 50
@@ -114,7 +129,7 @@ def test_exclusion_of_unacceptable_habtypen():
         habtype="H1",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=False,
-        threshold=90,
+        ook_als_rand_langs=False,
     )
     habtype_percentage_dict = defaultdict(int)
     habtype_percentage_dict[("H1", True, Kwaliteit.MATIG)] = 50
@@ -122,3 +137,18 @@ def test_exclusion_of_unacceptable_habtypen():
     regel.determine_keys()
     regel.check(habtype_percentage_dict)
     assert regel.evaluation == MaybeBoolean.FALSE
+
+
+def test_ook_als_rand_langs_true():
+    regel = StandaardMozaiekregel(
+        habtype="H1",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=True,
+    )
+    habtype_percentage_dict = defaultdict(int)
+    habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 50
+    habtype_percentage_dict[("H1", True, Kwaliteit.MATIG)] = 50
+    regel.determine_keys()
+    regel.check(habtype_percentage_dict)
+    assert regel.evaluation == MaybeBoolean.TRUE
