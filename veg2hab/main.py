@@ -4,8 +4,8 @@ from textwrap import dedent
 from typing import Union
 
 import geopandas as gpd
-from pkg_resources import resource_filename
 
+from veg2hab import constants
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.fgr import FGR
 from veg2hab.io.common import AccessDBInputs, Interface, ShapefileInputs
@@ -14,12 +14,11 @@ from veg2hab.waswordtlijst import WasWordtLijst
 
 
 def installation_instructions():
-    data_file_path = resource_filename("veg2hab", "package_data/toolbox.pyt")
     print(
         dedent(
             f"""
     To install the veg2hab toolbox, go to add Python toolbox in ArcGIS Pro and select the file at the following location:
-        {data_file_path}
+        {constants.TOOLBOX_PYT_PATH}
 """
         )
     )
@@ -28,23 +27,17 @@ def installation_instructions():
 def run(params: Union[AccessDBInputs, ShapefileInputs]):
     logging.info(f"Starting veg2hab met input parameters: {params.json()}")
 
-    wwl_filepath = resource_filename(
-        "veg2hab", "package_data/opgeschoonde_waswordt.xlsx"
-    )
-    wwl = WasWordtLijst.from_excel(wwl_filepath)
+    wwl = WasWordtLijst.from_excel(Path(constants.WWL_PATH))
 
-    logging.info(f"WasWordtLijst is ingelezen van {wwl_filepath}")
+    logging.info(f"WasWordtLijst is ingelezen van {constants.WWL_PATH}")
 
-    def_filepath = resource_filename(
-        "veg2hab", "package_data/opgeschoonde_definitietabel.xlsx"
-    )
-    deftabel = DefinitieTabel.from_excel(def_filepath)
+    deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
 
-    logging.info(f"Definitietabel is ingelezen van {def_filepath}")
+    logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
 
-    fgr = FGR(Path(resource_filename("veg2hab", "package_data/FGR.json")))
+    fgr = FGR(Path(constants.FGR_PATH))
 
-    logging.info(f"FGR is ingelezen")
+    logging.info(f"FGR is ingelezen van {constants.FGR_PATH}")
 
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 

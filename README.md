@@ -1,24 +1,61 @@
 # veg2hab
-Vegetatiekarteringen automatisch omzetten naar habitatkarteringen
+**veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen.
+
+Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
+ - WasWordtLijst, dit bestand zet SBB vegetatietypes om naar VvN vegetatietypes
+ - DefinitieTabel, dit is een samenvatting van de profieldocumenten.
+ - FGR kaart, Fysisch-Geografische Regio's
+ - Let op voor nieuwe versies: er komen nog meer bronbestanden bij!
 
 ## Installatie instructies
 
-De applicatie staat nog niet op PyPi. Dus de installatie instructies zijn nog wat omslachtig (ze zullen redelijk omslachtig blijven, maar dat is niet anders):
- 1. Bouw de Python package met `poetry build`. Deze bouwt de applicatie in de folder ./dist
- 2. Open Arcgis en open 'New notebook'
- 3. Zorg ervoor dat je een schone conda environment gebruikt (dit mag niet de default environment zijn, deze is readonly)
- 4. Installeer veg2hab met `!pip install {path_to_veg2hab_wheel}`
- 5. Gebruik `import veg2hab` en `veg2hab.installatie_instructies` om de locatie van de toolbox te vinden.
- 6. Ga naar 'Add Toolbox (file)' in de command search en voeg de toolbox toe aan het project.
- 7. Klik op 'draai veg2hab' om veg2hab te draaien.
+### Installatie binnen ArcGIS
+De applicatie staat nu op PyPi. Installatie vanaf PyPi is veruit het eenvoudigst
+ 1. Open Arcgis en open 'New notebook'
+ 2. Zorg ervoor dat je een schone conda environment gebruikt (dit mag niet de default environment zijn, deze is readonly)
+ 3. Installeer veg2hab met `!pip install --upgrade veg2hab`
+ 4. Gebruik `import veg2hab` en `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
+ 5. Ga naar 'Add Toolbox (file)' in de command search en voeg de toolbox toe aan het project.
+ 6. Veg2hab komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
+
+### Installatie op linux
+Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
+```sh
+apt install mdbtools
+```
+voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 
-## Inladen van vegetatiekarteringen
+## Development
+### Lokale ontwikkeling
+Download de git repository:
+```sh
+git clone https://github.com/Spheer-ai/veg2hab
+```
 
-### .mdb naar .csv
-Verschillende vegetatiekarteringen hebben informatie over de landelijke typologie in een MS Access database zitten.
+En installeer alle lokale (developmment) dependencies met:
+```sh
+poetry install
+```
 
-Binnen het project zijn onderstaande stappen gevolgd om deze data in te lezen:
-- Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
-- Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
-- De SBB-codes staan in Element.csv
+Linting doen we met isort en black:
+```sh
+poetry run black .
+poetry run isort .
+```
+
+Unittests worden gedraaid met pytest:
+```sh
+poetry run pytest tests/
+```
+
+### Nieuwe release
+1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`.
+2. Maak een nieuwe versie met poetry (minor, major, patch): `poetry version {{rule}}`
+3. Pas de [__init__.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version
+4. Pas [toolbox.pyt](veg2hab/package_data/toolbox.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
+5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
+6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github. (`git add`, `git commit`, `git push`)
+7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
+8. Push de tag naar git `git push origin tag v$(poetry version -s)`
+9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
