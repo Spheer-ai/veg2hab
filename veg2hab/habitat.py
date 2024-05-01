@@ -106,15 +106,13 @@ class HabitatKeuze:
             mozaiek_opmerking="",
             debug_info="",
         )
-    
+
     @property
     def zelfstandig(self):
         if self.habtype in ["H0000", "HXXXX"]:
             return True
-        
-        return is_mozaiek_type_present(
-            self.habitatvoorstellen, GeenMozaiekregel
-        )
+
+        return is_mozaiek_type_present(self.habitatvoorstellen, GeenMozaiekregel)
 
 
 def rank_habitatkeuzes(
