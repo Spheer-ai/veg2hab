@@ -69,20 +69,8 @@ class HabitatKeuze:
     mits_opmerking: str = ""
     mozaiek_opmerking: str = ""
     debug_info: Optional[str] = ""
-    zelfstandig: bool = None
 
     def __post_init__(self):
-        # Logica
-
-        # Als er StandaardMozaiekregels in de ondersteunende voorstellen
-        # zitten is dit geen zelfstandig habitattype
-        self.zelfstandig = not is_mozaiek_type_present(
-            self.habitatvoorstellen, StandaardMozaiekregel
-        )
-
-        if self.habtype in ["H0000", "HXXXX"]:
-            self.zelfstandig = True
-
         # Validatie
         if self.status in [
             KeuzeStatus.DUIDELIJK,
@@ -117,6 +105,15 @@ class HabitatKeuze:
             mits_opmerking="",
             mozaiek_opmerking="",
             debug_info="",
+        )
+    
+    @property
+    def zelfstandig(self):
+        if self.habtype in ["H0000", "HXXXX"]:
+            return True
+        
+        return is_mozaiek_type_present(
+            self.habitatvoorstellen, GeenMozaiekregel
         )
 
 
