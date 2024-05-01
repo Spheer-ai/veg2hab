@@ -135,10 +135,67 @@ def gdf():
             "ElmID": [1, 2, 3, 4],
             "mozaiek_present": [True, False, False, False],
             "HabitatVoorstel": [
-                [[voorstellen[0]]],
-                [[voorstellen[1]]],
-                [[voorstellen[2]]],
-                [[voorstellen[3]]],
+                [
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H1",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=StandaardMozaiekregel(
+                                habtype="H1",
+                                alleen_zelfstandig=True,
+                                alleen_goede_kwaliteit=True,
+                                ook_als_rand_langs=False,
+                            ),
+                            match_level=None,
+                        )
+                    ]
+                ],
+                [
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H2",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
+                ],
+                [
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H2",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
+                ],
+                [
+                    [
+                        HabitatVoorstel(
+                            onderbouwend_vegtype=None,
+                            vegtype_in_dt=None,
+                            habtype="H3",
+                            kwaliteit=Kwaliteit.GOED,
+                            idx_in_dt=None,
+                            mits=GeenCriterium(),
+                            mozaiek=GeenMozaiekregel(),
+                            match_level=None,
+                        )
+                    ]
+                ],
             ],
             "geometry": [
                 Polygon([(0, 0), (1, 0), (1, 3), (0, 3), (0, 0)]),
@@ -292,6 +349,7 @@ def test_multiple_mozaiek_present_shapes(gdf):
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     post = pd.DataFrame(
         {

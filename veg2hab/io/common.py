@@ -85,11 +85,11 @@ class Veg2HabConfig(BaseSettings):
         env_prefix = "VEG2HAB_"
 
     mozaiek_threshold: Union[int, float] = Field(
-        default=95.0,  # todo number/float
+        default=95.0,
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
-    mozaiek_als_rand_langs_threshold: Union[int, float] = Field(
-        default=50.0,  # todo number/float
+    mozaiek_als_rand_threshold: Union[int, float] = Field(
+        default=50.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
     )
     niet_geautomatiseerde_sbb: List[str] = Field(
