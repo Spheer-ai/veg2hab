@@ -19,6 +19,9 @@ class MozaiekRegel(BaseModel):
     mozaiek_threshold: Union[int, float] = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
+    mozaiek_als_rand_threshold = Union[int, float] = Field(
+        default_factory=lambda: Interface.get_instance().get_config().mozaiek_als_rand_threshold
+    )
 
     def __init_subclass__(cls):
         # Vul de _subtypes_ dict met alle subclasses
@@ -99,6 +102,7 @@ class StandaardMozaiekregel(MozaiekRegel):
     habtype: str
     alleen_zelfstandig: bool
     alleen_goede_kwaliteit: bool
+    ook_als_rand_langs: bool
 
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
@@ -131,8 +135,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         for key in self.keys:
             requested_habtype_percentage += habtype_percentage_dict.get(key, 0)
 
+        threshold = (
+            self.mozaiek_threshold
+            if not self.ook_als_rand_langs
+            else self.rand_threshold
+        )
+
         # Threshold is behaald, dus TRUE
-        if requested_habtype_percentage >= self.mozaiek_threshold:
+        if requested_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.TRUE
             return
 
@@ -141,10 +151,7 @@ class StandaardMozaiekregel(MozaiekRegel):
             0,
         )
         # Threshold kan nog behaald worden, dus POSTPONE
-        if (
-            requested_habtype_percentage + unknown_habtype_percentage
-            >= self.mozaiek_threshold
-        ):
+        if requested_habtype_percentage + unknown_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.POSTPONE
             return
 
@@ -156,7 +163,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         return self._evaluation
 
     def __str__(self):
-        return f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} {'G' if self.alleen_goede_kwaliteit else 'G/M'} {self.habtype}."
+        complete_string = ""
+        complete_string += f"{'(als rand langs)' if self.ook_als_rand_langs else ''} "
+        complete_string += (
+            f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} "
+        )
+        complete_string += f"{'G' if self.alleen_goede_kwaliteit else 'G/M'} "
+        complete_string += f"{self.habtype}."
+        return complete_string
 
 
 def make_buffered_boundary_overlay_gdf(
