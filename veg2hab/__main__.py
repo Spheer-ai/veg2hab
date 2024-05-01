@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 import veg2hab
-from veg2hab import constants
+from veg2hab import constants, main
 from veg2hab.definitietabel import opschonen_definitietabel
 from veg2hab.io.cli import CLIAccessDBInputs, CLIInterface, CLIShapefileInputs
 from veg2hab.waswordtlijst import opschonen_waswordtlijst
@@ -31,8 +31,8 @@ def main(verbose: int):
 )
 @CLIAccessDBInputs.click_decorator
 def digitale_standaard(**kwargs):
-    print(kwargs)
     params = CLIAccessDBInputs(**kwargs)
+    main.run(params)
 
 
 @main.command(
@@ -42,6 +42,7 @@ def digitale_standaard(**kwargs):
 @CLIShapefileInputs.click_decorator
 def vector_bestand(**kwargs):
     params = CLIShapefileInputs(**kwargs)
+    main.run(params)
 
 
 if __name__ == "__main__":
