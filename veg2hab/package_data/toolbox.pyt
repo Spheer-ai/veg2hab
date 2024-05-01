@@ -3,9 +3,10 @@ from typing import Type, Union
 
 import veg2hab.io.arcgis
 import veg2hab.main
+import veg2hab.constants
+import logging
 
-
-VERSION = "0.1.0"
+SUPPORTED_VERSIONS = ["0.1.0", "0.1.1"]
 
 # this instantiates the arcgis interface and configures the logging
 veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
@@ -63,8 +64,12 @@ class BaseTool:
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        # TODO this would be a nice additional check
-        # veg2hab.io.arcgis.ArcGISInterface.get_instance().check_version(VERSION)
+        if veg2hab.__version__ not in SUPPORTED_VERSIONS:
+            logging.warning(
+                "Deze versie van de toolbox is niet getest met deze versie van de software.\n"
+                "Gelieve de toolbox opnieuw toe te voegen aan ArcGIS, zie installatie instructies.\n"
+                f"De locatie van toolbox.pyt is: {veg2hab.constants.TOOLBOX_PYT_PATH}"
+            )
 
         input_params = self.param_type.from_parameter_list(parameters)
         veg2hab.main.run(input_params)
