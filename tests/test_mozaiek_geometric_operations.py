@@ -45,6 +45,7 @@ def gdf():
                 habtype="H1",
                 alleen_zelfstandig=True,
                 alleen_goede_kwaliteit=True,
+                ook_als_rand_langs=False,
             ),
             match_level=None,
         ),
@@ -133,7 +134,6 @@ def gdf():
                 ],
             ],
             "ElmID": [1, 2, 3, 4],
-            "mozaiek_present": [True, False, False, False],
             "HabitatVoorstel": [
                 [
                     [
@@ -346,6 +346,12 @@ def test_multiple_mozaiek_present_shapes(gdf):
     # 1 en 2, beide met mozaiekregel
     pre = gdf[gdf["ElmID"].isin([1, 2])].copy()
     pre["HabitatVoorstel"].iloc[1][0][0].mozaiek = StandaardMozaiekregel(
+        habtype="H2",
+        alleen_zelfstandig=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    pre["HabitatKeuze"].iloc[1][0].habitatvoorstellen[0].mozaiek = StandaardMozaiekregel(
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,
