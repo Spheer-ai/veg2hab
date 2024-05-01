@@ -49,15 +49,15 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
     if isinstance(params, AccessDBInputs):
         kartering = Kartering.from_access_db(
             shape_path=Path(filename),
-            shape_elm_id_column=params.ElmID_col,
+            shape_elm_id_column=params.elmid_col,
             access_mdb_path=params.access_mdb_path,
-            opmerkingen_column=params.opmerkingen_column,
-            datum_column=params.datum_column,
+            opmerkingen_column=params.opmerking_col,
+            datum_column=params.datum_col,
         )
     elif isinstance(params, ShapefileInputs):
         kartering = Kartering.from_shapefile(
             shape_path=Path(filename),
-            ElmID_col=params.ElmID_col,
+            ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
             sbb_of_vvn=params.sbb_of_vvn,
             datum_col=params.datum_col,

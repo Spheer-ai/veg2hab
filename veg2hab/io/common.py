@@ -19,13 +19,13 @@ class AccessDBInputs(BaseModel):
     access_mdb_path: Path = Field(
         description="Locatie van de .mdb file van de digitale standaard",
     )
-    opmerkingen_column: Optional[str] = Field(
-        default=None,
-        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
-    )
-    datum_column: Optional[str] = Field(
+    datum_col: Optional[str] = Field(
         default=None,
         description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+    )
+    opmerking_col: Optional[str] = Field(
+        default=None,
+        description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
 
 
