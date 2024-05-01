@@ -1,9 +1,11 @@
 import logging
 from functools import wraps
-from typing import Callable, Dict
+from pathlib import Path
+from typing import Callable, Dict, Optional
 
 import click
 from geopandas.geodataframe import GeoDataFrame
+from datetime import datetime, timezone
 from typing_extensions import override
 
 from .common import AccessDBInputs, Interface, ShapefileInputs
@@ -11,7 +13,11 @@ from .common import AccessDBInputs, Interface, ShapefileInputs
 
 class CLIInterface(Interface):
     @override
-    def output_shapefile(self, shapefile_id: str, gdf: GeoDataFrame) -> None:
+    def output_shapefile(self, shapefile_id: Optional[Path], gdf: GeoDataFrame) -> None:
+        if shapefile_id is None:
+            shapefile_id = Path(
+                f"./habkart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
+            )
         gdf.to_file(shapefile_id, driver="GPKG", layer="main")
 
     @override

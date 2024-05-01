@@ -27,6 +27,14 @@ class AccessDBInputs(BaseModel):
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
+    lok_vegtypen_col: Optional[str] = Field(
+        default=None,
+        description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
+    )
+    output_bestand: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
 
 
 class ShapefileInputs(BaseModel):
@@ -72,6 +80,11 @@ class ShapefileInputs(BaseModel):
         default=None,
         description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
     )
+    output_bestand: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+
 
 
 class Interface(metaclass=ABCMeta):
@@ -91,12 +104,12 @@ class Interface(metaclass=ABCMeta):
             Interface.__instance = object.__new__(cls)
         return Interface.__instance
 
-    def shape_id_to_filename(self, shapefile_id: str) -> str:
+    def shape_id_to_filename(self, shapefile_id: str) -> Path:
         """Convert the shapefile id to a (temporary) file and returns the filename"""
-        return shapefile_id
+        return Path(shapefile_id)
 
     @abstractmethod
-    def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
+    def output_shapefile(self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame) -> None:
         """Output the shapefile with the given id.
         ID would either be a path to a shapefile or an identifier to a shapefile in ArcGIS or QGIS.
         """

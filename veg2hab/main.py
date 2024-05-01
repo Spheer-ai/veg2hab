@@ -48,7 +48,7 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     if isinstance(params, AccessDBInputs):
         kartering = Kartering.from_access_db(
-            shape_path=Path(filename),
+            shape_path=filename,
             shape_elm_id_column=params.elmid_col,
             access_mdb_path=params.access_mdb_path,
             opmerkingen_column=params.opmerking_col,
@@ -56,7 +56,7 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
         )
     elif isinstance(params, ShapefileInputs):
         kartering = Kartering.from_shapefile(
-            shape_path=Path(filename),
+            shape_path=filename,
             ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
             sbb_of_vvn=params.sbb_of_vvn,
@@ -88,4 +88,4 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     logging.info("Omzetting is successvol, wordt nu weggeschreven naar .gpkg")
 
-    Interface.get_instance().output_shapefile("output_name", final_format)
+    Interface.get_instance().output_shapefile(params.output_bestand, final_format)
