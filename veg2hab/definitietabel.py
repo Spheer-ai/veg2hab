@@ -207,7 +207,7 @@ def opschonen_definitietabel(
     dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     ### Mits json definities toevoegen
-    with open(path_in_mitsjson, "r") as file:
+    with open(path_in_mitsjson, "r", encoding="utf-8") as file:
         data = json.load(file)
     mitsjson = pd.DataFrame(
         [{"mits": key, "mitsjson": value} for key, value in data.items()]
@@ -224,7 +224,7 @@ def opschonen_definitietabel(
     dt["mitsjson"] = dt.mitsjson.apply(json.dumps)
 
     ### Mozaiek json definities toevoegen
-    with open(path_in_mozaiekjson, "r") as file:
+    with open(path_in_mozaiekjson, "r", encoding="utf-8") as file:
         data = json.load(file)
     mozaiekjson = pd.DataFrame(
         [{"mozaiek": key, "mozaiekjson": value} for key, value in data.items()]
