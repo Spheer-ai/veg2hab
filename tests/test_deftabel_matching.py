@@ -12,7 +12,11 @@ from veg2hab.criteria import (
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
 from veg2hab.enums import FGRType, Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
-from veg2hab.mozaiek import GeenMozaiekregel, PlaceholderMozaiekregel
+from veg2hab.mozaiek import (
+    GeenMozaiekregel,
+    PlaceholderMozaiekregel,
+    StandaardMozaiekregel,
+)
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -43,7 +47,7 @@ def test_perfect_match_VvN(dt):
                     FGRCriterium(fgrtype=FGRType.GG),
                     FGRCriterium(fgrtype=FGRType.DU),
                     NietGeautomatiseerdCriterium(
-                        toelichting="het vlak op andere wijze onder \"kustgebied\" valt"
+                        toelichting='het vlak op andere wijze onder "kustgebied" valt'
                     ),
                 ]
             ),
@@ -119,9 +123,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(
-                toelichting="mits in zandverstuiving"
-            ),
+            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
@@ -154,9 +156,7 @@ def test_perfect_and_less_specific_match_VvN(dt):
             mits=EnCriteria(
                 sub_criteria=[
                     FGRCriterium(fgrtype=FGRType.DU),
-                    NietGeautomatiseerdCriterium(
-                        toelichting="zachte berk dominant"
-                    ),
+                    NietGeautomatiseerdCriterium(toelichting="zachte berk dominant"),
                 ]
             ),
             mozaiek=GeenMozaiekregel(),
@@ -169,10 +169,16 @@ def test_perfect_and_less_specific_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=640,
             mits=GeenCriterium(),
-            mozaiek=PlaceholderMozaiekregel(),
+            mozaiek=StandaardMozaiekregel(
+                habtype="H91D0",
+                alleen_zelfstandig=True,
+                alleen_goede_kwaliteit=False,
+                ook_als_rand_langs=True,
+            ),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
+    post[1].mozaiek.determine_keys()
     assert dt.find_habtypes(pre) == post
 
 
@@ -185,9 +191,7 @@ def test_perfect_match_SBB(dt):
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
-            mits=NietGeautomatiseerdCriterium(
-                toelichting="mits in vennen"
-            ),
+            mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
         )
@@ -218,9 +222,7 @@ def test_matches_both_vvn_and_sbb(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(
-                toelichting="mits in zandverstuiving"
-            ),
+            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
@@ -242,9 +244,7 @@ def test_matches_both_vvn_and_sbb(dt):
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
-            mits=NietGeautomatiseerdCriterium(
-                toelichting="mits in vennen"
-            ),
+            mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
         ),

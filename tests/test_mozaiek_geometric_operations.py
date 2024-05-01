@@ -105,6 +105,7 @@ def gdf():
                                 habtype="H1",
                                 alleen_zelfstandig=True,
                                 alleen_goede_kwaliteit=True,
+                                ook_als_rand_langs=False,
                             ),
                             match_level=None,
                         )
@@ -305,6 +306,7 @@ def test_multiple_mozaiek_present_shapes(gdf):
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
     )
     post = pd.DataFrame(
         {

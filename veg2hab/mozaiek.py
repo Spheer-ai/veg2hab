@@ -16,7 +16,8 @@ class MozaiekRegel(BaseModel):
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
-    mozaiek_threshold = 90
+    mozaiek_threshold = 95
+    rand_threshold = 30
 
     def __init_subclass__(cls):
         # Vul de _subtypes_ dict met alle subclasses
@@ -76,19 +77,6 @@ class PlaceholderMozaiekregel(MozaiekRegel):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
 
 
-# class DummyMozaiekregel(Mozaiekregel):
-#     # TODO: remove this once no longer needed
-#     type: ClassVar[str] = "DummyMozaiekregel"
-#     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
-
-#     def check(self, habtype_percentage_dict: Dict) -> None:
-#         self._evaluation = MaybeBoolean.FALSE
-
-#     @property
-#     def evaluation(self) -> MaybeBoolean:
-#         return self._evaluation
-
-
 class GeenMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "GeenMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
@@ -110,6 +98,7 @@ class StandaardMozaiekregel(MozaiekRegel):
     habtype: str
     alleen_zelfstandig: bool
     alleen_goede_kwaliteit: bool
+    ook_als_rand_langs: bool
 
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
@@ -142,8 +131,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         for key in self.keys:
             requested_habtype_percentage += habtype_percentage_dict[key]
 
+        threshold = (
+            self.mozaiek_threshold
+            if not self.ook_als_rand_langs
+            else self.rand_threshold
+        )
+
         # Threshold is behaald, dus TRUE
-        if requested_habtype_percentage >= self.mozaiek_threshold:
+        if requested_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.TRUE
             return
 
@@ -151,10 +146,7 @@ class StandaardMozaiekregel(MozaiekRegel):
             ("HXXXX", True, Kwaliteit.NVT)
         ]
         # Threshold kan nog behaald worden, dus POSTPONE
-        if (
-            requested_habtype_percentage + unknown_habtype_percentage
-            >= self.mozaiek_threshold
-        ):
+        if requested_habtype_percentage + unknown_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.POSTPONE
             return
 
@@ -166,7 +158,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         return self._evaluation
 
     def __str__(self):
-        return f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} {'G' if self.alleen_goede_kwaliteit else 'G/M'} {self.habtype}."
+        complete_string = ""
+        complete_string += f"{'(als rand langs)' if self.ook_als_rand_langs else ''} "
+        complete_string += (
+            f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} "
+        )
+        complete_string += f"{'G' if self.alleen_goede_kwaliteit else 'G/M'} "
+        complete_string += f"{self.habtype}."
+        return complete_string
 
 
 def make_buffered_boundary_overlay_gdf(
