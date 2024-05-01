@@ -44,3 +44,6 @@ line-length = 88
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+typeCheckingMode = "basic"

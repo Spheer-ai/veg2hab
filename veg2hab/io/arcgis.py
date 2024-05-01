@@ -13,7 +13,7 @@ from .common import AccessDBInputs, Interface, ShapefileInputs
 
 class ArcGISInterface(Interface):
     def _generate_random_gpkg_name(self, basename: str) -> str:
-        import arcpy
+        import arcpy # type: ignore
 
         file_location = os.path.abspath(os.path.join(arcpy.env.scratchWorkspace, ".."))
 
@@ -22,7 +22,7 @@ class ArcGISInterface(Interface):
 
     @override
     def shape_id_to_filename(self, shapefile_id: str) -> Path:
-        import arcpy
+        import arcpy # type: ignore
 
         filename = self._generate_random_gpkg_name("vegkart")
 
@@ -44,8 +44,7 @@ class ArcGISInterface(Interface):
     def output_shapefile(
         self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame
     ) -> None:
-        # TODO use shapefile_id as output
-        import arcpy
+        import arcpy # type: ignore
 
         if shapefile_id is None:
             filename = self._generate_random_gpkg_name("habkart")
@@ -76,7 +75,7 @@ class ArcGISInterface(Interface):
 
         class ArcpyAddMessageHandler(logging.Handler):
             def emit(self, record: logging.LogRecord):
-                import arcpy
+                import arcpy # type: ignore
 
                 msg = self.format(record)
                 if record.levelno >= logging.ERROR:
@@ -95,8 +94,8 @@ class ArcGISInterface(Interface):
         )
 
 
-def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
-    import arcpy
+def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]: # type: ignore
+    import arcpy # type: ignore
 
     outputs = []
     for field_name, field_info in param_schema["properties"].items():
@@ -142,21 +141,21 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
 
 class ArcGISAccessDBInputs(AccessDBInputs):
     @classmethod
-    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self: # type: ignore
         as_dict = {p.name: p.valueAsText for p in parameters}
         return cls(**as_dict)
 
     @classmethod
-    def to_parameter_list(cls) -> List["arcpy.Parameter"]:
+    def to_parameter_list(cls) -> List["arcpy.Parameter"]: # type: ignore
         return _schema_to_param_list(cls.schema())
 
 
 class ArcGISShapefileInputs(ShapefileInputs):
     @classmethod
-    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self: # type: ignore
         as_dict = {p.name: p.valueAsText for p in parameters}
         return cls(**as_dict)
 
     @classmethod
-    def to_parameter_list(cls) -> List["arcpy.Parameter"]:
+    def to_parameter_list(cls) -> List["arcpy.Parameter"]: # type: ignore
         return _schema_to_param_list(cls.schema())

@@ -1125,7 +1125,7 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
-    def as_final_format(self) -> pd.DataFrame:
+    def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
@@ -1185,7 +1185,7 @@ class Kartering:
             # versie van hab_as_final_format te maken die geen vegtypeinfo nodig heeft
             vegtypeinfos = [
                 VegTypeInfo(
-                    percentage=0,
+                    percentage=0, # type: ignore
                     SBB=[],
                     VvN=[],
                 )

@@ -25,8 +25,8 @@ class WasWordtLijst:
         ), "Niet alle VvN codes zijn valid"
 
         # Omvormen naar SBB en VvN klasses
-        self.df["SBB"] = self.df["SBB"].apply(SBB.from_string)
-        self.df["VvN"] = self.df["VvN"].apply(VvN.from_string)
+        self.df["SBB"] = self.df["SBB"].apply(SBB.from_string) # type: ignore
+        self.df["VvN"] = self.df["VvN"].apply(VvN.from_string) # type: ignore
 
         # Replace pd.NA with None
         # NOTE: kunnen we ook alle rows met een NA gewoon verwijderen? Als we of geen VvN of

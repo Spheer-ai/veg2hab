@@ -81,6 +81,7 @@ class SBB:
     def from_string(cls, code: Union[str, None]) -> Union[SBB, None]:
         if pd.isnull(code):
             return None
+        assert code is not None
         return cls(code)
 
     def match_up_to(self, other: Optional[SBB]) -> MatchLevel:
@@ -129,9 +130,9 @@ class SBB:
         # Strippen van evt rompgemeenschap of derivaatgemeenschap
         code_gemeenschap = re.sub(SBB.gemeenschap, "", code)
 
-        return SBB.basis_sbb.fullmatch(code) or SBB.basis_sbb.fullmatch(
+        return bool(SBB.basis_sbb.fullmatch(code)) or bool(SBB.basis_sbb.fullmatch(
             code_gemeenschap
-        )
+        ))
 
     @classmethod
     def validate_pandas_series(
@@ -336,7 +337,7 @@ class VvN:
         """
         Checkt of een string voldoet aan de VvN opmaak
         """
-        return cls.normale_vvn.fullmatch(code) or cls.gemeenschap.fullmatch(code)
+        return bool(cls.normale_vvn.fullmatch(code)) or bool(cls.gemeenschap.fullmatch(code))
 
     @classmethod
     def validate_pandas_series(
@@ -381,6 +382,7 @@ class VvN:
             )
         )
 
+    @staticmethod
     def opschonen_series(series: pd.Series) -> pd.Series:
         """
         Voert een aantal opschoningen uit op een pandas series van VvN codes
