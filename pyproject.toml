@@ -11,7 +11,7 @@ Issues = "https://github.com/Spheer-ai/veg2hab/issues"
 Source = "https://github.com/Spheer-ai/veg2hab"
 
 [tool.poetry.scripts]
-veg2hab = "veg2hab.__main__:main"
+veg2hab = "veg2hab.__main__:veg2hab"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
