@@ -58,11 +58,11 @@ def _decorate_click(func: Callable, param_schema: Dict):
 
 
 def _get_argument_description(description: str, param_schema: Dict):
-    description += "\n\n"
+    description += "\n\nArguments:\n\n"
     for field_name, field_info in param_schema["properties"].items():
         if field_name in param_schema["required"]:
             description += (
-                f" - {field_name.upper()}: {field_info.get('description', '')}\n\n"
+                f"  {field_name.upper()}: {field_info.get('description', '')}\n\n"
             )
     return description
 
