@@ -324,3 +324,8 @@ def calc_nr_of_unresolved_habitatkeuzes_per_row(gdf):
             ]
         )
     )
+
+
+def determine_if_minimum_oppervlak_is_reached(gdf):
+    assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
+    assert "area" in gdf.columns, "area kolom niet aanwezig in gdf"
