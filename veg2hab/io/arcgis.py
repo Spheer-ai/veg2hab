@@ -63,7 +63,7 @@ class ArcGISInterface(Interface):
             )
             logging.error(str(e))
 
-    def instantiate_loggers(self) -> None:
+    def instantiate_loggers(self, log_level: int = logging.INFO) -> None:
         """Instantiate the loggers for the module."""
 
         class ArcpyAddMessageHandler(logging.Handler):
@@ -82,7 +82,7 @@ class ArcGISInterface(Interface):
 
         logging.basicConfig(
             format="%(asctime)s - %(levelname)s - %(message)s",
-            level=logging.INFO,
+            level=log_level,
             handlers=[ArcpyAddMessageHandler()],
         )
 
