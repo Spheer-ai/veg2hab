@@ -86,6 +86,6 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     final_format = kartering.as_final_format()
 
-    logging.info("Omzetting is successvol, wordt nu weggeschreven naar .gpkg")
+    logging.info("Omzetting is successvol, wordt nu weggeschreven naar een geopackage")
 
-    Interface.get_instance().output_shapefile(params.output_bestand, final_format)
+    Interface.get_instance().output_shapefile(params.output, final_format)

@@ -1,11 +1,11 @@
 import logging
+from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import click
 from geopandas.geodataframe import GeoDataFrame
-from datetime import datetime, timezone
 from typing_extensions import override
 
 from .common import AccessDBInputs, Interface, ShapefileInputs
@@ -30,7 +30,10 @@ def _decorate_click(func: Callable, param_schema: Dict):
         is_required = field_name in param_schema["required"]
 
         if field_info.get("format", "") == "path":
-            param_type = click.Path(exists=True)
+            if field_name == "output":
+                param_type = click.Path(exists=False, writable=True)
+            else:
+                param_type = click.Path(exists=True)
         else:
             param_type = str
 
