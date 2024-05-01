@@ -1,8 +1,8 @@
 import logging
 import os.path
-from pathlib import Path
 import random
 import string
+from pathlib import Path
 from typing import List, Optional
 
 import geopandas as gpd
@@ -41,7 +41,9 @@ class ArcGISInterface(Interface):
         return Path(filename)
 
     @override
-    def output_shapefile(self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame) -> None:
+    def output_shapefile(
+        self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame
+    ) -> None:
         # TODO use shapefile_id as output
         import arcpy
 
