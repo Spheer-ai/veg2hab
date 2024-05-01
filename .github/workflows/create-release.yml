@@ -6,9 +6,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    # branches:
+    #   - master
     inputs:
       tag:
         description: 'Tag to release'
+        default: 'v*.*.*'
         required: true
 
 permissions:
@@ -23,9 +26,9 @@ jobs:
       id: tag
       run: |
         if [[ ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-          echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=tag::${{ github.ref }}"
+          echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         fi
 
     - uses: actions/checkout@v4
@@ -38,23 +41,22 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry==1.5.1
-        poetry install --only-root
+        poetry install --without dev
 
-    # - name: Check versions
-    #   run: |
-    #     poetry verison == ${{ steps.tag.outputs.tag }}
-
-    - name: Build wheel
+    - name: Check versions
       run: |
-        poetry version ${{ steps.tag.outputs.tag }}
-        poetry build
+        poetry run python release.py check-versions ${{ steps.tag.outputs.tag }}
 
-    - name: Release
+    - name: Publish release to pypi
+      run: |
+        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+        poetry publish --build
+
+    - name: Create github release
       uses: softprops/action-gh-release@v2
       with:
         files: |
           ./dist/*
-          ./veg2hab/package_data/*
         tag_name: ${{ steps.tag.outputs.tag }}
         prerelease: false
         generate_release_notes: true
