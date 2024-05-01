@@ -9,7 +9,9 @@ from veg2hab.io.cli import CLIAccessDBInputs, CLIInterface, CLIShapefileInputs
 
 @click.group()
 @click.version_option(veg2hab.__version__)
-@click.option("-v", "--verbose", count=True, help="Increase verbosity, use -vv for debug info")
+@click.option(
+    "-v", "--verbose", count=True, help="Increase verbosity, use -vv for debug info"
+)
 def veg2hab(verbose: int):
     if verbose == 0:
         log_level = logging.WARNING
