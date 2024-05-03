@@ -104,6 +104,9 @@ class KeuzeStatus(Enum):
     # 1 Habitatvoorstel met kloppende mits
     DUIDELIJK = auto()
 
+    # Er is wel een keuze gemaakt, maar de minimum oppervlakte van het habitattype is niet gehaald
+    MINIMUM_OPP_NIET_GEHAALD = auto()
+
     # Geen habitatvoorstel met kloppende mits
     GEEN_KLOPPENDE_MITSEN = auto()
 
@@ -127,6 +130,7 @@ class KeuzeStatus(Enum):
 
     __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
+        "MINIMUM_OPP_NIET_GEHAALD": "Er is een habitatvoorstel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
         "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
         "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
         "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",

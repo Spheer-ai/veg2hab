@@ -360,6 +360,41 @@ def calc_nr_of_unresolved_habitatkeuzes_per_row(gdf):
     )
 
 
-def determine_if_minimum_oppervlak_is_reached(gdf):
+def apply_minimum_oppervlak(gdf):
     assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
     assert "area" in gdf.columns, "area kolom niet aanwezig in gdf"
+
+    # TODO: Dit naar de config
+    min_area = defaultdict(lambda: 100)
+    for habtype in ["H6110", "H7220"]:
+        min_area[habtype] = 10
+    for habtype in [
+        "H2180_A",
+        "H2180_B",
+        "H2180_C",
+        "H9110",
+        "H9120",
+        "H9160_A",
+        "H9160_B",
+        "H9190",
+        "H91D0",
+        "H91E0_A",
+        "H91E0_B",
+        "H91E0_C",
+        "H91F0",
+    ]:
+        min_area[habtype] = 1000
+
+    modified_gdf = gdf.copy()
+
+    # checken voor iedere habkeuze of het oppervlak boven min_area[keuze.habtype] is
+    def check_area(row):
+        for idx, keuze in enumerate(row.HabitatKeuze):
+            area = row.area * (row.VegTypeInfo[idx].percentage / 100)
+            if area < min_area[keuze.habtype]:
+                keuze.habtype = "H0000"
+                keuze.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
+
+    modified_gdf.apply(check_area, axis=1)
+
+    return modified_gdf
