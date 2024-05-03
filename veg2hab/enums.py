@@ -101,6 +101,9 @@ class KeuzeStatus(Enum):
     # 1 Habitatvoorstel met kloppende mits
     DUIDELIJK = auto()
 
+    # Er is wel een keuze gemaakt, maar de minimum oppervlakte van het habitattype is niet gehaald
+    MINIMUM_OPP_NIET_GEHAALD = auto()
+
     # Geen habitatvoorstel met kloppende mits
     GEEN_KLOPPENDE_MITSEN = auto()
 
@@ -125,6 +128,8 @@ class KeuzeStatus(Enum):
     def toelichting(self):
         if self == KeuzeStatus.DUIDELIJK:
             return "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek."
+        elif self == KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD:
+            return "Er is een habitatvoorstel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald."
         elif self == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
             return "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden."
         elif self == KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL:
