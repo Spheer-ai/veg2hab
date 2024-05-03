@@ -35,21 +35,24 @@ Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
  1. Open ArcGIS Pro
  2. Maak een nieuwe conda environment aan voor veg2hab (de default environment is read-only en niet geschikt om veg2hab in te installeren): 
     - Open de 'Package Manager'  
-        <img src="./images/package_manager.png" alt="package manager" width="200"/>
-    - Klik op het tandwiel naast 'Active Environment'
-    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als Source de default Environment.
+        <img src="./images/package_manager.png" alt="package manager" width="400"/>
+    - Klik op het tandwiel naast 'Active Environment'  
+        <img src="./images/package_manager.png" alt="package manager" width="400"/>
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
     - Selecteer de environment en druk op 'OK'.
- 1. Download en installeer veg2hab:
+ 3. Download en installeer veg2hab:
     - Klik op 'New notebook'
+        <img src="./images/package_manager.png" alt="package manager" width="400"/>
     - Download veg2hab met het commando `!pip install --upgrade veg2hab`
-    - Installeer veg2hab met het commando `import veg2hab`.
- 2. Installeer de veg2hab Python Toolbox:
+        <img src="./images/package_manager.png" alt="package manager" width="400"/>
+    - Installeer veg2hab met het commando `import veg2hab`
+ 4. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
+        <img src="./images/package_manager.png" alt="package manager" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
-
-![The Geoprocessing tab in ArcGIS Pro](./images/geoprocessing_tab.png)
+<img src="./images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
 
 
 ### Installatie op linux
