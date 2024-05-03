@@ -51,7 +51,7 @@ def gdf():
     '''
     return gpd.GeoDataFrame(
         {
-            "area": [MIN_AREA["H6110"], MIN_AREA["H1234"] * 0.8, MIN_AREA["H1234"], MIN_AREA["H2180_A"]],
+            "Opp": [MIN_AREA["H6110"], MIN_AREA["H1234"] * 0.8, MIN_AREA["H1234"], MIN_AREA["H2180_A"]],
             "VegTypeInfo": [
                 [VegTypeInfo(SBB=[], VvN=[], percentage=100)],
                 [VegTypeInfo(SBB=[], VvN=[], percentage=100)],
@@ -113,50 +113,50 @@ def extract_habtypen(gdf):
 
 def test_generic_habtype_minimum_area(gdf):
     # Te klein
-    subset = gdf.iloc[[1]]
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H0000"]] == extract_habtypen(gecheckt)
+    subset = gdf.iloc[[1]].copy()
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H0000"]] == extract_habtypen(subset)
     
     # Groot genoeg
     subset = gdf.iloc[[1]].copy()
     subset["area"] = MIN_AREA["H1234"] * 1.1
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H1234"]] == extract_habtypen(gecheckt)
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H1234"]] == extract_habtypen(subset)
 
 
-def test_small_large_minimum_area(gdf):
+def test_special_cases_minimum_area(gdf):
     # Precies groot genoeg
-    subset = gdf.iloc[0, 3]
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H7220", "H9110"]] == extract_habtypen(gecheckt)
+    subset = gdf.iloc[[0, 3]].copy()
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H7220"], ["H9110"]] == extract_habtypen(subset)
 
     # Omgewisseld; alleen H7220 is groot genoeg
-    subset = gdf.iloc[0, 3].copy()
-    subset["HabitatKeuze"] = subset.iloc[[1, 0]].HabitatKeuze
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H0000", "H7220"]] == extract_habtypen(gecheckt)
+    subset = gdf.iloc[[0, 3]].copy()
+    subset.HabitatKeuze.at[0], subset.HabitatKeuze.at[3] = subset.HabitatKeuze.at[3], subset.HabitatKeuze.at[0]
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H0000"], ["H7220"]] == extract_habtypen(subset)
 
 
 def test_complex_minimum_area(gdf):
-    # Precies groot genoeg voor 1, maar door complex te klein
-    subset = gdf.iloc[[2]]
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H0000", "H0000"]] == extract_habtypen(gecheckt)
+    # Precies groot genoeg voor 1 habtype, maar door complex te klein
+    subset = gdf.iloc[[2]].copy()
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H0000", "H0000"]] == extract_habtypen(subset)
 
     # Dubbel zo groot vlak, dus 60% is nu groot genoeg
     subset = gdf.iloc[[2]].copy()
     subset["area"] = MIN_AREA["H1234"] * 2
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H1234", "H0000"]] == extract_habtypen(gecheckt)
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H1234", "H0000"]] == extract_habtypen(subset)
 
     # Drie keer zo groot vlak, dus 60% en 40% zijn nu groot genoeg
+    subset = gdf.iloc[[2]].copy()
     subset["area"] = MIN_AREA["H1234"] * 3
-    gecheckt = apply_minimum_oppervlak(subset)
-    assert [["H1234", "H4321"]] == extract_habtypen(gecheckt)
+    subset["HabitatKeuze"] = apply_minimum_oppervlak(subset)
+    assert [["H1234", "H4321"]] == extract_habtypen(subset)
 
 
 def test_all_minimum_area(gdf):
-    # Alles is groot genoeg
-    gecheckt = apply_minimum_oppervlak(gdf)
-    assert [["H7220"], ["H1234"], ["H0000", "H0000"], ["H9110"]] == extract_habtypen(gecheckt)
+    gdf["HabitatKeuze"] = apply_minimum_oppervlak(gdf)
+    assert [["H7220"], ["H0000"], ["H0000", "H0000"], ["H9110"]] == extract_habtypen(gdf)
 
