@@ -34,17 +34,17 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven.
 Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
  1. Open ArcGIS Pro
  2. Maak een nieuwe conda environment aan voor veg2hab (de default environment is read-only en niet geschikt om veg2hab in te installeren): 
-    - Open de 'Package Manager'
+    - Open de 'Package Manager' ![Package Manager](./images/package_manager.png)
     - Klik op het tandwiel naast 'Active Environment'
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als Source de default Environment.
     - Selecteer de environment en druk op 'OK'.
  3. Download en installeer veg2hab:
-    1. Klik op 'New notebook'
-    2. Download veg2hab met het commando `!pip install --upgrade veg2hab`
-    3. Installeer veg2hab met het commando `import veg2hab`.
+    - Klik op 'New notebook'
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`
+    - Installeer veg2hab met het commando `import veg2hab`.
  4. Installeer de veg2hab Python Toolbox:
-    1. Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
-    2. Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
+    - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
