@@ -1,20 +1,55 @@
 # veg2hab
+
+- [veg2hab](#veg2hab)
+  - [Introductie](#introductie)
+  - [Installatie instructies](#installatie-instructies)
+    - [Installatie binnen ArcGIS Pro](#installatie-binnen-arcgis-pro)
+    - [Installatie op linux](#installatie-op-linux)
+  - [Gebruikershandleiding](#gebruikershandleiding)
+    - [Gebruikte Bronbestanden in de omzetting](#gebruikte-bronbestanden-in-de-omzetting)
+  - [Development](#development)
+    - [Lokale ontwikkeling](#lokale-ontwikkeling)
+    - [Nieuwe release](#nieuwe-release)
+  - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
+    - [Vlakbrede kolommen](#vlakbrede-kolommen)
+    - [Complex-deel-specifieke kolommen](#complex-deel-specifieke-kolommen)
+
+## Introductie
+
 **veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen. De library kan op 3 manieren gebruikt worden:
 
 - Als functionaliteit binnen andere (python) software;
 - Met de meegeleverde Command Line Interface;
 - Vanuit ArcGIS Pro.
 
+veg2hab wordt gedistribueerd via PyPI, waar alle historische versies te vinden zijn.
+
 ## Installatie instructies
 
-### Installatie binnen ArcGIS
-De applicatie staat nu op PyPi. Installatie vanaf PyPi is veruit het eenvoudigst
- 1. Open Arcgis en open 'New notebook'
- 2. Zorg ervoor dat je een schone conda environment gebruikt (dit mag niet de default environment zijn, deze is readonly)
- 3. Installeer veg2hab met `!pip install --upgrade veg2hab`
- 4. Gebruik `import veg2hab` en `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
- 5. Ga naar 'Add Toolbox (file)' in de command search en voeg de toolbox toe aan het project.
- 6. Veg2hab komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
+### Installatie binnen ArcGIS Pro
+
+Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. 
+Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven. 
+
+Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
+ 1. Open ArcGIS Pro
+ 2. Maak een nieuwe conda environment aan voor veg2hab (de default environment is read-only en niet geschikt om veg2hab in te installeren): 
+    - Open de 'Package Manager'
+    - Klik op het tandwiel naast 'Active Environment'
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als Source de default Environment.
+    - Selecteer de environment en druk op 'OK'.
+ 3. Download en installeer veg2hab:
+    1. Klik op 'New notebook'
+    2. Download veg2hab met het commando `!pip install --upgrade veg2hab`
+    3. Installeer veg2hab met het commando `import veg2hab`.
+ 4. Installeer de veg2hab Python Toolbox:
+    1. Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
+    2. Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
+
+Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
+
+![The Geoprocessing tab in ArcGIS Pro](./images/geoprocessing_tab.png)
+
 
 ### Installatie op linux
 Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
@@ -24,6 +59,8 @@ apt install mdbtools
 voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ## Gebruikershandleiding
+
+Veg2hab komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
 
 ### Gebruikte Bronbestanden in de omzetting
 Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
