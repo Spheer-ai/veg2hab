@@ -1,11 +1,9 @@
 # veg2hab
-**veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen.
+**veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen. De library kan op 3 manieren gebruikt worden:
 
-Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
- - WasWordtLijst, dit bestand zet SBB vegetatietypes om naar VvN vegetatietypes
- - DefinitieTabel, dit is een samenvatting van de profieldocumenten.
- - FGR kaart, Fysisch-Geografische Regio's
- - Let op voor nieuwe versies: er komen nog meer bronbestanden bij!
+- Als functionaliteit binnen andere (python) software;
+- Met de meegeleverde Command Line Interface;
+- Vanuit ArcGIS Pro.
 
 ## Installatie instructies
 
@@ -24,6 +22,15 @@ Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg me
 apt install mdbtools
 ```
 voor meer informatie, zie: https://github.com/mdbtools/mdbtools
+
+## Gebruikershandleiding
+
+### Gebruikte Bronbestanden in de omzetting
+Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
+ - WasWordtLijst, dit bestand zet SBB vegetatietypes om naar VvN vegetatietypes
+ - DefinitieTabel, dit is een samenvatting van de profieldocumenten.
+ - FGR kaart, Fysisch-Geografische Regio's
+ - Let op voor nieuwe versies: er komen nog meer bronbestanden bij!
 
 
 ## Development
