@@ -35,7 +35,7 @@ Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
  1. Open ArcGIS Pro
  2. Maak een nieuwe conda environment aan voor veg2hab (de default environment is read-only en niet geschikt om veg2hab in te installeren): 
     - Open de 'Package Manager'  
-    <img src="./images/package_manager.png" alt="package manager" width="200"/>
+        <img src="./images/package_manager.png" alt="package manager" width="200"/>
     - Klik op het tandwiel naast 'Active Environment'
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als Source de default Environment.
     - Selecteer de environment en druk op 'OK'.
