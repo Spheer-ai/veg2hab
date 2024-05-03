@@ -6,7 +6,8 @@
     - [Installatie binnen ArcGIS Pro](#installatie-binnen-arcgis-pro)
     - [Installatie op linux](#installatie-op-linux)
   - [Gebruikershandleiding](#gebruikershandleiding)
-    - [Gebruikte Bronbestanden in de omzetting](#gebruikte-bronbestanden-in-de-omzetting)
+    - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
+    - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
   - [Development](#development)
     - [Lokale ontwikkeling](#lokale-ontwikkeling)
     - [Nieuwe release](#nieuwe-release)
@@ -52,6 +53,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
+
 <img src="./images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
 
 
@@ -64,14 +66,22 @@ voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ## Gebruikershandleiding
 
+### Gebruik in ArcGIS Pro
+
 Veg2hab komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
 
-### Gebruikte Bronbestanden in de omzetting
-Hiervoor gebruikt het de volgende bronbestanden. Deze bestanden worden automatisch mee geinstalleerd bij het installeren van veg2hab en zijn niet aanpasbaar:
- - WasWordtLijst, dit bestand zet SBB vegetatietypes om naar VvN vegetatietypes
- - DefinitieTabel, dit is een samenvatting van de profieldocumenten.
- - FGR kaart, Fysisch-Geografische Regio's
+
+### Bronbestanden die veg2hab gebruikt
+
+**veg2hab** is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. 
+
+Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker: 
+
+ - WasWordtLijst (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten
+ - DefinitieTabel (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten
+ - Fysisch-Geografische Regio kaart (versie xxxxx)
  - Let op voor nieuwe versies: er komen nog meer bronbestanden bij!
+
 
 
 ## Development
