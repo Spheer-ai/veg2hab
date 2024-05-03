@@ -29,9 +29,8 @@ veg2hab wordt gedistribueerd via PyPI, waar alle historische versies te vinden z
 ### Installatie binnen ArcGIS Pro
 
 Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. 
-Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven. 
+Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven: 
 
-Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
  1. Open ArcGIS Pro
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren): 
     - Open de 'Package Manager'  
@@ -41,15 +40,15 @@ Om veg2hab te gebruiken in ArcGIS, moeten de volgende stappen doorlopen worden:
         <img src="./images/new_environment.png" alt="new python environment" width="400"/>  
         <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
- 1. Download en installeer veg2hab:
-    - Klik op 'New notebook'
+ 3. Download en installeer veg2hab:
+    - Klik op 'New notebook'  
         <img src="./images/package_manager.png" alt="package manager" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`  
         <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
     - Installeer veg2hab met het commando `import veg2hab`
- 2. Installeer de veg2hab Python Toolbox:
+ 4. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie  
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
