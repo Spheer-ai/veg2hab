@@ -16,6 +16,7 @@ from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
+    apply_minimum_oppervlak,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
@@ -263,7 +264,9 @@ def mozaiekregel_habtype_percentage_dict_to_string(
 
 
 def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
-    """ """
+    """
+    Herformatteert een habitatkeuze en bijbehorende vegtypeinfo naar de kolommen zoals in het Gegevens Leverings Protocol
+    """
 
     keuze, vegtypeinfo = print_info
 
@@ -277,12 +280,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
             KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
+            KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
         ]:
             voorstel = keuze.habitatvoorstellen[0]
             series_dict = {
                 f"Habtype{idx}": keuze.habtype,
                 f"Perc{idx}": vegtypeinfo.percentage,
-                f"Opp{idx}": opp * vegtypeinfo.percentage,
+                f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking,
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
@@ -357,7 +361,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
         series_dict = {
             f"Habtype{idx}": keuze.habtype,
             f"Perc{idx}": str(vegtypeinfo.percentage),
-            f"Opp{idx}": str(opp * vegtypeinfo.percentage),
+            f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
             f"Opm{idx}": keuze.opmerking,
             f"_Mits_opm{idx}": keuze.mits_opmerking,
@@ -1083,6 +1087,8 @@ class Kartering:
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
+        self.check_minimum_oppervlak()
+
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
@@ -1130,7 +1136,12 @@ class Kartering:
     def check_minimum_oppervlak(self) -> None:
         """
         Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
+
+        NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
         """
+        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+
+        self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
 
     def as_final_format(self) -> pd.DataFrame:
         """
@@ -1154,7 +1165,7 @@ class Kartering:
                 "_LokVegTyp",
                 "_LokVrtNar",
             ]
-        ].copy()
+        ]
 
         # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
         base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
