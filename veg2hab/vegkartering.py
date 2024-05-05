@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import ClassVar, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -608,6 +608,18 @@ def _single_to_multi(
 
 
 class Kartering:
+    VEGTYPE_COLS: ClassVar[List[str]] = [
+        "ElmID",
+        "Opp",
+        "VegTypeInfo",
+        "Datum",
+        "Opmerking",
+        "_LokVegTyp",
+        "_LokVrtNar",
+        "geometry",
+    ]
+    HABTYPE_COLS: ClassVar[List[str]] = []
+
     def __init__(self, gdf: gpd.GeoDataFrame):
         self.gdf = gdf
 
@@ -944,6 +956,27 @@ class Kartering:
             wwl.toevoegen_VvN_aan_List_VegTypeInfo
         )
 
+    @staticmethod
+    def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
+        result = pd.Series()
+        for idx, info in enumerate(vegtypeinfos, 1):
+            result[f"SBB{idx}"] = ",".join(
+                str(sbb) for sbb in info.SBB
+            )  # convert to pandas string..
+            result[f"VvN{idx}"] = ",".join(str(vvn) for vvn in info.VvN)
+            result[f"perc{idx}"] = info.percentage
+        return result
+
+    def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
+        # TODO: fix dtypes (string dtypes would be nice)
+        self.gdf[[v for v in self.VEGTYPE_COLS if v != "VegTypeInfo"]]
+        vegtypes_df = self.gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
+        return vegtypes_df
+
+    @classmethod
+    def from_editable(cls, gdf: gpd.GeoDataFrame) -> Self:
+        pass
+
     def apply_deftabel(self, dt: "DefinitieTabel") -> None:
         """
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
@@ -1157,7 +1190,7 @@ class Kartering:
 
         self.gdf = apply_functionele_samenhang(self.gdf)
 
-    def as_final_format(self) -> pd.DataFrame:
+    def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
