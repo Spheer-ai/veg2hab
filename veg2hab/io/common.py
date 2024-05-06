@@ -27,10 +27,6 @@ class AccessDBInputs(BaseModel):
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
-    lok_vegtypen_col: Optional[str] = Field(
-        default=None,
-        description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
-    )
     output: Optional[Path] = Field(
         default=None,
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
@@ -43,14 +39,14 @@ class ShapefileInputs(BaseModel):
     shapefile: str = Field(
         description="Locatie van de vegetatiekartering",
     )
-    elmid_col: str = Field(
-        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
-    )
     vegtype_col_format: Literal["single", "multi"] = Field(
         description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
     )
     sbb_of_vvn: Literal["VvN", "SBB", "beide"] = Field(
         description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    )
+    elmid_col: Optional[str] = Field(
+        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
     )
     datum_col: Optional[str] = Field(
         default=None,
@@ -60,11 +56,11 @@ class ShapefileInputs(BaseModel):
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
-    SBB_col: Optional[str] = Field(
+    sbb_col: Optional[str] = Field(
         default=None,
         description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )
-    VvN_col: Optional[str] = Field(
+    vvn_col: Optional[str] = Field(
         default=None,
         description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )

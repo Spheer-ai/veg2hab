@@ -1,7 +1,5 @@
 import sys
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from veg2hab.io.arcgis import ArcGISAccessDBInputs, ArcGISShapefileInputs
 
@@ -15,8 +13,8 @@ def test_to_parameter_list():
 
     param_list = ArcGISShapefileInputs.to_parameter_list()
 
-    assert len(param_list) == 11
+    assert len(param_list) == 12
 
     param_list = ArcGISAccessDBInputs.to_parameter_list()
 
-    assert len(param_list) == 5
+    assert len(param_list) == 6
