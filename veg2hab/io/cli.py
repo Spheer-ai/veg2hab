@@ -26,7 +26,7 @@ class CLIInterface(Interface):
 
 
 def _decorate_click(func: Callable, param_schema: Dict):
-    for field_name, field_info in reversed(param_schema["properties"].items()):
+    for field_name, field_info in reversed(list(param_schema["properties"].items())):
         is_required = field_name in param_schema["required"]
 
         if field_info.get("format", "") == "path":

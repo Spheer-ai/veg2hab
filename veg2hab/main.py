@@ -53,7 +53,6 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
             access_mdb_path=params.access_mdb_path,
             opmerkingen_column=params.opmerking_col,
             datum_column=params.datum_col,
-            lok_vegtypen_column=params.lok_vegtypen_col,
         )
     elif isinstance(params, ShapefileInputs):
         kartering = Kartering.from_shapefile(
@@ -63,11 +62,11 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
             sbb_of_vvn=params.sbb_of_vvn,
             datum_col=params.datum_col,
             opmerking_col=params.opmerking_col,
-            SBB_col=params.SBB_col,
-            VvN_col=params.VvN_col,
+            SBB_col=params.sbb_col,
+            VvN_col=params.vvn_col,
             split_char=params.split_char,
             perc_col=params.perc_col,
-            lok_vegtypen_column=params.lok_vegtypen_col,
+            lok_vegtypen_col=params.lok_vegtypen_col,
         )
     else:
         raise RuntimeError("Something went wrong with the input parameters")
