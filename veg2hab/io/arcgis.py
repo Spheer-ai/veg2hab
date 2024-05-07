@@ -2,7 +2,8 @@ import logging
 import os.path
 import random
 import string
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 import geopandas as gpd
 from typing_extensions import Self, override
@@ -20,7 +21,7 @@ class ArcGISInterface(Interface):
         return os.path.join(file_location, random_name)
 
     @override
-    def shape_id_to_filename(self, shapefile_id: str) -> str:
+    def shape_id_to_filename(self, shapefile_id: str) -> Path:
         import arcpy
 
         filename = self._generate_random_gpkg_name("vegkart")
@@ -37,13 +38,19 @@ class ArcGISInterface(Interface):
         if status.status != 4:
             raise RuntimeError(f"Failed to convert shapefile to GeoPackage: {status}")
 
-        return filename
+        return Path(filename)
 
-    def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
+    @override
+    def output_shapefile(
+        self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame
+    ) -> None:
         # TODO use shapefile_id as output
         import arcpy
 
-        filename = self._generate_random_gpkg_name("habkart")
+        if shapefile_id is None:
+            filename = self._generate_random_gpkg_name("habkart")
+        else:
+            filename = str(shapefile_id)
 
         gdf.to_file(filename, driver="GPKG", layer="main")
 
@@ -63,6 +70,7 @@ class ArcGISInterface(Interface):
             )
             logging.error(str(e))
 
+    @override
     def instantiate_loggers(self, log_level: int = logging.INFO) -> None:
         """Instantiate the loggers for the module."""
 
