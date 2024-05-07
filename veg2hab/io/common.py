@@ -16,7 +16,7 @@ class AccessDBInputs(BaseModel):
     shapefile: str = Field(
         description="Locatie van de vegetatiekartering",
     )
-    ElmID_col: str = Field(
+    elmid_col: str = Field(
         description="De kolomnaam van de ElementID in de Shapefile; deze wordt gematched aan de Element tabel in de AccessDB",
     )
     access_mdb_path: Path = Field(
@@ -41,7 +41,7 @@ class ShapefileInputs(BaseModel):
     shapefile: str = Field(
         description="Locatie van de vegetatiekartering",
     )
-    ElmID_col: str = Field(
+    elmid_col: str = Field(
         description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
     )
     vegtype_col_format: Literal["single", "multi"] = Field(
@@ -131,7 +131,7 @@ class Interface(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def instantiate_loggers(self) -> None:
+    def instantiate_loggers(self, log_level: int) -> None:
         """Instantiate the loggers for the module."""
 
     def get_config(self) -> Veg2HabConfig:
