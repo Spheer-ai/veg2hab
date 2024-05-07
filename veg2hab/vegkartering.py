@@ -16,6 +16,7 @@ from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
+    apply_minimum_oppervlak,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
@@ -1124,6 +1125,18 @@ class Kartering:
 
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
+
+    def check_minimum_oppervlak(self) -> None:
+        """
+        Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
+
+        NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
+        """
+        assert (
+            "HabitatKeuze" in self.gdf.columns
+        ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+
+        self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
 
     def as_final_format(self) -> pd.DataFrame:
         """
