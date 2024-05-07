@@ -82,7 +82,6 @@ class HabitatKeuze:
     status: KeuzeStatus
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
-    zelfstandig: bool
     habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
     opmerking: str = ""
     mits_opmerking: str = ""
@@ -90,6 +89,7 @@ class HabitatKeuze:
     debug_info: Optional[str] = ""
 
     def __post_init__(self):
+        # Validatie
         if self.status in [
             KeuzeStatus.DUIDELIJK,
         ]:
@@ -109,7 +109,6 @@ class HabitatKeuze:
 
         if self.habtype in ["H0000", "HXXXX"]:
             assert self.kwaliteit == Kwaliteit.NVT
-            assert self.zelfstandig
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
@@ -119,13 +118,19 @@ class HabitatKeuze:
             status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
-            zelfstandig=True,
             opmerking="Er is een mozaiekregel waarvoor nog te weinig info is om een keuze te maken.",
             habitatvoorstellen=habitatvoorstellen,
             mits_opmerking="",
             mozaiek_opmerking="",
             debug_info="",
         )
+
+    @property
+    def zelfstandig(self):
+        if self.habtype in ["H0000", "HXXXX"]:
+            return True
+
+        return is_mozaiek_type_present(self.habitatvoorstellen, GeenMozaiekregel)
 
 
 def rank_habitatkeuzes(
@@ -179,7 +184,6 @@ def try_to_determine_habkeuze(
                 status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
                 habtype="H0000",
                 kwaliteit=all_voorstellen[0].kwaliteit,
-                zelfstandig=True,
                 habitatvoorstellen=all_voorstellen,
                 opmerking="Geen van de opgegeven vegetatietypen is teruggevonden in de definitietabel.",
                 mits_opmerking="",
@@ -192,7 +196,6 @@ def try_to_determine_habkeuze(
             status=KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
             habtype="H0000",
             kwaliteit=all_voorstellen[0].kwaliteit,
-            zelfstandig=True,
             habitatvoorstellen=all_voorstellen,
             opmerking="Er zijn geen vegetatietypen opgegeven voor dit vlak.",
             mits_opmerking="",
@@ -252,11 +255,10 @@ def try_to_determine_habkeuze(
                     status=KeuzeStatus.DUIDELIJK,
                     habtype=voorstel.habtype,
                     kwaliteit=voorstel.kwaliteit,
-                    zelfstandig=True,
                     habitatvoorstellen=[voorstel],
                     opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                    mits_opmerking=str(voorstel.mits),
-                    mozaiek_opmerking=str(voorstel.mozaiek),
+                    mits_opmerking=f"Mits: {str(voorstel.mits)}, {str(voorstel.mits.evaluation)}",
+                    mozaiek_opmerking=f"Mozaiekregel: {str(voorstel.mozaiek)}, {str(voorstel.mozaiek.evaluation)}",
                     debug_info="",
                 )
 
@@ -266,11 +268,10 @@ def try_to_determine_habkeuze(
                     status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
                     habtype="HXXXX",
                     kwaliteit=Kwaliteit.NVT,
-                    zelfstandig=True,
                     habitatvoorstellen=true_voorstellen,
                     opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                    mits_opmerking=f"Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in true_voorstellen]}",
-                    mozaiek_opmerking=f"Kloppende mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in true_voorstellen]}",
+                    mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in true_voorstellen]}",
+                    mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in true_voorstellen]}",
                     debug_info="",
                 )
 
@@ -301,11 +302,10 @@ def try_to_determine_habkeuze(
                 status=KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                zelfstandig=True,
                 habitatvoorstellen=return_voorstellen,
                 opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                mits_opmerking=f"Alle niet false mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in return_voorstellen]}",
-                mozaiek_opmerking=f"Alle niet false mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in return_voorstellen]}",
+                mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in return_voorstellen]}",
+                mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
                 debug_info="",
             )
 
@@ -332,11 +332,10 @@ def try_to_determine_habkeuze(
                 status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                zelfstandig=True,
                 habitatvoorstellen=return_voorstellen,
                 opmerking="Dit vlak heeft mozaiekregels waarvoor nog te weinig info is om een keuze te maken. Dit gebeurt als het vlak omringd wordt door meer dan 90% HXXXX. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                mits_opmerking=f"Kloppende mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in return_voorstellen]}",
-                mozaiek_opmerking=f"Mozaiekregel(s) met te weinig info: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in return_voorstellen]}",
+                mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in return_voorstellen]}",
+                mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
                 debug_info="",
             )
 
@@ -345,11 +344,10 @@ def try_to_determine_habkeuze(
         status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
         habtype="H0000",
         kwaliteit=Kwaliteit.NVT,
-        zelfstandig=True,
         habitatvoorstellen=all_voorstellen,
         opmerking=f"Er zijn geen habitatvoorstellen waarvan zowel de mits als de mozaiekregel klopt. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek].",
-        mits_opmerking=f"Mitsen waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits)] for voorstel in all_voorstellen]}",
-        mozaiek_opmerking=f"Mozaiekregels waaraan mogelijk niet is voldaan: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek)] for voorstel in all_voorstellen]}",
+        mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in all_voorstellen]}",
+        mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in all_voorstellen]}",
         debug_info="",
     )
 

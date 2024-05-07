@@ -33,6 +33,53 @@ voor een extra 100% door hun eigen habitattype omringd worden.
 
 @pytest.fixture
 def gdf():
+    voorstellen = [
+        HabitatVoorstel(
+            onderbouwend_vegtype=None,
+            vegtype_in_dt=None,
+            habtype="H1",
+            kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=StandaardMozaiekregel(
+                habtype="H1",
+                alleen_zelfstandig=True,
+                alleen_goede_kwaliteit=True,
+            ),
+            match_level=None,
+        ),
+        HabitatVoorstel(
+            onderbouwend_vegtype=None,
+            vegtype_in_dt=None,
+            habtype="H2",
+            kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=GeenMozaiekregel(),
+            match_level=None,
+        ),
+        HabitatVoorstel(
+            onderbouwend_vegtype=None,
+            vegtype_in_dt=None,
+            habtype="H2",
+            kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=GeenMozaiekregel(),
+            match_level=None,
+        ),
+        HabitatVoorstel(
+            onderbouwend_vegtype=None,
+            vegtype_in_dt=None,
+            habtype="H3",
+            kwaliteit=Kwaliteit.GOED,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=GeenMozaiekregel(),
+            match_level=None,
+        ),
+    ]
+
     return gpd.GeoDataFrame(
         {
             "HabitatKeuze": [
@@ -41,12 +88,11 @@ def gdf():
                         status=KeuzeStatus.DUIDELIJK,
                         habtype="H1",
                         kwaliteit=Kwaliteit.GOED,
-                        zelfstandig=True,
                         opmerking="",
                         mits_opmerking="",
                         mozaiek_opmerking="",
                         debug_info="",
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[voorstellen[0]],
                     )
                 ],
                 [
@@ -54,12 +100,11 @@ def gdf():
                         status=KeuzeStatus.DUIDELIJK,
                         habtype="H2",
                         kwaliteit=Kwaliteit.GOED,
-                        zelfstandig=True,
                         opmerking="",
                         mits_opmerking="",
                         mozaiek_opmerking="",
                         debug_info="",
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[voorstellen[1]],
                     )
                 ],
                 [
@@ -67,12 +112,11 @@ def gdf():
                         status=KeuzeStatus.DUIDELIJK,
                         habtype="H2",
                         kwaliteit=Kwaliteit.GOED,
-                        zelfstandig=True,
                         opmerking="",
                         mits_opmerking="",
                         mozaiek_opmerking="",
                         debug_info="",
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[voorstellen[2]],
                     )
                 ],
                 [
@@ -80,78 +124,21 @@ def gdf():
                         status=KeuzeStatus.DUIDELIJK,
                         habtype="H3",
                         kwaliteit=Kwaliteit.GOED,
-                        zelfstandig=True,
                         opmerking="",
                         mits_opmerking="",
                         mozaiek_opmerking="",
                         debug_info="",
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[voorstellen[3]],
                     )
                 ],
             ],
             "ElmID": [1, 2, 3, 4],
             "mozaiek_present": [True, False, False, False],
             "HabitatVoorstel": [
-                [
-                    [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H1",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=StandaardMozaiekregel(
-                                habtype="H1",
-                                alleen_zelfstandig=True,
-                                alleen_goede_kwaliteit=True,
-                            ),
-                            match_level=None,
-                        )
-                    ]
-                ],
-                [
-                    [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H2",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
-                    ]
-                ],
-                [
-                    [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H2",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
-                    ]
-                ],
-                [
-                    [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H3",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
-                    ]
-                ],
+                [[voorstellen[0]]],
+                [[voorstellen[1]]],
+                [[voorstellen[2]]],
+                [[voorstellen[3]]],
             ],
             "geometry": [
                 Polygon([(0, 0), (1, 0), (1, 3), (0, 3), (0, 0)]),
@@ -176,7 +163,9 @@ def test_warning_buffer_equals_zero(gdf):
 def test_single_shape(gdf):
     # Enkel 1
     pre = gdf[gdf["ElmID"].isin([1])]
-    post = pd.DataFrame({"ElmID": [1], "dict": [{("H1", True, Kwaliteit.GOED): 100.0}]})
+    post = pd.DataFrame(
+        {"ElmID": [1], "dict": [{("H1", False, Kwaliteit.GOED): 100.0}]}
+    )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
         gdf[["ElmID", "HabitatKeuze"]],
@@ -190,7 +179,6 @@ def test_single_shape_matig_mozaiek(gdf):
     # Enkel 1
     pre = gdf[gdf["ElmID"].isin([1])]
     pre["HabitatKeuze"].iloc[0][0].kwaliteit = Kwaliteit.MATIG
-    pre["HabitatKeuze"].iloc[0][0].zelfstandig = False
     post = pd.DataFrame(
         {"ElmID": [1], "dict": [{("H1", False, Kwaliteit.MATIG): 100.0}]}
     )
@@ -211,7 +199,7 @@ def test_two_shapes(gdf):
             "ElmID": [1],
             "dict": [
                 {
-                    ("H1", True, Kwaliteit.GOED): 100.0,
+                    ("H1", False, Kwaliteit.GOED): 100.0,
                     ("H2", True, Kwaliteit.GOED): 12.5,
                 },
             ],
@@ -234,7 +222,7 @@ def test_habtype_percentage_addition(gdf):
             "ElmID": [1],
             "dict": [
                 {
-                    ("H1", True, Kwaliteit.GOED): 100.0,
+                    ("H1", False, Kwaliteit.GOED): 100.0,
                     ("H2", True, Kwaliteit.GOED): 25.0,
                 },
             ],
@@ -257,7 +245,7 @@ def test_two_habtypes(gdf):
             "ElmID": [1],
             "dict": [
                 {
-                    ("H1", True, Kwaliteit.GOED): 100.0,
+                    ("H1", False, Kwaliteit.GOED): 100.0,
                     ("H2", True, Kwaliteit.GOED): 12.5,
                     ("H3", True, Kwaliteit.GOED): 12.5,
                 },
@@ -281,7 +269,7 @@ def test_all_shapes(gdf):
             "ElmID": [1],
             "dict": [
                 {
-                    ("H1", True, Kwaliteit.GOED): 100.0,
+                    ("H1", False, Kwaliteit.GOED): 100.0,
                     ("H2", True, Kwaliteit.GOED): 25.0,
                     ("H3", True, Kwaliteit.GOED): 12.5,
                 },
@@ -310,12 +298,12 @@ def test_multiple_mozaiek_present_shapes(gdf):
             "ElmID": [1, 2],
             "dict": [
                 {
-                    ("H1", True, Kwaliteit.GOED): 100.0,
-                    ("H2", True, Kwaliteit.GOED): 12.5,
+                    ("H1", False, Kwaliteit.GOED): 100.0,
+                    ("H2", False, Kwaliteit.GOED): 12.5,
                 },
                 {
-                    ("H1", True, Kwaliteit.GOED): 25.0,
-                    ("H2", True, Kwaliteit.GOED): 100.0,
+                    ("H1", False, Kwaliteit.GOED): 25.0,
+                    ("H2", False, Kwaliteit.GOED): 100.0,
                 },
             ],
         }
