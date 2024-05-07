@@ -44,7 +44,6 @@ class SBB:
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )
         if code in niet_geautomatiseerde_sbb:
-            print(f"De SBB code {code} is niet geautomatiseerd")
             self.klasse = code
             return
 

@@ -48,7 +48,7 @@
         "alleen_goede_kwaliteit": "True"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H9160_B": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige en mozaïekvegetaties van H2310": {
         "type": "StandaardMozaiekregel",
@@ -87,10 +87,10 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H9190": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H9120": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H7230": {
         "type": "StandaardMozaiekregel",
@@ -99,7 +99,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H2140_A en niet dominant": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H9160_A": {
         "type": "StandaardMozaiekregel",
@@ -150,7 +150,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met goede zelfstandige vegetaties van H4030; alle matige vegetaties maken maximaal 20% van het habitattype uit èn zijn maximaal 1 ha groot": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H91F0": {
         "type": "StandaardMozaiekregel",
@@ -171,7 +171,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met goede vegetaties van H4030; alle matige vegetaties maken maximaal 20% van het habitattype uit èn zijn maximaal 1 ha groot": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H3150": {
         "type": "StandaardMozaiekregel",
@@ -228,7 +228,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H9160_A": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige en mozaïekvegetaties van H2110": {
         "type": "StandaardMozaiekregel",
@@ -285,7 +285,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H7110_B en maximaal 10% van het habitattype uitmakend": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige en mozaïekvegetaties van H3260_A": {
         "type": "StandaardMozaiekregel",
@@ -294,7 +294,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met goede zelfstandige vegetaties van H2310; alle matige vegetaties maken maximaal 20% van het habitattype uit èn zijn maximaal 1 ha groot": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H3110": {
         "type": "StandaardMozaiekregel",
@@ -309,7 +309,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H91F0": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige en mozaïekvegetaties van H4030": {
         "type": "StandaardMozaiekregel",
@@ -336,7 +336,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met goede zelfstandige vegetaties van H6210; alle mozaïekvegetaties maken maximaal 50% van het habitattype uit": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H1310_A": {
         "type": "StandaardMozaiekregel",
@@ -357,13 +357,13 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met goede zelfstandige vegetaties van H4010_A; alle matige vegetaties maken maximaal 20% van het habitattype uit èn zijn maximaal 1 ha groot": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in fijnschalig mozaïek met goede zelfstandige vegetaties van H3130": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H91D0": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H91E0_C": {
         "type": "StandaardMozaiekregel",
@@ -372,7 +372,7 @@
         "alleen_goede_kwaliteit": "False"
     },
     "alleen in mozaïek met of als rand langs zelfstandige vegetaties van H9110": {
-        "type": "PlaceholderMozaiekregel"
+        "type": "NietGeimplementeerdeMozaiekregel"
     },
     "alleen in mozaïek met zelfstandige vegetaties van H7140_B": {
         "type": "StandaardMozaiekregel",

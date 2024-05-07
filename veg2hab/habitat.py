@@ -9,7 +9,11 @@ from veg2hab.criteria import (
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, PlaceholderMozaiekregel
+from veg2hab.mozaiek import (
+    GeenMozaiekregel,
+    MozaiekRegel,
+    NietGeimplementeerdeMozaiekregel,
+)
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
@@ -57,7 +61,7 @@ class HabitatVoorstel:
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
         )
-    
+
     @classmethod
     def HXXXX_niet_geautomatiseerd_SBB(cls, info: "VegTypeInfo"):
         assert len(info.SBB) > 0
