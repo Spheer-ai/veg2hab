@@ -19,13 +19,17 @@ class AccessDBInputs(BaseModel):
     access_mdb_path: Path = Field(
         description="Locatie van de .mdb file van de digitale standaard",
     )
-    opmerkingen_column: Optional[str] = Field(
+    datum_col: Optional[str] = Field(
+        default=None,
+        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+    )
+    opmerking_col: Optional[str] = Field(
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
-    datum_column: Optional[str] = Field(
+    output: Optional[Path] = Field(
         default=None,
-        description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
 
 
@@ -35,14 +39,14 @@ class ShapefileInputs(BaseModel):
     shapefile: str = Field(
         description="Locatie van de vegetatiekartering",
     )
-    elmid_col: str = Field(
-        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
-    )
     vegtype_col_format: Literal["single", "multi"] = Field(
         description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
     )
     sbb_of_vvn: Literal["VvN", "SBB", "beide"] = Field(
         description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    )
+    elmid_col: Optional[str] = Field(
+        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
     )
     datum_col: Optional[str] = Field(
         default=None,
@@ -52,11 +56,11 @@ class ShapefileInputs(BaseModel):
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
     )
-    SBB_col: Optional[str] = Field(
+    sbb_col: Optional[str] = Field(
         default=None,
         description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )
-    VvN_col: Optional[str] = Field(
+    vvn_col: Optional[str] = Field(
         default=None,
         description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
     )
@@ -71,6 +75,10 @@ class ShapefileInputs(BaseModel):
     lok_vegtypen_col: Optional[str] = Field(
         default=None,
         description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
+    )
+    output: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
 
 
@@ -91,12 +99,14 @@ class Interface(metaclass=ABCMeta):
             Interface.__instance = object.__new__(cls)
         return Interface.__instance
 
-    def shape_id_to_filename(self, shapefile_id: str) -> str:
+    def shape_id_to_filename(self, shapefile_id: str) -> Path:
         """Convert the shapefile id to a (temporary) file and returns the filename"""
-        return shapefile_id
+        return Path(shapefile_id)
 
     @abstractmethod
-    def output_shapefile(self, shapefile_id: str, gdf: gpd.GeoDataFrame) -> None:
+    def output_shapefile(
+        self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame
+    ) -> None:
         """Output the shapefile with the given id.
         ID would either be a path to a shapefile or an identifier to a shapefile in ArcGIS or QGIS.
         """
