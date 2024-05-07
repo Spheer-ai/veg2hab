@@ -114,33 +114,27 @@ class KeuzeStatus(Enum):
     MEERDERE_KLOPPENDE_MITSEN = auto()
 
     # Er zijn NietGeautomatiseerdCriteriums, dus handmatige controle
-    NIET_GEAUTOMATISEERD = auto()
+    NIET_GEAUTOMATISEERD_CRITERIUM = auto()
 
-    # # Dit gaat Veg2Hab niet op kunnen lossen
-    # HANDMATIGE_CONTROLE = auto()
+    # Er is een vegetatietype dat we niet kunnen omzetten
+    NIET_GEAUTOMATISEERD_VEGTYPE = auto()
 
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
+    toelichting_dict = {
+        DUIDELIJK: "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
+        GEEN_KLOPPENDE_MITSEN: "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
+        VEGTYPEN_NIET_IN_DEFTABEL: "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
+        GEEN_OPGEGEVEN_VEGTYPEN: "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
+        MEERDERE_KLOPPENDE_MITSEN: "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
+        NIET_GEAUTOMATISEERD_CRITERIUM: "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
+        NIET_GEAUTOMATISEERD_VEGTYPE: "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
+        WACHTEN_OP_MOZAIEK: "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+    }
+
     def toelichting(self):
-        if self == KeuzeStatus.DUIDELIJK:
-            return "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek."
-        elif self == KeuzeStatus.GEEN_KLOPPENDE_MITSEN:
-            return "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden."
-        elif self == KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL:
-            return "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype."
-        elif self == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
-            return "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
-        elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
-            return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
-        elif self == KeuzeStatus.NIET_GEAUTOMATISEERD:
-            return "Er zijn niet geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd."
-        # elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
-        #     assert (
-        #         False
-        #     ), "Bij KeuzeStatus.HANDMATIGE_CONTROLE moet nog een mooie toelichting, maar ik weet nu nog niet hoe of wat precies, want deze KeuzeStatus is nog niet in gebruik."
-        elif self == KeuzeStatus.WACHTEN_OP_MOZAIEK:
-            return "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)"
+        return self.toelichting_dict[self]
 
 
 class FGRType(Enum):
