@@ -2,18 +2,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-from veg2hab.criteria import (
-    BeperkendCriterium,
-    GeenCriterium,
-    NietGeautomatiseerdCriterium,
-)
+from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import (
-    GeenMozaiekregel,
-    MozaiekRegel,
-    NietGeimplementeerdeMozaiekregel,
-)
+from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
