@@ -8,7 +8,7 @@
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
     - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
-  - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
+  - [Development](#development)
     - [Lokale ontwikkeling](#lokale-ontwikkeling)
     - [Nieuwe release](#nieuwe-release)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
@@ -20,9 +20,10 @@
 **veg2hab** zet Nederlandse vegetatietypekarteringen automatisch om naar habitattypekarteringen. De library kan op 3 manieren gebruikt worden:
 
 - Als functionaliteit binnen andere (python) software;
+- Met de meegeleverde Command Line Interface;
 - Vanuit ArcGIS Pro.
 
-veg2hab wordt gedistribueerd via PyPI, waar alle toekomstige versies aan toe worden gevoegd.
+veg2hab wordt gedistribueerd via PyPI, waar alle historische versies te vinden zijn.
 
 ## Installatie instructies
 
@@ -67,15 +68,11 @@ voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ### Gebruik in ArcGIS Pro
 
-De omzetting van **veg2hab** van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
+De omzetting van **veg2hab** van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. De omzetting is opgesplitst in meerdere tools, die achter elkaar gebruikt dienen te worden. Deze opsplitsing is aangebracht zodat de gebruiker het tussenproduct kan bekijken, en indien nodig handmatig kan aanpassen voordat de volgende stap ondernomen wordt. 
 
-De omzettool komt in twee smaken:
-1. `digitale_standaard`, voor het omzetten van vegetatiekarteringen die de landelijke digitale standaard gebruiken, die bestaat uit een shapefile gecombineerd met een access database. De gebruiker voert in welke vegetatiekarteringen omgezet moet worden en waar de bijhorende access database te vinden is.
-2. `vector_bestand`, voor het omzetten van vegetatiekarteringen die alle benodigde informatie in de shapefile zelf bevatten. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. 
+De tools in logische volgorde van draaien: 
 
-Let op:
-- Wanneer de gebruiker beschikt over een access database, raden wij aan de  `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
-- Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN). 
+ komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
 
 
 ### Bronbestanden die veg2hab gebruikt
@@ -87,11 +84,12 @@ Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch 
  - WasWordtLijst (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten
  - DefinitieTabel (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten
  - Fysisch-Geografische Regio kaart (versie 2013, [link](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170))
+ - BRO Bodemkaart (versie 2023-01, [link](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/d9cc67ba-5491-4640-86ac-b8d392250270))
  - Let op: bij volgende versies komen er waarschijnlijk meer bronbestanden bij
 
 
 
-## Handleiding voor ontwikkelaars
+## Development
 ### Lokale ontwikkeling
 Download de git repository:
 ```sh
@@ -135,6 +133,12 @@ poetry run pytest tests/
 
 ## Interpretatie van de output-habitattypekartering
 
+*Deze sectie is nog niet af en zal in de toekomst vast verplaatst worden, maar bij deze begin ik alvast aan wat uiteindelijk toch geschreven moet worden*
+
+*Ook wellicht nuttig voor als we mensen veg2hab gaan laten gebruiken, een basic naslagwerk*
+
+*TODO: Ik benoem in de uitleg hieronder enkele keren de "specifiekheid" van regels in de definitietabel. Ik weet niet of dit door een ecoloog begrepen wordt of dat hier toch een andere oplossing voor gevonden moet worden.* 
+
 ### Vlakbrede kolommen
 **Area**: Oppervlakte van het gehele vlak in m2.
 
@@ -161,7 +165,7 @@ poetry run pytest tests/
 
 **Opm{i}**: Korte uitleg van hoe Veg2Hab tot het habitattype van dit complex-deel is gekomen.
 
-**VvN{i}**/**SBB{i}**: De VvN/SBB-code die het gegeven habitattype onderbouwt, als deze er is. Dit is normaal gesproken het vegetatietype wat in de definitietabel tot het gegeven habitattype leidt. Als H0000 gegeven is, zullen alle in de definitietabel gevonden vegetatietypen weergegeven zijn. In het geval van HXXXX worden hier vegetatietypen vermeld van het meest specifieke niveau wat in de definitietabel is gevonden.
+**VvN{i}**/**SBB{i}**: De VvN/SBB-code die het gegeven habitattype onderbouwd, als deze er is. Dit is normaal gesproken het vegetatietype wat in de definitietabel tot het gegeven habitattype leidt. Als H0000 gegeven is, zullen alle in de definitietabel gevonden vegetatietypen weergegeven zijn. In het geval van HXXXX worden hier vegetatietypen vermeld van het meest specifieke niveau wat in de definitietabel is gevonden.
 
 **_Status{i}**: Interne beslissings-status van Veg2Hab voor dit complex-deel. Wat de opgegeven status betekend is samengevat in `_Uitleg{i}`. Mogelijke statussen en hun uitleg zijn:
 - `DUIDELIJK`: Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.
