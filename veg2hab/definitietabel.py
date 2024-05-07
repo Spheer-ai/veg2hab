@@ -10,6 +10,7 @@ import pandas as pd
 from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.io.common import Interface
 from veg2hab.mozaiek import (  # DummyMozaiekregel,; GeenMozaiekregel,
     MozaiekRegel,
     StandaardMozaiekregel,
@@ -95,7 +96,13 @@ class DefinitieTabel:
             voorstellen += voorstel
 
         if len(voorstellen) == 0:
-            voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
+            niet_geautomatiseerde_sbb = (
+                Interface.get_instance().get_config().niet_geautomatiseerde_sbb
+            )
+            if len(info.SBB) > 0 and str(info.SBB[0]) in niet_geautomatiseerde_sbb:
+                voorstellen.append(HabitatVoorstel.HXXXX_niet_geautomatiseerd_SBB(info))
+            else: 
+                voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
 
         return voorstellen
 

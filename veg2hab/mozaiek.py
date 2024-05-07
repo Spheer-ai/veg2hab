@@ -5,10 +5,13 @@ from numbers import Number
 from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
-import pandas as pd
 from pydantic import BaseModel, PrivateAttr
 
 from veg2hab.enums import Kwaliteit, MaybeBoolean
+
+# from veg2hab.io.common import Interface
+# NOTE: even temp
+from veg2hab.io.cli import CLIInterface
 
 
 class MozaiekRegel(BaseModel):
@@ -16,7 +19,9 @@ class MozaiekRegel(BaseModel):
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
-    mozaiek_threshold = 90
+    # mozaiek_threshold = Interface.get_instance().get_config().mozaiek_threshold
+    # NOTE: even temp
+    mozaiek_threshold = CLIInterface.get_instance().get_config().mozaiek_threshold
 
     def __init_subclass__(cls):
         # Vul de _subtypes_ dict met alle subclasses

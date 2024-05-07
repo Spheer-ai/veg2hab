@@ -1,13 +1,16 @@
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import ClassVar, Optional, Type
+from typing import ClassVar, Optional
 
 import geopandas as gpd
-from pydantic import BaseModel, Field
-from typing_extensions import Literal, Self
+from pydantic import BaseModel, BaseSettings, Field
+from typing_extensions import List, Literal, Union
 
 
 class AccessDBInputs(BaseModel):
+    class Config:
+        extra = "forbid"
+
     label: ClassVar[str] = "digitale_standaard"
     description: ClassVar[str] = "Draai veg2hab o.b.v. de digitale standaard"
     shapefile: str = Field(
@@ -30,6 +33,9 @@ class AccessDBInputs(BaseModel):
 
 
 class ShapefileInputs(BaseModel):
+    class Config:
+        extra = "forbid"
+
     label: ClassVar[str] = "vector_bestand"
     description: ClassVar[str] = "Draai veg2hab o.b.v. een vector bestand"
     shapefile: str = Field(
@@ -74,6 +80,29 @@ class ShapefileInputs(BaseModel):
     )
 
 
+class Veg2HabConfig(BaseSettings):
+    class Config:
+        env_prefix = "VEG2HAB_"
+
+    mozaiek_threshold: Union[int, float] = Field(
+        default=95.0,  # todo number/float
+        description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
+    )
+    mozaiek_als_rand_langs_threshold: Union[int, float] = Field(
+        default=50.0,  # todo number/float
+        description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
+    )
+    niet_geautomatiseerde_sbb: List[str] = Field(
+        default=[
+            "100",
+            "200",
+            "300",
+            "400",
+        ],
+        description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
+    )
+
+
 class Interface(metaclass=ABCMeta):
     """Singleton class that defines the interface for the different UI systems."""
 
@@ -104,3 +133,6 @@ class Interface(metaclass=ABCMeta):
     @abstractmethod
     def instantiate_loggers(self) -> None:
         """Instantiate the loggers for the module."""
+
+    def get_config(self) -> Veg2HabConfig:
+        return Veg2HabConfig()
