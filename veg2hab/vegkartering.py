@@ -740,9 +740,9 @@ class Kartering:
     def from_shapefile(
         cls,
         shape_path: Path,
-        ElmID_col: str,
         vegtype_col_format: Literal["single", "multi"],
         sbb_of_vvn: Literal["VvN", "SBB", "beide"],
+        ElmID_col: Optional[str] = None,
         datum_col: Optional[str] = None,
         opmerking_col: Optional[str] = None,
         SBB_col: Optional[str] = None,
