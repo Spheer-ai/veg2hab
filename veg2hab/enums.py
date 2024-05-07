@@ -122,19 +122,19 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
-    toelichting_dict = {
-        DUIDELIJK: "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
-        GEEN_KLOPPENDE_MITSEN: "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
-        VEGTYPEN_NIET_IN_DEFTABEL: "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
-        GEEN_OPGEGEVEN_VEGTYPEN: "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
-        MEERDERE_KLOPPENDE_MITSEN: "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
-        NIET_GEAUTOMATISEERD_CRITERIUM: "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
-        NIET_GEAUTOMATISEERD_VEGTYPE: "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
-        WACHTEN_OP_MOZAIEK: "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+    _toelichting_dict = {
+        "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
+        "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
+        "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
+        "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
+        "MEERDERE_KLOPPENDE_MITSEN": "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
+        "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
+        "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
+        "WACHTEN_OP_MOZAIEK": "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
     }
 
     def toelichting(self):
-        return self.toelichting_dict[self]
+        return self._toelichting_dict.value[self.name]
 
 
 class FGRType(Enum):

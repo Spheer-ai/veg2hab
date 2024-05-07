@@ -101,7 +101,7 @@ class DefinitieTabel:
             )
             if len(info.SBB) > 0 and str(info.SBB[0]) in niet_geautomatiseerde_sbb:
                 voorstellen.append(HabitatVoorstel.HXXXX_niet_geautomatiseerd_SBB(info))
-            else: 
+            else:
                 voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
 
         return voorstellen
