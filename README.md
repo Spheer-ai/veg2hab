@@ -67,7 +67,7 @@ voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ### Gebruik in ArcGIS Pro
 
-De omzetting van **veg2hab** van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
+De omzetting van veg2hab van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
 
 De omzettool komt in twee smaken:
 1. `digitale_standaard`, voor het omzetten van vegetatiekarteringen die de landelijke digitale standaard gebruiken, die bestaat uit een shapefile gecombineerd met een access database. De gebruiker voert in welke vegetatiekarteringen omgezet moet worden en waar de bijhorende access database te vinden is.
@@ -80,14 +80,15 @@ Let op:
 
 ### Bronbestanden die veg2hab gebruikt
 
-**veg2hab** is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. 
+veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. 
 
 Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker: 
 
  - WasWordtLijst (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten
  - DefinitieTabel (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten
  - Fysisch-Geografische Regio kaart (versie 2013, [link](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170))
- - Let op: bij volgende versies komen er waarschijnlijk meer bronbestanden bij
+  
+Let op: bij volgende versies komen er waarschijnlijk meer bronbestanden bij.
 
 
 
@@ -121,7 +122,7 @@ poetry run pytest tests/
 
 ### Nieuwe release
 1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`.
-2. Maak een nieuwe versie met poetry (minor, major, patch): `poetry version {{rule}}`
+2. Maak een nieuwe versie met poetry (major, minor, patch): `poetry version {{rule}}`
 3. Pas de [__init__.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version
 4. Pas [toolbox.pyt](veg2hab/package_data/toolbox.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
 5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
@@ -129,8 +130,6 @@ poetry run pytest tests/
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
 8. Push de tag naar git `git push origin tag v$(poetry version -s)`
 9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
-
-
 
 
 ## Interpretatie van de output-habitattypekartering
