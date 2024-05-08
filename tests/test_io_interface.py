@@ -13,8 +13,11 @@ def test_abstract_base_class():
 # if the different tests would run in different
 # processes, or something.
 
+
 # NOTE: temporary fix
-@pytest.mark.xfail(reason="This test only works if it is executed before an Interface is instantiated anywhere")
+@pytest.mark.xfail(
+    reason="This test only works if it is executed before an Interface is instantiated anywhere"
+)
 def test_first_time_get_instance():
     with pytest.raises(TypeError):
         i = Interface.get_instance()

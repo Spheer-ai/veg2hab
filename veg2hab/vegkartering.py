@@ -1127,7 +1127,6 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
-
     def as_final_format(self) -> pd.DataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven

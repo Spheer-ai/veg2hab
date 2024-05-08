@@ -20,7 +20,9 @@ class Mozaiekregel(BaseModel):
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
     mozaiek_als_rand_threshold: Union[int, float] = Field(
-        default_factory=lambda: Interface.get_instance().get_config().mozaiek_als_rand_threshold
+        default_factory=lambda: Interface.get_instance()
+        .get_config()
+        .mozaiek_als_rand_threshold
     )
 
     def __init_subclass__(cls):
@@ -302,9 +304,7 @@ def is_mozaiek_type_present(
 
     return any(
         [
-            (
-                voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type)
-            )
+            (voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type))
             for voorstel in voorstellen
         ]
     )
