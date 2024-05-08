@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 from functools import lru_cache
 from pathlib import Path
@@ -9,6 +10,7 @@ import pandas as pd
 from veg2hab.criteria import BeperkendCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
+from veg2hab.io.common import Interface
 from veg2hab.mozaiek import (  # DummyMozaiekregel,; GeenMozaiekregel,
     MozaiekRegel,
     StandaardMozaiekregel,
@@ -94,7 +96,13 @@ class DefinitieTabel:
             voorstellen += voorstel
 
         if len(voorstellen) == 0:
-            voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
+            niet_geautomatiseerde_sbb = (
+                Interface.get_instance().get_config().niet_geautomatiseerde_sbb
+            )
+            if len(info.SBB) > 0 and str(info.SBB[0]) in niet_geautomatiseerde_sbb:
+                voorstellen.append(HabitatVoorstel.HXXXX_niet_geautomatiseerd_SBB(info))
+            else:
+                voorstellen.append(HabitatVoorstel.H0000_vegtype_not_in_dt(info))
 
         return voorstellen
 
@@ -150,8 +158,11 @@ def opschonen_definitietabel(
     """
     assert path_in_deftabel.suffix == ".xls", "Input deftabel file is not an xls file"
     assert (
-        path_in_mitsjson.suffix == ".csv"
-    ), "Input json definitions file is not an csv file"
+        path_in_mitsjson.suffix == ".json"
+    ), "Input json definitions file is not a json file"
+    assert (
+        path_in_mozaiekjson.suffix == ".json"
+    ), "Input mozaiek json definitions file is not a json file"
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
     ### Inladen
@@ -203,23 +214,36 @@ def opschonen_definitietabel(
     dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     ### Mits json definities toevoegen
-    # TODO: .json van maken
-    mitsjson = pd.read_csv(path_in_mitsjson, sep="|")
+    with open(path_in_mitsjson, "r", encoding="utf-8") as file:
+        data = json.load(file)
+    mitsjson = pd.DataFrame(
+        [{"mits": key, "mitsjson": value} for key, value in data.items()]
+    )
 
     # Checken dat we alle mitsen in dt ook in mitsjson hebben
     for mits in dt.mits.dropna().unique():
         if mits not in mitsjson.mits.unique():
             raise ValueError(f"Mits {mits} is niet gevonden in mitsjson")
 
+    # NaN vervangen door lege strings zodat hier GeenCriteria vanuit mitsjson op matchen
+    dt.mits[dt.mits.isna()] = ""
     dt = dt.merge(mitsjson, on="mits", how="left")
+    dt["mitsjson"] = dt.mitsjson.apply(json.dumps)
 
     ### Mozaiek json definities toevoegen
-    mozaiekjson = pd.read_csv(path_in_mozaiekjson, sep="|")
+    with open(path_in_mozaiekjson, "r", encoding="utf-8") as file:
+        data = json.load(file)
+    mozaiekjson = pd.DataFrame(
+        [{"mozaiek": key, "mozaiekjson": value} for key, value in data.items()]
+    )
 
     for mozaiek in dt.mozaiek.dropna().unique():
         if mozaiek not in mozaiekjson.mozaiek.unique():
             raise ValueError(f"Mozaiek {mozaiek} is niet gevonden in mozaiekjson")
 
+    # NaN vervangen door lege strings zodat hier GeenMozaiek vanuit mozaiekjson op matchen
+    dt["mozaiek"] = dt["mozaiek"].fillna("")
     dt = dt.merge(mozaiekjson, on="mozaiek", how="left")
+    dt["mozaiekjson"] = dt.mozaiekjson.apply(json.dumps)
 
     dt.to_excel(path_out, index=False)

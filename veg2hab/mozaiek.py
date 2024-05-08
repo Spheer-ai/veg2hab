@@ -5,10 +5,10 @@ from numbers import Number
 from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
-import pandas as pd
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from veg2hab.enums import Kwaliteit, MaybeBoolean
+from veg2hab.io.common import Interface
 
 
 class MozaiekRegel(BaseModel):
@@ -16,7 +16,9 @@ class MozaiekRegel(BaseModel):
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
-    mozaiek_threshold = 90
+    mozaiek_threshold: Union[int, float] = Field(
+        default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
+    )
 
     def __init_subclass__(cls):
         # Vul de _subtypes_ dict met alle subclasses
@@ -61,8 +63,8 @@ class MozaiekRegel(BaseModel):
         raise NotImplementedError()
 
 
-class PlaceholderMozaiekregel(MozaiekRegel):
-    type: ClassVar[str] = "PlaceholderMozaiekregel"
+class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
+    type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, habtype_percentage_dict: Dict) -> None:
@@ -74,19 +76,6 @@ class PlaceholderMozaiekregel(MozaiekRegel):
 
     def __str__(self):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
-
-
-# class DummyMozaiekregel(Mozaiekregel):
-#     # TODO: remove this once no longer needed
-#     type: ClassVar[str] = "DummyMozaiekregel"
-#     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
-
-#     def check(self, habtype_percentage_dict: Dict) -> None:
-#         self._evaluation = MaybeBoolean.FALSE
-
-#     @property
-#     def evaluation(self) -> MaybeBoolean:
-#         return self._evaluation
 
 
 class GeenMozaiekregel(MozaiekRegel):
@@ -140,16 +129,17 @@ class StandaardMozaiekregel(MozaiekRegel):
     def check(self, habtype_percentage_dict: Dict) -> None:
         requested_habtype_percentage = 0
         for key in self.keys:
-            requested_habtype_percentage += habtype_percentage_dict[key]
+            requested_habtype_percentage += habtype_percentage_dict.get(key, 0)
 
         # Threshold is behaald, dus TRUE
         if requested_habtype_percentage >= self.mozaiek_threshold:
             self._evaluation = MaybeBoolean.TRUE
             return
 
-        unknown_habtype_percentage = habtype_percentage_dict[
-            ("HXXXX", True, Kwaliteit.NVT)
-        ]
+        unknown_habtype_percentage = habtype_percentage_dict.get(
+            ("HXXXX", True, Kwaliteit.NVT),
+            0,
+        )
         # Threshold kan nog behaald worden, dus POSTPONE
         if (
             requested_habtype_percentage + unknown_habtype_percentage
