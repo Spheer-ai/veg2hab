@@ -252,10 +252,13 @@ def mozaiekregel_habtype_percentage_dict_to_string(
     if habtype_percentage_dict is None:
         return ""
 
+    assert all(
+        [v > 0 for v in habtype_percentage_dict.values()]
+    ), "Alle percentages moeten groter dan 0 zijn"
+
     return ", ".join(
         f"{v:.2f}% {'goed ' if k[2] == Kwaliteit.GOED else 'matig ' if k[2] == Kwaliteit.MATIG else ''}{'zelfstandig' if k[1] else 'mozaiek'} {k[0]}"
         for k, v in habtype_percentage_dict.items()
-        if v > 0
     )
 
 
@@ -270,9 +273,10 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.DUIDELIJK,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-            KeuzeStatus.PLACEHOLDER,
+            KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
+            KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
         ]:
             voorstel = keuze.habitatvoorstellen[0]
             series_dict = {
@@ -299,7 +303,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 ),
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
-                f"_Uitleg{idx}": keuze.status.toelichting(),
+                f"_Uitleg{idx}": keuze.status.toelichting,
                 f"_VvNdftbl{idx}": (
                     str(
                         [
@@ -339,7 +343,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     if keuze.status in [
         KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
-        KeuzeStatus.PLACEHOLDER,
+        KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
     ]:
         voorstellen = keuze.habitatvoorstellen
@@ -384,7 +388,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             ),
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
-            f"_Uitleg{idx}": keuze.status.toelichting(),
+            f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": str(
                 [
                     (
@@ -503,16 +507,16 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opp{i}",
             f"Kwal{i}",
             f"Opm{i}",
-            f"VvN{i}",
             f"SBB{i}",
+            f"VvN{i}",
+            f"_VgTypInf{i}",
             f"_Status{i}",
             f"_Uitleg{i}",
-            f"_VgTypInf{i}",
+            f"_SBBdftbl{i}",
+            f"_VvNdftbl{i}",
             f"_Mits_opm{i}",
             f"_Mozk_opm{i}",
             f"_MozkPerc{i}",
-            f"_VvNdftbl{i}",
-            f"_SBBdftbl{i}",
         ]
     return gdf[new_columns]
 

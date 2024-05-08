@@ -4,7 +4,10 @@ import geopandas as gpd
 import pandas as pd
 import pytest
 
+from veg2hab.io.cli import CLIInterface
 from veg2hab.vegkartering import VegTypeInfo, ingest_vegtype
+
+CLIInterface.get_instance()
 
 
 @pytest.fixture

@@ -162,7 +162,6 @@ def test_warning_buffer_equals_zero(gdf):
 
 def test_single_shape(gdf):
     # Enkel 1
-    # NOTE: Als er niks is dan "overal" H0000???
     pre = gdf[gdf["ElmID"].isin([1])]
     post = pd.DataFrame(
         {"ElmID": [1], "dict": [{("H1", False, Kwaliteit.GOED): 100.0}]}
