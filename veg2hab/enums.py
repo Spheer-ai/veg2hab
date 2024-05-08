@@ -114,7 +114,7 @@ class KeuzeStatus(Enum):
     MEERDERE_KLOPPENDE_MITSEN = auto()
 
     # Er zijn NietGeautomatiseerdCriteriums, dus handmatige controle
-    NIET_GEAUTOMATISEERD = auto()
+    NIET_GEAUTOMATISEERD_CRITERIUM = auto()
 
     # # Dit gaat Veg2Hab niet op kunnen lossen
     # HANDMATIGE_CONTROLE = auto()
@@ -136,7 +136,7 @@ class KeuzeStatus(Enum):
             return "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen."
         elif self == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN:
             return "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken."
-        elif self == KeuzeStatus.NIET_GEAUTOMATISEERD:
+        elif self == KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM:
             return "Er zijn niet geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd."
         # elif self == KeuzeStatus.HANDMATIGE_CONTROLE:
         #     assert (

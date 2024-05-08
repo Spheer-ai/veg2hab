@@ -141,12 +141,6 @@ class StandaardMozaiekregel(Mozaiekregel):
             else self.mozaiek_als_rand_threshold
         )
 
-        threshold = (
-            self.mozaiek_threshold
-            if not self.ook_als_rand_langs
-            else self.rand_threshold
-        )
-
         # Threshold is behaald, dus TRUE
         if requested_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.TRUE
