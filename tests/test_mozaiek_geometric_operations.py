@@ -137,63 +137,22 @@ def gdf():
             "HabitatVoorstel": [
                 [
                     [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H1",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=StandaardMozaiekregel(
-                                habtype="H1",
-                                alleen_zelfstandig=True,
-                                alleen_goede_kwaliteit=True,
-                                ook_als_rand_langs=False,
-                            ),
-                            match_level=None,
-                        )
+                        voorstellen[0]
                     ]
                 ],
                 [
                     [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H2",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
+                        voorstellen[1]
                     ]
                 ],
                 [
                     [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H2",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
+                        voorstellen[2]
                     ]
                 ],
                 [
                     [
-                        HabitatVoorstel(
-                            onderbouwend_vegtype=None,
-                            vegtype_in_dt=None,
-                            habtype="H3",
-                            kwaliteit=Kwaliteit.GOED,
-                            idx_in_dt=None,
-                            mits=GeenCriterium(),
-                            mozaiek=GeenMozaiekregel(),
-                            match_level=None,
-                        )
+                        voorstellen[3]
                     ]
                 ],
             ],
@@ -345,15 +304,8 @@ def test_all_shapes(gdf):
 def test_multiple_mozaiek_present_shapes(gdf):
     # 1 en 2, beide met mozaiekregel
     pre = gdf[gdf["ElmID"].isin([1, 2])].copy()
+    # Omdat de voorstellen in HabitatKeuze uit dezelfde list komen hoeven we enkel HabitatVoorstel te updaten.
     pre["HabitatVoorstel"].iloc[1][0][0].mozaiek = StandaardMozaiekregel(
-        habtype="H2",
-        alleen_zelfstandig=True,
-        alleen_goede_kwaliteit=True,
-        ook_als_rand_langs=False,
-    )
-    pre["HabitatKeuze"].iloc[1][0].habitatvoorstellen[
-        0
-    ].mozaiek = StandaardMozaiekregel(
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,
