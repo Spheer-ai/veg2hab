@@ -4,12 +4,8 @@ from typing import List, Optional, Tuple, Union
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
-from veg2hab.mozaiek import (
-    GeenMozaiekregel,
-    MozaiekRegel,
-    StandaardMozaiekregel,
-    is_mozaiek_type_present,
-)
+from veg2hab.io.common import Interface
+from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
@@ -58,6 +54,20 @@ class HabitatVoorstel:
             match_level=MatchLevel.NO_MATCH,
         )
 
+    @classmethod
+    def HXXXX_niet_geautomatiseerd_SBB(cls, info: "VegTypeInfo"):
+        assert len(info.SBB) > 0
+        return cls(
+            onderbouwend_vegtype=info.SBB[0],
+            vegtype_in_dt=None,
+            habtype="HXXXX",
+            kwaliteit=Kwaliteit.NVT,
+            idx_in_dt=None,
+            mits=GeenCriterium(),
+            mozaiek=GeenMozaiekregel(),
+            match_level=MatchLevel.NO_MATCH,
+        )
+
 
 @dataclass
 class HabitatKeuze:
@@ -84,7 +94,7 @@ class HabitatKeuze:
             assert self.habtype == "H0000"
         elif self.status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
-            KeuzeStatus.PLACEHOLDER,
+            KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
         ]:
             assert self.habtype == "HXXXX"
@@ -185,6 +195,27 @@ def try_to_determine_habkeuze(
             debug_info="",
         )
 
+    # Als er maar 1 habitatvoorstel is en dat is HXXXX, kan dat zijn omdat het vegetatietype niet geautomatiseerd is
+    if len(all_voorstellen) == 1 and all_voorstellen[0].habtype == "HXXXX":
+        voorstel = all_voorstellen[0]
+        niet_geautomatiseerde_sbb = (
+            Interface.get_instance().get_config().niet_geautomatiseerde_sbb
+        )
+        if str(voorstel.onderbouwend_vegtype) in niet_geautomatiseerde_sbb:
+            assert isinstance(voorstel.onderbouwend_vegtype, _SBB)
+            assert isinstance(voorstel.mits, GeenCriterium)
+            assert isinstance(voorstel.mozaiek, GeenMozaiekregel)
+            return HabitatKeuze(
+                status=KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
+                habtype="HXXXX",
+                kwaliteit=Kwaliteit.NVT,
+                habitatvoorstellen=all_voorstellen,
+                opmerking="Dit vegetatietype is niet geautomatiseerd. Handmatige omzetting is vereist.",
+                mits_opmerking="",
+                mozaiek_opmerking="",
+                debug_info="",
+            )
+
     sublisted_voorstellen = _sublist_per_match_level(all_voorstellen)
 
     # Per MatchLevel checken of er kloppende mitsen zijn
@@ -247,7 +278,7 @@ def try_to_determine_habkeuze(
 
             # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
             # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
             return_voorstellen = [
                 voorstel
                 for voorstel in all_voorstellen
@@ -259,7 +290,7 @@ def try_to_determine_habkeuze(
             ]
 
             return HabitatKeuze(
-                status=KeuzeStatus.PLACEHOLDER,
+                status=KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 habitatvoorstellen=return_voorstellen,
@@ -275,7 +306,7 @@ def try_to_determine_habkeuze(
 
             # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
             # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een placeholder af.
+            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
             return_voorstellen = [
                 voorstel
                 for voorstel in all_voorstellen

@@ -7,6 +7,7 @@ from typing import ClassVar, Optional, Union
 import pandas as pd
 
 from veg2hab.enums import MatchLevel
+from veg2hab.io.common import Interface
 
 
 @dataclass
@@ -38,8 +39,12 @@ class SBB:
 
     def __init__(self, code: str):
         assert isinstance(code, str), "Code is not a string"
-        if code in ["100", "200", "300", "400"]:
-            self.klasse = "niet habitattypewaardig"
+        # TODO: dit zou heel mooi naar een config kunnen later
+        niet_geautomatiseerde_sbb = (
+            Interface.get_instance().get_config().niet_geautomatiseerde_sbb
+        )
+        if code in niet_geautomatiseerde_sbb:
+            self.klasse = code
             return
 
         # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
