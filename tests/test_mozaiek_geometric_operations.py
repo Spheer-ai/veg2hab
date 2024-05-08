@@ -135,26 +135,10 @@ def gdf():
             ],
             "ElmID": [1, 2, 3, 4],
             "HabitatVoorstel": [
-                [
-                    [
-                        voorstellen[0]
-                    ]
-                ],
-                [
-                    [
-                        voorstellen[1]
-                    ]
-                ],
-                [
-                    [
-                        voorstellen[2]
-                    ]
-                ],
-                [
-                    [
-                        voorstellen[3]
-                    ]
-                ],
+                [[voorstellen[0]]],
+                [[voorstellen[1]]],
+                [[voorstellen[2]]],
+                [[voorstellen[3]]],
             ],
             "geometry": [
                 Polygon([(0, 0), (1, 0), (1, 3), (0, 3), (0, 0)]),
