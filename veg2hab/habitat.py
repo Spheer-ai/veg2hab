@@ -209,7 +209,6 @@ def try_to_determine_habkeuze(
                 status=KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                zelfstandig=True,
                 habitatvoorstellen=all_voorstellen,
                 opmerking="Dit vegetatietype is niet geautomatiseerd. Handmatige omzetting is vereist.",
                 mits_opmerking="",

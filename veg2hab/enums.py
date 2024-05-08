@@ -125,7 +125,7 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
-    _toelichting_dict = {
+    __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
         "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
         "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
@@ -136,8 +136,9 @@ class KeuzeStatus(Enum):
         "WACHTEN_OP_MOZAIEK": "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
     }
 
+    @property
     def toelichting(self):
-        return self._toelichting_dict.value[self.name]
+        return self.__toelichting.value[self.name]
 
 
 class FGRType(Enum):

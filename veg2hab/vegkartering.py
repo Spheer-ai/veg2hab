@@ -303,7 +303,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 ),
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
-                f"_Uitleg{idx}": keuze.status.toelichting(),
+                f"_Uitleg{idx}": keuze.status.toelichting,
                 f"_VvNdftbl{idx}": (
                     str(
                         [
@@ -388,7 +388,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             ),
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
-            f"_Uitleg{idx}": keuze.status.toelichting(),
+            f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": str(
                 [
                     (
@@ -516,7 +516,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"_VvNdftbl{i}",
             f"_Mits_opm{i}",
             f"_Mozk_opm{i}",
-            f"_MozkDict{i}",
+            f"_MozkPerc{i}",
         ]
     return gdf[new_columns]
 
