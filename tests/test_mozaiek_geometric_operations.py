@@ -351,7 +351,9 @@ def test_multiple_mozaiek_present_shapes(gdf):
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    pre["HabitatKeuze"].iloc[1][0].habitatvoorstellen[0].mozaiek = StandaardMozaiekregel(
+    pre["HabitatKeuze"].iloc[1][0].habitatvoorstellen[
+        0
+    ].mozaiek = StandaardMozaiekregel(
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,

@@ -50,6 +50,9 @@ class MaybeBoolean(Enum):
             return NotImplemented
         return or_resolver[max(or_order[self], or_order[other])]
 
+    def __str__(self):
+        return self.name
+
 
 class Kwaliteit(Enum):
     NVT = "Nvt"  # bijvoorbeeld in het geval van H0000 en HXXXX
@@ -127,7 +130,7 @@ class KeuzeStatus(Enum):
 
     # Het minimum oppervlak voor dit habitattype is niet gehaald
     MINIMUM_OPP_NIET_GEHAALD = auto()
-    
+
     __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
         "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
