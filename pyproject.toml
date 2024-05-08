@@ -1,9 +1,18 @@
 [tool.poetry]
 name = "veg2hab"
-version = "0.1.1"
+version = "0.2.1"
 description = "Package voor automatisch omzetten van vegetatiekarteringen naar habitatkaarten"
 authors = ["Spheer.ai <info@spheer.ai>"]
 readme = "README.md"
+license = "LGPLv3" 
+classifiers = [
+  "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+]
 
 [project.urls]
 Homepage = "https://github.com/Spheer-ai/veg2hab"
@@ -11,7 +20,7 @@ Issues = "https://github.com/Spheer-ai/veg2hab/issues"
 Source = "https://github.com/Spheer-ai/veg2hab"
 
 [tool.poetry.scripts]
-veg2hab = "veg2hab.__main__:main"
+veg2hab = "veg2hab.__main__:veg2hab"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"

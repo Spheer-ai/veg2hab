@@ -1,6 +1,8 @@
 import logging
+from datetime import datetime, timezone
 from functools import wraps
-from typing import Callable, Dict
+from pathlib import Path
+from typing import Callable, Dict, Optional
 
 import click
 from geopandas.geodataframe import GeoDataFrame
@@ -11,7 +13,11 @@ from .common import AccessDBInputs, Interface, ShapefileInputs
 
 class CLIInterface(Interface):
     @override
-    def output_shapefile(self, shapefile_id: str, gdf: GeoDataFrame) -> None:
+    def output_shapefile(self, shapefile_id: Optional[Path], gdf: GeoDataFrame) -> None:
+        if shapefile_id is None:
+            shapefile_id = Path(
+                f"./habkart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
+            )
         gdf.to_file(shapefile_id, driver="GPKG", layer="main")
 
     @override
@@ -20,11 +26,14 @@ class CLIInterface(Interface):
 
 
 def _decorate_click(func: Callable, param_schema: Dict):
-    for field_name, field_info in reversed(param_schema["properties"].items()):
+    for field_name, field_info in reversed(list(param_schema["properties"].items())):
         is_required = field_name in param_schema["required"]
 
         if field_info.get("format", "") == "path":
-            param_type = click.Path(exists=True)
+            if field_name == "output":
+                param_type = click.Path(exists=False, writable=True)
+            else:
+                param_type = click.Path(exists=True)
         else:
             param_type = str
 
@@ -49,11 +58,11 @@ def _decorate_click(func: Callable, param_schema: Dict):
 
 
 def _get_argument_description(description: str, param_schema: Dict):
-    description += "\n\n"
+    description += "\n\nArguments:\n\n"
     for field_name, field_info in param_schema["properties"].items():
         if field_name in param_schema["required"]:
             description += (
-                f" - {field_name.upper()}: {field_info.get('description', '')}\n\n"
+                f"  {field_name.upper()}: {field_info.get('description', '')}\n\n"
             )
     return description
 
