@@ -369,40 +369,21 @@ def apply_minimum_oppervlak(gdf) -> pd.Series:
 
     NOTE: Voor nu wordt functionele samenhang niet meegenomen
     """
-    # NOTE: Deze zou ook best in vegkartering kunnen (of in zn eigen file), ben er nog niet helemaal over uit 
+    # NOTE: Deze zou ook best in vegkartering kunnen (of in zn eigen file), ben er nog niet helemaal over uit
     assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
     assert "Opp" in gdf.columns, "area kolom niet aanwezig in gdf"
 
-    # TODO: Dit naar de config
-    min_area = defaultdict(lambda: 100)
-    for habtype in ["H6110", "H7220"]:
-        min_area[habtype] = 10
-    for habtype in [
-        "H2180_A",
-        "H2180_B",
-        "H2180_C",
-        "H9110",
-        "H9120",
-        "H9160_A",
-        "H9160_B",
-        "H9190",
-        "H91D0",
-        "H91E0_A",
-        "H91E0_B",
-        "H91E0_C",
-        "H91F0",
-    ]:
-        min_area[habtype] = 1000
+    min_area = Interface.get_instance().get_config().minimum_oppervlak
+    min_area_default = Interface.get_instance().get_config().minimum_oppervlak_default
 
     # checken voor iedere habkeuze of het oppervlak boven min_area[keuze.habtype] is
-    def check_area(row):        
+    def check_area(row):
         new_keuzes = deepcopy(row.HabitatKeuze)
         for idx, keuze in enumerate(new_keuzes):
-
             if keuze.habtype in ["H0000", "HXXXX"]:
                 continue
             area = row.Opp * (row.VegTypeInfo[idx].percentage / 100)
-            if area < min_area[keuze.habtype]:
+            if area < min_area.get(keuze.habtype, min_area_default):
                 keuze.habtype = "H0000"
                 keuze.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
         return new_keuzes

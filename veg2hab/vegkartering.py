@@ -1139,7 +1139,9 @@ class Kartering:
 
         NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
         """
-        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+        assert (
+            "HabitatKeuze" in self.gdf.columns
+        ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
 
         self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
 
