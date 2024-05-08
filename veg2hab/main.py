@@ -48,24 +48,25 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     if isinstance(params, AccessDBInputs):
         kartering = Kartering.from_access_db(
-            shape_path=Path(filename),
-            shape_elm_id_column=params.ElmID_col,
+            shape_path=filename,
+            shape_elm_id_column=params.elmid_col,
             access_mdb_path=params.access_mdb_path,
-            opmerkingen_column=params.opmerkingen_column,
-            datum_column=params.datum_column,
+            opmerkingen_column=params.opmerking_col,
+            datum_column=params.datum_col,
         )
     elif isinstance(params, ShapefileInputs):
         kartering = Kartering.from_shapefile(
-            shape_path=Path(filename),
-            ElmID_col=params.ElmID_col,
+            shape_path=filename,
+            ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
             sbb_of_vvn=params.sbb_of_vvn,
             datum_col=params.datum_col,
             opmerking_col=params.opmerking_col,
-            SBB_col=params.SBB_col,
-            VvN_col=params.VvN_col,
+            SBB_col=params.sbb_col,
+            VvN_col=params.vvn_col,
             split_char=params.split_char,
             perc_col=params.perc_col,
+            lok_vegtypen_col=params.lok_vegtypen_col,
         )
     else:
         raise RuntimeError("Something went wrong with the input parameters")
@@ -86,6 +87,6 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     final_format = kartering.as_final_format()
 
-    logging.info("Omzetting is successvol, wordt nu weggeschreven naar .gpkg")
+    logging.info("Omzetting is successvol, wordt nu weggeschreven naar een geopackage")
 
-    Interface.get_instance().output_shapefile("output_name", final_format)
+    Interface.get_instance().output_shapefile(params.output, final_format)
