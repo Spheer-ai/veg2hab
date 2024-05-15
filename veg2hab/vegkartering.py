@@ -11,9 +11,9 @@ import pandas as pd
 from typing_extensions import Literal, Self
 
 from veg2hab.access_db import read_access_tables
+from veg2hab.bronnen import FGR
 from veg2hab.criteria import FGRCriterium, is_criteria_type_present
 from veg2hab.enums import KeuzeStatus, Kwaliteit
-from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
@@ -1208,5 +1208,12 @@ class Kartering:
         path.parent.mkdir(parents=True, exist_ok=True)
         final.to_file(path)
 
-    def __len__(self):
+    def get_geometry_mask(self) -> gpd.GeoDataFrame:
+        """
+        Geeft een gdf met alleen de geometrieen van de kartering,
+        bedoeld voor masking bij inladen grote gpkg's, zoals bodemkaart en LBK
+        """
+        return self.gdf[["geometry"]]
+
+    def __len__(self) -> int:
         return len(self.gdf)

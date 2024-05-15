@@ -1,0 +1,58 @@
+from abc import ABC, abstractmethod
+from pathlib import Path
+
+import geopandas as gpd
+
+from veg2hab.enums import FGRType
+
+
+class Bron(ABC):
+    @abstractmethod
+    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
+        pass
+
+
+class LBK(Bron):
+    def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
+        self.gdf = gpd.read_file(path, mask=mask, include_fields=["Serie"])
+        self.gdf = self.gdf.rename(columns={"Serie": "lbk"})
+
+    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
+        """
+        Returns bodemkaart codes voor de gegeven geometrie
+        """
+        assert "geometry" in other_gdf.columns
+        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").lbk
+
+
+class FGR(Bron):
+    def __init__(self, path: Path):
+        # inladen
+        self.gdf = gpd.read_file(path)
+        self.gdf = self.gdf[["fgr", "geometry"]]
+
+        # omzetten naar enum (validatie)
+        self.gdf["fgr"] = self.gdf["fgr"].apply(FGRType)
+
+    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
+        """
+        Returns fgr codes voor de gegeven geometrie
+        """
+        assert "geometry" in other_gdf.columns
+        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").fgr
+
+
+class Bodemkaart(Bron):
+    def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
+        # inladen
+        soil_area = gpd.read_file(path, layer="soilarea", mask=mask, include_fields=["maparea_id"])
+        soil_units_table = gpd.read_file(path, layer="soilarea_soilunit", include_fields=["maparea_id", "soilunit_code"], ignore_geometry=True)
+        self.gdf = soil_area.merge(soil_units_table, on="maparea_id")[["geometry", "soilunit_code"]]
+        self.gdf = self.gdf.rename(columns={"soilunit_code": "bodem"})
+
+    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
+        """
+        Returns bodemkaart codes voor de gegeven geometrie
+        """
+        assert "geometry" in other_gdf.columns
+        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
