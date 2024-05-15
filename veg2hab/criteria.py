@@ -7,7 +7,7 @@ from typing import ClassVar, List, Optional, Union
 import geopandas as gpd
 from pydantic import BaseModel, PrivateAttr
 
-from veg2hab.enums import FGRType, MaybeBoolean
+from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
 
 
 class BeperkendCriterium(BaseModel):
@@ -105,6 +105,38 @@ class FGRCriterium(BeperkendCriterium):
 
     def __str__(self):
         return f"FGR is {self.fgrtype.value}"
+
+
+class BodemCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "BodemCriterium"
+    bodemtype: BodemType
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self, row: gpd.GeoSeries) -> None:
+        assert "bodem" in row, "bodem kolom niet aanwezig"
+        assert row["bodem"] is not None, "bodem kolom is leeg"
+        self._evaluation = (
+            MaybeBoolean.TRUE if row["bodem"] == self.bodemtype else MaybeBoolean.FALSE
+        )
+
+    def __str__(self):
+        return f"Bodem is {self.bodemtype}"
+
+
+class LBKCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "LBKCriterium"
+    lbktype: LBKType
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+
+    def check(self, row: gpd.GeoSeries) -> None:
+        assert "lbk" in row, "lbk kolom niet aanwezig"
+        assert row["lbk"] is not None, "lbk kolom is leeg"
+        self._evaluation = (
+            MaybeBoolean.TRUE if row["lbk"] == self.lbk else MaybeBoolean.FALSE
+        )
+
+    def __str__(self):
+        return f"LBK is {self.lbk}"
 
 
 class NietCriterium(BeperkendCriterium):
