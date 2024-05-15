@@ -58,6 +58,14 @@ class MaybeBoolean(Enum):
 
     def __str__(self):
         return self.name
+    
+    def as_letter(self):
+        return {
+            MaybeBoolean.FALSE: "F",
+            MaybeBoolean.POSTPONE: "P",
+            MaybeBoolean.CANNOT_BE_AUTOMATED: "C",
+            MaybeBoolean.TRUE: "T",
+        }[self]
 
 
 class Kwaliteit(Enum):
@@ -394,15 +402,15 @@ class BodemType(Enum):
     }
 
     def __str__(self):
-        return self.__tuple_dict[self.name].str
+        return BodemType._BodemType__tuple_dict.value[self.name].str
 
     @property
     def codes(self):
-        return self.__tuple_dict[self.name].codes
+        return BodemType._BodemType__tuple_dict.value[self.name].codes
 
     @property
     def enkel_negatieven(self):
-        return self.__tuple_dict[self.name].enkel_negatieven
+        return BodemType._BodemType__tuple_dict.value[self.name].enkel_negatieven
 
 
 class LBKType(Enum):
@@ -455,12 +463,12 @@ class LBKType(Enum):
     }
 
     def __str__(self):
-        return self.__tuple_dict[self.name].str
+        return LBKType._LBKType__tuple_dict.value[self.name].str
 
     @property
     def codes(self):
-        return self.__tuple_dict[self.name].codes
+        return LBKType._LBKType__tuple_dict.value[self.name].codes
 
     @property
     def enkel_negatieven(self):
-        return self.__tuple_dict[self.name].enkel_negatieven
+        return LBKType._LBKType__tuple_dict.value[self.name].enkel_negatieven
