@@ -5,6 +5,7 @@ from operator import and_, or_
 from typing import ClassVar, List, Optional, Union
 
 import geopandas as gpd
+import pandas as pd
 from pydantic import BaseModel, PrivateAttr
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
@@ -99,12 +100,18 @@ class FGRCriterium(BeperkendCriterium):
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
+        
+        if pd.isna(row["fgr"]):
+            # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+        
         self._evaluation = (
             MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
-        return f"FGR is {self.fgrtype.value}"
+        return f"FGR is {self.fgrtype.value} ({self._evaluation.as_letter()})"
 
 
 class BodemCriterium(BeperkendCriterium):
@@ -115,12 +122,18 @@ class BodemCriterium(BeperkendCriterium):
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
         assert row["bodem"] is not None, "bodem kolom is leeg"
+
+        if pd.isna(row["bodem"]):
+            # Er is een NaN als het vlak niet mooi binnen een bodemkaartvlak valt
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+        
         self._evaluation = (
             MaybeBoolean.TRUE if row["bodem"] == self.bodemtype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
-        return f"Bodem is {self.bodemtype}"
+        return f"Bodem is {self.bodemtype} ({self._evaluation.as_letter()})"
 
 
 class LBKCriterium(BeperkendCriterium):
@@ -131,12 +144,18 @@ class LBKCriterium(BeperkendCriterium):
     def check(self, row: gpd.GeoSeries) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
         assert row["lbk"] is not None, "lbk kolom is leeg"
+
+        if pd.isna(row["lbk"]):
+            # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+        
         self._evaluation = (
-            MaybeBoolean.TRUE if row["lbk"] == self.lbk else MaybeBoolean.FALSE
+            MaybeBoolean.TRUE if row["lbk"] == self.lbktype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
-        return f"LBK is {self.lbk}"
+        return f"LBK is {self.lbktype} ({self._evaluation.as_letter()})"
 
 
 class NietCriterium(BeperkendCriterium):

@@ -56,3 +56,4 @@ class Bodemkaart(Bron):
         """
         assert "geometry" in other_gdf.columns
         return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
+    
