@@ -17,7 +17,8 @@ def installatie_instructies():
     print(
         dedent(
             f"""
-    To install the veg2hab toolbox, go to add Python toolbox in ArcGIS Pro and select the file at the following location:
+    Om veg2hab te kunnen draaien, moet de veg2hab toolbox geïnstalleerd worden in ArcGIS Pro.
+    Ga naar "add Python toolbox" in ArcGIS Pro en selecteer het bestand op de volgende locatie:
         {constants.TOOLBOX_PYT_PATH}
 """
         )

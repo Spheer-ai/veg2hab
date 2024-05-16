@@ -127,7 +127,7 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             displayName=field_info["description"],
             datatype=datatype,
             parameterType="Required" if is_required else "Optional",
-            direction="Input",
+            direction="Output" if field_name == "output" else "Input",
             multiValue=field_info.get("type") == "array",
         )
 
@@ -162,22 +162,18 @@ class ArcGISAccessDBInputs(AccessDBInputs):
 
     @classmethod
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
-        as_dict = {p.name: p for p in parameters}
-        if as_dict["vegtype_col_format"].altered:
-            is_multivalue_per_column = (
-                as_dict["vegtype_col_format"].valueAsText == "single"
-            )
-            as_dict["split_char"].enabled = is_multivalue_per_column
-
-        if as_dict["sbb_of_vvn"].altered:
-            as_dict["sbb_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "VvN"
-            as_dict["vvn_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "SBB"
-
+        pass
 
 class ArcGISShapefileInputs(ShapefileInputs):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
+        for col in ["sbb_col", "vvn_col", "perc_col", "lok_vegtypen_col"]:
+            if as_dict.get(col) is None:
+                as_dict[col] = []
+            else:
+                as_dict[col] = as_dict[col].split(";")
+
         return cls(**as_dict)
 
     @classmethod
@@ -186,8 +182,17 @@ class ArcGISShapefileInputs(ShapefileInputs):
 
     @classmethod
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
-        pass
+        as_dict = {p.name: p for p in parameters}
+        if as_dict["vegtype_col_format"].altered:
+            is_multivalue_per_column = (
+                as_dict["vegtype_col_format"].valueAsText == "single"
+            )
+            as_dict["split_char"].enabled = is_multivalue_per_column
+            as_dict["sbb_col"].multiValue = not is_multivalue_per_column
+            as_dict["vvn_col"].multiValue = not is_multivalue_per_column
+            as_dict["perc_col"].multiValue = not is_multivalue_per_column
+            as_dict["lok_vegtypen_col"].multiValue = not is_multivalue_per_column
 
-    @validator("sbb_col", "vvn_col", "perc_col", "lok_vegtypen_col", pre=True)
-    def allow_none_and_strings(cls, v: List[Optional[str]]) -> List[List[str]]:
-        return [col.split(";") if col is not None else [] for col in v]
+        if as_dict["sbb_of_vvn"].altered:
+            as_dict["sbb_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "VvN"
+            as_dict["vvn_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "SBB"
