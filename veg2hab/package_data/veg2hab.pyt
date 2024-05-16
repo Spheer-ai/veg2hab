@@ -58,7 +58,7 @@ class BaseTool:
             logging.warning(
                 "Deze versie van de toolbox is niet getest met deze versie van de software.\n"
                 "Gelieve de toolbox opnieuw toe te voegen aan ArcGIS, zie installatie instructies.\n"
-                f"De locatie van toolbox.pyt is: {veg2hab.constants.TOOLBOX_PYT_PATH}"
+                f"De locatie van veg2hab.pyt is: {veg2hab.constants.TOOLBOX_PYT_PATH}"
             )
 
         input_params = self.param_type.from_parameter_list(parameters)
