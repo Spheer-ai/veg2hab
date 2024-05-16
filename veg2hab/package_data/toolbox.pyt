@@ -46,17 +46,7 @@ class BaseTool:
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        # TODO: we could do some more validation here
-        # and or make some parameters dependent on others
-        # validate that the column exists
-        # if parameters[0].altered:
-        #     try:
-        #         layer = parameters[0].valueAsText
-        #         fields = [f.name for f in arcpy.ListFields(layer)]
-        #         parameters[1].filter.list = fields
-        #     except Exception as e:
-        #         # hmm, dit doet het nog niet helemaal..
-        #         logging.error(e)
+        return self.param_type.update_parameters(parameters)
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool

@@ -2,23 +2,33 @@ import logging
 import os.path
 import random
 import string
+import tempfile
 from pathlib import Path
 from typing import List, Optional
 
 import geopandas as gpd
+from pydantic import validator
 from typing_extensions import Self, override
 
 from .common import AccessDBInputs, Interface, ShapefileInputs
 
 
 class ArcGISInterface(Interface):
+    def _get_temp_dir(self):
+        import arcpy
+
+        if arcpy.env.scratchWorkspace is not None:
+            return os.path.abspath(os.path.join(arcpy.env.scratchWorkspace, ".."))
+        if arcpy.env.scratchFolder is not None:
+            return arcpy.env.scratchFolder
+
+        return tempfile.gettempdir()
+
     def _generate_random_gpkg_name(self, basename: str) -> str:
         import arcpy
 
-        file_location = os.path.abspath(os.path.join(arcpy.env.scratchWorkspace, ".."))
-
         random_name = f"{basename}_{''.join(random.choices(string.ascii_letters + string.digits, k=8))}.gpkg"
-        return os.path.join(file_location, random_name)
+        return os.path.join(self._get_temp_dir(), random_name)
 
     @override
     def shape_id_to_filename(self, shapefile_id: str) -> Path:
@@ -118,6 +128,7 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             datatype=datatype,
             parameterType="Required" if is_required else "Optional",
             direction="Input",
+            multiValue=field_info.get("type") == "array",
         )
 
         if field_name == "shapefile":
@@ -150,6 +161,14 @@ class ArcGISAccessDBInputs(AccessDBInputs):
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
         return _schema_to_param_list(cls.schema())
 
+    def update_parameters(self, parameters: List["arcpy.Parameter"]) -> None:
+        as_dict = {p.name: p for p in parameters}
+        if as_dict["vegtype_col_format"].altered:
+            if as_dict["vegtype_col_format"].value == "single":
+                as_dict["split_char"].enabled = True
+            else:
+                as_dict["split_char"].enabled = False
+
 
 class ArcGISShapefileInputs(ShapefileInputs):
     @classmethod
@@ -160,3 +179,10 @@ class ArcGISShapefileInputs(ShapefileInputs):
     @classmethod
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
         return _schema_to_param_list(cls.schema())
+
+    def update_parameters(self, parameters: List["arcpy.Parameter"]) -> None:
+        pass
+
+    @validator("sbb_col", "vvn_col", "perc_col", "lok_vegtypen_col", pre=True)
+    def allow_none_and_strings(cls, v: List[Optional[str]]) -> List[List[str]]:
+        return [col.split(";") if col is not None else [] for col in v]
