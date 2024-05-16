@@ -143,7 +143,6 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
 
         outputs.append(param)
 
-    # TODO: fix this for multi field inputs
     for param in outputs:
         if param.name.endswith("_col"):
             param.parameterDependencies = [shapefile_param.name]
@@ -164,10 +163,14 @@ class ArcGISAccessDBInputs(AccessDBInputs):
     def update_parameters(self, parameters: List["arcpy.Parameter"]) -> None:
         as_dict = {p.name: p for p in parameters}
         if as_dict["vegtype_col_format"].altered:
-            if as_dict["vegtype_col_format"].value == "single":
-                as_dict["split_char"].enabled = True
-            else:
-                as_dict["split_char"].enabled = False
+            is_multivalue_per_column = (
+                as_dict["vegtype_col_format"].valueAsText == "single"
+            )
+            as_dict["split_char"].enabled = is_multivalue_per_column
+
+        if as_dict["sbb_of_vvn"].altered:
+            as_dict["sbb_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "VvN"
+            as_dict["vvn_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "SBB"
 
 
 class ArcGISShapefileInputs(ShapefileInputs):
