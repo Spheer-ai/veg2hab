@@ -1,5 +1,4 @@
 import logging
-import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
@@ -778,7 +777,7 @@ class Kartering:
         shapefile = gpd.read_file(shape_path)
 
         if ElmID_col and not shapefile[ElmID_col].is_unique:
-            warnings.warn(
+            logging.warn(
                 f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
                 Eerste paar dubbele waarden:
                 {
@@ -924,7 +923,7 @@ class Kartering:
             lambda infos: any(len(info.VvN) > 0 for info in infos)
         )
         if VvN_already_present.any() and not override_existing_VvN:
-            warnings.warn(
+            logging.warn(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )
             return
@@ -1063,7 +1062,7 @@ class Kartering:
             ):
                 break
         else:
-            warnings.warn(
+            logging.warn(
                 f"Maximaal aantal iteraties ({max_iter}) bereikt voor het bepalen van de habitatkeuzes."
             )
 
@@ -1075,7 +1074,7 @@ class Kartering:
             # NOTE: @reviewer Moet dit een warning zijn vind je? Of gewoon een print?
             # NOTE: Het is iets wat niet alarmerend is maar wel nuttig om te weten.
             # NOTE
-            warnings.warn(
+            logging.warn(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
 
