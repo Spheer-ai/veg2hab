@@ -13,7 +13,7 @@ from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
 
 
-def installation_instructions():
+def installatie_instructies():
     print(
         dedent(
             f"""

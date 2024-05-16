@@ -160,7 +160,8 @@ class ArcGISAccessDBInputs(AccessDBInputs):
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
         return _schema_to_param_list(cls.schema())
 
-    def update_parameters(self, parameters: List["arcpy.Parameter"]) -> None:
+    @classmethod
+    def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
         as_dict = {p.name: p for p in parameters}
         if as_dict["vegtype_col_format"].altered:
             is_multivalue_per_column = (
@@ -183,7 +184,8 @@ class ArcGISShapefileInputs(ShapefileInputs):
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
         return _schema_to_param_list(cls.schema())
 
-    def update_parameters(self, parameters: List["arcpy.Parameter"]) -> None:
+    @classmethod
+    def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
         pass
 
     @validator("sbb_col", "vvn_col", "perc_col", "lok_vegtypen_col", pre=True)

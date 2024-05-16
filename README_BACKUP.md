@@ -29,27 +29,27 @@ veg2hab wordt gedistribueerd via PyPI, waar alle historische versies te vinden z
 
 ### Installatie binnen ArcGIS Pro
 
-Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. 
-Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven: 
+Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
+Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro
- 2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren): 
-    - Open de 'Package Manager'  
+ 2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
+    - Open de 'Package Manager'
         <img src="./images/package_manager.png" alt="package manager" width="400"/>
-    - Klik op het tandwiel naast 'Active Environment'  
-    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.  
-        <img src="./images/new_environment.png" alt="new python environment" width="400"/>  
+    - Klik op het tandwiel naast 'Active Environment'
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
+        <img src="./images/new_environment.png" alt="new python environment" width="400"/>
         <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
  3. Download en installeer veg2hab:
-    - Klik op 'New notebook'  
+    - Klik op 'New notebook'
         <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`  
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`
         <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
     - Installeer veg2hab met het commando `import veg2hab`
  4. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie  
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
@@ -68,18 +68,18 @@ voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ### Gebruik in ArcGIS Pro
 
-De omzetting van **veg2hab** van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. De omzetting is opgesplitst in meerdere tools, die achter elkaar gebruikt dienen te worden. Deze opsplitsing is aangebracht zodat de gebruiker het tussenproduct kan bekijken, en indien nodig handmatig kan aanpassen voordat de volgende stap ondernomen wordt. 
+De omzetting van **veg2hab** van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. De omzetting is opgesplitst in meerdere tools, die achter elkaar gebruikt dienen te worden. Deze opsplitsing is aangebracht zodat de gebruiker het tussenproduct kan bekijken, en indien nodig handmatig kan aanpassen voordat de volgende stap ondernomen wordt.
 
-De tools in logische volgorde van draaien: 
+De tools in logische volgorde van draaien:
 
  komt met twee opties `digitale_standaard` en `vector_bestand`, afhankelijk van het formaat waarin de vegetatietype beschikbaar is. We willen iedereen aanraden de digitale standaard te gebruiken, wanneer dit mogelijk is.
 
 
 ### Bronbestanden die veg2hab gebruikt
 
-**veg2hab** is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. 
+**veg2hab** is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen.
 
-Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker: 
+Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
 
  - WasWordtLijst (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten
  - DefinitieTabel (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten
@@ -121,7 +121,7 @@ poetry run pytest tests/
 1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`.
 2. Maak een nieuwe versie met poetry (minor, major, patch): `poetry version {{rule}}`
 3. Pas de [__init__.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version
-4. Pas [toolbox.pyt](veg2hab/package_data/toolbox.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
+4. Pas [veg2hab.pyt](veg2hab/package_data/veg2hab.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan veg2hab.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
 5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
 6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github. (`git add`, `git commit`, `git push`)
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
@@ -137,7 +137,7 @@ poetry run pytest tests/
 
 *Ook wellicht nuttig voor als we mensen veg2hab gaan laten gebruiken, een basic naslagwerk*
 
-*TODO: Ik benoem in de uitleg hieronder enkele keren de "specifiekheid" van regels in de definitietabel. Ik weet niet of dit door een ecoloog begrepen wordt of dat hier toch een andere oplossing voor gevonden moet worden.* 
+*TODO: Ik benoem in de uitleg hieronder enkele keren de "specifiekheid" van regels in de definitietabel. Ik weet niet of dit door een ecoloog begrepen wordt of dat hier toch een andere oplossing voor gevonden moet worden.*
 
 ### Vlakbrede kolommen
 **Area**: Oppervlakte van het gehele vlak in m2.
@@ -152,10 +152,10 @@ poetry run pytest tests/
 
 **_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
 
-**_LokVrtNar**: Of de oorspronkelijk opgegeven lokale vegetatietypen in de bronkartering primair is vertaald naar SBB, VvN of beide. Als er naar SBB is vertaald, zijn er bijbehorende VvN uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, is dit niet gedaan. 
+**_LokVrtNar**: Of de oorspronkelijk opgegeven lokale vegetatietypen in de bronkartering primair is vertaald naar SBB, VvN of beide. Als er naar SBB is vertaald, zijn er bijbehorende VvN uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, is dit niet gedaan.
 
 ### Complex-deel-specifieke kolommen
-**Habtype{i}**: Habitattype van het complex-deel. HXXXX hier betekend dat er menselijk oordeel nodig is over dit complex-deel. 
+**Habtype{i}**: Habitattype van het complex-deel. HXXXX hier betekend dat er menselijk oordeel nodig is over dit complex-deel.
 
 **Perc{i}**: Percentage van het gehele vlak wat door dit complex-deel wordt bedekt.
 
