@@ -4,7 +4,7 @@ version = "0.2.1"
 description = "Package voor automatisch omzetten van vegetatiekarteringen naar habitatkaarten"
 authors = ["Spheer.ai <info@spheer.ai>"]
 readme = "README.md"
-license = "LGPLv3" 
+license = "LGPLv3"
 classifiers = [
   "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
 
@@ -23,12 +23,13 @@ Source = "https://github.com/Spheer-ai/veg2hab"
 veg2hab = "veg2hab.__main__:veg2hab"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4.0"
-geopandas = ">=0.10.0"
-openpyxl = ">=3.0.0"
-xlrd = ">=2.0.1"
-pyodbc= ">=4.0.1"
-pydantic = ">=1.0,<2.0"
+python = ">=3.7.1,<4.0"
+pandas = "^1.3.0"
+geopandas = "^0.10.0"
+openpyxl = "^3.1.0"
+xlrd = "^2.0.1"
+pyodbc= "^4.0.1"
+pydantic = "^1.10.0"
 setuptools = "<60.0.0"
 pygeos = "^0.14"
 typing-extensions = "4.7.1"
