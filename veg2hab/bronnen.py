@@ -12,6 +12,13 @@ class Bron(ABC):
         pass
 
 
+# TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
+#       binnen een bronvlak liggen NaN krijgen. Beter zou zijn dat ze alles krijgen waar ze op liggen, en als
+#       dat steeds dezelfde is, het karteringvlak alsnog dat type krijgt. Dit kan voorkomen bij LBK en bij
+#       de bodemkaart, omdat hier regelmatig vlakken met dezelfde typering toch naast elkaar liggen, omdat ze
+#       verschillen in zaken waar wij niet naar kijken.
+
+
 class LBK(Bron):
     def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
         self.gdf = gpd.read_file(path, mask=mask, include_fields=["Serie"])
@@ -45,9 +52,18 @@ class FGR(Bron):
 class Bodemkaart(Bron):
     def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
         # inladen
-        soil_area = gpd.read_file(path, layer="soilarea", mask=mask, include_fields=["maparea_id"])
-        soil_units_table = gpd.read_file(path, layer="soilarea_soilunit", include_fields=["maparea_id", "soilunit_code"], ignore_geometry=True)
-        self.gdf = soil_area.merge(soil_units_table, on="maparea_id")[["geometry", "soilunit_code"]]
+        soil_area = gpd.read_file(
+            path, layer="soilarea", mask=mask, include_fields=["maparea_id"]
+        )
+        soil_units_table = gpd.read_file(
+            path,
+            layer="soilarea_soilunit",
+            include_fields=["maparea_id", "soilunit_code"],
+            ignore_geometry=True,
+        )
+        self.gdf = soil_area.merge(soil_units_table, on="maparea_id")[
+            ["geometry", "soilunit_code"]
+        ]
         self.gdf = self.gdf.rename(columns={"soilunit_code": "bodem"})
 
     def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
@@ -56,4 +72,3 @@ class Bodemkaart(Bron):
         """
         assert "geometry" in other_gdf.columns
         return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
-    

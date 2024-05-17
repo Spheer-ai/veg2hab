@@ -58,7 +58,7 @@ class MaybeBoolean(Enum):
 
     def __str__(self):
         return self.name
-    
+
     def as_letter(self):
         return {
             MaybeBoolean.FALSE: "F",
@@ -186,7 +186,7 @@ class BodemType(Enum):
     LEMIGE_HUMUSPODZOLGRONDEN = "lemige humuspodzolgronden"
     VAAGGRONDEN = "vaaggronden"
     LEEMARME_VAAGGRONDEN_H9190 = "leemarme vaaggronden (H9190)"
-    PODZOLGRONDEN_MET_EEN_ZANDDEK = "podzolgronden met een zanddek"
+    PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190 = "podzolgronden met een zanddek (H9190)"
     MODERPODZOLGRONDEN = "moderpodzolgronden"
     OUDE_KLEIGRONDEN = "oude kleigronden"
     LEEMGRONDEN = "leemgronden"
