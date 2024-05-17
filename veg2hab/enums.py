@@ -131,9 +131,6 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
-    # Het minimum oppervlak voor dit habitattype is niet gehaald
-    MINIMUM_OPP_NIET_GEHAALD = auto()
-
     __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
         "MINIMUM_OPP_NIET_GEHAALD": "Er is een habitatvoorstel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
