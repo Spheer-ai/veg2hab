@@ -762,8 +762,8 @@ class Kartering:
         SBB_col: List[str],
         VvN_col: List[str],
         split_char: Optional[str] = "+",
-        perc_col: List[str],
-        lok_vegtypen_col: List[str],
+        perc_col: List[str] = [],
+        lok_vegtypen_col: List[str] = [],
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
