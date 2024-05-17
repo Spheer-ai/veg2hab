@@ -361,3 +361,33 @@ def calc_nr_of_unresolved_habitatkeuzes_per_row(gdf):
             ]
         )
     )
+
+
+def apply_minimum_oppervlak(gdf) -> pd.Series:
+    """
+    Past de minimum oppervlak regeling toe
+
+    NOTE: Voor nu wordt functionele samenhang niet meegenomen
+    """
+    # NOTE: Deze zou ook best in vegkartering kunnen (of in zn eigen file), ben er nog niet helemaal over uit
+    assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
+    assert "Opp" in gdf.columns, "area kolom niet aanwezig in gdf"
+
+    min_area = Interface.get_instance().get_config().minimum_oppervlak
+    min_area_default = Interface.get_instance().get_config().minimum_oppervlak_default
+
+    # checken voor iedere habkeuze of het oppervlak boven min_area[keuze.habtype] is
+    def check_area(row):
+        new_keuzes = deepcopy(row.HabitatKeuze)
+        for idx, keuze in enumerate(new_keuzes):
+            if keuze.habtype in ["H0000", "HXXXX"]:
+                continue
+            area = row.Opp * (row.VegTypeInfo[idx].percentage / 100)
+            if area < min_area.get(keuze.habtype, min_area_default):
+                keuze.habtype = "H0000"
+                keuze.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
+        return new_keuzes
+
+    new_keuzes = gdf.apply(check_area, axis=1)
+
+    return new_keuzes
