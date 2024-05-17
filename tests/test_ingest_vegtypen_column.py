@@ -29,7 +29,7 @@ def test_single_SBB(gdf):
     post = ingest_vegtype(
         gdf=gdf,
         sbb_cols=["SBB1"],
-        vvn_cols=None,
+        vvn_cols=[],
         perc_cols=["perc1"],
     )
     expected = pd.Series(
@@ -46,7 +46,7 @@ def test_single_SBB(gdf):
 def test_single_VvN(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=None,
+        sbb_cols=[],
         vvn_cols=["VvN1"],
         perc_cols=["perc1"],
     )
@@ -95,7 +95,7 @@ def test_multiple_SBB(gdf):
     post = ingest_vegtype(
         gdf=gdf,
         sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=None,
+        vvn_cols=[],
         perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
@@ -287,6 +287,6 @@ def test_columns_dont_exist(gdf):
         ingest_vegtype(
             gdf=gdf,
             sbb_cols=["SBB1", "SBB3"],
-            vvn_cols=None,
+            vvn_cols=[],
             perc_cols=["perc1", "perc2"],
         )
