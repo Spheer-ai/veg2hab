@@ -100,12 +100,12 @@ class FGRCriterium(BeperkendCriterium):
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
-        
+
         if pd.isna(row["fgr"]):
             # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
             self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
-        
+
         self._evaluation = (
             MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
         )
@@ -127,7 +127,7 @@ class BodemCriterium(BeperkendCriterium):
             # Er is een NaN als het vlak niet mooi binnen een bodemkaartvlak valt
             self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
-        
+
         self._evaluation = (
             MaybeBoolean.TRUE if row["bodem"] == self.bodemtype else MaybeBoolean.FALSE
         )
@@ -149,7 +149,7 @@ class LBKCriterium(BeperkendCriterium):
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
             self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
-        
+
         self._evaluation = (
             MaybeBoolean.TRUE if row["lbk"] == self.lbktype else MaybeBoolean.FALSE
         )

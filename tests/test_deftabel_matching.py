@@ -3,9 +3,11 @@ from pathlib import Path
 import pytest
 
 from veg2hab.criteria import (
+    BodemCriterium,
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
+    LBKCriterium,
     NietGeautomatiseerdCriterium,
     OfCriteria,
 )

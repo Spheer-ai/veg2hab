@@ -981,9 +981,9 @@ class Kartering:
         mits_info_df["fgr"] = fgr.for_geometry(mits_info_df.loc[fgr_needed]).drop(
             columns="index_right"
         )
-        mits_info_df["bodem"] = bodemkaart.for_geometry(mits_info_df.loc[bodem_needed]).drop(
-            columns="index_right"
-        )
+        mits_info_df["bodem"] = bodemkaart.for_geometry(
+            mits_info_df.loc[bodem_needed]
+        ).drop(columns="index_right")
         mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed]).drop(
             columns="index_right"
         )
@@ -997,8 +997,14 @@ class Kartering:
                         raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
-    def bepaal_habitatkeuzes(self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, max_iter: int = 20) -> None:
+    def bepaal_habitatkeuzes(
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, max_iter: int = 20
+    ) -> None:
         """ """
+        assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
+        assert isinstance(bodemkaart, Bodemkaart), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
+        assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
+        
         # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
         self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
             lambda voorstellen_list: [None for sublist in voorstellen_list]
@@ -1007,7 +1013,7 @@ class Kartering:
 
         ### Checken mitsen
         self.check_mitsen(fgr, bodemkaart, lbk)
-        
+
         ### Verkrijgen overlay gdf
         # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
         # Als er geen vlakken met mozaiekregels zijn of als deze vlakken allemaal nergens aan grenzen is overlayed None
