@@ -1,11 +1,14 @@
 from collections import defaultdict
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
+
+import pandas as pd
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
+from veg2hab.mozaiek import GeenMozaiekregel, Mozaiekregel, is_mozaiek_type_present
 from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
@@ -22,7 +25,7 @@ class HabitatVoorstel:
     kwaliteit: Kwaliteit
     idx_in_dt: Optional[int]
     mits: BeperkendCriterium
-    mozaiek: MozaiekRegel
+    mozaiek: Mozaiekregel
     match_level: MatchLevel
     mozaiek_dict: Optional[dict] = None
 
