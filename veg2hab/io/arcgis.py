@@ -164,6 +164,7 @@ class ArcGISAccessDBInputs(AccessDBInputs):
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
         pass
 
+
 class ArcGISShapefileInputs(ShapefileInputs):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
@@ -188,6 +189,8 @@ class ArcGISShapefileInputs(ShapefileInputs):
                 as_dict["vegtype_col_format"].valueAsText == "single"
             )
             as_dict["split_char"].enabled = is_multivalue_per_column
+
+            # TODO: ik heb het idee dat dit niks doet, maar moet nog even checken.
             as_dict["sbb_col"].multiValue = not is_multivalue_per_column
             as_dict["vvn_col"].multiValue = not is_multivalue_per_column
             as_dict["perc_col"].multiValue = not is_multivalue_per_column
