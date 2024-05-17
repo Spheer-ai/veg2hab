@@ -1,3 +1,4 @@
+import json
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import ClassVar, List, Optional
@@ -93,13 +94,14 @@ class Veg2HabConfig(BaseSettings):
         env_prefix = "VEG2HAB_"
 
     mozaiek_threshold: Union[int, float] = Field(
-        default=95.0,  # todo number/float
+        default=95.0,
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
-    mozaiek_als_rand_langs_threshold: Union[int, float] = Field(
-        default=50.0,  # todo number/float
+    mozaiek_als_rand_threshold: Union[int, float] = Field(
+        default=50.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
     )
+
     niet_geautomatiseerde_sbb: List[str] = Field(
         default=[
             "100",
@@ -109,6 +111,38 @@ class Veg2HabConfig(BaseSettings):
         ],
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
     )
+
+    # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
+    minimum_oppervlak_exceptions: str = Field(
+        default=json.dumps(
+            {
+                "H6110": 10,
+                "H7220": 10,
+                "H2180_A": 1000,
+                "H2180_B": 1000,
+                "H2180_C": 1000,
+                "H9110": 1000,
+                "H9120": 1000,
+                "H9160_A": 1000,
+                "H9160_B": 1000,
+                "H9190": 1000,
+                "H91D0": 1000,
+                "H91E0_A": 1000,
+                "H91E0_B": 1000,
+                "H91E0_C": 1000,
+                "H91F0": 1000,
+            }
+        ),
+        description="Minimum oppervlakken per habitattype",
+    )
+    minimum_oppervlak_default: Union[int, float] = Field(
+        default=100,
+        description="Minimum oppervlak voor een habitattype",
+    )
+
+    @property
+    def minimum_oppervlak(self):
+        return json.loads(self.minimum_oppervlak_exceptions)
 
 
 class Interface(metaclass=ABCMeta):
