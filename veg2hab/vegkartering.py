@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -135,7 +135,7 @@ def ingest_vegtype(
     # Inlezen
     if len(sbb_cols) == 0:
         sbb_cols = [None] * len(perc_cols)
-    if len(vvn_cols):
+    if len(vvn_cols) == 0:
         vvn_cols = [None] * len(perc_cols)
 
     def _row_to_vegtypeinfo_list(row: gpd.GeoSeries) -> List[VegTypeInfo]:
@@ -559,7 +559,7 @@ def _single_to_multi(
     VvN_col: Optional[str] = None,
     split_char: Optional[str] = None,
     perc_col: Optional[str] = None,
-) -> gpd.GeoDataFrame:
+) -> Tuple[gpd.GeoDataFrame, List[str], List[str], List[str]]:
     """
     Converteert een "single" kolomformat dataframe naar een "multi" kolomformat dataframe
     De nieuwe "multi" format kolommen heten SBB1/2/3/..., VvN1/2/3/... en perc1/2/3/...
@@ -607,25 +607,31 @@ def _single_to_multi(
 
     # Kolomnamen moeten geupdated worden.
     if SBB_col:
-        SBB_col = [f"{SBB_col}{idx+1}" for idx in range(n_cols_needed)]
+        SBB_out = [f"{SBB_col}{idx+1}" for idx in range(n_cols_needed)]
         # Stel dat er max 3 VvN zijn en max 2 SBB, dan moet de SBB3 nog wel bestaan
-        for col in SBB_col:
+        for col in SBB_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        SBB_out = []
 
     if VvN_col:
-        VvN_col = [f"{VvN_col}{idx+1}" for idx in range(n_cols_needed)]
-        for col in VvN_col:
+        VvN_out = [f"{VvN_col}{idx+1}" for idx in range(n_cols_needed)]
+        for col in VvN_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        VvN_out = []
 
     if perc_col:
-        perc_col = [f"{perc_col}{idx+1}" for idx in range(n_cols_needed)]
-        for col in perc_col:
+        perc_out = [f"{perc_col}{idx+1}" for idx in range(n_cols_needed)]
+        for col in perc_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        perc_out = []
 
-    return gdf, SBB_col, VvN_col, perc_col
+    return gdf, SBB_out, VvN_out, perc_out
 
 
 class Kartering:
