@@ -13,7 +13,7 @@ from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
 from veg2hab.enums import FGRType, Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.cli import CLIInterface
-from veg2hab.mozaiek import GeenMozaiekregel, NietGeimplementeerdeMozaiekregel
+from veg2hab.mozaiek import GeenMozaiekregel, StandaardMozaiekregel
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -168,10 +168,16 @@ def test_perfect_and_less_specific_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=640,
             mits=GeenCriterium(),
-            mozaiek=NietGeimplementeerdeMozaiekregel(),
+            mozaiek=StandaardMozaiekregel(
+                habtype="H91D0",
+                alleen_zelfstandig=True,
+                alleen_goede_kwaliteit=False,
+                ook_als_rand_langs=True,
+            ),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
+    post[1].mozaiek.determine_keys()
     assert dt.find_habtypes(pre) == post
 
 
