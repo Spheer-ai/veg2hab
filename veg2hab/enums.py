@@ -104,6 +104,9 @@ class KeuzeStatus(Enum):
     # 1 Habitatvoorstel met kloppende mits
     DUIDELIJK = auto()
 
+    # Er is wel een keuze gemaakt, maar de minimum oppervlakte van het habitattype is niet gehaald
+    MINIMUM_OPP_NIET_GEHAALD = auto()
+
     # Geen habitatvoorstel met kloppende mits
     GEEN_KLOPPENDE_MITSEN = auto()
 
@@ -122,11 +125,15 @@ class KeuzeStatus(Enum):
     # Er is een vegetatietype dat we niet kunnen omzetten
     NIET_GEAUTOMATISEERD_VEGTYPE = auto()
 
+    # # Dit gaat Veg2Hab niet op kunnen lossen
+    # HANDMATIGE_CONTROLE = auto()
+
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
     __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
+        "MINIMUM_OPP_NIET_GEHAALD": "Er is een habitatvoorstel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
         "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
         "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
         "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
@@ -134,6 +141,7 @@ class KeuzeStatus(Enum):
         "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
         "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
         "WACHTEN_OP_MOZAIEK": "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        "MINIMUM_OPP_NIET_GEHAALD": "Het minimum oppervlak voor dit habitattype is niet gehaald. Functionele samenhang wordt nog niet meegenomen.",
     }
 
     @property

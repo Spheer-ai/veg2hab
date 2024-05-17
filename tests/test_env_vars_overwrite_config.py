@@ -1,3 +1,4 @@
+import json
 import os
 
 from veg2hab.io.cli import CLIInterface
@@ -13,16 +14,10 @@ def test_mozaiek_threshold():
 
 
 def test_mozaiek_als_rand_langs_threshold():
-    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_LANGS_THRESHOLD"] = "49.0"
-    assert (
-        CLIInterface.get_instance().get_config().mozaiek_als_rand_langs_threshold
-        == 49.0
-    )
-    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_LANGS_THRESHOLD"] = "48.0"
-    assert (
-        CLIInterface.get_instance().get_config().mozaiek_als_rand_langs_threshold
-        == 48.0
-    )
+    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "49.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == 49.0
+    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "48.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == 48.0
 
 
 def test_niet_geautomatiseerde_sbb():
@@ -41,3 +36,26 @@ def test_niet_geautomatiseerde_sbb():
         "300",
         "400",
     ]
+
+
+def test_minimum_oppervlak():
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "100"
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
+        {
+            "H6110": 10,
+            "H9110": 1000,
+        }
+    )
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 100
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 10
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 1000
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "200"
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
+        {
+            "H6110": 20,
+            "H9110": 2000,
+        }
+    )
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 200
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 20
+    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 2000
