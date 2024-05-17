@@ -14,16 +14,10 @@ def test_mozaiek_threshold():
 
 
 def test_mozaiek_als_rand_langs_threshold():
-    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_LANGS_THRESHOLD"] = "49.0"
-    assert (
-        CLIInterface.get_instance().get_config().mozaiek_als_rand_langs_threshold
-        == 49.0
-    )
-    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_LANGS_THRESHOLD"] = "48.0"
-    assert (
-        CLIInterface.get_instance().get_config().mozaiek_als_rand_langs_threshold
-        == 48.0
-    )
+    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "49.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == 49.0
+    os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "48.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == 48.0
 
 
 def test_niet_geautomatiseerde_sbb():

@@ -11,13 +11,18 @@ from veg2hab.enums import Kwaliteit, MaybeBoolean
 from veg2hab.io.common import Interface
 
 
-class MozaiekRegel(BaseModel):
+class Mozaiekregel(BaseModel):
     # NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
     mozaiek_threshold: Union[int, float] = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
+    )
+    mozaiek_als_rand_threshold: Union[int, float] = Field(
+        default_factory=lambda: Interface.get_instance()
+        .get_config()
+        .mozaiek_als_rand_threshold
     )
 
     def __init_subclass__(cls):
@@ -30,7 +35,7 @@ class MozaiekRegel(BaseModel):
 
     def __new__(cls, *args, **kwargs):
         # Maakt de juiste subclass aan op basis van de type parameter
-        if cls == MozaiekRegel:
+        if cls == Mozaiekregel:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
         return super().__new__(
@@ -63,7 +68,7 @@ class MozaiekRegel(BaseModel):
         raise NotImplementedError()
 
 
-class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
+class NietGeimplementeerdeMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
@@ -78,7 +83,7 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
 
 
-class GeenMozaiekregel(MozaiekRegel):
+class GeenMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "GeenMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
@@ -93,12 +98,13 @@ class GeenMozaiekregel(MozaiekRegel):
         return "Geen mozaiekregel (altijd waar)"
 
 
-class StandaardMozaiekregel(MozaiekRegel):
+class StandaardMozaiekregel(Mozaiekregel):
     type: ClassVar[str] = "StandaardMozaiekregel"
     # Habtype waarmee gematcht moet worden
     habtype: str
     alleen_zelfstandig: bool
     alleen_goede_kwaliteit: bool
+    ook_als_rand_langs: bool
 
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
@@ -131,8 +137,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         for key in self.keys:
             requested_habtype_percentage += habtype_percentage_dict.get(key, 0)
 
+        threshold = (
+            self.mozaiek_threshold
+            if not self.ook_als_rand_langs
+            else self.mozaiek_als_rand_threshold
+        )
+
         # Threshold is behaald, dus TRUE
-        if requested_habtype_percentage >= self.mozaiek_threshold:
+        if requested_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.TRUE
             return
 
@@ -141,10 +153,7 @@ class StandaardMozaiekregel(MozaiekRegel):
             0,
         )
         # Threshold kan nog behaald worden, dus POSTPONE
-        if (
-            requested_habtype_percentage + unknown_habtype_percentage
-            >= self.mozaiek_threshold
-        ):
+        if requested_habtype_percentage + unknown_habtype_percentage >= threshold:
             self._evaluation = MaybeBoolean.POSTPONE
             return
 
@@ -156,7 +165,14 @@ class StandaardMozaiekregel(MozaiekRegel):
         return self._evaluation
 
     def __str__(self):
-        return f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} {'G' if self.alleen_goede_kwaliteit else 'G/M'} {self.habtype}."
+        complete_string = ""
+        complete_string += f"{'(als rand langs)' if self.ook_als_rand_langs else ''} "
+        complete_string += (
+            f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} "
+        )
+        complete_string += f"{'G' if self.alleen_goede_kwaliteit else 'G/M'} "
+        complete_string += f"{self.habtype}."
+        return complete_string
 
 
 def make_buffered_boundary_overlay_gdf(
@@ -183,7 +199,6 @@ def make_buffered_boundary_overlay_gdf(
         "ElmID" in gdf.columns
     ), f"ElmID niet gevonden in gdf bij make_buffered_boundary_overlay_gdf"
 
-    # TODO: hier is mozaiek_type_present voor gebruiken
     mozaiek_present = gdf.HabitatVoorstel.apply(
         lambda voorstellen: any(
             not isinstance(voorstel.mozaiek, GeenMozaiekregel)
@@ -278,24 +293,20 @@ def calc_mozaiek_percentages_from_overlay_gdf(
 
 def is_mozaiek_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    mozaiek_type: MozaiekRegel,
+    mozaiek_type: Mozaiekregel,
 ) -> bool:
     """
     Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is
-    NOTE: Op het moment wordt dit gebruikt om te kijken of er dummymozaiekregels zijn, en zo ja, dan wordt er HXXXX gegeven.
-    NOTE: Zodra mozaiekregels geimplementeerd zijn, kan deze functie mogelijk weg
     """
     # Als we een lijst van lijsten hebben, dan flattenen we die
     if any(isinstance(i, list) for i in voorstellen):
         voorstellen = [item for sublist in voorstellen for item in sublist]
 
     return any(
-        (
-            voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type)
-            if voorstel.mozaiek is not None
-            else False
-        )
-        for voorstel in voorstellen
+        [
+            (voorstel.mozaiek.is_mozaiek_type_present(mozaiek_type))
+            for voorstel in voorstellen
+        ]
     )
 
     # ------------------------

@@ -125,8 +125,14 @@ class KeuzeStatus(Enum):
     # Er is een vegetatietype dat we niet kunnen omzetten
     NIET_GEAUTOMATISEERD_VEGTYPE = auto()
 
+    # # Dit gaat Veg2Hab niet op kunnen lossen
+    # HANDMATIGE_CONTROLE = auto()
+
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
+
+    # Het minimum oppervlak voor dit habitattype is niet gehaald
+    MINIMUM_OPP_NIET_GEHAALD = auto()
 
     __toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
@@ -138,6 +144,7 @@ class KeuzeStatus(Enum):
         "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
         "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
         "WACHTEN_OP_MOZAIEK": "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        "MINIMUM_OPP_NIET_GEHAALD": "Het minimum oppervlak voor dit habitattype is niet gehaald. Functionele samenhang wordt nog niet meegenomen.",
     }
 
     @property
