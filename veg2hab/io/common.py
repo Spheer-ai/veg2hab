@@ -135,12 +135,6 @@ class Veg2HabConfig(BaseSettings):
         ),
         description="Minimum oppervlakken per habitattype",
     )
-    # NOTE:
-    # NOTE:
-    # NOTE: Ik kan de normale waarde meegeven zoals ik het nu doe, als los field, of ik zou ook een 'default': 100 entry in de dictionary kunnen zetten.
-    # NOTE: Of een defaultdict.
-    # NOTE:
-    # NOTE:
     minimum_oppervlak_default: Union[int, float] = Field(
         default=100,
         description="Minimum oppervlak voor een habitattype",
