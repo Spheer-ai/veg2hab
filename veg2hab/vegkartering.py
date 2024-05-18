@@ -864,7 +864,7 @@ class Kartering:
 
         # Selectie van de te bewaren kolommen
         cols = [
-            col for col in [datum_col, opmerking_col] if col in shapefile.columns
+            col for col in [datum_col, opmerking_col] if col is not None
         ] + [ElmID_col, "_LokVegTyp", "geometry"]
 
         # Uitvinden welke vegtype kolommen er mee moeten
@@ -1111,11 +1111,7 @@ class Kartering:
         # of we hebben max_iter bereikt
 
         if n_keuzes_still_to_determine_post > 0:
-            # NOTE
-            # NOTE: @reviewer Moet dit een warning zijn vind je? Of gewoon een print?
-            # NOTE: Het is iets wat niet alarmerend is maar wel nuttig om te weten.
-            # NOTE
-            logging.warn(
+            logging.info(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
 
