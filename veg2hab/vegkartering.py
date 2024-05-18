@@ -863,9 +863,11 @@ class Kartering:
             ] = "Geen kolommen opgegeven voor lokale vegetatietypen"
 
         # Selectie van de te bewaren kolommen
-        cols = [
-            col for col in [datum_col, opmerking_col] if col is not None
-        ] + [ElmID_col, "_LokVegTyp", "geometry"]
+        cols = [col for col in [datum_col, opmerking_col] if col is not None] + [
+            ElmID_col,
+            "_LokVegTyp",
+            "geometry",
+        ]
 
         # Uitvinden welke vegtype kolommen er mee moeten
         cols += SBB_col + VvN_col + perc_col
