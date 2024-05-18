@@ -6,7 +6,7 @@ import veg2hab.main
 import veg2hab.constants
 import logging
 
-SUPPORTED_VERSIONS = ["0.2.2a1"]
+SUPPORTED_VERSIONS = ["0.2.2a1", "0.2.2"]
 
 # this instantiates the arcgis interface and configures the logging
 veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
