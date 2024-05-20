@@ -4,6 +4,7 @@
   - [Introductie](#introductie)
   - [Installatie instructies](#installatie-instructies)
     - [Installatie binnen ArcGIS Pro](#installatie-binnen-arcgis-pro)
+      - [Probleemoplossing](#probleemoplossing)
     - [Installatie op linux](#installatie-op-linux)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
@@ -40,6 +41,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         <img src="./images/new_environment.png" alt="new python environment" width="400"/>  
         <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
+    - Start ArcGIS opnieuw op.
  3. Download en installeer veg2hab:
     - Klik op 'New notebook'  
         <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
@@ -50,11 +52,24 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie  
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+    - Start ArcGIS opnieuw op
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 <img src="./images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
 
+#### Probleemoplossing
+
+In het algemeen is het een goed idee om tijdens de installatie van veg2hab ArcGIS meermalen opnieuw op te starten, maar minstens voordat veg2hab gebruikt wordt.
+
+__Vraag__
+`pip install veg2hab` lijkt goed te gaan, maar als ik daarna het commando `import veg2hab` probeer, krijg ik een foutmelding "WARNING: Package(s) not found: veg2hab" of iets soortgelijks.
+
+__Antwoord__
+Run in een Notebook achtereenvolgens de volgende commando's:
+1. `import pip`
+2. `pip.main(["install", "veg2hab"])`
+3. `import veg2hab`
 
 ### Installatie op linux
 Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
