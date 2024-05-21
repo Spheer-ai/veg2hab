@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 from veg2hab.criteria import (
-    BodemCriterium,
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
@@ -12,7 +11,7 @@ from veg2hab.criteria import (
     OfCriteria,
 )
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
-from veg2hab.enums import FGRType, Kwaliteit
+from veg2hab.enums import FGRType, Kwaliteit, LBKType
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import GeenMozaiekregel, NietGeimplementeerdeMozaiekregel
@@ -124,7 +123,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
+            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
@@ -217,7 +216,7 @@ def test_matches_both_vvn_and_sbb(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
+            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
