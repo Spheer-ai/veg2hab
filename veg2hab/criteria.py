@@ -56,6 +56,9 @@ class BeperkendCriterium(BaseModel):
 
     def is_criteria_type_present(self, type):
         return isinstance(self, type)
+    
+    def get_opm(self) -> str:
+        return None
 
     @property
     def evaluation(self) -> MaybeBoolean:
@@ -111,20 +114,35 @@ class FGRCriterium(BeperkendCriterium):
         )
 
     def __str__(self):
-        return f"FGR is {self.fgrtype.value} ({self._evaluation.as_letter()})"
+        string = f"FGR is {self.fgrtype.value}"
+        if self._evaluation is not None:
+            string += f" ({self._evaluation.as_letter()})"
+        return string
 
+    # def get_opm(self) -> str:
+    #     if pd.isna(self.fgrtype):
+    #         return "vlak ligt niet binnen een FGR-vak"
+    #     return f"FGR type is {self.fgrtype.value}"
 
 class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     bodemtype: BodemType
+    # actual_bodemtype: List[str]
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
         assert row["bodem"] is not None, "bodem kolom is leeg"
 
+        # self.actual_bodemtype = row["bodem"]
+
+        if len(row["bodem"]) > 1:
+            # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+
         if pd.isna(row["bodem"]):
-            # Er is een NaN als het vlak niet mooi binnen een bodemkaartvlak valt
+            # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
             self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
@@ -133,8 +151,17 @@ class BodemCriterium(BeperkendCriterium):
         )
 
     def __str__(self):
-        return f"Bodem is {self.bodemtype} ({self._evaluation.as_letter()})"
+        string = f"Bodem is {self.bodemtype}"
+        if self._evaluation is not None:
+            string += f" ({self._evaluation.as_letter()})"
+        return string
 
+    # def get_opm(self) -> str:
+    #     if len(self.actual_bodemtype) == 1:
+    #         if pd.isna(self.actual_bodemtype[0]):
+    #             return "vlak ligt niet binnen een bodemkaartvlak"
+    #         return f"bodemtype is {self.actual_bodemtype[0]}"
+    #     return f"bodemtypen zijn {', '.join(self.actual_bodemtype)}"
 
 class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
@@ -155,8 +182,15 @@ class LBKCriterium(BeperkendCriterium):
         )
 
     def __str__(self):
-        return f"LBK is {self.lbktype} ({self._evaluation.as_letter()})"
-
+        string = f"LBK is {self.lbktype}"
+        if self._evaluation is not None:
+            string += f" ({self._evaluation.as_letter()})"
+        return string
+    
+    # def get_opm(self) -> str:
+    #     if pd.isna(self.lbktype):
+    #         return "vlak ligt niet binnen een LBK-vak"
+    #     return f"LBK type is {self.lbktype.value}"
 
 class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
@@ -176,6 +210,9 @@ class NietCriterium(BeperkendCriterium):
 
     def __str__(self):
         return f"niet {self.sub_criterium}"
+    
+    def get_opm(self) -> str:
+        return self.sub_criterium.get_opm()
 
 
 class OfCriteria(BeperkendCriterium):
@@ -204,7 +241,12 @@ class OfCriteria(BeperkendCriterium):
     def __str__(self):
         of_crits = " of ".join(str(crit) for crit in self.sub_criteria)
         return f"({of_crits})"
-
+    
+    def get_opm(self) -> str:
+        opms = [crit.get_opm() for crit in self.sub_criteria]
+        # remove duplicates and None values
+        opms = list(set(filter(None, opms)))
+        return ", ".join(opms)
 
 class EnCriteria(BeperkendCriterium):
     type: ClassVar[str] = "EnCriteria"
@@ -231,6 +273,12 @@ class EnCriteria(BeperkendCriterium):
     def __str__(self):
         en_crits = " en ".join(str(crit) for crit in self.sub_criteria)
         return f"({en_crits})"
+    
+    def get_opm(self) -> str:
+        opms = [crit.get_opm() for crit in self.sub_criteria]
+        # remove duplicates and None values
+        opms = list(set(filter(None, opms)))
+        return ", ".join(opms)
 
 
 def is_criteria_type_present(
