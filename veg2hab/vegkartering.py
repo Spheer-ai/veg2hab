@@ -1002,9 +1002,11 @@ class Kartering:
     ) -> None:
         """ """
         assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
-        assert isinstance(bodemkaart, Bodemkaart), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
+        assert isinstance(
+            bodemkaart, Bodemkaart
+        ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
         assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
-        
+
         # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
         self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
             lambda voorstellen_list: [None for sublist in voorstellen_list]

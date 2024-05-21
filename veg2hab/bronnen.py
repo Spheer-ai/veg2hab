@@ -1,16 +1,8 @@
-from abc import ABC, abstractmethod
 from pathlib import Path
 
 import geopandas as gpd
 
 from veg2hab.enums import FGRType
-
-
-class Bron(ABC):
-    @abstractmethod
-    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
-        pass
-
 
 # TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
 #       binnen een bronvlak liggen NaN krijgen. Beter zou zijn dat ze alles krijgen waar ze op liggen, en als
@@ -19,7 +11,7 @@ class Bron(ABC):
 #       verschillen in zaken waar wij niet naar kijken.
 
 
-class LBK(Bron):
+class LBK:
     def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
         self.gdf = gpd.read_file(path, mask=mask, include_fields=["Serie"])
         self.gdf = self.gdf.rename(columns={"Serie": "lbk"})
@@ -32,7 +24,7 @@ class LBK(Bron):
         return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").lbk
 
 
-class FGR(Bron):
+class FGR:
     def __init__(self, path: Path):
         # inladen
         self.gdf = gpd.read_file(path)
@@ -49,7 +41,7 @@ class FGR(Bron):
         return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").fgr
 
 
-class Bodemkaart(Bron):
+class Bodemkaart:
     def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
         # inladen
         soil_area = gpd.read_file(
@@ -71,7 +63,11 @@ class Bodemkaart(Bron):
         Returns bodemkaart codes voor de gegeven geometrie
         """
         assert "geometry" in other_gdf.columns
-        bodemtypen_per_index = gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
+        bodemtypen_per_index = gpd.sjoin(
+            other_gdf, self.gdf, how="left", predicate="within"
+        ).bodem
         # Vlakken kunnen meer dan 1 bodemtype krijgen, die gevallen moeten gecombineerd worden
-        bodemtypen_per_index = bodemtypen_per_index.groupby(bodemtypen_per_index.index).apply(lambda bodemtypen: [bodemtype for bodemtype in bodemtypen])
+        bodemtypen_per_index = bodemtypen_per_index.groupby(
+            bodemtypen_per_index.index
+        ).apply(lambda bodemtypen: [bodemtype for bodemtype in bodemtypen])
         return bodemtypen_per_index
