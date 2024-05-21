@@ -71,4 +71,7 @@ class Bodemkaart(Bron):
         Returns bodemkaart codes voor de gegeven geometrie
         """
         assert "geometry" in other_gdf.columns
-        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
+        bodemtypen_per_index = gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").bodem
+        # Vlakken kunnen meer dan 1 bodemtype krijgen, die gevallen moeten gecombineerd worden
+        bodemtypen_per_index = bodemtypen_per_index.groupby(bodemtypen_per_index.index).apply(lambda bodemtypen: [bodemtype for bodemtype in bodemtypen])
+        return bodemtypen_per_index
