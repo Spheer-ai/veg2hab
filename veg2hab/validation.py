@@ -1,5 +1,5 @@
+import logging
 import re
-import warnings
 from collections import defaultdict
 from numbers import Number
 from typing import Dict, List, Optional
@@ -78,11 +78,11 @@ def _convert_row_to_dict(
 
     # TODO valideren dat alle habtypes anders zijn.
     if len(ret_values) == 0:
-        warnings.warn(f"No non-null habitat types found, returning 100% of H0000")
+        logging.warn(f"No non-null habitat types found, returning 100% of H0000")
         return {"H0000": 100}
 
     if abs(sum(ret_values.values()) - 100) > 0.1:
-        warnings.warn(
+        logging.warn(
             f"Percentages do not add up to 100% for row: {row.name}, result: {ret_values}"
         )
 
@@ -193,7 +193,7 @@ def spatial_join(
 
     mask = overlayed.area < MIN_AREA_THRESHOLD
     if mask.sum() > 0:
-        warnings.warn(
+        logging.warn(
             f"Dropping {mask.sum()} rows based on area (presumed rounding errors) with a combined area of {overlayed[mask].area.sum()} m²"
         )
         overlayed = overlayed[~mask]
@@ -204,7 +204,7 @@ def spatial_join(
         assert (
             how == "union"
         ), "Combination of how=union with unmatched polygons should not be possible."
-        warnings.warn(
+        logging.warn(
             f"Found {total_non_matched_mask.sum()} polygons, that were only present in one of the two geodataframes. Filling these with {{'ONGEKARTEERD: 100'}}"
         )
 
@@ -290,9 +290,9 @@ def bereken_percentage_confusion_matrix(
     # TODO add some validation here!!
     # willen we hier nog valideren met percentages?
     #     if percentage > 1e-10:
-    #         warnings.warn("Non matching percentages in conf matrix, too much pred %?")
+    #         logging.warn("Non matching percentages in conf matrix, too much pred %?")
     # if true_percentage > 1e-10:
-    #     warnings.warn("Non matching percentages in conf matrix, too much true %?")
+    #     logging.warn("Non matching percentages in conf matrix, too much true %?")
 
     return pd.DataFrame(outputs, columns=["pred_hab", "true_hab", "percentage"])
 

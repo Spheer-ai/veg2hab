@@ -6,7 +6,7 @@ import veg2hab.main
 import veg2hab.constants
 import logging
 
-SUPPORTED_VERSIONS = ["0.1.0", "0.1.1", "0.2.1"]
+SUPPORTED_VERSIONS = ["0.2.2a1", "0.2.2"]
 
 # this instantiates the arcgis interface and configures the logging
 veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
@@ -46,17 +46,7 @@ class BaseTool:
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        # TODO: we could do some more validation here
-        # and or make some parameters dependent on others
-        # validate that the column exists
-        # if parameters[0].altered:
-        #     try:
-        #         layer = parameters[0].valueAsText
-        #         fields = [f.name for f in arcpy.ListFields(layer)]
-        #         parameters[1].filter.list = fields
-        #     except Exception as e:
-        #         # hmm, dit doet het nog niet helemaal..
-        #         logging.error(e)
+        return self.param_type.update_parameters(parameters)
 
     def updateMessages(self, parameters):
         """Modify the messages created by internal validation for each tool
@@ -68,7 +58,7 @@ class BaseTool:
             logging.warning(
                 "Deze versie van de toolbox is niet getest met deze versie van de software.\n"
                 "Gelieve de toolbox opnieuw toe te voegen aan ArcGIS, zie installatie instructies.\n"
-                f"De locatie van toolbox.pyt is: {veg2hab.constants.TOOLBOX_PYT_PATH}"
+                f"De locatie van veg2hab.pyt is: {veg2hab.constants.TOOLBOX_PYT_PATH}"
             )
 
         input_params = self.param_type.from_parameter_list(parameters)

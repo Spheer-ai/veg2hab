@@ -68,8 +68,8 @@ def create_package_data():
         / "data"
         / "definitietabel habitattypen (versie 24 maart 2009)_0.xls"
     )
-    path_in_mitsjson = Path(__file__).parent / "data" / "mitsjson.csv"
-    path_in_mozaiekjson = Path(__file__).parent / "data" / "mozaiekjson.csv"
+    path_in_mitsjson = Path(__file__).parent / "data" / "mitsjson.json"
+    path_in_mozaiekjson = Path(__file__).parent / "data" / "mozaiekjson.json"
     path_out_dt = (
         Path(__file__).parent
         / "veg2hab"
