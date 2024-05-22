@@ -1,2 +1,9 @@
 veg2hab/package_data/opgeschoonde_definitietabel.xlsx filter=lfs diff=lfs merge=lfs -text
 veg2hab/package_data/opgeschoonde_waswordt.xlsx filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/bodemkaart.gpkg filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.dbf filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.prj filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.qmd filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.shp filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.shx filter=lfs diff=lfs merge=lfs -text
+data/bronbestanden/lbk.cpg filter=lfs diff=lfs merge=lfs -text
