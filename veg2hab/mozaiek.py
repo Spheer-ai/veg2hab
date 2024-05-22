@@ -1,5 +1,5 @@
 import json
-import warnings
+import logging
 from collections import defaultdict
 from numbers import Number
 from typing import ClassVar, Dict, List, Optional, Tuple, Union
@@ -193,7 +193,7 @@ def make_buffered_boundary_overlay_gdf(
         raise ValueError(f"Buffer moet positief zijn, maar is {buffer}")
 
     if buffer == 0:
-        warnings.warn("Buffer is 0. Dit kan leiden tot onverwachte resultaten.")
+        logging.warn("Buffer is 0. Dit kan leiden tot onverwachte resultaten.")
 
     assert (
         "ElmID" in gdf.columns
