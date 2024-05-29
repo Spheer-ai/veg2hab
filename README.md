@@ -45,24 +45,24 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
-    - Open de 'Package Manager'.
+    - Open de 'Package Manager'.  
         <img src="./images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
-    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.  
         <img src="./images/new_environment.png" alt="new python environment" width="400"/>
         <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
     - Let op: het aanmaken van een nieuwe environment kan langer dan 5 minuten duren. De status van het aanmaken kan bekeken worden onder `Tasks` rechtsonderin de Package Manager.
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
-    - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
+    - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.  
         <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.  
         <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
-    - Installeer veg2hab met het commando `import veg2hab`.
+ 4. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  5. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie.
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie.  
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
@@ -71,7 +71,7 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 #### Aanvullende opmerkingen
 
-- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het importeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd moeten worden. De gebruiker moet daarna zelf alleen nog de Toolbox installeren.
+- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het installeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd worden. De gebruiker moet daarna zelf alleen nog veg2hab activeren en de Toolbox installeren.
 - Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
 
 
