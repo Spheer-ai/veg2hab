@@ -1,10 +1,19 @@
 from collections import namedtuple
 from enum import Enum, IntEnum, auto
+from typing import List, NamedTuple
 
-bodem_tuple = namedtuple("bodem_tuple", "str codes enkel_negatieven")
-# TODO: misschien enum voor enkel negatief/enkel positief/alles?
-#       Alternatief is een lijst met "forbidden maybeboolean values" (enkel negatief -> [MaybeBoolean.TRUE] en vice versa)
-LBK_tuple = namedtuple("LBK_tuple", "str codes enkel_negatieven enkel_positieven")
+
+class BodemTuple(NamedTuple):
+    string: str
+    codes: List[str]
+    enkel_negatieven: bool
+
+
+class LBKTuple(NamedTuple):
+    string: str
+    codes: List[str]
+    enkel_negatieven: bool
+    enkel_positieven: bool
 
 
 class MaybeBoolean(Enum):
@@ -139,7 +148,7 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
-    __toelichting = {
+    _toelichting = {
         "DUIDELIJK": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 habitatvoorstel met kloppende mits/mozaiek.",
         "GEEN_KLOPPENDE_MITSEN": "Er is geen habitatvoorstel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
         "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
@@ -152,7 +161,7 @@ class KeuzeStatus(Enum):
 
     @property
     def toelichting(self):
-        return self.__toelichting.value[self.name]
+        return self._toelichting.value[self.name]
 
 
 class FGRType(Enum):
@@ -193,9 +202,9 @@ class BodemType(Enum):
 
     # TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifieke te forceren?
 
-    __tuple_dict = {
-        "LEEMARME_HUMUSPODZOLGRONDEN": bodem_tuple(
-            str="leemarme humuspodzolgronden",
+    _tuple_dict = {
+        "LEEMARME_HUMUSPODZOLGRONDEN": BodemTuple(
+            string="leemarme humuspodzolgronden",
             codes=[
                 "Hn21",
                 "Hn30",
@@ -208,13 +217,13 @@ class BodemType(Enum):
             ],
             enkel_negatieven=False,
         ),
-        "LEMIGE_HUMUSPODZOLGRONDEN": bodem_tuple(
-            str="lemige humuspodzolgronden",
+        "LEMIGE_HUMUSPODZOLGRONDEN": BodemTuple(
+            string="lemige humuspodzolgronden",
             codes=["Hn23", "cHn23", "Hd23", "cHd23"],
             enkel_negatieven=False,
         ),
-        "VAAGGRONDEN": bodem_tuple(
-            str="vaaggronden",
+        "VAAGGRONDEN": BodemTuple(
+            string="vaaggronden",
             codes=[
                 # Kalkloze zandgronden -> Vaaggronden
                 "Zn21",
@@ -348,18 +357,18 @@ class BodemType(Enum):
             ],
             enkel_negatieven=False,
         ),
-        "LEEMARME_VAAGGRONDEN_H9190": bodem_tuple(
-            str="leemarme vaaggronden",
+        "LEEMARME_VAAGGRONDEN_H9190": BodemTuple(
+            string="leemarme vaaggronden",
             codes=["Zn21", "Zd21", "Zb21", "Zn30", "Zd30", "Zb30"],
             enkel_negatieven=True,
         ),
-        "PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190": bodem_tuple(
-            str="podzolgronden met een zanddek",
+        "PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190": BodemTuple(
+            string="podzolgronden met een zanddek",
             codes=["zY21", "zhY21", "zY21g", "zY30", "zhY30", "zY30g"],
             enkel_negatieven=False,
         ),
-        "MODERPODZOLGRONDEN": bodem_tuple(
-            str="moderpodzolgronden",
+        "MODERPODZOLGRONDEN": BodemTuple(
+            string="moderpodzolgronden",
             codes=[
                 "Y21",
                 "Y23",
@@ -372,13 +381,13 @@ class BodemType(Enum):
             ],
             enkel_negatieven=False,
         ),
-        "OUDE_KLEIGRONDEN": bodem_tuple(
-            str="oude kleigronden",
+        "OUDE_KLEIGRONDEN": BodemTuple(
+            string="oude kleigronden",
             codes=["KT", "KX"],
             enkel_negatieven=False,
         ),
-        "LEEMGRONDEN": bodem_tuple(
-            str="leemgronden",
+        "LEEMGRONDEN": BodemTuple(
+            string="leemgronden",
             codes=[
                 "pLn5",
                 "pLn6",
@@ -402,15 +411,15 @@ class BodemType(Enum):
     }
 
     def __str__(self):
-        return BodemType._BodemType__tuple_dict.value[self.name].str
+        return BodemType._tuple_dict.value[self.name].string
 
     @property
     def codes(self):
-        return BodemType._BodemType__tuple_dict.value[self.name].codes
+        return BodemType._tuple_dict.value[self.name].codes
 
     @property
     def enkel_negatieven(self):
-        return BodemType._BodemType__tuple_dict.value[self.name].enkel_negatieven
+        return BodemType._tuple_dict.value[self.name].enkel_negatieven
 
 
 class LBKType(Enum):
@@ -429,33 +438,33 @@ class LBKType(Enum):
     ZANDVERSTUIVING = "zandverstuiving"
     ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "onder invloed van beek of rivier"
 
-    __tuple_dict = {
-        "HOOGVEENLANDSCHAP": LBK_tuple(
-            str="hoogveenlandschap",
+    _tuple_dict = {
+        "HOOGVEENLANDSCHAP": LBKTuple(
+            string="hoogveenlandschap",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=False,
             enkel_positieven=True,
         ),
-        "HOOGVEEN": LBK_tuple(
-            str="hoogveen",
+        "HOOGVEEN": LBKTuple(
+            string="hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "HERSTELLEND_HOOGVEEN": LBK_tuple(
-            str="herstellend hoogveen",
+        "HERSTELLEND_HOOGVEEN": LBKTuple(
+            string="herstellend hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ZANDVERSTUIVING": LBK_tuple(
-            str="zandverstuiving",
+        "ZANDVERSTUIVING": LBKTuple(
+            string="zandverstuiving",
             codes=["HzSD", "HzSDa", "HzSF", "HzSFa", "HzSL", "HzSLa", "HzSX", "HzSXa"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBK_tuple(
-            str="onder invloed van beek of rivier",
+        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTuple(
+            string="onder invloed van beek of rivier",
             codes=["HzBB", "HzBN", "HzBV", "HzBW", "HzBL", "HzBD", "HlDB", "HlDD"],
             enkel_negatieven=False,
             enkel_positieven=True,
@@ -463,12 +472,12 @@ class LBKType(Enum):
     }
 
     def __str__(self):
-        return LBKType._LBKType__tuple_dict.value[self.name].str
+        return LBKType._tuple_dict.value[self.name].string
 
     @property
     def codes(self):
-        return LBKType._LBKType__tuple_dict.value[self.name].codes
+        return LBKType._tuple_dict.value[self.name].codes
 
     @property
     def enkel_negatieven(self):
-        return LBKType._LBKType__tuple_dict.value[self.name].enkel_negatieven
+        return LBKType._tuple_dict.value[self.name].enkel_negatieven

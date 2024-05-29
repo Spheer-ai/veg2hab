@@ -23,10 +23,15 @@ CLIInterface.get_instance()
 
 @pytest.fixture(scope="module")
 def dt():
-    path_in = Path("data/definitietabel habitattypen (versie 24 maart 2009)_0.xls")
-    path_mitsjson = Path("data/mitsjson.json")
-    path_mozaiekjson = Path("data/mozaiekjson.json")
-    path_out = Path("testing/opgeschoonde_definitietabel.xlsx")
+    path_in = (
+        Path(__file__).resolve().parent
+        / "../data/definitietabel habitattypen (versie 24 maart 2009)_0.xls"
+    )
+    path_mitsjson = Path(__file__).resolve().parent / "../data/mitsjson.json"
+    path_mozaiekjson = Path(__file__).resolve().parent / "../data/mozaiekjson.json"
+    path_out = (
+        Path(__file__).resolve().parent / "../testing/opgeschoonde_definitietabel.xlsx"
+    )
     path_out.parent.mkdir(exist_ok=True)
     opschonen_definitietabel(path_in, path_mitsjson, path_mozaiekjson, path_out)
     return DefinitieTabel.from_excel(path_out)

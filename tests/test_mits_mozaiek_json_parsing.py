@@ -14,14 +14,14 @@ CLIInterface.get_instance()
 
 @pytest.fixture
 def mitsjson() -> dict:
-    p = Path("data/mitsjson.json")
+    p = Path(__file__).resolve().parent / "../data/mitsjson.json"
     with p.open() as f:
         return json.load(f)
 
 
 @pytest.fixture
 def mozaiekjson() -> dict:
-    p = Path("data/mozaiekjson.json")
+    p = Path(__file__).resolve().parent / "../data/mozaiekjson.json"
     with p.open() as f:
         return json.load(f)
 
