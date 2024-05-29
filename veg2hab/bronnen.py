@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import geopandas as gpd
 
@@ -42,7 +43,7 @@ class FGR:
 
 
 class Bodemkaart:
-    def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
+    def __init__(self, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> None:
         # inladen
         soil_area = gpd.read_file(
             path, layer="soilarea", mask=mask, include_fields=["maparea_id"]
