@@ -1,8 +1,12 @@
+import sys
+import urllib.request
 from pathlib import Path
 from typing import Optional
 
 import geopandas as gpd
+from typing_extensions import Self
 
+import veg2hab
 from veg2hab.enums import FGRType
 
 # TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
@@ -12,10 +16,51 @@ from veg2hab.enums import FGRType
 #       verschillen in zaken waar wij niet naar kijken.
 
 
+def get_datadir(app_author: str, app_name: str, version: str) -> Path:
+    """
+    Returns a parent directory path where persistent application data can be stored.
+
+    - linux: ~/.local/share
+    - windows: C:/Users/<USER>/AppData/Roaming
+    """
+
+    home = Path.home()
+
+    if sys.platform == "win32":
+        p = home / "AppData/Roaming"
+    elif sys.platform.startswith("linux"):
+        p = home / ".local/share"
+    else:
+        raise ValueError("Unsupported platform")
+
+    return p / app_author / app_name / version
+
+
 class LBK:
-    def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
-        self.gdf = gpd.read_file(path, mask=mask, include_fields=["Serie"])
-        self.gdf = self.gdf.rename(columns={"Serie": "lbk"})
+    def __init__(self, gdf: gpd.GeoDataFrame):
+        if set(gdf.columns) != {"geometry", "lbk"}:
+            raise ValueError(
+                "The GeoDataFrame should have columns 'geometry' and 'lbk'"
+            )
+        self.gdf = gdf
+
+    def from_file(cls, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
+        return cls(
+            gpd.read_file(path, mask=mask, include_fields=["Serie"]).rename(
+                columns={"Serie": "lbk"}
+            )
+        )
+
+    @classmethod
+    def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
+        local_path = get_datadir("veg2hab", "data", veg2hab.__version__) / "lbk.gpkg"
+        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/{veg2hab.__version__}/lbk.gpkg"
+
+        if not local_path.exists():
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(remote_path, local_path)
+
+        return cls.from_file(local_path, mask)
 
     def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
         """
