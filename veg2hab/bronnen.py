@@ -1,3 +1,5 @@
+import hashlib
+import logging
 import sys
 import urllib.request
 from pathlib import Path
@@ -6,7 +8,7 @@ from typing import Optional
 import geopandas as gpd
 from typing_extensions import Self
 
-import veg2hab
+import veg2hab.constants
 from veg2hab.enums import FGRType
 
 # TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
@@ -16,7 +18,20 @@ from veg2hab.enums import FGRType
 #       verschillen in zaken waar wij niet naar kijken.
 
 
-def get_datadir(app_author: str, app_name: str, version: str) -> Path:
+def get_checksum(path: Path) -> str:
+    assert path.is_file()
+    chunk_size = 8192
+
+    with path.open("rb") as f:
+        file_hash = hashlib.md5()
+        chunk = f.read(chunk_size)
+        while chunk:
+            file_hash.update(chunk)
+            chunk = f.read(chunk_size)
+    return file_hash.hexdigest()
+
+
+def get_datadir(app_author: str, app_name: str) -> Path:
     """
     Returns a parent directory path where persistent application data can be stored.
 
@@ -27,13 +42,13 @@ def get_datadir(app_author: str, app_name: str, version: str) -> Path:
     home = Path.home()
 
     if sys.platform == "win32":
-        p = home / "AppData/Roaming"
+        p = home / "AppData" / "Roaming"
     elif sys.platform.startswith("linux"):
-        p = home / ".local/share"
+        p = home / ".local" / "share"
     else:
         raise ValueError("Unsupported platform")
 
-    return p / app_author / app_name / version
+    return p / app_author / app_name
 
 
 class LBK:
@@ -56,7 +71,13 @@ class LBK:
         local_path = get_datadir("veg2hab", "data", veg2hab.__version__) / "lbk.gpkg"
         remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/{veg2hab.__version__}/lbk.gpkg"
 
-        if not local_path.exists():
+        if (
+            not local_path.is_file()
+            or get_checksum(local_path) != veg2hab.constants.LBK_CHECKSUM
+        ):
+            logging.warning(
+                "Lokale versie LBK kaart komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
+            )
             local_path.parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(remote_path, local_path)
 
@@ -88,7 +109,15 @@ class FGR:
 
 
 class Bodemkaart:
-    def __init__(self, path: Path, mask: gpd.GeoDataFrame = None) -> None:
+    def __init__(self, gdf: gpd.GeoDataFrame) -> None:
+        if set(gdf.columns) != {"geometry", "bodem"}:
+            raise ValueError(
+                "The GeoDataFrame should have columns 'geometry' and 'bodem'"
+            )
+        self.gdf = gdf
+
+    @classmethod
+    def from_file(cls, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         # inladen
         soil_area = gpd.read_file(
             path, layer="soilarea", mask=mask, include_fields=["maparea_id"]
@@ -99,10 +128,28 @@ class Bodemkaart:
             include_fields=["maparea_id", "soilunit_code"],
             ignore_geometry=True,
         )
-        self.gdf = soil_area.merge(soil_units_table, on="maparea_id")[
+        gdf = soil_area.merge(soil_units_table, on="maparea_id")[
             ["geometry", "soilunit_code"]
         ]
-        self.gdf = self.gdf.rename(columns={"soilunit_code": "bodem"})
+        gdf = gdf.rename(columns={"soilunit_code": "bodem"})
+        return cls(gdf)
+
+    @classmethod
+    def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
+        local_path = get_datadir("veg2hab", "data") / "bodemkaart.gpkg"
+        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/{veg2hab.__version__}/bodemkaart.gpkg"
+
+        if (
+            not local_path.is_file()
+            or get_checksum(local_path) != veg2hab.constants.BODEMKAART_CHECKSUM
+        ):
+            logging.warning(
+                "Lokale versie bodemkaart komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
+            )
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(remote_path, local_path)
+
+        return cls.from_file(local_path, mask)
 
     def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
         """

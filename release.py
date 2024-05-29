@@ -6,6 +6,7 @@ from typing import Optional
 import click
 
 import veg2hab.constants
+from veg2hab.bronnen import get_checksum
 from veg2hab.definitietabel import opschonen_definitietabel
 from veg2hab.waswordtlijst import opschonen_waswordtlijst
 
@@ -46,6 +47,25 @@ def check_versions(tag_version: Optional[str]):
             f"Version {poetry_version} is not in {top_level_namespace['SUPPORTED_VERSIONS']}"
         )
     print("Versions are valid")
+
+    # check checksums
+    lbk_checksum = get_checksum(
+        Path(__file__).parent / "data" / "bronbestanden" / "lbk.gpkg"
+    )
+    if lbk_checksum != veg2hab.constants.LBK_CHECKSUM:
+        raise ValueError(
+            f"Checksum of lbk.gpkg does not match, replace veg2hab.constants.LBK_CHECKSUM with:\n{lbk_checksum}"
+        )
+
+    bodemkaart_checksum = get_checksum(
+        Path(__file__).parent / "data" / "bronbestanden" / "bodemkaart.gpkg"
+    )
+    if bodemkaart_checksum != veg2hab.constants.BODEMKAART_CHECKSUM:
+        raise ValueError(
+            f"Checksum of bodemkaart.gpkg does not match, replace veg2hab.constants.BODEMKAART_CHECKSUM with:\n{bodemkaart_checksum}"
+        )
+
+    print("Checksums match correctly")
 
 
 @veg2hab_internal.command()

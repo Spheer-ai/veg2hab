@@ -6,7 +6,7 @@ from typing import Union
 import geopandas as gpd
 
 from veg2hab import constants
-from veg2hab.bronnen import FGR
+from veg2hab.bronnen import FGR, LBK, Bodemkaart
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.common import AccessDBInputs, Interface, ShapefileInputs
 from veg2hab.vegkartering import Kartering
@@ -38,6 +38,14 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
     fgr = FGR(Path(constants.FGR_PATH))
 
     logging.info(f"FGR is ingelezen van {constants.FGR_PATH}")
+
+    bodemkaart = Bodemkaart.from_github()
+
+    logging.info(f"Bodemkaart is ingelezen")
+
+    lbk = LBK.from_github()
+
+    logging.info(f"LBK is ingelezen")
 
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
@@ -81,7 +89,11 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     logging.info(f"Definitietabel is toegepast op de vegetatie kartering")
 
-    kartering.bepaal_habitatkeuzes(fgr)
+    kartering.bepaal_habitatkeuzes(
+        fgr,
+        bodemkaart,
+        lbk,
+    )
 
     logging.info(f"Mitsen zijn gecheckt")
 
