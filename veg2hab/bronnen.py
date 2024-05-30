@@ -69,7 +69,7 @@ class LBK:
     @classmethod
     def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         local_path = get_datadir("veg2hab", "data", veg2hab.__version__) / "lbk.gpkg"
-        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/{veg2hab.__version__}/lbk.gpkg"
+        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/v{veg2hab.__version__}/lbk.gpkg"
 
         if (
             not local_path.is_file()
@@ -78,6 +78,7 @@ class LBK:
             logging.warning(
                 "Lokale versie LBK kaart komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
             )
+            logging.debug(f"Download bodemkaart van {remote_path} naar {local_path}")
             local_path.parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(remote_path, local_path)
 
@@ -137,7 +138,7 @@ class Bodemkaart:
     @classmethod
     def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         local_path = get_datadir("veg2hab", "data") / "bodemkaart.gpkg"
-        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/{veg2hab.__version__}/bodemkaart.gpkg"
+        remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/v{veg2hab.__version__}/bodemkaart.gpkg"
 
         if (
             not local_path.is_file()
@@ -146,6 +147,7 @@ class Bodemkaart:
             logging.warning(
                 "Lokale versie bodemkaart komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
             )
+            logging.debug(f"Download bodemkaart van {remote_path} naar {local_path}")
             local_path.parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(remote_path, local_path)
 
