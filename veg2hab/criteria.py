@@ -81,7 +81,7 @@ class GeenCriterium(BeperkendCriterium):
 
     def __str__(self):
         return "Geen mits (altijd waar)"
-    
+
     def get_opm(self) -> Optional[str]:
         return None
 
@@ -96,7 +96,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
 
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
-    
+
     def get_opm(self) -> Optional[str]:
         return None
 
