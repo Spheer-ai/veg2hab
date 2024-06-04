@@ -1,10 +1,9 @@
 import logging
-import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -21,6 +20,7 @@ from veg2hab.criteria import (
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.habitat import (
     HabitatVoorstel,
+    apply_minimum_oppervlak,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
@@ -117,8 +117,8 @@ class VegTypeInfo:
 
 def ingest_vegtype(
     gdf: gpd.GeoDataFrame,
-    sbb_cols: Optional[List[str]],
-    vvn_cols: Optional[List[str]],
+    sbb_cols: List[str],
+    vvn_cols: List[str],
     perc_cols: List[str],
 ) -> pd.Series:
     """
@@ -126,22 +126,22 @@ def ingest_vegtype(
     Vlakken zonder percentage
     """
     # Validatie
-    if sbb_cols is not None and len(sbb_cols) != len(perc_cols):
+    if len(sbb_cols) != 0 and len(sbb_cols) != len(perc_cols):
         raise ValueError(
             f"De lengte van sbb_cols ({len(sbb_cols)}) moet 0 zijn of gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
         )
 
-    if vvn_cols is not None and len(vvn_cols) != len(perc_cols):
+    if len(vvn_cols) != 0 and len(vvn_cols) != len(perc_cols):
         raise ValueError(
             f"De lengte van vvn_cols ({len(vvn_cols)}) moet 0 zijn of gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
         )
 
-    assert sbb_cols or vvn_cols, "Er moet een SBB of VvN kolom zijn"
+    assert len(sbb_cols) + len(vvn_cols) > 0, "Er moet een SBB of VvN kolom zijn"
 
     # Inlezen
-    if not sbb_cols:
+    if len(sbb_cols) == 0:
         sbb_cols = [None] * len(perc_cols)
-    if not vvn_cols:
+    if len(vvn_cols) == 0:
         vvn_cols = [None] * len(perc_cols)
 
     def _row_to_vegtypeinfo_list(row: gpd.GeoSeries) -> List[VegTypeInfo]:
@@ -268,7 +268,9 @@ def mozaiekregel_habtype_percentage_dict_to_string(
 
 
 def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
-    """ """
+    """
+    Herformatteert een habitatkeuze en bijbehorende vegtypeinfo naar de kolommen zoals in het Gegevens Leverings Protocol
+    """
 
     keuze, vegtypeinfo = print_info
 
@@ -282,12 +284,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
             KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
+            KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
         ]:
             voorstel = keuze.habitatvoorstellen[0]
             series_dict = {
                 f"Habtype{idx}": keuze.habtype,
                 f"Perc{idx}": vegtypeinfo.percentage,
-                f"Opp{idx}": opp * vegtypeinfo.percentage,
+                f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking,
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
@@ -362,7 +365,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
         series_dict = {
             f"Habtype{idx}": keuze.habtype,
             f"Perc{idx}": str(vegtypeinfo.percentage),
-            f"Opp{idx}": str(opp * vegtypeinfo.percentage),
+            f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
             f"Opm{idx}": keuze.opmerking,
             f"_Mits_opm{idx}": keuze.mits_opmerking,
@@ -565,7 +568,7 @@ def _single_to_multi(
     VvN_col: Optional[str] = None,
     split_char: Optional[str] = None,
     perc_col: Optional[str] = None,
-) -> gpd.GeoDataFrame:
+) -> Tuple[gpd.GeoDataFrame, List[str], List[str], List[str]]:
     """
     Converteert een "single" kolomformat dataframe naar een "multi" kolomformat dataframe
     De nieuwe "multi" format kolommen heten SBB1/2/3/..., VvN1/2/3/... en perc1/2/3/...
@@ -613,25 +616,31 @@ def _single_to_multi(
 
     # Kolomnamen moeten geupdated worden.
     if SBB_col:
-        SBB_col = [f"{SBB_col}{idx+1}" for idx in range(n_cols_needed)]
+        SBB_out = [f"{SBB_col}{idx+1}" for idx in range(n_cols_needed)]
         # Stel dat er max 3 VvN zijn en max 2 SBB, dan moet de SBB3 nog wel bestaan
-        for col in SBB_col:
+        for col in SBB_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        SBB_out = []
 
     if VvN_col:
-        VvN_col = [f"{VvN_col}{idx+1}" for idx in range(n_cols_needed)]
-        for col in VvN_col:
+        VvN_out = [f"{VvN_col}{idx+1}" for idx in range(n_cols_needed)]
+        for col in VvN_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        VvN_out = []
 
     if perc_col:
-        perc_col = [f"{perc_col}{idx+1}" for idx in range(n_cols_needed)]
-        for col in perc_col:
+        perc_out = [f"{perc_col}{idx+1}" for idx in range(n_cols_needed)]
+        for col in perc_out:
             if col not in gdf.columns:
                 gdf[col] = None
+    else:
+        perc_out = []
 
-    return gdf, SBB_col, VvN_col, perc_col
+    return gdf, SBB_out, VvN_out, perc_out
 
 
 class Kartering:
@@ -749,16 +758,17 @@ class Kartering:
     def from_shapefile(
         cls,
         shape_path: Path,
+        *,
         vegtype_col_format: Literal["single", "multi"],
         sbb_of_vvn: Literal["VvN", "SBB", "beide"],
         ElmID_col: Optional[str] = None,
         datum_col: Optional[str] = None,
         opmerking_col: Optional[str] = None,
-        SBB_col: Optional[str] = None,
-        VvN_col: Optional[str] = None,
+        SBB_col: List[str],
+        VvN_col: List[str],
         split_char: Optional[str] = "+",
-        perc_col: Optional[str] = None,
-        lok_vegtypen_col: Optional[str] = None,
+        perc_col: List[str] = [],
+        lok_vegtypen_col: List[str] = [],
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.
@@ -769,21 +779,64 @@ class Kartering:
         - sbb_of_vvn: "VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.
         - datum_col: kolomnaam van de datum als deze er is
         - opmerking_col: kolomnaam van de opmerking als deze er is
-        - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
-        - SBB_col: kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
+        - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij single_col mag deze list maximaal lengte 1 hebben)
+        - SBB_col: kolomnaam van de SBB vegetatietypen als deze er is (bij single_col mag deze list maximaal lengte 1 hebben)
         - split_char: karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)
-        - perc_col: kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))
-        - lok_vegtypen_col: kolomnaam van de lokale vegetatietypen als deze er zijn (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)
+        - perc_col: kolomnaam van de percentage als deze er is (bij single_col mag deze list maximaal lengte 1 hebben))
+        - lok_vegtypen_col: kolomnaam van de lokale vegetatietypen als deze er zijn (bij single_col mag deze list maximaal lengte 1 hebben)
         """
+        # CONTROLEREN VAN DE INPUT
+        if sbb_of_vvn == "VvN":
+            num_cols = len(VvN_col)
+            if len(VvN_col) == 0:
+                raise ValueError(
+                    "VvN_col moet worden opgegeven als sbb_of_vvn == 'VvN'"
+                )
+        elif sbb_of_vvn == "SBB":
+            num_cols = len(SBB_col)
+            if len(SBB_col) == 0:
+                raise ValueError(
+                    "SBB_col moet worden opgegeven als sbb_of_vvn == 'SBB'"
+                )
+        elif sbb_of_vvn == "beide":
+            num_cols = len(VvN_col)
+            if len(VvN_col) == 0 or len(SBB_col) == 0:
+                raise ValueError(
+                    "Zowel VvN_col als SBB_col moeten worden opgegeven als sbb_of_vvn == 'beide'"
+                )
+            if len(VvN_col) != len(SBB_col):
+                raise ValueError(
+                    "VvN_col en SBB_col moeten even lang zijn als sbb_of_vvn == 'beide'"
+                )
+        else:
+            raise ValueError("sbb_of_vvn moet ['VvN', 'SBB' of 'beide'] zijn")
 
-        ###############
-        ##### Valideren, opschonen en aanvullen van de shapefile
-        ###############
+        if vegtype_col_format == "single":
+            if num_cols != 1:
+                raise ValueError(
+                    "Aantal kolommen moet 1 zijn bij vegtype_col_format == 'single'"
+                )
+        elif vegtype_col_format == "multi":
+            if num_cols == 0:
+                raise ValueError(
+                    "Aantal kolommen moet groter dan 0 zijn bij vegtype_col_format == 'multi'"
+                )
 
+        if len(perc_col) != num_cols and len(perc_col) != 0:
+            raise ValueError(
+                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col"
+            )
+
+        if len(lok_vegtypen_col) != num_cols and len(lok_vegtypen_col) != 0:
+            raise ValueError(
+                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col"
+            )
+
+        # VALIDEREN, OPSCHONEN EN AANVULLEN VAN DE SHAPEFILE
         shapefile = gpd.read_file(shape_path)
 
         if ElmID_col and not shapefile[ElmID_col].is_unique:
-            warnings.warn(
+            logging.warn(
                 f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
                 Eerste paar dubbele waarden:
                 {
@@ -804,11 +857,9 @@ class Kartering:
             split_char = "+"
 
         # Vastleggen lokale vegtypen voor in de output
-        if lok_vegtypen_col is not None:
+        if len(lok_vegtypen_col) > 0:
             shapefile["_LokVegTyp"] = shapefile.apply(
-                lambda row: ", ".join(
-                    [str(row[col]) for col in lok_vegtypen_col.split(split_char)]
-                ),
+                lambda row: ", ".join([str(row[col]) for col in lok_vegtypen_col]),
                 axis=1,
             )
         else:
@@ -817,23 +868,14 @@ class Kartering:
             ] = "Geen kolommen opgegeven voor lokale vegetatietypen"
 
         # Selectie van de te bewaren kolommen
-        cols = [
-            col for col in [datum_col, opmerking_col] if col in shapefile.columns
-        ] + [ElmID_col, "_LokVegTyp", "geometry"]
+        cols = [col for col in [datum_col, opmerking_col] if col is not None] + [
+            ElmID_col,
+            "_LokVegTyp",
+            "geometry",
+        ]
 
         # Uitvinden welke vegtype kolommen er mee moeten
-        if vegtype_col_format == "multi":
-            if SBB_col is not None:
-                SBB_col = SBB_col.split(split_char)
-                cols += SBB_col
-            if VvN_col is not None:
-                VvN_col = VvN_col.split(split_char)
-                cols += VvN_col
-            if perc_col is not None:
-                perc_col = perc_col.split(split_char)
-                cols += perc_col
-        else:
-            cols += [col for col in [VvN_col, SBB_col, perc_col] if col is not None]
+        cols += SBB_col + VvN_col + perc_col
         if not all(col in shapefile.columns for col in cols):
             raise ValueError(
                 f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
@@ -841,6 +883,14 @@ class Kartering:
         gdf = shapefile[cols].copy()
 
         # Standardiseren van kolomnamen
+        # Als er geen datum of opmerking kolom is, dan maken we die en vullen we deze met None
+        if datum_col is None:
+            datum_col = "Datum"
+            gdf[datum_col] = None
+        if opmerking_col is None:
+            opmerking_col = "Opmerking"
+            gdf[opmerking_col] = None
+
         gdf = gdf.rename(
             columns={ElmID_col: "ElmID", opmerking_col: "Opmerking", datum_col: "Datum"}
         )
@@ -853,29 +903,21 @@ class Kartering:
         if vegtype_col_format == "single":
             gdf, SBB_col, VvN_col, perc_col = _single_to_multi(
                 gdf=gdf,
-                SBB_col=SBB_col,
-                VvN_col=VvN_col,
+                SBB_col=None if len(SBB_col) == 0 else SBB_col[0],
+                VvN_col=None if len(VvN_col) == 0 else VvN_col[0],
                 split_char=split_char,
-                perc_col=perc_col,
+                perc_col=None if len(perc_col) == 0 else perc_col[0],
             )
             vegtype_col_format = "multi"
 
         # Opschonen
-        if SBB_col:
+        if len(SBB_col) > 0:
             gdf[SBB_col] = gdf[SBB_col].apply(_SBB.opschonen_series)
 
-        if VvN_col:
+        if len(VvN_col) > 0:
             gdf[VvN_col] = gdf[VvN_col].apply(_VvN.opschonen_series)
 
-        # Als er geen datum of opmerking kolom is, dan maken we die en vullen we deze met None
-        datum_col = "Datum" if datum_col is None else datum_col
-        opmerking_col = "Opmerking" if opmerking_col is None else opmerking_col
-        for col in [datum_col, opmerking_col]:
-            if col not in gdf.columns:
-                gdf[col] = None
-
         # Standardiseren van kolomnamen
-        gdf = gdf.rename(columns={datum_col: "Datum", opmerking_col: "Opmerking"})
         gdf["Opp"] = gdf["geometry"].area
         LokVrtNar_string = sbb_of_vvn if sbb_of_vvn != "beide" else "zowel SBB als VvN"
         gdf[
@@ -883,7 +925,7 @@ class Kartering:
         ] = f"Lokale typologie is primair vertaald naar {LokVrtNar_string}"
 
         # Percentages invullen als die er niet zijn
-        if perc_col is None:
+        if len(perc_col) == 0:
             if vegtype_col_format == "multi":
                 perc_col = [
                     f"perc_{n}"
@@ -929,7 +971,7 @@ class Kartering:
             lambda infos: any(len(info.VvN) > 0 for info in infos)
         )
         if VvN_already_present.any() and not override_existing_VvN:
-            warnings.warn(
+            logging.warn(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )
             return
@@ -1083,7 +1125,7 @@ class Kartering:
             ):
                 break
         else:
-            warnings.warn(
+            logging.warn(
                 f"Maximaal aantal iteraties ({max_iter}) bereikt voor het bepalen van de habitatkeuzes."
             )
 
@@ -1091,17 +1133,15 @@ class Kartering:
         # of we hebben max_iter bereikt
 
         if n_keuzes_still_to_determine_post > 0:
-            # NOTE
-            # NOTE: @reviewer Moet dit een warning zijn vind je? Of gewoon een print?
-            # NOTE: Het is iets wat niet alarmerend is maar wel nuttig om te weten.
-            # NOTE
-            warnings.warn(
+            logging.info(
                 f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
             )
 
         assert (
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
+
+        self.check_minimum_oppervlak()
 
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
@@ -1147,6 +1187,18 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
+    def check_minimum_oppervlak(self) -> None:
+        """
+        Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
+
+        NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
+        """
+        assert (
+            "HabitatKeuze" in self.gdf.columns
+        ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+
+        self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
+
     def as_final_format(self) -> pd.DataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
@@ -1169,7 +1221,7 @@ class Kartering:
                 "_LokVegTyp",
                 "_LokVrtNar",
             ]
-        ].copy()
+        ]
 
         # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
         base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)

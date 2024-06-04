@@ -1,6 +1,7 @@
+import json
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import ClassVar, Optional
+from typing import ClassVar, List, Optional
 
 import geopandas as gpd
 from pydantic import BaseModel, BaseSettings, Field
@@ -45,14 +46,34 @@ class ShapefileInputs(BaseModel):
     shapefile: str = Field(
         description="Locatie van de vegetatiekartering",
     )
+    elmid_col: Optional[str] = Field(
+        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
+    )
     vegtype_col_format: Literal["single", "multi"] = Field(
         description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
     )
-    sbb_of_vvn: Literal["VvN", "SBB", "beide"] = Field(
+    sbb_of_vvn: Literal["SBB", "VvN", "beide"] = Field(
         description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
     )
-    elmid_col: Optional[str] = Field(
-        description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
+    sbb_col: List[str] = Field(
+        default_factory=list,
+        description="SBB kolom(men) (verplicht wanneer het voorname type 'SBB' of 'beide' is)",
+    )
+    vvn_col: List[str] = Field(
+        default_factory=list,
+        description="VvN kolom(men) (verplicht wanneer het voorname type 'VvN' of 'beide' is)",
+    )
+    perc_col: List[str] = Field(
+        default_factory=list,
+        description="Percentage kolom(men) (optioneel)",
+    )
+    lok_vegtypen_col: List[str] = Field(
+        default_factory=list,
+        description="Lokale vegetatietypen kolom(men) (optioneel)",
+    )
+    split_char: Optional[str] = Field(
+        default="+",
+        description='Karakter waarop de complexe vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa"))',
     )
     datum_col: Optional[str] = Field(
         default=None,
@@ -61,26 +82,6 @@ class ShapefileInputs(BaseModel):
     opmerking_col: Optional[str] = Field(
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
-    )
-    sbb_col: Optional[str] = Field(
-        default=None,
-        description="kolomnaam van de SBB vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
-    )
-    vvn_col: Optional[str] = Field(
-        default=None,
-        description="kolomnaam van de VvN vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char)",
-    )
-    split_char: Optional[str] = Field(
-        default="+",
-        description='karakter waarop de vegetatietypen gesplitst moeten worden (voor complexen (bv "16aa2+15aa")) (wordt bij mutli_col gebruikt om de kolommen te scheiden)',
-    )
-    perc_col: Optional[str] = Field(
-        default=None,
-        description="kolomnaam van de percentage als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
-    )
-    lok_vegtypen_col: Optional[str] = Field(
-        default=None,
-        description="kolomnaam van de lokale vegetatietypen als deze er is (bij multi_col: alle kolomnamen gesplitst door vegtype_split_char))",
     )
     output: Optional[Path] = Field(
         default=None,
@@ -96,10 +97,11 @@ class Veg2HabConfig(BaseSettings):
         default=95.0,
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
-    mozaiek_als_rand_langs_threshold: Union[int, float] = Field(
-        default=25.0,
+    mozaiek_als_rand_threshold: Union[int, float] = Field(
+        default=50.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
     )
+
     niet_geautomatiseerde_sbb: List[str] = Field(
         default=[
             "100",
@@ -109,6 +111,38 @@ class Veg2HabConfig(BaseSettings):
         ],
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
     )
+
+    # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
+    minimum_oppervlak_exceptions: str = Field(
+        default=json.dumps(
+            {
+                "H6110": 10,
+                "H7220": 10,
+                "H2180_A": 1000,
+                "H2180_B": 1000,
+                "H2180_C": 1000,
+                "H9110": 1000,
+                "H9120": 1000,
+                "H9160_A": 1000,
+                "H9160_B": 1000,
+                "H9190": 1000,
+                "H91D0": 1000,
+                "H91E0_A": 1000,
+                "H91E0_B": 1000,
+                "H91E0_C": 1000,
+                "H91F0": 1000,
+            }
+        ),
+        description="Minimum oppervlakken per habitattype",
+    )
+    minimum_oppervlak_default: Union[int, float] = Field(
+        default=100,
+        description="Minimum oppervlak voor een habitattype",
+    )
+
+    @property
+    def minimum_oppervlak(self):
+        return json.loads(self.minimum_oppervlak_exceptions)
 
 
 class Interface(metaclass=ABCMeta):

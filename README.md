@@ -28,27 +28,27 @@ veg2hab wordt gedistribueerd via PyPI, waar alle toekomstige versies aan toe wor
 
 ### Installatie binnen ArcGIS Pro
 
-Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. 
-Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven: 
+Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
+Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro
- 2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren): 
-    - Open de 'Package Manager'  
+ 2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
+    - Open de 'Package Manager'
         <img src="./images/package_manager.png" alt="package manager" width="400"/>
-    - Klik op het tandwiel naast 'Active Environment'  
-    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.  
-        <img src="./images/new_environment.png" alt="new python environment" width="400"/>  
+    - Klik op het tandwiel naast 'Active Environment'
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
+        <img src="./images/new_environment.png" alt="new python environment" width="400"/>
         <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
  3. Download en installeer veg2hab:
-    - Klik op 'New notebook'  
+    - Klik op 'New notebook'
         <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`  
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`
         <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
     - Installeer veg2hab met het commando `import veg2hab`
  4. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie  
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
@@ -71,23 +71,23 @@ De omzetting van veg2hab van vegetatiekarteringen naar habitattypekaarten gebeur
 
 De omzettool komt in twee smaken:
 1. `digitale_standaard`, voor het omzetten van vegetatiekarteringen die de landelijke digitale standaard gebruiken, die bestaat uit een shapefile gecombineerd met een access database. De gebruiker voert in welke vegetatiekarteringen omgezet moet worden en waar de bijhorende access database te vinden is.
-2. `vector_bestand`, voor het omzetten van vegetatiekarteringen die alle benodigde informatie in de shapefile zelf bevatten. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. 
+2. `vector_bestand`, voor het omzetten van vegetatiekarteringen die alle benodigde informatie in de shapefile zelf bevatten. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat.
 
 Let op:
 - Wanneer de gebruiker beschikt over een access database, raden wij aan de  `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
-- Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN). 
+- Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN).
 
 
 ### Bronbestanden die veg2hab gebruikt
 
-veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. 
+veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen.
 
-Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker: 
+Sommige bestanden zijn landelijk beschikbaar. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
 
  - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten
  - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten
  - [Fysisch-Geografische Regio kaart](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170))
-  
+
 Let op: bij volgende versies komen er waarschijnlijk meer bronbestanden bij.
 
 
@@ -124,7 +124,7 @@ poetry run pytest tests/
 1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`.
 2. Maak een nieuwe versie met poetry (major, minor, patch): `poetry version {{rule}}`
 3. Pas de [\_\_init\_\_.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version
-4. Pas [toolbox.pyt](veg2hab/package_data/toolbox.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan toolbox.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
+4. Pas [veg2hab.pyt](veg2hab/package_data/veg2hab.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan veg2hab.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
 5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
 6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github. (`git add`, `git commit`, `git push`)
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
@@ -147,10 +147,10 @@ poetry run pytest tests/
 
 **_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
 
-**_LokVrtNar**: Of de oorspronkelijk opgegeven lokale vegetatietypen in de bronkartering primair is vertaald naar SBB, VvN of beide. Als er naar SBB is vertaald, zijn er bijbehorende VvN uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, is dit niet gedaan. 
+**_LokVrtNar**: Of de oorspronkelijk opgegeven lokale vegetatietypen in de bronkartering primair is vertaald naar SBB, VvN of beide. Als er naar SBB is vertaald, zijn er bijbehorende VvN uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, is dit niet gedaan.
 
 ### Complex-deel-specifieke kolommen
-**Habtype{i}**: Habitattype van het complex-deel. HXXXX hier betekend dat er menselijk oordeel nodig is over dit complex-deel. 
+**Habtype{i}**: Habitattype van het complex-deel. HXXXX hier betekend dat er menselijk oordeel nodig is over dit complex-deel.
 
 **Perc{i}**: Percentage van het gehele vlak wat door dit complex-deel wordt bedekt.
 

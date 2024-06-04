@@ -48,8 +48,8 @@ def _(
         return pd.read_sql(
             f"SELECT {','.join(col_names.keys())} FROM {table_name.value}",
             conn,
-            dtype=col_names,
-        )
+            columns=col_names.keys(),
+        ).astype(col_names)
 
 
 @read_table.register
