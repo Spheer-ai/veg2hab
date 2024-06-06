@@ -151,7 +151,7 @@ class KeuzeStatus(Enum):
     # # Dit gaat Veg2Hab niet op kunnen lossen
     # HANDMATIGE_CONTROLE = auto()
 
-    # Er is meer dan threshold % HXXXX in de omliggende vlakken
+    # Er is een mozaiekregel, en we hebben enkel nog de mitsen gecheckt
     WACHTEN_OP_MOZAIEK = auto()
 
     _toelichting = {
@@ -163,7 +163,10 @@ class KeuzeStatus(Enum):
         "MEERDERE_KLOPPENDE_MITSEN": "Er zijn meerdere habitatvoorstellen met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
         "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
         "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype.",
-        "WACHTEN_OP_MOZAIEK": "Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        # NOTE: WACHTEN_OP_MOZAIEK gaat van "wachten op de volgende iteratie" naar "wachten op checken mozaiekregels"
+        #       met het scheiden van bepaal mits habitatkeuzes en bepaal mozaiek habitatkeuzes
+        # TODO: Hier onder aangeven hoe de mozaiekchecktool gaat heten
+        "WACHTEN_OP_MOZAIEK": "Er kan via een mozaiekregel een habitattype toegekend worden, deze wordt pas gecheckt in de mozaiekchecktool.",
         "MINIMUM_OPP_NIET_GEHAALD": "Het minimum oppervlak voor dit habitattype is niet gehaald. Functionele samenhang wordt nog niet meegenomen.",
     }
 
