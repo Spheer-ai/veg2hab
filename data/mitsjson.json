@@ -192,12 +192,21 @@
         "toelichting": "mits in vennen en in combinatie met andere vegetaties van H3160"
     },
     "mits het Hoogveenmos-verbond aanwezig is, het onderdeel van een hoogveenlandschap is en een acrotelm aanwezig is": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits het Hoogveenmos-verbond aanwezig is, het onderdeel van een hoogveenlandschap is en een acrotelm aanwezig is"
+        "type": "EnCriteria",
+        "sub_criteria": [
+            {
+                "type": "NietGeautomatiseerd",
+                "toelichting": "het Hoogveenmos-verbond aanwezig is en een acrotelm aanwezig is"
+            },
+            {
+                "type": "LBKCriterium",
+                "lbktype": "hoogveenlandschap"
+            }
+        ]
     },
     "mits in herstellend hoogveen": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits in herstellend hoogveen"
+        "type": "LBKCriterium",
+        "lbktype": "herstellend hoogveen"
     },
     "mits niet in mozaïek met vegetaties van H3110 en mits geen onderdeel van H7120 en niet in lijnvormige wateren": {
         "type": "NietGeautomatiseerd",
@@ -368,8 +377,11 @@
         "fgrtype": "Laagveengebied"
     },
     "mits niet in hoogveen": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits niet in hoogveen"
+        "type": "NietCriterium",
+        "sub_criterium": {
+            "type": "LBKCriterium",
+            "lbktype": "hoogveen"
+        }
     },
     "mits in FGR Hogere zandgronden zonder hoogveen": {
         "type": "EnCriteria",
@@ -379,8 +391,11 @@
                 "fgrtype": "Hogere Zandgronden"
             },
             {
-                "type": "NietGeautomatiseerd",
-                "toelichting": "zonder hoogveen"
+                "type": "NietCriterium",
+                "sub_criterium": {
+                    "type": "LBKCriterium",
+                    "lbktype": "hoogveen"
+                }
             }
         ]
     },
@@ -445,16 +460,37 @@
         ]
     },
     "mits het onderdeel van een hoogveenlandschap is en een acrotelm aanwezig is": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits het onderdeel van een hoogveenlandschap is en een acrotelm aanwezig is"
+        "type": "EnCriteria",
+        "sub_criteria": [
+            {
+                "type": "LBKCriterium",
+                "lbktype": "hoogveenlandschap"
+            },
+            {
+                "type": "NietGeautomatiseerd",
+                "toelichting": "mits een acrotelm aanwezig is"
+            }
+        ]
     },
     "mits niet in een hoogveenlandschap en mits een acrotelm aanwezig is of een vergelijkbaar hoogveenvormend proces": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits niet in een hoogveenlandschap en mits een acrotelm aanwezig is of een vergelijkbaar hoogveenvormend proces"
+        "type": "EnCriteria",
+        "sub_criteria": [
+            {
+                "type": "NietCriterium",
+                "sub_criterium": {
+                    "type": "LBKCriterium",
+                    "lbktype": "hoogveenlandschap"
+                }
+            },
+            {
+                "type": "NietGeautomatiseerd",
+                "toelichting": "mits een acrotelm aanwezig is of een vergelijkbaar hoogveenvormend proces"
+            }
+        ]
     },
     "mits in zandverstuiving": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits in zandverstuiving"
+        "type": "LBKCriterium",
+        "lbktype": "zandverstuiving"
     },
     "mits op oeverwallen van rivieren of riviertjes": {
         "type": "NietGeautomatiseerd",
@@ -716,7 +752,7 @@
             },
             {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "een vlakvormig, al dan niet nabeweid, hooiland"
+                "toelichting": "mits in een vlakvormig, al dan niet nabeweid, hooiland"
             }
         ]
     },
@@ -786,8 +822,12 @@
                 }
             },
             {
+                "type": "BodemCriterium",
+                "bodemtype": "vaaggronden"
+            },
+            {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "op vaaggronden en kraaihei niet dominant"
+                "toelichting": "kraaihei niet dominant"
             }
         ]
     },
@@ -819,8 +859,15 @@
                 }
             },
             {
+                "type": "NietCriterium",
+                "sub_criterium": {
+                    "type": "BodemCriterium",
+                    "bodemtype": "vaaggronden"
+                }
+            },
+            {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "op vaaggronden en kraaihei niet dominant"
+                "toelichting": "kraaihei niet dominant"
             }
         ]
     },
@@ -858,8 +905,17 @@
         ]
     },
     "mits op vaaggronden en kraaihei niet dominant": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits op vaaggronden en kraaihei niet dominant"
+        "type": "EnCriteria",
+        "sub_criteria": [
+            {
+                "type": "BodemCriterium",
+                "bodemtype": "vaaggronden"
+            },
+            {
+                "type": "NietGeautomatiseerd",
+                "toelichting": "kraaihei niet dominant"
+            }
+        ]
     },
     "mits kraaihei dominant": {
         "type": "NietGeautomatiseerd",
@@ -1044,8 +1100,17 @@
         ]
     },
     "mits op alluviale bodem en onder invloed van beek of rivier": {
-        "type": "NietGeautomatiseerd",
-        "toelichting": "mits op alluviale bodem en onder invloed van beek of rivier"
+        "type": "EnCriteria",
+        "sub_criteria": [
+            {
+                "type": "NietGeautomatiseerd",
+                "toelichting": "op alluviale bodem"
+            },
+            {
+                "type": "LBKCriterium",
+                "lbktype": "onder invloed van beek of rivier"
+            }
+        ]
     },
     "mits in FGR Duinen": {
         "type": "FGRCriterium",
@@ -1095,8 +1160,25 @@
         "type": "EnCriteria",
         "sub_criteria": [
             {
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "leemarme humuspodzolgronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "leemarme vaaggronden (H9190)"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "podzolgronden met een zanddek (H9190)"
+                    }
+                ]
+            },
+            {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "op leemarme humuspodzolgronden, leemarme vaaggronden of podzolgronden met een zanddek en mits onderdeel van een minimaal honderdjarige opstand van zomereik of op een bosgroeiplaats ouder dan 1850"
+                "toelichting": "mits onderdeel van een minimaal honderdjarige opstand van zomereik of op een bosgroeiplaats ouder dan 1850"
             },
             {
                 "type": "NietCriterium",
@@ -1111,8 +1193,29 @@
         "type": "EnCriteria",
         "sub_criteria": [
             {
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "moderpodzolgronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "lemige humuspodzolgronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "oude kleigronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "leemgronden"
+                    }
+                ]
+            },
+            {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "op moderpodzolgronden, lemige humuspodzolgronden, oude kleigronden of leemgronden en mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
+                "toelichting": "mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
             },
             {
                 "type": "NietCriterium",
@@ -1174,8 +1277,29 @@
         "type": "EnCriteria",
         "sub_criteria": [
             {
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "moderpodzolgronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "lemige humuspodzolgronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "oude kleigronden"
+                    },
+                    {
+                        "type": "BodemCriterium",
+                        "bodemtype": "leemgronden"
+                    }
+                ]
+            },
+            {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "op moderpodzolgronden, lemige humuspodzolgronden, oude kleigronden of leemgronden zonder hydromorfe kenmerken en mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
+                "toelichting": "mits zonder hydromorfe kenmerken en mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
             },
             {
                 "type": "NietCriterium",

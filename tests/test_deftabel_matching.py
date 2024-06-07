@@ -6,11 +6,12 @@ from veg2hab.criteria import (
     EnCriteria,
     FGRCriterium,
     GeenCriterium,
+    LBKCriterium,
     NietGeautomatiseerdCriterium,
     OfCriteria,
 )
 from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
-from veg2hab.enums import FGRType, Kwaliteit
+from veg2hab.enums import FGRType, Kwaliteit, LBKType
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import GeenMozaiekregel, StandaardMozaiekregel
@@ -22,10 +23,15 @@ CLIInterface.get_instance()
 
 @pytest.fixture(scope="module")
 def dt():
-    path_in = Path("data/definitietabel habitattypen (versie 24 maart 2009)_0.xls")
-    path_mitsjson = Path("data/mitsjson.json")
-    path_mozaiekjson = Path("data/mozaiekjson.json")
-    path_out = Path("testing/opgeschoonde_definitietabel.xlsx")
+    path_in = (
+        Path(__file__).resolve().parent
+        / "../data/definitietabel habitattypen (versie 24 maart 2009)_0.xls"
+    )
+    path_mitsjson = Path(__file__).resolve().parent / "../data/mitsjson.json"
+    path_mozaiekjson = Path(__file__).resolve().parent / "../data/mozaiekjson.json"
+    path_out = (
+        Path(__file__).resolve().parent / "../testing/opgeschoonde_definitietabel.xlsx"
+    )
     path_out.parent.mkdir(exist_ok=True)
     opschonen_definitietabel(path_in, path_mitsjson, path_mozaiekjson, path_out)
     return DefinitieTabel.from_excel(path_out)
@@ -122,7 +128,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
+            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
@@ -221,7 +227,7 @@ def test_matches_both_vvn_and_sbb(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=NietGeautomatiseerdCriterium(toelichting="mits in zandverstuiving"),
+            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),

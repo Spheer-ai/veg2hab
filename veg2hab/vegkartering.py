@@ -10,9 +10,14 @@ import pandas as pd
 from typing_extensions import Literal, Self
 
 from veg2hab.access_db import read_access_tables
-from veg2hab.criteria import FGRCriterium, is_criteria_type_present
+from veg2hab.bronnen import FGR, LBK, Bodemkaart
+from veg2hab.criteria import (
+    BodemCriterium,
+    FGRCriterium,
+    LBKCriterium,
+    is_criteria_type_present,
+)
 from veg2hab.enums import KeuzeStatus, Kwaliteit
-from veg2hab.fgr import FGR
 from veg2hab.habitat import (
     HabitatVoorstel,
     apply_minimum_oppervlak,
@@ -991,7 +996,8 @@ class Kartering:
             else [[HabitatVoorstel.H0000_no_vegtype_present()]]
         )
 
-    def check_mitsen(self, fgr: FGR) -> None:
+    # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
+    def check_mitsen(self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK) -> None:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
@@ -1003,20 +1009,26 @@ class Kartering:
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
 
         ### Bepaal waar meer informatie nodig is
-        # FGR
         fgr_needed = self.gdf["HabitatVoorstel"].apply(
             is_criteria_type_present, args=(FGRCriterium,)
         )
-        # Bodem
-        # etc
+        bodem_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(BodemCriterium,)
+        )
+        lbk_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(LBKCriterium,)
+        )
 
         ### Verrijken met de benodigde informatie
-        # FGR
-        mits_info_df["fgr"] = fgr.fgr_for_geometry(mits_info_df.loc[fgr_needed]).drop(
+        mits_info_df["fgr"] = fgr.for_geometry(mits_info_df.loc[fgr_needed]).drop(
             columns="index_right"
         )
-        # Bodem
-        # etc
+        mits_info_df["bodem"] = bodemkaart.for_geometry(
+            mits_info_df.loc[bodem_needed]
+        ).drop(columns="index_right")
+        mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed]).drop(
+            columns="index_right"
+        )
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
@@ -1027,8 +1039,16 @@ class Kartering:
                         raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
-    def bepaal_habitatkeuzes(self, fgr: FGR, max_iter: int = 20) -> None:
+    def bepaal_habitatkeuzes(
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, max_iter: int = 20
+    ) -> None:
         """ """
+        assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
+        assert isinstance(
+            bodemkaart, Bodemkaart
+        ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
+        assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
+
         # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
         self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
             lambda voorstellen_list: [None for sublist in voorstellen_list]
@@ -1036,7 +1056,7 @@ class Kartering:
         self.gdf["finished_on_iteration"] = 0
 
         ### Checken mitsen
-        self.check_mitsen(fgr)
+        self.check_mitsen(fgr, bodemkaart, lbk)
 
         ### Verkrijgen overlay gdf
         # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
@@ -1260,5 +1280,12 @@ class Kartering:
         path.parent.mkdir(parents=True, exist_ok=True)
         final.to_file(path)
 
-    def __len__(self):
+    def get_geometry_mask(self) -> gpd.GeoDataFrame:
+        """
+        Geeft een gdf met alleen de geometrieen van de kartering,
+        bedoeld voor masking bij inladen grote gpkg's, zoals bodemkaart en LBK
+        """
+        return self.gdf[["geometry"]]
+
+    def __len__(self) -> int:
         return len(self.gdf)

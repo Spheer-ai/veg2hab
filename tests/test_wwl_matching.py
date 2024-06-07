@@ -14,7 +14,7 @@ def wwl():
         / ".."
         / "data/5. Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx"
     )
-    path_out = Path("testing/opgeschoonde_waswordt.xlsx")
+    path_out = Path(__file__).resolve().parent / "../testing/opgeschoonde_waswordt.xlsx"
     path_out.parent.mkdir(exist_ok=True)
     opschonen_waswordtlijst(path_in, path_out)
     return WasWordtLijst.from_excel(path_out)

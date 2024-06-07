@@ -6,8 +6,8 @@ from typing import Union
 import geopandas as gpd
 
 from veg2hab import constants
+from veg2hab.bronnen import FGR
 from veg2hab.definitietabel import DefinitieTabel
-from veg2hab.fgr import FGR
 from veg2hab.io.common import AccessDBInputs, Interface, ShapefileInputs
 from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst

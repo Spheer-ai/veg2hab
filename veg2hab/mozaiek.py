@@ -11,7 +11,7 @@ from veg2hab.enums import Kwaliteit, MaybeBoolean
 from veg2hab.io.common import Interface
 
 
-class Mozaiekregel(BaseModel):
+class MozaiekRegel(BaseModel):
     # NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
 
     type: ClassVar[Optional[str]] = None
@@ -35,7 +35,7 @@ class Mozaiekregel(BaseModel):
 
     def __new__(cls, *args, **kwargs):
         # Maakt de juiste subclass aan op basis van de type parameter
-        if cls == Mozaiekregel:
+        if cls == MozaiekRegel:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
         return super().__new__(
@@ -68,7 +68,7 @@ class Mozaiekregel(BaseModel):
         raise NotImplementedError()
 
 
-class NietGeimplementeerdeMozaiekregel(Mozaiekregel):
+class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
@@ -83,7 +83,7 @@ class NietGeimplementeerdeMozaiekregel(Mozaiekregel):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
 
 
-class GeenMozaiekregel(Mozaiekregel):
+class GeenMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "GeenMozaiekregel"
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
@@ -98,7 +98,7 @@ class GeenMozaiekregel(Mozaiekregel):
         return "Geen mozaiekregel (altijd waar)"
 
 
-class StandaardMozaiekregel(Mozaiekregel):
+class StandaardMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "StandaardMozaiekregel"
     # Habtype waarmee gematcht moet worden
     habtype: str
@@ -293,7 +293,7 @@ def calc_mozaiek_percentages_from_overlay_gdf(
 
 def is_mozaiek_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    mozaiek_type: Mozaiekregel,
+    mozaiek_type: MozaiekRegel,
 ) -> bool:
     """
     Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is
