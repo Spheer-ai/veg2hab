@@ -1,7 +1,7 @@
 import json
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Optional, Tuple
 
 import geopandas as gpd
 from pydantic import BaseModel, BaseSettings, Field
@@ -110,6 +110,17 @@ class Veg2HabConfig(BaseSettings):
             "400",
         ],
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
+    )
+
+    functionele_samenhang_buffer_distances: List[
+        Tuple[int, int, Optional[float]]
+    ] = Field(
+        default=[
+            (100, 100, 10.01),
+            (90, 100, 5.01),
+            (50, 90, 0.01),
+        ],
+        description="Lijst met (vanaf percentage (incl), tot percentage (excl), buffer afstand) tuples voor het bepalen van functionele samenhang",
     )
 
     # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden

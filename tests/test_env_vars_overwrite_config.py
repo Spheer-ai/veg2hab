@@ -59,3 +59,36 @@ def test_minimum_oppervlak():
     assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 200
     assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 20
     assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 2000
+
+
+def test_functionele_samenhang():
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+        [
+            [100, 100, 10.01],
+            [90, 100, 5.01],
+            [50, 90, 0.01],
+        ]
+    )
+    assert (
+        CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
+        == [
+            (100, 100, 10.01),
+            (90, 100, 5.01),
+            (50, 90, 0.01),
+        ]
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+        [
+            [101, 101, 10.02],
+            [91, 101, 5.02],
+            [51, 91, 0.02],
+        ]
+    )
+    assert (
+        CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
+        == [
+            (101, 101, 10.02),
+            (91, 101, 5.02),
+            (51, 91, 0.02),
+        ]
+    )
