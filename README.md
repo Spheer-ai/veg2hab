@@ -8,6 +8,7 @@
       - [Aanvullende opmerkingen](#aanvullende-opmerkingen)
     - [Installatie .mdb drivers op Windows](#installatie-mdb-drivers-op-windows)
     - [Installatie veg2hab op linux](#installatie-veg2hab-op-linux)
+    - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
     - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
@@ -62,7 +63,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
  4. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  5. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf de locatie.  
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.  
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
@@ -71,7 +72,7 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 #### Aanvullende opmerkingen
 
-- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het installeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd worden. De gebruiker moet daarna zelf alleen nog veg2hab activeren en de Toolbox installeren.
+- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het installeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd worden, zie sectie [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer). De gebruiker moet daarna zelf alleen nog veg2hab activeren en de Toolbox installeren.
 - Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
 
 
@@ -95,6 +96,20 @@ Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg me
 apt install mdbtools
 ```
 voor meer informatie, zie: https://github.com/mdbtools/mdbtools
+
+### Installatie instructies voor IT beheer
+
+In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. Hierbij is het van belang dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
+
+**Voor het eenmalig aanmaken van een nieuwe conda omgeving:**
+- repo.anaconda.com
+- conda.anaconda.org
+
+**Voor het installeren / upgraden naar een nieuwe versie van veg2hab:**
+- files.pythonhosted.org
+- pypi.org
+
+
 
 ## Gebruikershandleiding
 
