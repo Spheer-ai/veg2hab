@@ -113,6 +113,8 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 ## Gebruikershandleiding
 
+Voor een uitgebreide gebruikershandleiding, zie [Handleiding voor gebruikers](./docs/HANDLEIDING.md).
+
 ### Gebruik in ArcGIS Pro
 
 De omzetting van veg2hab van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
