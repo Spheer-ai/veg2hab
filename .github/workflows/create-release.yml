@@ -59,6 +59,8 @@ jobs:
       with:
         files: |
           ./dist/*
+          ./data/bronbestanden/lbk.gpkg
+          ./data/bronbestanden/bodemkaart.gpkg
         tag_name: ${{ steps.tag.outputs.tag }}
         prerelease: false
         generate_release_notes: true
