@@ -30,18 +30,18 @@ veg2hab wordt gedistribueerd via PyPI, waar alle toekomstige versies aan toe wor
 
 ### Disclaimer
 
-Veg2hab is bedoeld als hulpmiddel om sneller vegetatiekarteringen om te zetten naar concept habitattypekaarten. Na de omzetting door veg2hab is over het algemeen nog handwerk van de gebruiker nodig, omdat sommige beperkende criteria niet te automatiseren zijn en expert judgment vereisen. Veg2hab geeft vlakken die het niet automatisch een habittatype (of `H0000`) kan toekennen de code `Hxxxx`, en beschrijft in de output welke controles de gebruiker handmatig moet doen. 
+Veg2hab is bedoeld als hulpmiddel om sneller vegetatiekarteringen om te zetten naar concept habitattypekaarten. Na de omzetting door veg2hab is over het algemeen nog handwerk van de gebruiker nodig, omdat sommige beperkende criteria niet te automatiseren zijn en expert judgment vereisen. Veg2hab geeft vlakken die het niet automatisch een habittatype (of `H0000`) kan toekennen de code `HXXXX`, en beschrijft in de output welke controles de gebruiker handmatig moet doen. 
 
 Het wordt gebruikers sterk aangeraden om:
 - het rapport van een vegetatiekartering door te lezen, om te controleren of er zaken expliciet afwijken van de typologie vertalingen in de was-wordt lijst, de profieldocumenten of de omzetregels uit het methodiekdocument.
 - De output van veg2hab steekproefsgewijs na te lopen, om te zien of de omzetting strookt met de verwachting en kennis over het gebied.
-- Na het toepassen van de beperkende criteria het tussenproduct na te lopen en handmatig `Hxxxx` om te zetten naar `H0000` of een habitattype, om pas daarna de mozaiekregels en functionele samenhang toe te passen.
+- Na het toepassen van de beperkende criteria het tussenproduct na te lopen en handmatig `HXXXX` om te zetten naar `H0000` of een habitattype, om pas daarna de mozaiekregels en functionele samenhang toe te passen.
 
 ## Installatie instructies
 
 ### Installatie binnen ArcGIS Pro
 
-Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. Voor oudere versies 
+Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
 Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro.
@@ -60,8 +60,8 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
     - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.  
         <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
- 4. Activeer veg2hab in het notebook met het commando `import veg2hab`.
- 5. Installeer de veg2hab Python Toolbox:
+ 5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
+ 6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.  
         <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
@@ -77,7 +77,7 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 
 ### Installatie .mdb drivers op Windows
-veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`: 
+Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`: 
 
 <img src="./images/odbc_drivers.png" alt="ODBC Drivers window" width="400"/>
 
@@ -95,7 +95,7 @@ Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg me
 ```sh
 apt install mdbtools
 ```
-voor meer informatie, zie: https://github.com/mdbtools/mdbtools
+Voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ### Installatie instructies voor IT beheer
 
@@ -129,12 +129,13 @@ Let op:
 
 ### Bronbestanden die veg2hab gebruikt
 
-veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
+Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
 
  - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten.
  - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten.
  - [Fysisch-Geografische Regio kaart](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
- - [Landelijke Bodem Kaart](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
+ - [Landschappelijke Bodem Kaart](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
+ - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
 
 Let op: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
 
@@ -232,7 +233,8 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
 **_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
-- `VOLDOET_AAN_MEERDERE_HABTYPEN`, `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
+- `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
+- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
 - `HABTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
 - `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
 
