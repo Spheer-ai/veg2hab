@@ -1,5 +1,6 @@
 import json
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from pathlib import Path
 from typing import ClassVar, List, Optional, Tuple
 
@@ -123,7 +124,7 @@ class Veg2HabConfig(BaseSettings):
     )
 
     # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
-    minimum_oppervlak_exceptions: str = Field(
+    minimum_oppervlak_exceptions_raw: str = Field(
         default=json.dumps(
             {
                 "H6110": 10,
@@ -145,14 +146,20 @@ class Veg2HabConfig(BaseSettings):
         ),
         description="Minimum oppervlakken per habitattype",
     )
+
+    @property
+    def minimum_oppervlak_exceptions(self):
+        return json.loads(self.minimum_oppervlak_exceptions_raw)
+
     minimum_oppervlak_default: Union[int, float] = Field(
         default=100,
         description="Minimum oppervlak voor een habitattype",
     )
 
-    @property
-    def minimum_oppervlak(self):
-        return json.loads(self.minimum_oppervlak_exceptions)
+    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> Union[int, float]:
+        return self.minimum_oppervlak_exceptions.get(
+            habtype, self.minimum_oppervlak_default
+        )
 
 
 class Interface(metaclass=ABCMeta):

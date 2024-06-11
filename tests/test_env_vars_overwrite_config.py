@@ -40,25 +40,73 @@ def test_niet_geautomatiseerde_sbb():
 
 def test_minimum_oppervlak():
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "100"
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS_RAW"] = json.dumps(
         {
             "H6110": 10,
             "H9110": 1000,
         }
     )
     assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 100
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 10
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 1000
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H6110"]
+        == 10
+    )
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H9110"]
+        == 1000
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("not_an_exception")
+        == 100
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H6110")
+        == 10
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H9110")
+        == 1000
+    )
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "200"
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS_RAW"] = json.dumps(
         {
             "H6110": 20,
             "H9110": 2000,
         }
     )
     assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 200
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 20
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 2000
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H6110"]
+        == 20
+    )
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H9110"]
+        == 2000
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("not_an_exception")
+        == 200
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H6110")
+        == 20
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H9110")
+        == 2000
+    )
 
 
 def test_functionele_samenhang():

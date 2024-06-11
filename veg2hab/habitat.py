@@ -168,6 +168,8 @@ def try_to_determine_habkeuze(
     wordt (
     """
 
+    # TODO: Hier niet meer dingen doen met HabitatKeuze.opmerking, maar alle communicatie via KeuzeStatus.toelichting laten verlopen
+
     assert len(all_voorstellen) > 0, "Er zijn geen habitatvoorstellen"
 
     # Als er maar 1 habitatvoorstel is en dat is H0000, dan...

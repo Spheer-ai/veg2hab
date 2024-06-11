@@ -1141,8 +1141,6 @@ class Kartering:
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-        self.check_minimum_oppervlak()
-
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
@@ -1187,17 +1185,17 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
-    def check_minimum_oppervlak(self) -> None:
-        """
-        Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
+    # def check_minimum_oppervlak(self) -> None:
+    #     """
+    #     Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
 
-        NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
-        """
-        assert (
-            "HabitatKeuze" in self.gdf.columns
-        ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+    #     NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
+    #     """
+    #     assert (
+    #         "HabitatKeuze" in self.gdf.columns
+    #     ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
 
-        self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
+    #     self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
 
     def as_final_format(self) -> pd.DataFrame:
         """

@@ -59,6 +59,7 @@ class LBK:
             )
         self.gdf = gdf
 
+    @classmethod
     def from_file(cls, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         return cls(
             gpd.read_file(path, mask=mask, include_fields=["Serie"]).rename(
