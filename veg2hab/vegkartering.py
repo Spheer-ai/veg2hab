@@ -299,8 +299,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-                f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]) if len(vegtypeinfo.VvN) > 0 else None,
-                f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]) if len(vegtypeinfo.SBB) > 0 else None,
+                f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN])
+                if len(vegtypeinfo.VvN) > 0
+                else None,
+                f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB])
+                if len(vegtypeinfo.SBB) > 0
+                else None,
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
@@ -360,8 +364,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-            f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]) if len(vegtypeinfo.VvN) > 0 else None,
-            f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]) if len(vegtypeinfo.SBB) > 0 else None,
+            f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN])
+            if len(vegtypeinfo.VvN) > 0
+            else None,
+            f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB])
+            if len(vegtypeinfo.SBB) > 0
+            else None,
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
