@@ -1,3 +1,5 @@
+import dataclasses
+import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
@@ -621,7 +623,10 @@ class Kartering:
     HABTYPE_COLS: ClassVar[List[str]] = []
 
     def __init__(self, gdf: gpd.GeoDataFrame):
-        self.gdf = gdf
+        try:
+            self.gdf = gdf[self.VEGTYPE_COLS + self.HABTYPE_COLS]
+        except KeyError:
+            self.gdf = gdf[self.VEGTYPE_COLS]
 
         # Alle VegTypeInfo sorteren op percentage van hoog naar laag
         # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
@@ -969,13 +974,85 @@ class Kartering:
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
         # TODO: fix dtypes (string dtypes would be nice)
-        self.gdf[[v for v in self.VEGTYPE_COLS if v != "VegTypeInfo"]]
-        vegtypes_df = self.gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
-        return vegtypes_df
+        gdf = self.gdf[self.VEGTYPE_COLS]
+
+        # unpack the vegtypeinfo
+        vegtypes_df = gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
+        str_columns = {
+            name: "string"
+            for name in vegtypes_df.columns
+            if name.startswith("SBB") or name.startswith("VvN")
+        }
+        perc_columns = {
+            name: float for name in vegtypes_df.columns if name.startswith("perc")
+        }
+        vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
+
+        # move and rename vegtype info column to the end
+        gdf = gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
+        gdf = pd.concat([gdf, vegtypes_df], axis=1)
+
+        gdf["_VegTypeInfo"] = (
+            gdf["_VegTypeInfo"]
+            .apply(lambda x: json.dumps([dataclasses.asdict(v) for v in x]))
+            .astype("string")
+        )
+
+        column_order = [
+            "ElmID",
+            "Opp",
+            "Datum",
+            "Opmerking",
+            *vegtypes_df.columns,
+            "_VegTypeInfo",
+            "_LokVegTyp",
+            "_LokVrtNar",
+            "geometry",
+        ]
+        return gdf[column_order]
+
+    @staticmethod
+    def _multi_col_to_vetype(row: pd.Series) -> List[VegTypeInfo]:
+        result = []
+        for idx in range(1, 100):  # arbitrary number
+            sbb = row.get(f"SBB{idx}", None)
+            vvn = row.get(f"VvN{idx}", None)
+            perc = row.get(f"perc{idx}", None)
+            if sbb is None and vvn is None:
+                break
+            result.append(
+                VegTypeInfo.from_str_vegtypes(
+                    SBB_strings=sbb.split(","),
+                    VvN_strings=vvn.split(","),
+                    percentage=perc,
+                )
+            )
+        else:
+            raise ValueError("Er zijn te veel kolommen met SBB/VvN/percentage")
+
+        return result
 
     @classmethod
-    def from_editable(cls, gdf: gpd.GeoDataFrame) -> Self:
-        pass
+    def from_editable_vegtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
+        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(
+            lambda x: [VegTypeInfo(**v) for v in json.loads(x)]
+        )
+
+        altered_vegtypes = gdf.apply(cls._multi_col_to_vetype, axis=1)
+
+        if not (altered_vegtypes != gdf["_VegTypeInfo"]).all():
+            logging.warn(
+                "Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen."
+            )
+
+        gdf["VegTypeInfo"] = altered_vegtypes
+        gdf = gdf.drop(
+            columns=[
+                "_VegTypeInfo",
+                *gdf.columns[gdf.columns.str.startswith(("SBB", "VvN", "perc"))],
+            ]
+        )
+        return cls(gdf)
 
     def apply_deftabel(self, dt: "DefinitieTabel") -> None:
         """
