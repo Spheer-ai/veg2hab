@@ -299,16 +299,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-                f"VvN{idx}": (
-                    str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                    else None
-                ),
-                f"SBB{idx}": (
-                    str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                    else None
-                ),
+                f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]) if len(vegtypeinfo.VvN) > 0 else None,
+                f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]) if len(vegtypeinfo.SBB) > 0 else None,
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
@@ -332,12 +324,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                         ]
                     )
                     if isinstance(voorstel.vegtype_in_dt, _SBB)
-                    else None
-                ),
-                # Als de status GEEN_OPGEGEVEN_VEGTYPEN is, dan willen we bij VgTypInf niks invullen
-                f"_VgTypInf{idx}": (
-                    str(vegtypeinfo)
-                    if keuze.status != KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN
                     else None
                 ),
             }
@@ -374,26 +360,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-            f"VvN{idx}": str(
-                [
-                    (
-                        str(voorstel.onderbouwend_vegtype)
-                        if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                        else None
-                    )
-                    for voorstel in voorstellen
-                ]
-            ),
-            f"SBB{idx}": str(
-                [
-                    (
-                        str(voorstel.onderbouwend_vegtype)
-                        if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                        else None
-                    )
-                    for voorstel in voorstellen
-                ]
-            ),
+            f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]) if len(vegtypeinfo.VvN) > 0 else None,
+            f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]) if len(vegtypeinfo.SBB) > 0 else None,
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
@@ -429,7 +397,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     for voorstel in voorstellen
                 ]
             ),
-            f"_VgTypInf{idx}": str(vegtypeinfo),
         }
 
         return pd.Series(series_dict)
@@ -517,7 +484,6 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opm{i}",
             f"SBB{i}",
             f"VvN{i}",
-            f"_VgTypInf{i}",
             f"_Status{i}",
             f"_Uitleg{i}",
             f"_SBBdftbl{i}",
