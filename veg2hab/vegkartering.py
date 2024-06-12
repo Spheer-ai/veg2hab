@@ -18,9 +18,9 @@ from veg2hab.criteria import (
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit
+from veg2hab.functionele_samenhang import apply_functionele_samenhang
 from veg2hab.habitat import (
     HabitatVoorstel,
-    apply_minimum_oppervlak,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
@@ -166,6 +166,8 @@ def ingest_vegtype(
             )
 
             vegtype_list.append(vegtypeinfo)
+        if vegtype_list == []:
+            return [VegTypeInfo(percentage=100, SBB=[], VvN=[])]
         return vegtype_list
 
     return gdf.apply(_row_to_vegtypeinfo_list, axis=1)
@@ -460,8 +462,8 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
             len(habitatkeuzes) == 1
         ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
         assert (
-            vegtypeinfos == []
-        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er geen VegTypeInfo zijn"
+            vegtypeinfos == [VegTypeInfo(percentage=100, SBB=[], VvN=[])],
+        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
         aggregate[
             (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit.as_letter())
         ] = 100
@@ -1185,17 +1187,13 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
-    # def check_minimum_oppervlak(self) -> None:
-    #     """
-    #     Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
+    def functionele_samenhang(self) -> pd.DataFrame:
+        """
+        Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
+        """
+        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze"
 
-    #     NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
-    #     """
-    #     assert (
-    #         "HabitatKeuze" in self.gdf.columns
-    #     ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
-
-    #     self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
+        self.gdf = apply_functionele_samenhang(self.gdf)
 
     def as_final_format(self) -> pd.DataFrame:
         """

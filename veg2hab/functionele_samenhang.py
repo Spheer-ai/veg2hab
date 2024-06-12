@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 from typing import Dict, List, Set, Tuple
 
 import geopandas as gpd
@@ -15,10 +16,10 @@ class UnionFind:
     https://en.wikipedia.org/wiki/Disjoint-set_data_structure
     https://www.youtube.com/watch?v=ayW5B2W9hfo
 
-    Wordt gebruikt om groepen van items te clusteren op basis van gemeenschappelijke elementen
-    [1, 2, 3], [2, 4], [5]                      ->  [1, 2, 3, 4], [5]
-    [1, 2], [3, 4], [5, 6], [2, 3]              ->  [1, 2, 3, 4], [5, 6]
-    [1, 2], [2, 3], [4, 5], [1, 6], [4, 7, 8]   ->  [1, 2, 3, 6], [4, 5, 7, 8]
+    Wordt gebruikt om paren van items te clusteren op basis van gemeenschappelijke elementen
+    [1, 2], [2, 3], [2, 4], [5, 5]          ->  [1, 2, 3, 4], [5]
+    [1, 2], [3, 4], [5, 6], [2, 3]          ->  [1, 2, 3, 4], [5, 6]
+    [1, 2], [2, 3], [4, 5], [1, 6], [4, 7]  ->  [1, 2, 3, 6], [4, 5, 7]
     """
 
     def __init__(self):
@@ -82,7 +83,7 @@ def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List]:
     Werkt op (een subset van) het resultaat van _extract_elmid_perc_habtype
 
     Afhankelijk van het percentage van een complexdeel wordt er gebufferd, en daarna adhv overlap in de GeoDataFrame clusters bepaald;
-    Als A overlapt met B en B met C, dan is [A, B en C] een cluster
+    Als A overlapt met B en B met C, dan is [A, B, C] een cluster
 
     Output is een lijst met lijsten van (ElmID, complexdeelindex), waarbij iedere sublijst een cluster is,
     en er geen gemene elementen zijn tussen sublijsten.
@@ -111,7 +112,7 @@ def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List]:
 
         # Bepalen overlap-paren
         overlaps = gpd.sjoin(
-            current_subset, current_subset, how="inner", op="intersects"
+            current_subset, current_subset, how="inner", predicate="intersects"
         )
         overlaps = list(
             zip(
@@ -124,7 +125,7 @@ def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List]:
     clusters = UnionFind.cluster_pairs(intersection_pairs)
 
     # Alle elementen die niet aan de laagste percentage-eis voldoen moeten als zelfstandige nog steeds wel
-    # meegenomen worden in de rest van het minimum-oppervlak-proces, dus ze moeten ook in intersection_pairs
+    # meegenomen worden in de rest van het minimum-oppervlak-proces, dus die voegen we als individuen toe
     lowest_perc = min(distance_tuples, key=lambda x: x[0])[0]
     unclusterables = gdf[gdf.percentage < lowest_perc]
     clusters.extend(
@@ -136,26 +137,28 @@ def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List]:
 
 def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
-    Trekt uit de ElmID, VegTypeInfo en HabitatKeuze kolommen de data die
-
+    Trekt uit de vegkartering gdf de benodigde informatie voor het bepalen van clusters
+    Ieder complexdeel/HabitatKeuze krijgt een eigen rij in de output, met de identifier (ElmID, complex-deel-index)
+    Als er meerdere complexdelen met hetzelfde habtype in een vlak zitten, worden deze samengevoegd
     """
 
     def apply_func(row: pd.Series) -> pd.DataFrame:
-        # identifier (Elmid, cmplxdeel_n) | percentage | habitattype | geometry
+        # identifier (Elmid, [cmplxdeel_n]) | percentage | habitattype | geometry
         identifier = []
         percentage = []
         habtype = []
         geometry = []
         for idx, keuze in enumerate(row["HabitatKeuze"]):
             # Dit stelt ons in staat weer terug te gaan naar de originele habitatkeuze
-            identifier.append((row["ElmID"], idx))
+            identifier.append((row["ElmID"], (idx,)))
             # Nodig voor het bepalen van de buffergrootte
             percentage.append(row.VegTypeInfo[idx].percentage)
             # We clusteren binnen ieder habtype
             habtype.append(keuze.habtype)
             # We kunnen niet clusteren zonder geometrie
             geometry.append(row.geometry)
-        return gpd.GeoDataFrame(
+
+        gdf = gpd.GeoDataFrame(
             {
                 "identifier": identifier,
                 "percentage": percentage,
@@ -164,35 +167,63 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             }
         )
 
+        # Checken op meerdere complexdelen met hetzelfde habtype binnen het huidige vlak
+        if len(set(habtype)) != len(habtype):
+            non_unique_habtypes = set(
+                habtype[i] for i in range(len(habtype)) if habtype.count(habtype[i]) > 1
+            )
+            # We vervangen alle rijen met hetzelfde habtype door 1 rij met gecombineerde identifier
+            # en de som van de percentages
+            for type in non_unique_habtypes:
+                all_rows_of_type = gdf[gdf.habtype == type].copy()
+                identifiers = all_rows_of_type["identifier"].tolist()
+                new_row = gpd.GeoDataFrame(
+                    {
+                        "identifier": [
+                            (
+                                identifiers[0][0],
+                                tuple(identifier[1][0] for identifier in identifiers),
+                            )
+                        ],
+                        "percentage": [sum(all_rows_of_type.percentage)],
+                        "habtype": [type],
+                        "geometry": [all_rows_of_type.geometry.iloc[0]],
+                    }
+                )
+                gdf = gdf[gdf.habtype != type]
+                gdf = pd.concat([gdf, new_row], ignore_index=True)
+
+        return gdf
+
     extracted = gdf.apply(apply_func, axis=1)
     return pd.concat(extracted.to_list(), ignore_index=True)
 
 
 def _remove_habtypen_due_to_minimum_oppervlak(
-    gdf: gpd.GeoDataFrame, to_be_edited: Set[Tuple]
+    gdf: gpd.GeoDataFrame, to_be_edited: Set[Tuple[int, Tuple]]
 ) -> gpd.GeoDataFrame:
     """
-    Past HabitatKeuzes aan op basis van de (ElmID, complex-deel-index) paren die in to_be_edited zitten
+    Past HabitatKeuzes aan op basis van de (ElmID, complex-deel-index) tuples die in to_be_edited zitten
 
     De status van de HabitatKeuze wordt aangepast naar KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
     De opmerking wordt aangepast naar "Was {oud_habtype}, maar oppervlak was te klein. {oude_opmerking}"
     Het habitattype wordt aangepast naar "H0000"
     """
-    for ElmID, complex_deel_index in to_be_edited:
+    for ElmID, complex_deel_indices in to_be_edited:
         keuzes = gdf.loc[gdf.ElmID == ElmID, "HabitatKeuze"].iloc[0]
-        keuze_to_be_edited = keuzes[complex_deel_index]
-        keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-        keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein. {keuze_to_be_edited.opmerking}"
-        keuze_to_be_edited.habtype = "H0000"
+        for complex_deel_index in complex_deel_indices:
+            keuze_to_be_edited = keuzes[complex_deel_index]
+            keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
+            keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein. {keuze_to_be_edited.opmerking}"
+            keuze_to_be_edited.habtype = "H0000"
 
     return gdf
 
 
 def debug_visualize_clusters(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
-    Maakt een dataframe met enkel geometries, ElmID's en een cluster-index ter visualisatie van clusters
-    Er wordt enkel gekeken naar de eerste HabitatKeuze per vlak
-    Er wordt dus niet gekeken naar (ElmID, niet-0-index) cluster entries
+    Maakt een dataframe met enkel geometries, Habitattypen, ElmID's en een cluster-index ter visualisatie van clusters
+    Er wordt enkel gekeken naar de eerste HabitatKeuze per vlak (en dus niet naar (ElmID, niet-0-index) cluster entries)
     """
     all_clusters = []
 
@@ -208,7 +239,7 @@ def debug_visualize_clusters(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     for idx, cluster in enumerate(all_clusters):
         for identifier in cluster:
             ElmID, complex_deel_index = identifier
-            if complex_deel_index != 0:
+            if 0 not in complex_deel_index:
                 continue
             new_gdf.loc[new_gdf.ElmID == ElmID, "cluster_id"] = idx
             new_gdf.loc[new_gdf.ElmID == ElmID, "habtype"] = extracted.loc[
@@ -221,18 +252,6 @@ def debug_visualize_clusters(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
     Past de minimum oppervlak en functionele samenhang regels toe
-
-
-    # general idea:
-    # group by habtype
-    # for habtype in all_present_habtypen:
-    #     habtype_vlakken = get_vlakken_with_habtype(habtype)
-    #     clusters = _cluster_vlakken(habtype_vlakken)
-    #     for cluster in clusters:
-    #         if cluster opp < minimum:
-    #             habtype = "H0000"
-    #             status = KeuzeStatus.MINIMUM_OPPERVLAK
-    #             ergens iets met t oude habtype zodat we die niet kwijtraken
     """
     assert (
         "ElmID" in gdf.columns
@@ -251,7 +270,10 @@ def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     # Extracten van ElmID + complex-deel-index, percentage en habitattype
     extracted = _extract_elmid_perc_habtype(gdf)
 
-    edited_gdf = gdf.copy()
+    # NOTE: Ik wil eigenlijk niet dat deze functie in place is, maar ik kan geen goeie (deep)copy maken
+    #       Wat er nu staat is vooral voor de vorm, de originele gdf wordt via de HabitatKeuzes alsnog aangepast
+    #       pickle.loads(pickle.dumps(gdf)) zou mogelijk een optie zijn?
+    edited_gdf = gdf.copy(deep=True)
     all_present_habtypen = extracted["habtype"].unique()
     for habtype in all_present_habtypen:
         if habtype in ["H0000", "HXXXX"]:
@@ -261,16 +283,13 @@ def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         clusters = _cluster_vlakken(habtype_vlakken)
         assert len(habtype_vlakken) == sum(
             len(cluster) for cluster in clusters
-        ), "Clusters bevatten niet alle vlakken"
+        ), "Clusters bevatten niet alle vlakken of dubbele vlakken"
         for cluster in clusters:
             extracted_subset = extracted[extracted.identifier.isin(cluster)]
-            areas = extracted_subset.area * extracted_subset.percentage / 100
+            areas = extracted_subset.area * (extracted_subset.percentage / 100)
             if areas.sum() < min_opp_lookup_func(habtype):
                 edited_gdf = _remove_habtypen_due_to_minimum_oppervlak(
                     edited_gdf, cluster
-                )
-                print(
-                    f"{len(cluster)} vlakken van {habtype} hebben samen een oppervlak van {areas.sum()} m^2, wat kleiner is dan het minimum van {min_opp_lookup_func(habtype)} m^2"
                 )
 
     return edited_gdf

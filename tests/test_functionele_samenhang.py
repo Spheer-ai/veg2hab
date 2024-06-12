@@ -130,14 +130,14 @@ def test_extract_elmid_perc_habtype(test_gdf):
     extracted_reference = gpd.GeoDataFrame(
         {
             "identifier": [
-                (1, 0),
-                (2, 0),
-                (3, 0),
-                (3, 1),
-                (4, 0),
-                (4, 1),
-                (5, 0),
-                (5, 1),
+                (1, (0,)),
+                (2, (0,)),
+                (3, (0,)),
+                (3, (1,)),
+                (4, (0,)),
+                (4, (1,)),
+                (5, (0,)),
+                (5, (1,)),
             ],
             "percentage": [
                 100,
@@ -180,7 +180,12 @@ def test_gdf_cluster_vlakken(test_gdf):
     clustered = _cluster_vlakken(extracted)
     assert compare_clusterings(
         clustered,
-        [[(1, 0), (2, 0), (3, 0), (4, 0), (5, 0)], [(3, 1)], [(4, 1)], [(5, 1)]],
+        [
+            [(1, (0,)), (2, (0,)), (3, (0,)), (4, (0,)), (5, (0,))],
+            [(3, (1,))],
+            [(4, (1,))],
+            [(5, (1,))],
+        ],
     )
 
     # remove ElmID 3
@@ -188,7 +193,8 @@ def test_gdf_cluster_vlakken(test_gdf):
     extracted = _extract_elmid_perc_habtype(test_gdf)
     clustered = _cluster_vlakken(extracted)
     assert compare_clusterings(
-        clustered, [[(1, 0), (2, 0)], [(4, 0), (5, 0)], [(4, 1)], [(5, 1)]]
+        clustered,
+        [[(1, (0,)), (2, (0,))], [(4, (0,)), (5, (0,))], [(4, (1,))], [(5, (1,))]],
     )
 
 
@@ -204,7 +210,7 @@ def test_functionele_samenhang_fully_one_big_cluster(test_gdf):
     assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H1234"
     assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
 
-    # increase minimum size
+    # increase minimum size a bit
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "1000"
     test_gdf = apply_functionele_samenhang(test_gdf)
     assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
@@ -215,3 +221,43 @@ def test_functionele_samenhang_fully_one_big_cluster(test_gdf):
     assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
     assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H1234"
     assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
+
+    # increase minimum size massively
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "10000"
+    test_gdf = apply_functionele_samenhang(test_gdf)
+    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[1][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[2][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[2][1].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[3][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
+
+
+def test_combining_of_same_habtype_in_one_shape(test_gdf):
+    # Enkel het 60/40 vlak testen, met beide complexdelen H1234
+    # Eerst dat ze samen net genoeg zijn
+    test_gdf = test_gdf.iloc[[2]]
+    test_gdf.HabitatKeuze = [
+        [
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H1234", Kwaliteit.GOED, []),
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H1234", Kwaliteit.GOED, []),
+        ]
+    ]
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
+    apply_functionele_samenhang(test_gdf)
+    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
+    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H1234"
+
+    # Nu dat ze samen net te weinig zijn
+    test_gdf.HabitatKeuze = [
+        [
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H1234", Kwaliteit.GOED, []),
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H1234", Kwaliteit.GOED, []),
+        ]
+    ]
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
+    apply_functionele_samenhang(test_gdf)
+    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
