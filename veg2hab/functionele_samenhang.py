@@ -154,7 +154,11 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             # Nodig voor het bepalen van de buffergrootte
             percentage.append(row.VegTypeInfo[idx].percentage)
             # We clusteren binnen ieder habtype
-            habtype.append(keuze.habtype if keuze.habtype not in vegetatiekundig_identiek.keys() else vegetatiekundig_identiek[keuze.habtype])
+            habtype.append(
+                keuze.habtype
+                if keuze.habtype not in vegetatiekundig_identiek.keys()
+                else vegetatiekundig_identiek[keuze.habtype]
+            )
             # We kunnen niet clusteren zonder geometrie
             geometry.append(row.geometry)
 
@@ -195,7 +199,11 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
         return gdf
 
-    vegetatiekundig_identiek = Interface.get_instance().get_config().functionele_samenhang_vegetatiekundig_identiek
+    vegetatiekundig_identiek = (
+        Interface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+    )
     extracted = gdf.apply(apply_func, axis=1, args=(vegetatiekundig_identiek,))
     extracted = pd.concat(extracted.to_list(), ignore_index=True)
     return extracted
@@ -291,8 +299,6 @@ def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             areas = extracted_subset.area * (extracted_subset.percentage / 100)
             if areas.sum() > min_opp_lookup_func(habtype):
                 continue
-            edited_gdf = _remove_habtypen_due_to_minimum_oppervlak(
-                edited_gdf, cluster
-            )
+            edited_gdf = _remove_habtypen_due_to_minimum_oppervlak(edited_gdf, cluster)
 
     return edited_gdf

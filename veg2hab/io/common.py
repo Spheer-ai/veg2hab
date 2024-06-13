@@ -122,7 +122,7 @@ class Veg2HabConfig(BaseSettings):
         ),
         description="Vertaler van vegetatiekundig identieke habitattypen naar een gemene string",
     )
-    
+
     @property
     def functionele_samenhang_vegetatiekundig_identiek(self) -> dict:
         return json.loads(self.functionele_samenhang_vegetatiekundig_identiek_raw)

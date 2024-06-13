@@ -274,7 +274,9 @@ def test_vegetatiekundig_identiek(test_gdf):
         ]
     ]
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
-    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"] = json.dumps(
+    os.environ[
+        "VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"
+    ] = json.dumps(
         {
             "H2130": "H2130/H4030",
             "H4030": "H2130/H4030",
@@ -295,4 +297,3 @@ def test_vegetatiekundig_identiek(test_gdf):
     apply_functionele_samenhang(test_gdf)
     assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
     assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
-
