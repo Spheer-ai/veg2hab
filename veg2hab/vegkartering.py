@@ -1267,6 +1267,13 @@ class Kartering:
 
         self.gdf = apply_functionele_samenhang(self.gdf)
 
+    def to_editable_habtypes(self) -> gpd.GeoDataFrame:
+        pass
+
+    @classmethod
+    def from_editable_vegtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
+        pass
+
     def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven

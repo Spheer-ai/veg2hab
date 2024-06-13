@@ -404,7 +404,7 @@ class VvN:
         # Verwijderen haakjes uit Vvn (voor wwl)
         series = series.str.replace("[()]", "", regex=True)
         # Verwijderen p.p. uit VvN (voor wwl)
-        series = series.str.replace("p.p.", "")
+        series = series.str.replace("p.p.", "", regex=False)
         # Vervangen 0[1-9] door [1-9]
         series = series.str.replace("0([1-9])", r"\1", regex=True)
         # Vervangen enkel "-" of "x" vegtypen door None

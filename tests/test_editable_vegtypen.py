@@ -4,7 +4,10 @@ from pathlib import Path
 import geopandas as gpd
 import pytest
 
+from veg2hab import constants
+from veg2hab.bronnen import FGR, LBK, Bodemkaart
 from veg2hab.constants import WWL_PATH
+from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.vegkartering import Kartering, VegTypeInfo, ingest_vegtype
 from veg2hab.waswordtlijst import WasWordtLijst
@@ -35,6 +38,26 @@ def apply_wwl(kartering: Kartering) -> Kartering:
     return kartering
 
 
+def to_habtypekaart(kartering: Kartering) -> Kartering:
+    deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
+    fgr = FGR(Path(constants.FGR_PATH))
+    bodemkaart = Bodemkaart.from_file(
+        path=Path(__file__).parent.joinpath("../data/bronbestanden/bodemkaart.gpkg")
+    )
+    lbk = LBK.from_file(
+        path=Path(__file__).parent.joinpath("../data/bronbestanden/lbk.gpkg")
+    )
+
+    kartering.apply_deftabel(deftabel)
+
+    kartering.bepaal_habitatkeuzes(
+        fgr,
+        bodemkaart,
+        lbk,
+    )
+    return kartering
+
+
 def test_equivalency(kartering):
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = str(temp_dir)
@@ -45,4 +68,19 @@ def test_equivalency(kartering):
 
         editable_vegtype2 = gpd.read_file(temp_dir + "/vegkartering.gpkg")
         reconstructed_kartering = Kartering.from_editable_vegtypes(editable_vegtype2)
+        assert kartering.gdf.equals(reconstructed_kartering.gdf)
+
+
+def test_equivalency_habkart(kartering):
+    kartering = apply_wwl(kartering)
+    kartering = to_habtypekaart(kartering)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir = str(temp_dir)
+
+        editable_habtype = kartering.to_editable_habtypes()
+        editable_habtype.to_file(temp_dir + "/habkartering.gpkg", driver="GPKG")
+
+        editable_habtype2 = gpd.read_file(temp_dir + "/habkartering.gpkg")
+        reconstructed_kartering = Kartering.from_editable_vegtypes(editable_habtype2)
         assert kartering.gdf.equals(reconstructed_kartering.gdf)
