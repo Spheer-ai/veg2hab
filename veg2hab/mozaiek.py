@@ -70,7 +70,9 @@ class MozaiekRegel(BaseModel):
 
 class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.CANNOT_BE_AUTOMATED)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(
+        default=MaybeBoolean.CANNOT_BE_AUTOMATED
+    )
 
     def check(self, habtype_percentage_dict: Dict) -> None:
         assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED

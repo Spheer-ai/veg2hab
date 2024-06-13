@@ -86,7 +86,9 @@ class GeenCriterium(BeperkendCriterium):
 class NietGeautomatiseerdCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietGeautomatiseerd"
     toelichting: str
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.CANNOT_BE_AUTOMATED)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(
+        default=MaybeBoolean.CANNOT_BE_AUTOMATED
+    )
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
