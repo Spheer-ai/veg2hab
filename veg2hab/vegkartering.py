@@ -314,25 +314,21 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
-                f"_VvNdftbl{idx}": (
-                    str(
-                        [
-                            str(voorstel.vegtype_in_dt),
-                            voorstel.idx_in_dt,
-                            voorstel.habtype,
-                        ]
-                    )
+                f"_VvNdftbl{idx}": str(
+                    [
+                        str(voorstel.vegtype_in_dt),
+                        voorstel.idx_in_dt,
+                        voorstel.habtype,
+                    ]
                     if isinstance(voorstel.vegtype_in_dt, _VvN)
                     else None
                 ),
-                f"_SBBdftbl{idx}": (
-                    str(
-                        [
-                            str(voorstel.vegtype_in_dt),
-                            voorstel.idx_in_dt,
-                            voorstel.habtype,
-                        ]
-                    )
+                f"_SBBdftbl{idx}": str(
+                    [
+                        str(voorstel.vegtype_in_dt),
+                        voorstel.idx_in_dt,
+                        voorstel.habtype,
+                    ]
                     if isinstance(voorstel.vegtype_in_dt, _SBB)
                     else None
                 ),
@@ -399,7 +395,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
-            f"_VvNdftbl{idx}": str(
+            f"_VvNdftbl{idx}": "\n".join(
                 [
                     (
                         str(
@@ -410,12 +406,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                             ]
                         )
                         if isinstance(voorstel.vegtype_in_dt, _VvN)
-                        else None
+                        else "---"
                     )
                     for voorstel in voorstellen
                 ]
             ),
-            f"_SBBdftbl{idx}": str(
+            f"_SBBdftbl{idx}": "\n".join(
                 [
                     (
                         str(
@@ -426,7 +422,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                             ]
                         )
                         if isinstance(voorstel.vegtype_in_dt, _SBB)
-                        else None
+                        else "---"
                     )
                     for voorstel in voorstellen
                 ]
