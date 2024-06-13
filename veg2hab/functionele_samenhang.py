@@ -142,7 +142,7 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     Als er meerdere complexdelen met hetzelfde habtype in een vlak zitten, worden deze samengevoegd
     """
 
-    def apply_func(row: pd.Series) -> pd.DataFrame:
+    def apply_func(row: pd.Series, vegetatiekundig_identiek: dict) -> pd.DataFrame:
         # identifier (Elmid, [cmplxdeel_n]) | percentage | habitattype | geometry
         identifier = []
         percentage = []
@@ -154,7 +154,7 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             # Nodig voor het bepalen van de buffergrootte
             percentage.append(row.VegTypeInfo[idx].percentage)
             # We clusteren binnen ieder habtype
-            habtype.append(keuze.habtype)
+            habtype.append(keuze.habtype if keuze.habtype not in vegetatiekundig_identiek.keys() else vegetatiekundig_identiek[keuze.habtype])
             # We kunnen niet clusteren zonder geometrie
             geometry.append(row.geometry)
 
@@ -195,8 +195,10 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
         return gdf
 
-    extracted = gdf.apply(apply_func, axis=1)
-    return pd.concat(extracted.to_list(), ignore_index=True)
+    vegetatiekundig_identiek = Interface.get_instance().get_config().functionele_samenhang_vegetatiekundig_identiek
+    extracted = gdf.apply(apply_func, axis=1, args=(vegetatiekundig_identiek,))
+    extracted = pd.concat(extracted.to_list(), ignore_index=True)
+    return extracted
 
 
 def _remove_habtypen_due_to_minimum_oppervlak(
@@ -287,9 +289,10 @@ def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         for cluster in clusters:
             extracted_subset = extracted[extracted.identifier.isin(cluster)]
             areas = extracted_subset.area * (extracted_subset.percentage / 100)
-            if areas.sum() < min_opp_lookup_func(habtype):
-                edited_gdf = _remove_habtypen_due_to_minimum_oppervlak(
-                    edited_gdf, cluster
-                )
+            if areas.sum() > min_opp_lookup_func(habtype):
+                continue
+            edited_gdf = _remove_habtypen_due_to_minimum_oppervlak(
+                edited_gdf, cluster
+            )
 
     return edited_gdf

@@ -113,6 +113,20 @@ class Veg2HabConfig(BaseSettings):
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
     )
 
+    functionele_samenhang_vegetatiekundig_identiek_raw: str = Field(
+        default=json.dumps(
+            {
+                "H2130": "H2130/H4030",
+                "H4030": "H2130/H4030",
+            }
+        ),
+        description="Vertaler van vegetatiekundig identieke habitattypen naar een gemene string",
+    )
+    
+    @property
+    def functionele_samenhang_vegetatiekundig_identiek(self) -> dict:
+        return json.loads(self.functionele_samenhang_vegetatiekundig_identiek_raw)
+
     # (vanaf percentage (inclusief), buffer afstand)
     functionele_samenhang_buffer_distances: List[Tuple[int, float]] = Field(
         default=[

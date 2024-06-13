@@ -261,3 +261,38 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
     apply_functionele_samenhang(test_gdf)
     assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
     assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
+
+
+def test_vegetatiekundig_identiek(test_gdf):
+    # 2 verschillende habtypen die samen tellen voor functionele samenhang
+    # Eerst met net genoeg oppervlakte
+    test_gdf = test_gdf.iloc[[2]]
+    test_gdf.HabitatKeuze = [
+        [
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H2130", Kwaliteit.GOED, []),
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H4030", Kwaliteit.GOED, []),
+        ]
+    ]
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"] = json.dumps(
+        {
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
+        }
+    )
+    apply_functionele_samenhang(test_gdf)
+    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H2130"
+    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H4030"
+
+    # Nu met net niet genoeg oppervlakte
+    test_gdf.HabitatKeuze = [
+        [
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H2130", Kwaliteit.GOED, []),
+            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H4030", Kwaliteit.GOED, []),
+        ]
+    ]
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
+    apply_functionele_samenhang(test_gdf)
+    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
+

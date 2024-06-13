@@ -140,3 +140,33 @@ def test_functionele_samenhang():
             (51, 0.02),
         ]
     )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"] = json.dumps(
+        {
+            "H2130": ["H2130/H4030"],
+            "H4030": ["H2130/H4030"],
+        }
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+        == {
+            "H2130": ["H2130/H4030"],
+            "H4030": ["H2130/H4030"],
+        }
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"] = json.dumps(
+        {
+            "H2130": ["H4030/H2130"],
+            "H4030": ["H4030/H2130"],
+        }
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+        == {
+            "H2130": ["H4030/H2130"],
+            "H4030": ["H4030/H2130"],
+        }
+    )
