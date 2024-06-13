@@ -70,10 +70,10 @@ class MozaiekRegel(BaseModel):
 
 class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.CANNOT_BE_AUTOMATED)
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+        assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     @property
     def evaluation(self) -> MaybeBoolean:
@@ -88,7 +88,7 @@ class GeenMozaiekregel(MozaiekRegel):
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        self._evaluation = MaybeBoolean.TRUE
+        assert self._evaluation == MaybeBoolean.TRUE
 
     @property
     def evaluation(self) -> MaybeBoolean:
@@ -109,7 +109,7 @@ class StandaardMozaiekregel(MozaiekRegel):
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
 
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.POSTPONE)
 
     def determine_keys(self) -> None:
         assert not self.habtype in [

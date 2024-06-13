@@ -1039,6 +1039,126 @@ class Kartering:
                         raise ValueError("Er is een habitatvoorstel zonder mits")
                     voorstel.mits.check(mits_info_row)
 
+
+    def bepaal_mits_habitatkeuzes(self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK) -> None:
+        '''
+        Bepaalt voor complexdelen zonder mozaiekregels de habitatkeuzes
+        HabitatKeuzes waar ook mozaiekregels mee gemoeid zijn worden uitgesteld tot in bepaal_mozaiek_habitatkeuzes
+        '''
+        assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
+        assert isinstance(
+            bodemkaart, Bodemkaart
+        ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
+        assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
+
+        self.check_mitsen(fgr, bodemkaart, lbk)
+
+        self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
+            lambda voorstellen: [
+                try_to_determine_habkeuze(voorstel) for voorstel in voorstellen
+            ]
+        )
+
+
+    def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
+        '''
+        # TODO: zelfstandigheid/mozaiekvegetaties wordt nog niet goed afgehandeld. ATM
+                worden mozaiekvegetaties geinterpreteerd als vegetaties die aan hun mozaiekregel 
+                hebben voldaan (te herkennen aan "onzelfstandige" habtypen, HabitatKeuze.zelfstandig == False),
+                terwijl dit moet worden dat het grenst aan een vegtype met een mozaiekregel voor hetzelfde habtype
+
+        Reviseert de habitatkeuzes op basis van mozaiekregels.
+        '''
+        # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
+        self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
+            lambda voorstellen_list: [None for sublist in voorstellen_list]
+        )
+
+        # TODO: hieronder de naam van de tool invoeren ipv bepaal_mits_habitatkeuzes zodat de gebruiker er ook wat aan heeft
+        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze (draai eerst bepaal_mits_habitatkeuzes)"
+
+        self.gdf["finished_on_iteration"] = 0
+
+        ### Verkrijgen overlay gdf
+        # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
+        # Als er geen vlakken met mozaiekregels zijn of als deze vlakken allemaal nergens aan grenzen is overlayed None
+        overlayed = make_buffered_boundary_overlay_gdf(self.gdf)
+
+        for i in range(max_iter):
+            keuzes_still_to_determine_pre = calc_nr_of_unresolved_habitatkeuzes_per_row(
+                self.gdf
+            )
+            n_keuzes_still_to_determine_pre = keuzes_still_to_determine_pre.sum()
+
+            #####
+            # Mozaiekregels checken
+            #####
+            # We hoeven geen mozaiekdingen te doen als we geen vlakken met mozaiekregels hebben
+            if overlayed is not None:
+                # Vlakken waar alle HabitatKeuzes al bepaald zijn kunnen uit de mozaiekregel overlayed gdf
+                finished_ElmID = self.gdf[
+                    keuzes_still_to_determine_pre == 0
+                ].ElmID.to_list()
+                overlayed = overlayed[~overlayed.buffered_ElmID.isin(finished_ElmID)]
+
+                # obtain a series with 1 if there is at least 1 None habitatkeuze and 0 otherwise
+                finished_on_iteration_increment = self.gdf.HabitatKeuze.apply(
+                    lambda keuzes: 1 if keuzes.count(None) > 0 else 0
+                )
+                self.gdf["finished_on_iteration"] += finished_on_iteration_increment
+
+                # Mergen HabitatVoorstel met overlayed
+                # Nu hebben we dus per mozaiekregelvlak voor hoeveel procent het aan welke HabitatKeuzes grenst
+                augmented_overlayed = overlayed.merge(
+                    self.gdf[["ElmID", "HabitatKeuze"]],
+                    on="ElmID",
+                    how="left",
+                )
+
+                # Deze info zetten we per ElmID om in een defaultdict
+                habtype_percentages = calc_mozaiek_percentages_from_overlay_gdf(
+                    augmented_overlayed
+                )
+
+                # Met deze dicts kunnen we dan de mozaiekregels checken
+                self._check_mozaiekregels(habtype_percentages)
+
+            #####
+            # Habitatkeuze proberen te bepalen per list habitatvoorstellen van een vegtypeingo
+            #####
+            self.gdf["HabitatKeuze"] = self.gdf.HabitatVoorstel.apply(
+                lambda voorstellen: [
+                    try_to_determine_habkeuze(voorstel) for voorstel in voorstellen
+                ]
+            )
+
+            n_keuzes_still_to_determine_post = (
+                calc_nr_of_unresolved_habitatkeuzes_per_row(self.gdf).sum()
+            )
+
+            print(
+                f"Iteratie {i}: van {n_keuzes_still_to_determine_pre} naar {n_keuzes_still_to_determine_post} habitattypen nog te bepalen"
+            )
+
+            if (
+                n_keuzes_still_to_determine_pre == n_keuzes_still_to_determine_post
+                or n_keuzes_still_to_determine_post == 0
+            ):
+                break
+        else:
+            logging.warn(
+                f"Maximaal aantal iteraties ({max_iter}) bereikt in de mozaiekregel loop."
+            )
+
+        # Of we hebben overal een keuze, of we komen niet verder met nog meer iteraties,
+        # of we hebben max_iter bereikt
+
+        if n_keuzes_still_to_determine_post > 0:
+            logging.info(
+                f"Er zijn nog {n_keuzes_still_to_determine_post} habitatkeuzes die niet bepaald konden worden."
+            )
+
+
     def bepaal_habitatkeuzes(
         self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, max_iter: int = 20
     ) -> None:
@@ -1141,7 +1261,6 @@ class Kartering:
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-        self.check_minimum_oppervlak()
 
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():

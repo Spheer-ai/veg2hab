@@ -90,11 +90,13 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     logging.info(f"Definitietabel is toegepast op de vegetatie kartering")
 
-    kartering.bepaal_habitatkeuzes(
+    kartering.bepaal_mits_habitatkeuzes(
         fgr,
         bodemkaart,
         lbk,
     )
+
+    kartering.bepaal_mozaiek_habitatkeuzes()
 
     logging.info(f"Mitsen zijn gecheckt")
 
