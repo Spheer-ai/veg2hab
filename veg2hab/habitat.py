@@ -258,29 +258,7 @@ def try_to_determine_habkeuze(
 
             # ...of zijn er meerdere kloppende mitsen; Alle info van de kloppende mitsen meegeven
             if len(true_voorstellen) > 1:
-                if all(
-                    [
-                        voorstel.habtype == true_voorstellen[0].habtype
-                        for voorstel in true_voorstellen
-                    ]
-                ):
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
-                    print("hi")
+                if all([voorstel.habtype == true_voorstellen[0].habtype for voorstel in true_voorstellen]):
                     return HabitatKeuze(
                         status=KeuzeStatus.DUIDELIJK,
                         habtype=true_voorstellen[0].habtype,
