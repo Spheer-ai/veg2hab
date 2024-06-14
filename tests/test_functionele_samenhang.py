@@ -78,19 +78,39 @@ def test_gdf():
                 ],
             ],
             "HabitatKeuze": [
-                [HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, [])],
-                [HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, [])],
                 [
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+                    )
                 ],
                 [
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+                    )
                 ],
                 [
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
-                    HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+                    ),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []
+                    ),
+                ],
+                [
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+                    ),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []
+                    ),
+                ],
+                [
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+                    ),
+                    HabitatKeuze(
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4321", Kwaliteit.GOED, []
+                    ),
                 ],
             ],
             "geometry": [
@@ -241,8 +261,12 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
     test_gdf = test_gdf.iloc[[2]]
     test_gdf.HabitatKeuze = [
         [
-            HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
-            HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+            ),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+            ),
         ]
     ]
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
@@ -253,8 +277,12 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
     # Nu dat ze samen net te weinig zijn
     test_gdf.HabitatKeuze = [
         [
-            HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
-            HabitatKeuze(KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+            ),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H1234", Kwaliteit.GOED, []
+            ),
         ]
     ]
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
@@ -269,8 +297,12 @@ def test_vegetatiekundig_identiek(test_gdf):
     test_gdf = test_gdf.iloc[[2]]
     test_gdf.HabitatKeuze = [
         [
-            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H2130", Kwaliteit.GOED, []),
-            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H4030", Kwaliteit.GOED, []),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H2130", Kwaliteit.GOED, []
+            ),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4030", Kwaliteit.GOED, []
+            ),
         ]
     ]
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
@@ -289,8 +321,12 @@ def test_vegetatiekundig_identiek(test_gdf):
     # Nu met net niet genoeg oppervlakte
     test_gdf.HabitatKeuze = [
         [
-            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H2130", Kwaliteit.GOED, []),
-            HabitatKeuze(KeuzeStatus.DUIDELIJK, "H4030", Kwaliteit.GOED, []),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H2130", Kwaliteit.GOED, []
+            ),
+            HabitatKeuze(
+                KeuzeStatus.HABITATTYPE_TOEGEKEND, "H4030", Kwaliteit.GOED, []
+            ),
         ]
     ]
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
