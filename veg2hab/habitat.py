@@ -268,13 +268,13 @@ def try_to_determine_habkeuze(
                     opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                     mits_opmerking="\n".join(
                         [
-                            f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
                             for voorstel in true_voorstellen
                         ]
                     ),
                     mozaiek_opmerking="\n".join(
                         [
-                            f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
                             for voorstel in true_voorstellen
                         ]
                     ),
@@ -312,13 +312,13 @@ def try_to_determine_habkeuze(
                 opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                 mits_opmerking="\n".join(
                     [
-                        f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
                         for voorstel in return_voorstellen
                     ]
                 ),
                 mozaiek_opmerking="\n".join(
                     [
-                        f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
                         for voorstel in return_voorstellen
                     ]
                 ),
@@ -352,13 +352,13 @@ def try_to_determine_habkeuze(
                 opmerking="Dit vlak heeft mozaiekregels waarvoor nog te weinig info is om een keuze te maken. Dit gebeurt als het vlak omringd wordt door meer dan 90% HXXXX. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
                 mits_opmerking="\n".join(
                     [
-                        f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
                         for voorstel in return_voorstellen
                     ]
                 ),
                 mozaiek_opmerking="\n".join(
                     [
-                        f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
                         for voorstel in return_voorstellen
                     ]
                 ),
@@ -374,13 +374,13 @@ def try_to_determine_habkeuze(
         opmerking=f"Er zijn geen habitatvoorstellen waarvan zowel de mits als de mozaiekregel klopt. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek].",
         mits_opmerking="\n".join(
             [
-                f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
                 for voorstel in all_voorstellen
             ]
         ),
         mozaiek_opmerking="\n".join(
             [
-                f"[{voorstel.onderbouwend_vegtype}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
                 for voorstel in all_voorstellen
             ]
         ),
