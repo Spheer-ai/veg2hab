@@ -279,9 +279,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     # Er is 1 HabitatVoorstel
     if len(keuze.habitatvoorstellen) == 1:
         if keuze.status in [
-            KeuzeStatus.DUIDELIJK,
+            KeuzeStatus.HABITATTYPE_TOEGEKEND,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
-            KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+            KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
@@ -351,8 +351,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
         ), f"Er is 1 habitatkeuze maar KeuzeStatus {keuze.status} is niet DUIDELIJK, VEGTYPEN_NIET_IN_DEFTABEL of GEEN_KLOPPENDE_MITSEN"
 
     if keuze.status in [
-        KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-        KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+        KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
+        KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
     ]:
