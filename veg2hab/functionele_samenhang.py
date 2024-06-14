@@ -1,11 +1,11 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from copy import deepcopy
 from typing import Dict, List, Set, Tuple
 
 import geopandas as gpd
 import pandas as pd
 
-from veg2hab.enums import KeuzeStatus, Kwaliteit
+from veg2hab.enums import FuncSamenhangID, KeuzeStatus, Kwaliteit
 from veg2hab.habitat import HabitatKeuze
 from veg2hab.io.common import Interface
 
@@ -50,9 +50,11 @@ class UnionFind:
                 self.rank[root1] += 1
 
     @staticmethod
-    def cluster_pairs(pairs: List[List]) -> List[List]:
+    def cluster_pairs(
+        pairs: Set[Tuple[FuncSamenhangID, FuncSamenhangID]]
+    ) -> List[List[FuncSamenhangID]]:
         """
-        Clustert paren (sublists) op basis van gemene elementen
+        Clustert paren op basis van gemene elementen
         """
         uf = UnionFind()
 
@@ -77,7 +79,7 @@ class UnionFind:
         return list(clusters.values())
 
 
-def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List]:
+def _cluster_vlakken(gdf: gpd.GeoDataFrame) -> List[List[FuncSamenhangID]]:
     """
     Bepaald clusters van vlakken op basis van distance tuples bestaande uit een minimum percentage en een buffer distance
     Werkt op (een subset van) het resultaat van _extract_elmid_perc_habtype
@@ -150,7 +152,7 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         geometry = []
         for idx, keuze in enumerate(row["HabitatKeuze"]):
             # Dit stelt ons in staat weer terug te gaan naar de originele habitatkeuze
-            identifier.append((row["ElmID"], (idx,)))
+            identifier.append(FuncSamenhangID(row["ElmID"], (idx,)))
             # Nodig voor het bepalen van de buffergrootte
             percentage.append(row.VegTypeInfo[idx].percentage)
             # We clusteren binnen ieder habtype
@@ -185,8 +187,10 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
                     {
                         "identifier": [
                             (
-                                identifiers[0][0],
-                                tuple(identifier[1][0] for identifier in identifiers),
+                                identifiers[0].ElmID,
+                                tuple(
+                                    identifier.indices[0] for identifier in identifiers
+                                ),
                             )
                         ],
                         "percentage": [sum(all_rows_of_type.percentage)],
@@ -210,7 +214,7 @@ def _extract_elmid_perc_habtype(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def _remove_habtypen_due_to_minimum_oppervlak(
-    gdf: gpd.GeoDataFrame, to_be_edited: Set[Tuple[int, Tuple]]
+    gdf: gpd.GeoDataFrame, to_be_edited: Set[FuncSamenhangID]
 ) -> gpd.GeoDataFrame:
     """
     Past HabitatKeuzes aan op basis van de (ElmID, complex-deel-index) tuples die in to_be_edited zitten
@@ -219,10 +223,11 @@ def _remove_habtypen_due_to_minimum_oppervlak(
     De opmerking wordt aangepast naar "Was {oud_habtype}, maar oppervlak was te klein. {oude_opmerking}"
     Het habitattype wordt aangepast naar "H0000"
     """
-    for ElmID, complex_deel_indices in to_be_edited:
+    for func_samenhang_id in to_be_edited:
+        ElmID, indices = func_samenhang_id
         keuzes = gdf.loc[gdf.ElmID == ElmID, "HabitatKeuze"].iloc[0]
-        for complex_deel_index in complex_deel_indices:
-            keuze_to_be_edited = keuzes[complex_deel_index]
+        for index in indices:
+            keuze_to_be_edited = keuzes[index]
             keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
             keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein. {keuze_to_be_edited.opmerking}"
             keuze_to_be_edited.habtype = "H0000"

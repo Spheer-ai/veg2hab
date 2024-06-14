@@ -40,7 +40,7 @@ def test_niet_geautomatiseerde_sbb():
 
 def test_minimum_oppervlak():
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "100"
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS_RAW"] = json.dumps(
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
         {
             "H6110": 10,
             "H9110": 1000,
@@ -74,7 +74,7 @@ def test_minimum_oppervlak():
         == 1000
     )
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "200"
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS_RAW"] = json.dumps(
+    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
         {
             "H6110": 20,
             "H9110": 2000,
@@ -140,12 +140,10 @@ def test_functionele_samenhang():
             (51, 0.02),
         ]
     )
-    os.environ[
-        "VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"
-    ] = json.dumps(
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(
         {
-            "H2130": ["H2130/H4030"],
-            "H4030": ["H2130/H4030"],
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
         }
     )
     assert (
@@ -153,16 +151,14 @@ def test_functionele_samenhang():
         .get_config()
         .functionele_samenhang_vegetatiekundig_identiek
         == {
-            "H2130": ["H2130/H4030"],
-            "H4030": ["H2130/H4030"],
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
         }
     )
-    os.environ[
-        "VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"
-    ] = json.dumps(
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(
         {
-            "H2130": ["H4030/H2130"],
-            "H4030": ["H4030/H2130"],
+            "H2130": "H4030/H2130",
+            "H4030": "H4030/H2130",
         }
     )
     assert (
@@ -170,7 +166,7 @@ def test_functionele_samenhang():
         .get_config()
         .functionele_samenhang_vegetatiekundig_identiek
         == {
-            "H2130": ["H4030/H2130"],
-            "H4030": ["H4030/H2130"],
+            "H2130": "H4030/H2130",
+            "H4030": "H4030/H2130",
         }
     )
