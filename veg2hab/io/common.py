@@ -1,10 +1,11 @@
 import json
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 import geopandas as gpd
-from pydantic import BaseModel, BaseSettings, Field
+from pydantic import BaseModel, BaseSettings, Field, validator
 from typing_extensions import List, Literal, Union
 
 
@@ -112,37 +113,71 @@ class Veg2HabConfig(BaseSettings):
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
     )
 
+    functionele_samenhang_vegetatiekundig_identiek: Dict[str, str] = Field(
+        default={
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
+        },
+        description="Vertaler van vegetatiekundig identieke habitattypen naar een gemene string",
+    )
+
+    @validator("functionele_samenhang_vegetatiekundig_identiek", pre=True)
+    def parse_vegetatiekundig_identiek_json(cls, value):
+        try:
+            return json.loads(value) if isinstance(value, str) else value
+        except json.JSONDecodeError:
+            raise ValueError(
+                "Invalid JSON string for functionele_samenhang_vegetatiekundig_identiek"
+            )
+
+    # (vanaf percentage (inclusief), buffer afstand)
+    functionele_samenhang_buffer_distances: List[Tuple[int, float]] = Field(
+        default=[
+            (100, 10.01),
+            (90, 5.01),
+            (50, 0.01),
+        ],
+        description="Lijst met (vanaf percentage (incl), tot percentage (excl), buffer afstand) tuples voor het bepalen van functionele samenhang",
+    )
+
     # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
-    minimum_oppervlak_exceptions: str = Field(
-        default=json.dumps(
-            {
-                "H6110": 10,
-                "H7220": 10,
-                "H2180_A": 1000,
-                "H2180_B": 1000,
-                "H2180_C": 1000,
-                "H9110": 1000,
-                "H9120": 1000,
-                "H9160_A": 1000,
-                "H9160_B": 1000,
-                "H9190": 1000,
-                "H91D0": 1000,
-                "H91E0_A": 1000,
-                "H91E0_B": 1000,
-                "H91E0_C": 1000,
-                "H91F0": 1000,
-            }
-        ),
+    minimum_oppervlak_exceptions: Dict[str, Union[int, float]] = Field(
+        default={
+            "H6110": 10,
+            "H7220": 10,
+            "H2180_A": 1000,
+            "H2180_B": 1000,
+            "H2180_C": 1000,
+            "H9110": 1000,
+            "H9120": 1000,
+            "H9160_A": 1000,
+            "H9160_B": 1000,
+            "H9190": 1000,
+            "H91D0": 1000,
+            "H91E0_A": 1000,
+            "H91E0_B": 1000,
+            "H91E0_C": 1000,
+            "H91F0": 1000,
+        },
         description="Minimum oppervlakken per habitattype",
     )
+
+    @validator("minimum_oppervlak_exceptions", pre=True)
+    def parse_minimum_oppervlak_exceptions_json(cls, value):
+        try:
+            return json.loads(value) if isinstance(value, str) else value
+        except json.JSONDecodeError:
+            raise ValueError("Invalid JSON string for minimum_oppervlak_exceptions_raw")
+
     minimum_oppervlak_default: Union[int, float] = Field(
         default=100,
         description="Minimum oppervlak voor een habitattype",
     )
 
-    @property
-    def minimum_oppervlak(self):
-        return json.loads(self.minimum_oppervlak_exceptions)
+    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> Union[int, float]:
+        return self.minimum_oppervlak_exceptions.get(
+            habtype, self.minimum_oppervlak_default
+        )
 
 
 class Interface(metaclass=ABCMeta):

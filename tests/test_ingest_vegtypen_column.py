@@ -212,8 +212,8 @@ def test_none_SBB(gdf):
                     60, SBB_strings=["25a1"], VvN_strings=["25aa1"]
                 ),
             ],
-            [],
-            [],
+            [VegTypeInfo(percentage=100, SBB=[], VvN=[])],
+            [VegTypeInfo(percentage=100, SBB=[], VvN=[])],
         ],
         name="vegtype",
     )
