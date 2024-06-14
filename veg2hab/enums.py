@@ -1,6 +1,6 @@
 from collections import namedtuple
 from enum import Enum, IntEnum, auto
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple
 
 
 class BodemTuple(NamedTuple):
@@ -14,6 +14,11 @@ class LBKTuple(NamedTuple):
     codes: List[str]
     enkel_negatieven: bool
     enkel_positieven: bool
+
+
+class FuncSamenhangID(NamedTuple):
+    ElmID: int
+    indices: Tuple[int, ...]
 
 
 class MaybeBoolean(Enum):

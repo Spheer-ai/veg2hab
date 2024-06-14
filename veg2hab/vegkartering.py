@@ -166,7 +166,7 @@ def ingest_vegtype(
             )
 
             vegtype_list.append(vegtypeinfo)
-        if vegtype_list == []:
+        if len(vegtype_list) == 0:
             return [VegTypeInfo(percentage=100, SBB=[], VvN=[])]
         return vegtype_list
 
@@ -1245,7 +1245,7 @@ class Kartering:
             # Maar als we niet even veel keuzes als vegtypeinfos hebben, dan moet dat zijn
             # omdat dit vlak vanuit de vegetatiekartering geen vegtypen heeft gekregen
             assert (
-                vegtypeinfos == []
+                len(vegtypeinfos) == 0
             ), "Mismatch tussen aantal habitatkeuzes en vegtypeinfos; vegtypeinfos zijn niet leeg"
             assert (
                 len(keuzes) == 1
