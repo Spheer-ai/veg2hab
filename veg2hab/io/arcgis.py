@@ -66,7 +66,7 @@ class ArcGISInterface(Interface):
         import arcpy
 
         if shapefile_id is None:
-            filename = self._generate_random_gpkg_name("habkart")
+            filename = self._generate_random_gpkg_name("kaart")
         else:
             filename = str(shapefile_id)
 

@@ -24,7 +24,7 @@ class CLIInterface(Interface):
     def output_shapefile(self, shapefile_id: Optional[Path], gdf: GeoDataFrame) -> None:
         if shapefile_id is None:
             shapefile_id = Path(
-                f"./habkart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
+                f"./kaart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
             )
         gdf.to_file(shapefile_id, driver="GPKG", layer="main")
 
@@ -50,6 +50,8 @@ def _decorate_click(func: Callable, param_schema: Dict):
                 field_name,
                 type=param_type,
                 required=is_required,
+                # allow multiple values in case of the step_2_stacking
+                nargs=-1 if field_info.get("type") == "array" else 1,
             )(func)
         else:
             func = click.option(

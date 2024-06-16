@@ -122,7 +122,13 @@ def run_2_stack_vegkartering(params: StackVegKarteringInputs):
     logging.error(
         "Stapelen is nog niet geimplementeerd, voor nu wordt de eerste geselecteerd"
     )
-    kartering = Kartering.from_editable_vegtypes(gpd.read_file(gpkg_files[0]))
+
+    gdf = gpd.read_file(gpkg_files[0])
+    kartering = Kartering.from_editable_vegtypes(gdf)
+
+    logging.info("Kartering is succesvol ingelezen")
+
+    # TODO implement this!!
 
     gdf_vegkart = kartering.to_editable_vegtypes()
     Interface.get_instance().output_shapefile(params.output, gdf_vegkart)

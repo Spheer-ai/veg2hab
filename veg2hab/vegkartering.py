@@ -1294,7 +1294,7 @@ class Kartering:
         pass
 
     @classmethod
-    def from_editable_vegtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
+    def from_editable_habtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
         pass
 
     def as_final_format(self) -> gpd.GeoDataFrame:
