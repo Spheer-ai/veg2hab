@@ -74,10 +74,10 @@ class BeperkendCriterium(BaseModel):
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
 
     def check(self, row: gpd.GeoSeries) -> None:
-        self._evaluation = MaybeBoolean.TRUE
+        assert self._evaluation == MaybeBoolean.TRUE
 
     def __str__(self):
         return "Geen mits (altijd waar)"
@@ -86,10 +86,12 @@ class GeenCriterium(BeperkendCriterium):
 class NietGeautomatiseerdCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietGeautomatiseerd"
     toelichting: str
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    _evaluation: Optional[MaybeBoolean] = PrivateAttr(
+        default=MaybeBoolean.CANNOT_BE_AUTOMATED
+    )
 
     def check(self, row: gpd.GeoSeries) -> None:
-        self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+        assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
