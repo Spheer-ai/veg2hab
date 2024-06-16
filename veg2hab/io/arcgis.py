@@ -10,7 +10,15 @@ import geopandas as gpd
 from pydantic import validator
 from typing_extensions import Self, override
 
-from .common import AccessDBInputs, Interface, ShapefileInputs
+from .common import (
+    AccessDBInputs,
+    ApplyDefTabelInputs,
+    ApplyFunctioneleSamenhangInputs,
+    ApplyMozaiekInputs,
+    Interface,
+    ShapefileInputs,
+    StackVegKarteringInputs,
+)
 
 
 class ArcGISInterface(Interface):
@@ -153,7 +161,9 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
     return outputs
 
 
-class ArcGISAccessDBInputs(AccessDBInputs):
+class ArcGISMixin:
+    """mixin for arcgis classes"""
+
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
@@ -168,7 +178,11 @@ class ArcGISAccessDBInputs(AccessDBInputs):
         pass
 
 
-class ArcGISShapefileInputs(ShapefileInputs):
+class ArcGISAccessDBInputs(AccessDBInputs, ArcGISMixin):
+    pass
+
+
+class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
@@ -179,10 +193,6 @@ class ArcGISShapefileInputs(ShapefileInputs):
                 as_dict[col] = as_dict[col].split(";")
 
         return cls(**as_dict)
-
-    @classmethod
-    def to_parameter_list(cls) -> List["arcpy.Parameter"]:
-        return _schema_to_param_list(cls.schema())
 
     @classmethod
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
@@ -202,3 +212,30 @@ class ArcGISShapefileInputs(ShapefileInputs):
         if as_dict["sbb_of_vvn"].altered:
             as_dict["sbb_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "VvN"
             as_dict["vvn_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "SBB"
+
+
+class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
+    @classmethod
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
+        as_dict = {p.name: p.valueAsText for p in parameters}
+        col = "shapefile"
+        if as_dict.get(col) is None:
+            as_dict[col] = []
+        else:
+            as_dict[col] = as_dict[col].split(";")
+
+        return cls(**as_dict)
+
+
+class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
+    pass
+
+
+class ArcGISApplyMozaiekInputs(ApplyMozaiekInputs, ArcGISMixin):
+    pass
+
+
+class ArcGISApplyFunctioneleSamenhangInputs(
+    ApplyFunctioneleSamenhangInputs, ArcGISMixin
+):
+    pass

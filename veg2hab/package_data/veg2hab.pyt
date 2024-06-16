@@ -19,7 +19,7 @@ class Toolbox:
         self.alias = "veg2hab toolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Tool1, Tool2]
+        self.tools = [Tool1, Tool2, Tool3, Tool4, Tool5, Tool6]
 
 
 class BaseTool:
@@ -28,6 +28,10 @@ class BaseTool:
         param_type: Union[
             Type[veg2hab.io.arcgis.ArcGISAccessDBInputs],
             Type[veg2hab.io.arcgis.ArcGISShapefileInputs],
+            Type[veg2hab.io.arcgis.ArcGISStackVegKarteringInputs],
+            Type[veg2hab.io.arcgis.ArcGISApplyDefTabelInputs],
+            Type[veg2hab.io.arcgis.ArcGISApplyMozaiekInputs],
+            Type[veg2hab.io.arcgis.ArcGISApplyFunctioneleSamenhangInputs],
         ],
     ) -> None:
         self.param_type = param_type
@@ -77,3 +81,23 @@ class Tool1(BaseTool):
 class Tool2(BaseTool):
     def __init__(self):
         super().__init__(veg2hab.io.arcgis.ArcGISShapefileInputs)
+
+
+class Tool3(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ArcGISStackVegKarteringInputs)
+
+
+class Tool4(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ArcGISApplyDefTabelInputs)
+
+
+class Tool5(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ArcGISApplyMozaiekInputs)
+
+
+class Tool6(BaseTool):
+    def __init__(self):
+        super().__init__(veg2hab.io.arcgis.ArcGISApplyFunctioneleSamenhangInputs)

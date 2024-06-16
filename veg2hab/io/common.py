@@ -5,18 +5,22 @@ from pathlib import Path
 from typing import ClassVar, Dict, List, Optional, Tuple
 
 import geopandas as gpd
-from pydantic import BaseModel, BaseSettings, Field, validator
+from pydantic import BaseModel as _BaseModel
+from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal, Union
 
 
-class AccessDBInputs(BaseModel):
+class BaseModel(_BaseModel):
     class Config:
         extra = "forbid"
 
-    label: ClassVar[str] = "digitale_standaard"
-    description: ClassVar[str] = "Draai veg2hab o.b.v. de digitale standaard"
+
+class AccessDBInputs(BaseModel):
+    label: ClassVar[str] = "1a_digitale_standaard"
+    description: ClassVar[str] = "Inladen van vegkartering o.b.v. de digitale standaard"
+
     shapefile: str = Field(
-        description="Locatie van de vegetatiekartering",
+        description="Bestandslocatie van de vegetatiekartering",
     )
     elmid_col: str = Field(
         description="De kolomnaam van de ElementID in de Shapefile; deze wordt gematched aan de Element tabel in de AccessDB",
@@ -39,13 +43,11 @@ class AccessDBInputs(BaseModel):
 
 
 class ShapefileInputs(BaseModel):
-    class Config:
-        extra = "forbid"
+    label: ClassVar[str] = "1b_vector_bestand"
+    description: ClassVar[str] = "Inladen van vegkartering o.b.v. een vector bestand"
 
-    label: ClassVar[str] = "vector_bestand"
-    description: ClassVar[str] = "Draai veg2hab o.b.v. een vector bestand"
     shapefile: str = Field(
-        description="Locatie van de vegetatiekartering",
+        description="Bestandslocatie van de vegetatiekartering",
     )
     elmid_col: Optional[str] = Field(
         description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
@@ -83,6 +85,60 @@ class ShapefileInputs(BaseModel):
     opmerking_col: Optional[str] = Field(
         default=None,
         description="Opmerking kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
+    )
+    output: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+
+
+class StackVegKarteringInputs(BaseModel):
+    label: ClassVar[str] = "2_optioneel_stapel_veg"
+    description: ClassVar[str] = "Stapel verschillende vegetatiekarteringen"
+
+    shapefile: List[str] = Field(
+        description="Bestandslocatie van de vegetatiekarteringen, op volgerde van prioriteit (belangrijkste eerst)",
+    )
+    output: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+
+
+class ApplyDefTabelInputs(BaseModel):
+    label: ClassVar[str] = "3_definitietabel_en_mitsen"
+    description: ClassVar[str] = "Pas de definitie tabel toe en check de mitsen"
+
+    shapefile: str = Field(
+        description="Bestandslocatie van de vegetatiekarteringen",
+    )
+    output: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+
+
+class ApplyMozaiekInputs(BaseModel):
+    label: ClassVar[str] = "4_mozaiekregels"
+    description: ClassVar[str] = "Pas de mozaiekregels toe "
+
+    shapefile: List[str] = Field(
+        description="Bestandslocatie van de vegetatiekarteringen",
+    )
+    output: Optional[Path] = Field(
+        default=None,
+        description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+
+
+class ApplyFunctioneleSamenhangInputs(BaseModel):
+    label: ClassVar[str] = "5_functionele_samenhang_en_min_opp"
+    description: ClassVar[
+        str
+    ] = "Functionele samenhang en creeer de definitieve habitatkaart"
+
+    shapefile: List[str] = Field(
+        description="Bestandslocatie van de vegetatiekarteringen",
     )
     output: Optional[Path] = Field(
         default=None,
