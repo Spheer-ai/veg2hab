@@ -110,8 +110,8 @@ def _5_functionele_samenhang(**kwargs):
 if __name__ == "__main__":
     # Dit zorgt ervoor dat veg2hab als volgt aangeroepen kan worden:
     # python -m veg2hab <command>
-    # veg2hab()
+    veg2hab()
 
-    # TODO remove
-    CLIInterface.get_instance().instantiate_loggers(logging.INFO)
-    _2_optioneel_stapel_veg_kart(["veg_kart.gpkg", "veg_kart.gpkg"])
+    # # TODO remove
+    # CLIInterface.get_instance().instantiate_loggers(logging.INFO)
+    # _2_optioneel_stapel_veg_kart(["veg_kart.gpkg", "veg_kart.gpkg"])

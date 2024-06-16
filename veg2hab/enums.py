@@ -156,6 +156,9 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
+    # habitat type is handmatig toegewezen
+    HANDMATIG_TOEGEKEND = auto()
+
     _toelichting = {
         "HABITATTYPE_TOEGEKEND": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 meest specifieke definitietabelregel met kloppende mits/mozaiek.",
         "MINIMUM_OPP_NIET_GEHAALD": "Er is een definitietabelregel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
@@ -166,6 +169,7 @@ class KeuzeStatus(Enum):
         "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
         "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet automatisch via de definitietabel kan worden omgezet naar een habitattype, dus Veg2Hab kan geen habitattype toekennen.",
         "WACHTEN_OP_MOZAIEK": "De mozaiekregels moeten nog gecheckt worden, of rr is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        "HANDMATIG_TOEGEKEND": "Het habitattype is handmatig aangepast in een van de tussentijdse resultaten.",
     }
 
     @property

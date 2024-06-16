@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import ClassVar, List, Optional, Tuple, Union
+from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -22,6 +22,7 @@ from veg2hab.criteria import (
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.functionele_samenhang import apply_functionele_samenhang
 from veg2hab.habitat import (
+    HabitatKeuze,
     HabitatVoorstel,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
@@ -620,7 +621,10 @@ class Kartering:
         "_LokVrtNar",
         "geometry",
     ]
-    HABTYPE_COLS: ClassVar[List[str]] = []
+    HABTYPE_COLS: ClassVar[List[str]] = [
+        "HabitatVoorstel",
+        "HabitatKeuze",
+    ]
 
     def __init__(self, gdf: gpd.GeoDataFrame):
         try:
@@ -1009,10 +1013,18 @@ class Kartering:
             "_LokVrtNar",
             "geometry",
         ]
-        return gdf[column_order]
+
+        gdf = gdf[column_order]
+
+        # for some dumb reason ARCGis handles columns that begin with a _ or a number
+        # really badly.
+        rename_cols = {col: "INTERN" + col  for col in column_order if col.startswith("_")}
+        gdf = gdf.rename(columns=rename_cols)
+
+        return gdf
 
     @staticmethod
-    def _multi_col_to_vetype(row: pd.Series) -> List[VegTypeInfo]:
+    def _multi_col_to_vegtype(row: pd.Series) -> List[VegTypeInfo]:
         result = []
         for idx in range(1, 100):  # arbitrary number
             sbb = row.get(f"SBB{idx}", None)
@@ -1034,11 +1046,14 @@ class Kartering:
 
     @classmethod
     def from_editable_vegtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
+        rename_cols = {col: col[len("INTERN"):] for col in gdf.columns if col.startswith("INTERN_")}
+        gdf = gdf.rename(columns=rename_cols)
+
         gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(
             lambda x: [VegTypeInfo(**v) for v in json.loads(x)]
         )
 
-        altered_vegtypes = gdf.apply(cls._multi_col_to_vetype, axis=1)
+        altered_vegtypes = gdf.apply(cls._multi_col_to_vegtype, axis=1)
 
         if not (altered_vegtypes != gdf["_VegTypeInfo"]).all():
             logging.warn(
@@ -1290,12 +1305,114 @@ class Kartering:
 
         self.gdf = apply_functionele_samenhang(self.gdf)
 
+
+    @staticmethod
+    def _habkeuzes_to_multi_col(keuzes: List[HabitatKeuze]) -> pd.Series:
+        result = {}
+        for idx, keuze in enumerate(keuzes, 1):
+            result.update({
+                f"Habtype{idx}": keuze.habtype,
+                f"Kwal{idx}": keuze.kwaliteit.as_letter(),
+                f"Opm{idx}": keuze.opmerking,
+            })
+        return pd.Series(result)
+
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
-        pass
+        # it's all strings so thats easy.
+        habkeuzes_df = self.gdf["HabitatKeuze"].apply(self._habkeuzes_to_multi_col).astype("string")
+        rename_private_cols = {"VegTypeInfo": "_VegTypeInfo", "HabitatVoorstel": "_HabitatVoorstel", "HabitatKeuze": "_HabitatKeuze"}
+        gdf = gdf.rename(columns=rename_private_cols)
+
+        gdf = pd.concat([gdf, habkeuzes_df], axis=1)
+
+        for col in rename_columns.values():
+            gdf[col] = (
+                gdf[col]
+                .apply(lambda x: json.dumps([dataclasses.asdict(v) for v in x]))
+                .astype("string")
+            )
+
+        column_order = [
+            "ElmID",
+            "Opp",
+            "Datum",
+            "Opmerking",
+            *habkeuzes_df.columns,
+            "_HabitatKeuze"
+            "_HabitatVoorstel"
+            "_VegTypeInfo",
+            "_LokVegTyp",
+            "_LokVrtNar",
+            "geometry",
+        ]
+        assert set(gdf.columns) == set(column_order)
+
+        gdf = gdf[column_order]
+
+        # annoying ARCGIS
+        rename_columns = {col: "INTERN" + col for col in column_order if col.startswith("_")}
+        gdf = gdf.rename(columns=rename_columns)
+
+        return gdf
+
+
+    @staticmethod
+    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str]]:
+        result = []
+        for idx in range(1, 100):  # arbitrary number
+            habtype = row.get(f"Habtype{idx}", None)
+            habkeuze = row.get(f"Kwal{idx}", None)
+            if habtype is None and habkeuze is None:
+                break
+            result.append(
+                (habtype, habkeuze)
+            )
+        else:
+            raise ValueError("Er zijn te veel kolommen met Habtype/Kwal")
+
+        return result
 
     @classmethod
     def from_editable_habtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
-        pass
+        # rename the INTERN columns
+        rename_columns = {col: col[len("INTERN"):] for col in gdf.columns if col.startswith("INTERN_")}
+        gdf = gdf.rename(columns=rename_columns)
+
+        # unpack json strings
+        for col, data_type in {
+            "_VegTypeInfo": VegTypeInfo,
+            "_HabitatVoorstel": HabitatVoorstel,
+            "_HabitatKeuze": HabitatKeuze,
+        }.items():
+            gdf[col] = gdf[col].apply(
+                lambda x: [data_type(**v) for v in json.loads(x)]
+            )
+
+        # check for changed habitatkeuzes
+        altered_habkeuzes = gdf.apply(cls._multi_col_to_habkeuze, axis=1)
+        for new_keuze, old_keuze in zip(altered_habkeuzes, gdf["_HabitatKeuze"]):
+            new_habtype, new_kwaliteit = new_keuze
+            if new_habtype != old_keuze.habtype or new_kwaliteit != old_keuze.kwaliteit.as_letter():
+                logging.warn(
+                    "Er zijn handmatige wijzigingen in de habitatkeuzes. Deze worden overgenomen."
+                )
+                old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
+                old_keuze.habtype = new_habtype
+                old_keuze.kwaliteit = Kwaliteit.from_letter(new_kwaliteit)
+                old_keuze.habitatvoorstellen = []
+                old_keuze.opmerking = KeuzeStatus.HANDMATIG_TOEGEKEND.toelichting
+                old_keuze.mits_opmerking = ""
+                old_keuze.mozaiek_opmerking = ""
+                old_keuze.debug_info = None
+
+        gdf = gdf.rename({"_VegTypeInfo": "VegTypeInfo", "_HabitatVoorstel": "HabitatVoorstel", "_HabitatKeuze": "HabitatKeuze"})
+        gdf = gdf.drop(
+            columns=[
+                gdf.columns[gdf.columns.str.startswith(("Habtype", "Kwal"))],
+            ]
+        )
+        return cls(gdf)
+
 
     def as_final_format(self) -> gpd.GeoDataFrame:
         """
