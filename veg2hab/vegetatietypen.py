@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Optional, Union
 
 import pandas as pd
+from typing_extensions import Self
 
 from veg2hab.enums import MatchLevel
 from veg2hab.io.common import Interface
@@ -38,40 +39,34 @@ class SBB:
     rompgemeenschap: Optional[str] = None
 
     @classmethod
-    def from_code(self, code: str):
+    def from_code(cls, code: str) -> Self:
         assert isinstance(code, str), "Code is not a string"
         # TODO: dit zou heel mooi naar een config kunnen later
         niet_geautomatiseerde_sbb = (
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )
         if code in niet_geautomatiseerde_sbb:
-            self.klasse = code
-            return
+            return cls(klasse=code)
 
-        # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
-        self.derivaatgemeenschap = None
-        self.rompgemeenschap = None
-
-        match = self.gemeenschap.search(code)
+        kwargs = {}
+        match = cls.gemeenschap.search(code)
         if match:
             # Strippen van gemeenschap
             code = code[:-2]
             if match.group("type") == "/":
-                self.derivaatgemeenschap = match.group("gemeenschap")
+                kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
             elif match.group("type") == "-":
-                self.rompgemeenschap = match.group("gemeenschap")
+                kwargs["rompgemeenschap"] = match.group("gemeenschap")
             else:
-                assert (
-                    False
-                ), "Onmogelijk om hier te komen; groep 'type' moet '/' of '-' zijn"
+                raise ValueError(f"Invalide gemeenschap: {code}")
 
-        match = self.basis_sbb.fullmatch(code)
+        match = cls.basis_sbb.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.verbond = match.group("verbond")
-            self.associatie = match.group("associatie")
-            self.subassociatie = match.group("subassociatie")
-            return
+            kwargs["klasse"] = match.group("klasse")
+            kwargs["verbond"] = match.group("verbond")
+            kwargs["associatie"] = match.group("associatie")
+            kwargs["subassociatie"] = match.group("subassociatie")
+            return cls(**kwargs)
 
         raise ValueError(f"Invalid SBB code: {code}")
 
@@ -85,7 +80,7 @@ class SBB:
 
     @classmethod
     def from_string(cls, code: Union[str, None]) -> Union[SBB, None]:
-        if pd.isnull(code):
+        if pd.isnull(code) or code == "":
             return None
         return cls.from_code(code)
 
@@ -242,38 +237,30 @@ class VvN:
     derivaatgemeenschap: Optional[str] = None
     rompgemeenschap: Optional[str] = None
 
-    def __init__(self, code: str):
+    @classmethod
+    def from_code(cls, code: str):
         assert isinstance(code, str), "Code is not a string"
-        match = self.gemeenschap.fullmatch(code)
+        match = cls.gemeenschap.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.orde = None
-            self.verbond = None
-            self.associatie = None
-            self.subassociatie = None
+            kwargs = {"klasse": match.group("klasse")}
             if match.group("type") == "dg":
-                self.derivaatgemeenschap = match.group("gemeenschap")
-                self.rompgemeenschap = None
-                return
+                kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
+                return cls(kwargs)
             elif match.group("type") == "rg":
-                self.derivaatgemeenschap = None
-                self.rompgemeenschap = match.group("gemeenschap")
-                return
+                kwargs["rompgemeenschap"] = match.group("gemeenschap")
+                return cls(kwargs)
             else:
-                assert (
-                    False
-                ), "Onmogelijk om hier te komen; groep 'type' moet 'dg' of 'rg' zijn"
+                raise ValueError(f"Invalide gemeenschap: {code}")
 
-        match = self.normale_vvn.fullmatch(code)
+        match = cls.normale_vvn.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.orde = match.group("orde")
-            self.verbond = match.group("verbond")
-            self.associatie = match.group("associatie")
-            self.subassociatie = match.group("subassociatie")
-            self.derivaatgemeenschap = None
-            self.rompgemeenschap = None
-            return
+            return cls(
+                klasse=match.group("klasse"),
+                orde=match.group("orde"),
+                verbond=match.group("verbond"),
+                associatie=match.group("associatie"),
+                subassociatie=match.group("subassociatie"),
+            )
 
         raise ValueError(f"Invalid VvN code: {code}")
 
@@ -281,7 +268,7 @@ class VvN:
     def from_string(cls, code) -> Union[VvN, None]:
         if pd.isnull(code) or code == "":
             return None
-        return cls(code)
+        return cls.from_code(code)
 
     def normal_VvN_as_tuple(
         self,

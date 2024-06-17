@@ -991,6 +991,7 @@ class Kartering:
             name: float for name in vegtypes_df.columns if name.startswith("perc")
         }
         vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
+        vegtypes_df[str_columns.keys()] = vegtypes_df[str_columns.keys()].fillna("")
 
         # move and rename vegtype info column to the end
         gdf = gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})

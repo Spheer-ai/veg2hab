@@ -4,7 +4,7 @@ from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
 
 
 def test_vvn_from_str():
-    vvn = VvN("42aa1e")
+    vvn = VvN.from_code("42aa1e")
     assert vvn.klasse == "42"
     assert vvn.orde == "a"
     assert vvn.verbond == "a"
@@ -15,7 +15,7 @@ def test_vvn_from_str():
 
 
 def test_partial_vvn_from_str():
-    vvn = VvN("42aa")
+    vvn = VvN.from_code("42aa")
     assert vvn.klasse == "42"
     assert vvn.orde == "a"
     assert vvn.verbond == "a"
@@ -27,11 +27,11 @@ def test_partial_vvn_from_str():
 
 def test_invalid_vvn_from_str():
     with pytest.raises(ValueError):
-        vvn = VvN("some-random-str")
+        vvn = VvN.from_code("some-random-str")
 
 
 def test_vvn_with_derivaat_gemeenschap():
-    vvn = VvN("42dg2")
+    vvn = VvN.from_code("42dg2")
     assert vvn.klasse == "42"
     assert vvn.orde is None
     assert vvn.verbond is None
@@ -42,7 +42,7 @@ def test_vvn_with_derivaat_gemeenschap():
 
 
 def test_vvn_with_rompgemeenschap():
-    vvn = VvN("37rg2")
+    vvn = VvN.from_code("37rg2")
     assert vvn.klasse == "37"
     assert vvn.orde is None
     assert vvn.verbond is None
@@ -54,13 +54,13 @@ def test_vvn_with_rompgemeenschap():
 
 def test_vvn_rompgemeenschap_is_only_possible_on_klasse():
     with pytest.raises(ValueError):
-        vvn = VvN("37aa17rg2")
+        vvn = VvN.from_code("37aa17rg2")
 
 
 def test_match_vvn_codes():
-    vvn = VvN("42aa1e")
-    vvn2 = VvN("42aa")
-    vvn3 = VvN("42aa1f")
+    vvn = VvN.from_code("42aa1e")
+    vvn2 = VvN.from_code("42aa")
+    vvn3 = VvN.from_code("42aa1f")
 
     assert (
         vvn.match_up_to(vvn) == MatchLevel.SUBASSOCIATIE_VVN
@@ -81,9 +81,9 @@ def test_match_vvn_codes():
 
 
 def test_match_vvn_rompgemeenschap():
-    vvn = VvN("42rg2")
-    vvn2 = VvN("42rg3")
-    vvn3 = VvN("42")
+    vvn = VvN.from_code("42rg2")
+    vvn2 = VvN.from_code("42rg3")
+    vvn3 = VvN.from_code("42")
 
     vvn.match_up_to(vvn2) == MatchLevel.NO_MATCH, "Does not match to other RG"
     vvn.match_up_to(vvn3) == MatchLevel.NO_MATCH, "Does not match to not RG"
@@ -91,9 +91,9 @@ def test_match_vvn_rompgemeenschap():
 
 
 def test_basic_vvn_equality():
-    vvn = VvN("42aa1e")
-    vvn2 = VvN("42aa1e")
-    vvn3 = VvN("42aa")
+    vvn = VvN.from_code("42aa1e")
+    vvn2 = VvN.from_code("42aa1e")
+    vvn3 = VvN.from_code("42aa")
 
     assert vvn == vvn
     assert vvn == vvn2
