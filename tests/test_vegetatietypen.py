@@ -101,7 +101,7 @@ def test_basic_vvn_equality():
 
 
 def test_sbb_from_str():
-    sbb = SBB("42a1e")
+    sbb = SBB.from_code("42a1e")
     assert sbb.klasse == "42"
     assert sbb.verbond == "a"
     assert sbb.associatie == "1"
@@ -111,7 +111,7 @@ def test_sbb_from_str():
 
 
 def test_partial_sbb_from_str():
-    sbb = SBB("42a")
+    sbb = SBB.from_code("42a")
     assert sbb.klasse == "42"
     assert sbb.verbond == "a"
     assert sbb.associatie is None
@@ -122,12 +122,12 @@ def test_partial_sbb_from_str():
 
 def test_invalid_sbb_from_str():
     with pytest.raises(ValueError):
-        sbb = SBB("some-random-str")
+        sbb = SBB.from_code("some-random-str")
 
 
 def test_sbb_with_derivaat_gemeenschap():
-    sbb = SBB("37/b")
-    sbb2 = SBB("37a3a/b")
+    sbb = SBB.from_code("37/b")
+    sbb2 = SBB.from_code("37a3a/b")
 
     assert sbb.klasse == "37"
     assert sbb.verbond is None
@@ -145,8 +145,8 @@ def test_sbb_with_derivaat_gemeenschap():
 
 
 def test_sbb_with_rompgemeenschap():
-    sbb = SBB("37-b")
-    sbb2 = SBB("37a3a-b")
+    sbb = SBB.from_code("37-b")
+    sbb2 = SBB.from_code("37a3a-b")
 
     assert sbb.klasse == "37"
     assert sbb.verbond is None
@@ -164,9 +164,9 @@ def test_sbb_with_rompgemeenschap():
 
 
 def test_match_sbb_codes():
-    sbb = SBB("42a1e")
-    sbb2 = SBB("42a")
-    sbb3 = SBB("42a1f")
+    sbb = SBB.from_code("42a1e")
+    sbb2 = SBB.from_code("42a")
+    sbb3 = SBB.from_code("42a1f")
 
     assert (
         sbb.match_up_to(sbb) == MatchLevel.SUBASSOCIATIE_SBB
@@ -187,10 +187,10 @@ def test_match_sbb_codes():
 
 
 def test_match_sbb_rompgemeenschap():
-    sbb = SBB("42-b")
-    sbb2 = SBB("42-c")
-    sbb3 = SBB("42")
-    sbb4 = SBB("42a1e-b")
+    sbb = SBB.from_code("42-b")
+    sbb2 = SBB.from_code("42-c")
+    sbb3 = SBB.from_code("42")
+    sbb4 = SBB.from_code("42a1e-b")
 
     # NOTE: is dit een logische manier om score te geven? Match to self
     #       geeft 5 zodat de ranking met minder specifieke ssb niet de
@@ -208,9 +208,9 @@ def test_match_sbb_rompgemeenschap():
 
 
 def test_basic_ssb_equality():
-    sbb = SBB("42a1e")
-    sbb2 = SBB("42a1e")
-    sbb3 = SBB("42a")
+    sbb = SBB.from_code("42a1e")
+    sbb2 = SBB.from_code("42a1e")
+    sbb3 = SBB.from_code("42a")
 
     assert sbb == sbb
     assert sbb == sbb2

@@ -90,9 +90,6 @@ class DefinitieTabel:
             # We voegen het percentage en VegTypeInfo los to zodat _find_habtypes_for_code gecached kan worden
             # We moeten een deepcopy maken anders passen we denk ik via referentie de percentages aan in de cache
             voorstel = copy.deepcopy(self._find_habtypes_for_code(code))
-            for item in voorstel:
-                item.percentage = info.percentage
-                item.vegtypeinfo = info
             voorstellen += voorstel
 
         if len(voorstellen) == 0:
@@ -122,7 +119,7 @@ class DefinitieTabel:
         match_levels = self.df[column].apply(code.match_up_to)
         max_level = match_levels.max()
         if max_level == 0:
-            _LOGGER.info(f"Geen matchende habitattype gevonden voor {column}: {code}")
+            _LOGGER.debug(f"Geen matchende habitattype gevonden voor {column}: {code}")
             return []
 
         match_rows = self.df[match_levels > 0]

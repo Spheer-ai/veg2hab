@@ -69,7 +69,7 @@ class LBK:
 
     @classmethod
     def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
-        local_path = get_datadir("veg2hab", "data", veg2hab.__version__) / "lbk.gpkg"
+        local_path = get_datadir("veg2hab", "data") / "lbk.gpkg"
         remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/v{veg2hab.__version__}/lbk.gpkg"
 
         if (

@@ -37,7 +37,8 @@ class SBB:
     derivaatgemeenschap: Optional[str] = None
     rompgemeenschap: Optional[str] = None
 
-    def __init__(self, code: str):
+    @classmethod
+    def from_code(self, code: str):
         assert isinstance(code, str), "Code is not a string"
         # TODO: dit zou heel mooi naar een config kunnen later
         niet_geautomatiseerde_sbb = (
@@ -86,7 +87,7 @@ class SBB:
     def from_string(cls, code: Union[str, None]) -> Union[SBB, None]:
         if pd.isnull(code):
             return None
-        return cls(code)
+        return cls.from_code(code)
 
     def match_up_to(self, other: Optional[SBB]) -> MatchLevel:
         """

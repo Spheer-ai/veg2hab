@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
+from pydantic import BaseModel
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
@@ -13,14 +14,16 @@ from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
 
-@dataclass
-class HabitatVoorstel:
+class HabitatVoorstel(BaseModel):
     """
     Een voorstel voor een habitattype voor een vegetatietype
     """
 
-    onderbouwend_vegtype: Optional[Union[_SBB, _VvN]]
-    vegtype_in_dt: Optional[Union[_SBB, _VvN]]
+    class config:
+        extra = "forbid"
+
+    onderbouwend_vegtype: Union[_SBB, _VvN, None]
+    vegtype_in_dt: Union[_SBB, _VvN, None]
     habtype: str
     kwaliteit: Kwaliteit
     idx_in_dt: Optional[int]
@@ -72,8 +75,12 @@ class HabitatVoorstel:
         )
 
 
-@dataclass
-class HabitatKeuze:
+# TODO: dit zijn geen references meer nadat we ze opnieuw hebben ingeladen...
+# Mogelijk willen de habitatvoorstellen hier dus uit halen..
+class HabitatKeuze(BaseModel):
+    class config:
+        extra = "forbid"
+
     status: KeuzeStatus
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit

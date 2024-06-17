@@ -191,8 +191,8 @@ def test_perfect_match_SBB(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("9b1"),
-            vegtype_in_dt=SBB("9b1"),
+            onderbouwend_vegtype=SBB.from_code("9b1"),
+            vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
