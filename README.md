@@ -44,7 +44,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
-    - Open de 'Package Manager'.
+    - Open de 'Package Manager'.  
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
