@@ -48,25 +48,25 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
-        <img src="./images/new_environment.png" alt="new python environment" width="400"/>
-        <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_environment.png" alt="new python environment" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
     - Let op: het aanmaken van een nieuwe environment kan langer dan 5 minuten duren. De status van het aanmaken kan bekeken worden onder `Tasks` rechtsonderin de Package Manager.
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
-        <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
     - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.
-        <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
-        <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
-<img src="./images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
 
 #### Aanvullende opmerkingen
 
@@ -77,7 +77,7 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 ### Installatie .mdb drivers op Windows
 Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`:
 
-<img src="./images/odbc_drivers.png" alt="ODBC Drivers window" width="400"/>
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/odbc_drivers.png" alt="ODBC Drivers window" width="400"/>
 
 
 Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende stappen gevolgd worden (zie ook [deze video](https://www.youtube.com/watch?v=biSjA8ms_Wk)):
