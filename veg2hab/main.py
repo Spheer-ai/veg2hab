@@ -158,11 +158,13 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
 
     logging.info(f"FGR is ingelezen van {constants.FGR_PATH}")
 
-    bodemkaart = Bodemkaart.from_github()
+    mask = kartering.get_geometry_mask()
+
+    bodemkaart = Bodemkaart.from_github(mask=mask)
 
     logging.info(f"Bodemkaart is ingelezen")
 
-    lbk = LBK.from_github()
+    lbk = LBK.from_github(mask=mask)
 
     logging.info(f"LBK is ingelezen")
 

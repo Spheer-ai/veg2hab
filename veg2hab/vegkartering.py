@@ -653,6 +653,9 @@ class Kartering:
         except KeyError:
             self.gdf = gdf[self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS]
 
+        if not self.gdf["ElmID"].is_unique():
+            raise ValueError("ElmID is niet uniek")
+
         # Alle VegTypeInfo sorteren op percentage van hoog naar laag
         # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
         #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
@@ -1390,14 +1393,15 @@ class Kartering:
         return gdf
 
     @staticmethod
-    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str]]:
+    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str, str]]:
         result = []
         for idx in range(1, 100):  # arbitrary number
             habtype = row.get(f"Habtype{idx}", None)
             habkeuze = row.get(f"Kwal{idx}", None)
+            opm = row.get(f"Opm{idx}", None)
             if habtype is None and habkeuze is None:
                 break
-            result.append((habtype, habkeuze))
+            result.append((habtype, habkeuze, opm))
         else:
             raise ValueError("Er zijn te veel kolommen met Habtype/Kwal")
 
@@ -1429,7 +1433,7 @@ class Kartering:
                     "Het aantal habitatkeuzes is veranderd. Wij kunnen niet garanderen dat de output correct is."
                 )
             for new_keuze, old_keuze in zip(new_keuzes, old_keuzes):
-                new_habtype, new_kwaliteit = new_keuze
+                new_habtype, new_kwaliteit, new_opm = new_keuze
                 if (
                     new_habtype != old_keuze.habtype
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
@@ -1441,7 +1445,7 @@ class Kartering:
                     old_keuze.habtype = new_habtype
                     old_keuze.kwaliteit = Kwaliteit.from_letter(new_kwaliteit)
                     old_keuze.habitatvoorstellen = []
-                    old_keuze.opmerking = KeuzeStatus.HANDMATIG_TOEGEKEND.toelichting
+                    old_keuze.opmerking = new_opm
                     old_keuze.mits_opmerking = ""
                     old_keuze.mozaiek_opmerking = ""
                     old_keuze.debug_info = None

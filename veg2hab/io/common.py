@@ -122,7 +122,7 @@ class ApplyMozaiekInputs(BaseModel):
     label: ClassVar[str] = "4_mozaiekregels"
     description: ClassVar[str] = "Pas de mozaiekregels toe "
 
-    shapefile: List[str] = Field(
+    shapefile: str = Field(
         description="Bestandslocatie van de vegetatiekarteringen",
     )
     output: Optional[Path] = Field(
@@ -137,7 +137,7 @@ class ApplyFunctioneleSamenhangInputs(BaseModel):
         str
     ] = "Functionele samenhang en creeer de definitieve habitatkaart"
 
-    shapefile: List[str] = Field(
+    shapefile: str = Field(
         description="Bestandslocatie van de vegetatiekarteringen",
     )
     output: Optional[Path] = Field(
