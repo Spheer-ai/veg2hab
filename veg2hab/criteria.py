@@ -150,6 +150,9 @@ class FGRCriterium(BeperkendCriterium):
             )
         }
 
+    def get_format_string(self):
+        return f"FGR is {self.wanted_fgrtype.value}" + " ({})"
+
 
 class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
@@ -214,6 +217,9 @@ class BodemCriterium(BeperkendCriterium):
                 "niet " if self._evaluation == MaybeBoolean.FALSE else "",
             )
         }
+
+    def get_format_string(self):
+        return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
 
 class LBKCriterium(BeperkendCriterium):
@@ -294,6 +300,9 @@ class LBKCriterium(BeperkendCriterium):
             )
         }
 
+    def get_format_string(self):
+        return f"LBK is {self.wanted_lbktype}" + " ({})"
+
 
 class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
@@ -312,6 +321,12 @@ class NietCriterium(BeperkendCriterium):
         return ~self.sub_criterium.evaluation
 
     def __str__(self):
+        # Hier veranderen we "niet FGR is Duinen (F)" naar "niet FGR is Duinen (T)", 
+        # want niet false == true
+        if type(self.sub_criterium) in [FGRCriterium, BodemCriterium, LBKCriterium]:
+            return "niet " + self.sub_criterium.get_format_string().format(
+                (~self.sub_criterium.evaluation).as_letter()
+            )
         return f"niet {self.sub_criterium}"
 
     def get_opm(self) -> Set[str]:
