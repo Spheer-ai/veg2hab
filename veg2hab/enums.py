@@ -200,20 +200,20 @@ class BodemType(Enum):
         - Is dit type sluitend of is het enkel voor negatieven?
     """
 
-    LEEMARME_HUMUSPODZOLGRONDEN = "leemarme humuspodzolgronden"
-    LEMIGE_HUMUSPODZOLGRONDEN = "lemige humuspodzolgronden"
-    VAAGGRONDEN = "vaaggronden"
-    LEEMARME_VAAGGRONDEN_H9190 = "leemarme vaaggronden (H9190)"
-    PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190 = "podzolgronden met een zanddek (H9190)"
-    MODERPODZOLGRONDEN = "moderpodzolgronden"
-    OUDE_KLEIGRONDEN = "oude kleigronden"
-    LEEMGRONDEN = "leemgronden"
+    LEEMARME_HUMUSPODZOLGRONDEN = "Leemarme humuspodzolgronden"
+    LEMIGE_HUMUSPODZOLGRONDEN = "Lemige humuspodzolgronden"
+    VAAGGRONDEN = "Vaaggronden"
+    LEEMARME_VAAGGRONDEN_H9190 = "Leemarme vaaggronden (H9190)"
+    PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190 = "Podzolgronden met een zanddek (H9190)"
+    MODERPODZOLGRONDEN = "Moderpodzolgronden"
+    OUDE_KLEIGRONDEN = "Oude kleigronden"
+    LEEMGRONDEN = "Leemgronden"
 
     # TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifieke te forceren?
 
     _tuple_dict = {
         "LEEMARME_HUMUSPODZOLGRONDEN": BodemTuple(
-            string="leemarme humuspodzolgronden",
+            string="Leemarme humuspodzolgronden",
             codes=[
                 "Hn21",
                 "Hn30",
@@ -227,12 +227,12 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "LEMIGE_HUMUSPODZOLGRONDEN": BodemTuple(
-            string="lemige humuspodzolgronden",
+            string="Lemige humuspodzolgronden",
             codes=["Hn23", "cHn23", "Hd23", "cHd23"],
             enkel_negatieven=False,
         ),
         "VAAGGRONDEN": BodemTuple(
-            string="vaaggronden",
+            string="Vaaggronden",
             codes=[
                 # Kalkloze zandgronden -> Vaaggronden
                 "Zn21",
@@ -367,17 +367,17 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "LEEMARME_VAAGGRONDEN_H9190": BodemTuple(
-            string="leemarme vaaggronden",
+            string="Leemarme vaaggronden",
             codes=["Zn21", "Zd21", "Zb21", "Zn30", "Zd30", "Zb30"],
             enkel_negatieven=True,
         ),
         "PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190": BodemTuple(
-            string="podzolgronden met een zanddek",
+            string="Podzolgronden met een zanddek",
             codes=["zY21", "zhY21", "zY21g", "zY30", "zhY30", "zY30g"],
             enkel_negatieven=False,
         ),
         "MODERPODZOLGRONDEN": BodemTuple(
-            string="moderpodzolgronden",
+            string="Moderpodzolgronden",
             codes=[
                 "Y21",
                 "Y23",
@@ -391,12 +391,12 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "OUDE_KLEIGRONDEN": BodemTuple(
-            string="oude kleigronden",
+            string="Oude kleigronden",
             codes=["KT", "KX"],
             enkel_negatieven=False,
         ),
         "LEEMGRONDEN": BodemTuple(
-            string="leemgronden",
+            string="Leemgronden",
             codes=[
                 "pLn5",
                 "pLn6",
@@ -441,42 +441,49 @@ class LBKType(Enum):
         - Is dit type sluitend of is het enkel voor negatieven?
     """
 
-    HOOGVEENLANDSCHAP = "hoogveenlandschap"
-    HOOGVEEN = "hoogveen"
-    HERSTELLEND_HOOGVEEN = "herstellend hoogveen"
-    ZANDVERSTUIVING = "zandverstuiving"
-    ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "onder invloed van beek of rivier"
+    HOOGVEENLANDSCHAP = "Hoogveenlandschap"
+    HOOGVEEN = "Hoogveen"
+    HERSTELLEND_HOOGVEEN = "Herstellend hoogveen"
+    ZANDVERSTUIVING = "Zandverstuiving"
+    ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "Onder invloed van beek of rivier"
+    DEMO_ZOWEL_POSITIEF_ALS_NEGATIEF = "demo_zowel_positief_als_negatief"
 
     _tuple_dict = {
         "HOOGVEENLANDSCHAP": LBKTuple(
-            string="hoogveenlandschap",
+            string="Hoogveenlandschap",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=False,
             enkel_positieven=True,
         ),
         "HOOGVEEN": LBKTuple(
-            string="hoogveen",
+            string="Hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
         "HERSTELLEND_HOOGVEEN": LBKTuple(
-            string="herstellend hoogveen",
+            string="Herstellend hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
         "ZANDVERSTUIVING": LBKTuple(
-            string="zandverstuiving",
+            string="Zandverstuiving",
             codes=["HzSD", "HzSDa", "HzSF", "HzSFa", "HzSL", "HzSLa", "HzSX", "HzSXa"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
         "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTuple(
-            string="onder invloed van beek of rivier",
+            string="Onder invloed van beek of rivier",
             codes=["HzBB", "HzBN", "HzBV", "HzBW", "HzBL", "HzBD", "HlDB", "HlDD"],
             enkel_negatieven=False,
             enkel_positieven=True,
+        ),
+        "DEMO_ZOWEL_POSITIEF_ALS_NEGATIEF": LBKTuple(
+            string="demo_zowel_positief_als_negatief",
+            codes=["demo"],
+            enkel_negatieven=False,
+            enkel_positieven=False,
         ),
     }
 
@@ -490,3 +497,7 @@ class LBKType(Enum):
     @property
     def enkel_negatieven(self):
         return LBKType._tuple_dict.value[self.name].enkel_negatieven
+
+    @property
+    def enkel_positieven(self):
+        return LBKType._tuple_dict.value[self.name].enkel_positieven
