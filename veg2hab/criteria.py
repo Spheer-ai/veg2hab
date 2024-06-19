@@ -321,13 +321,13 @@ class NietCriterium(BeperkendCriterium):
         return ~self.sub_criterium.evaluation
 
     def __str__(self):
-        # Hier veranderen we "niet FGR is Duinen (F)" naar "niet FGR is Duinen (T)", 
+        # Hier veranderen we "niet FGR is Duinen (F)" naar "niet FGR is Duinen (T)",
         # want niet false == true
         if type(self.sub_criterium) in [FGRCriterium, BodemCriterium, LBKCriterium]:
-            return "niet " + self.sub_criterium.get_format_string().format(
-                (~self.sub_criterium.evaluation).as_letter()
+            return "(niet " + self.sub_criterium.get_format_string().format(
+                (~self.sub_criterium.evaluation).as_letter() + ")"
             )
-        return f"niet {self.sub_criterium}"
+        return f"niet ({self.sub_criterium})"
 
     def get_opm(self) -> Set[str]:
         return self.sub_criterium.get_opm()
