@@ -52,7 +52,8 @@ class MozaiekRegel(BaseModel):
 
     def json(self, *args, **kwargs):
         """Same here"""
-        return json.dumps(self.dict(*args, **kwargs))
+        data = self.dict(*args, **kwargs)
+        return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
     def is_mozaiek_type_present(self, type) -> bool:
         return isinstance(self, type)
@@ -62,7 +63,7 @@ class MozaiekRegel(BaseModel):
 
     @property
     def evaluation(self) -> MaybeBoolean:
-        raise NotImplementedError()
+        return self.cached_evaluation
 
     def __str__(self):
         raise NotImplementedError()
@@ -70,16 +71,10 @@ class MozaiekRegel(BaseModel):
 
 class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(
-        default=MaybeBoolean.CANNOT_BE_AUTOMATED
-    )
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-
-    @property
-    def evaluation(self) -> MaybeBoolean:
-        return self._evaluation
+        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
@@ -87,14 +82,10 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
 
 class GeenMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "GeenMozaiekregel"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        assert self._evaluation == MaybeBoolean.TRUE
-
-    @property
-    def evaluation(self) -> MaybeBoolean:
-        return self._evaluation
+        self.cached_evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
         return "Geen mozaiekregel (altijd waar)"
@@ -111,7 +102,7 @@ class StandaardMozaiekregel(MozaiekRegel):
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
 
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.POSTPONE)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def determine_keys(self) -> None:
         assert not self.habtype in [
@@ -147,7 +138,7 @@ class StandaardMozaiekregel(MozaiekRegel):
 
         # Threshold is behaald, dus TRUE
         if requested_habtype_percentage >= threshold:
-            self._evaluation = MaybeBoolean.TRUE
+            self.cached_evaluation = MaybeBoolean.TRUE
             return
 
         unknown_habtype_percentage = habtype_percentage_dict.get(
@@ -156,15 +147,11 @@ class StandaardMozaiekregel(MozaiekRegel):
         )
         # Threshold kan nog behaald worden, dus POSTPONE
         if requested_habtype_percentage + unknown_habtype_percentage >= threshold:
-            self._evaluation = MaybeBoolean.POSTPONE
+            self.cached_evaluation = MaybeBoolean.POSTPONE
             return
 
         # Threshold kan niet meer behaald worden, dus FALSE
-        self._evaluation = MaybeBoolean.FALSE
-
-    @property
-    def evaluation(self) -> MaybeBoolean:
-        return self._evaluation
+        self.cached_evaluation = MaybeBoolean.FALSE
 
     def __str__(self):
         complete_string = ""

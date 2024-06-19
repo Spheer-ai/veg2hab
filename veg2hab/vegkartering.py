@@ -653,7 +653,7 @@ class Kartering:
         except KeyError:
             self.gdf = gdf[self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS]
 
-        if not self.gdf["ElmID"].is_unique():
+        if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
         # Alle VegTypeInfo sorteren op percentage van hoog naar laag
@@ -1047,7 +1047,9 @@ class Kartering:
         result = []
         for idx in range(1, 100):  # arbitrary number
             sbb = row.get(f"SBB{idx}", "")
+            sbb = "" if pd.isnull(sbb) else str(sbb)
             vvn = row.get(f"VvN{idx}", "")
+            vvn = "" if pd.isnull(vvn) else str(vvn)
             perc = row.get(f"perc{idx}", None)
             if sbb == "" and vvn == "":
                 break
@@ -1076,9 +1078,10 @@ class Kartering:
 
         altered_vegtypes = gdf.apply(cls._multi_col_to_vegtype, axis=1)
 
-        if not (altered_vegtypes != gdf["_VegTypeInfo"]).all():
+        changes = gdf["_VegTypeInfo"] != altered_vegtypes
+        if changes.any():
             logging.warn(
-                "Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen."
+                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {changes.index[changes].to_list()}"
             )
 
         gdf["VegTypeInfo"] = altered_vegtypes

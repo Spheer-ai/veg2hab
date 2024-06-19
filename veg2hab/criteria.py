@@ -6,7 +6,7 @@ from typing import ClassVar, List, Optional, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
 
@@ -16,7 +16,7 @@ class BeperkendCriterium(BaseModel):
     Superclass voor alle beperkende criteria.
     Subclasses implementeren hun eigen check en non-standaard evaluation methodes.
     Niet-logic sublasses (dus niet EnCriteria, OfCriteria, NietCriterium) moeten een
-    _evaluation parameter hebben waar het resultaat van check gecached wordt.
+    cached_evaluation parameter hebben waar het resultaat van check gecached wordt.
     """
 
     type: ClassVar[Optional[str]] = None
@@ -49,7 +49,8 @@ class BeperkendCriterium(BaseModel):
 
     def json(self, *args, **kwargs):
         """Same here"""
-        return json.dumps(self.dict(*args, **kwargs))
+        data = self.dict(*args, **kwargs)
+        return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
     def check(self, row: gpd.GeoSeries):
         raise NotImplementedError()
@@ -65,19 +66,19 @@ class BeperkendCriterium(BaseModel):
         """
         Standaard evaluation method
         """
-        if self._evaluation is None:
+        if self.cached_evaluation is None:
             raise RuntimeError(
                 "Evaluation value requested before criteria has been checked"
             )
-        return self._evaluation
+        return self.cached_evaluation
 
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=MaybeBoolean.TRUE)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
-        assert self._evaluation == MaybeBoolean.TRUE
+        self.cached_evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
         return "Geen mits (altijd waar)"
@@ -86,12 +87,10 @@ class GeenCriterium(BeperkendCriterium):
 class NietGeautomatiseerdCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietGeautomatiseerd"
     toelichting: str
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(
-        default=MaybeBoolean.CANNOT_BE_AUTOMATED
-    )
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
-        assert self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
@@ -100,7 +99,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     fgrtype: FGRType
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
@@ -108,17 +107,17 @@ class FGRCriterium(BeperkendCriterium):
 
         if pd.isna(row["fgr"]):
             # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
+        self.cached_evaluation = (
             MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
         string = f"FGR is {self.fgrtype.value}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     # def get_opm(self) -> str:
@@ -131,7 +130,7 @@ class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     bodemtype: BodemType
     # actual_bodemtype: List[str]
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
@@ -141,22 +140,22 @@ class BodemCriterium(BeperkendCriterium):
 
         if len(row["bodem"]) > 1:
             # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
         if pd.isna(row["bodem"]):
             # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
+        self.cached_evaluation = (
             MaybeBoolean.TRUE if row["bodem"] == self.bodemtype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
         string = f"Bodem is {self.bodemtype}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     # def get_opm(self) -> str:
@@ -170,7 +169,7 @@ class BodemCriterium(BeperkendCriterium):
 class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
     lbktype: LBKType
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
@@ -178,17 +177,17 @@ class LBKCriterium(BeperkendCriterium):
 
         if pd.isna(row["lbk"]):
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
+        self.cached_evaluation = (
             MaybeBoolean.TRUE if row["lbk"] == self.lbktype else MaybeBoolean.FALSE
         )
 
     def __str__(self):
         string = f"LBK is {self.lbktype}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     # def get_opm(self) -> str:
