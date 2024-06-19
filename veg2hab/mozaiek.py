@@ -71,10 +71,10 @@ class MozaiekRegel(BaseModel):
 
 class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
-    cached_evaluation: Optional[MaybeBoolean] = None
+    cached_evaluation: MaybeBoolean = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+        assert self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
@@ -82,10 +82,10 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
 
 class GeenMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "GeenMozaiekregel"
-    cached_evaluation: Optional[MaybeBoolean] = None
+    cached_evaluation: MaybeBoolean = MaybeBoolean.TRUE
 
     def check(self, habtype_percentage_dict: Dict) -> None:
-        self.cached_evaluation = MaybeBoolean.TRUE
+        assert self.cached_evaluation == MaybeBoolean.TRUE
 
     def __str__(self):
         return "Geen mozaiekregel (altijd waar)"
@@ -102,7 +102,7 @@ class StandaardMozaiekregel(MozaiekRegel):
     keys: List[Tuple[str, bool, Kwaliteit]] = []
     habtype_percentage_dict: Dict = None
 
-    cached_evaluation: Optional[MaybeBoolean] = None
+    cached_evaluation: MaybeBoolean = MaybeBoolean.POSTPONE
 
     def determine_keys(self) -> None:
         assert not self.habtype in [

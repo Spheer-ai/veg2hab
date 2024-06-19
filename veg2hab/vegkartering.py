@@ -301,6 +301,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
             KeuzeStatus.NIET_GEAUTOMATISEERD_VEGTYPE,
             KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
+            KeuzeStatus.HANDMATIG_TOEGEKEND,
         ]:
             voorstel = keuze.habitatvoorstellen[0]
             series_dict = {
@@ -351,6 +352,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
         KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        KeuzeStatus.HANDMATIG_TOEGEKEND,
     ]:
         voorstellen = keuze.habitatvoorstellen
         # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
@@ -1081,7 +1083,7 @@ class Kartering:
         changes = gdf["_VegTypeInfo"] != altered_vegtypes
         if changes.any():
             logging.warn(
-                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {changes.index[changes].to_list()}"
+                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {changes['ElmID'][changes].to_list()}"
             )
 
         gdf["VegTypeInfo"] = altered_vegtypes
@@ -1430,7 +1432,9 @@ class Kartering:
 
         # check for changed habitatkeuzes
         altered_habkeuzes = gdf.apply(cls._multi_col_to_habkeuze, axis=1)
-        for new_keuzes, old_keuzes in zip(altered_habkeuzes, gdf["_HabitatKeuze"]):
+        for row_idx, (new_keuzes, old_keuzes) in enumerate(
+            zip(altered_habkeuzes, gdf["_HabitatKeuze"])
+        ):
             if len(new_keuzes) != len(old_keuzes):
                 logging.error(
                     "Het aantal habitatkeuzes is veranderd. Wij kunnen niet garanderen dat de output correct is."
@@ -1442,16 +1446,14 @@ class Kartering:
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
                 ):
                     logging.warn(
-                        "Er zijn handmatige wijzigingen in de habitatkeuzes. Deze worden overgenomen."
+                        f"Er zijn handmatige wijzigingen in de habitatkeuzes. Deze worden overgenomen. In regel: elmID={gdf['ElmID'].iloc[row_idx]}"
                     )
                     old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
                     old_keuze.habtype = new_habtype
                     old_keuze.kwaliteit = Kwaliteit.from_letter(new_kwaliteit)
-                    old_keuze.habitatvoorstellen = []
                     old_keuze.opmerking = new_opm
-                    old_keuze.mits_opmerking = ""
-                    old_keuze.mozaiek_opmerking = ""
-                    old_keuze.debug_info = None
+                    # we passen de habitatvoorstellen niet aan
+                    # net zoals de opmerkingen
 
         gdf = gdf.rename(
             columns={

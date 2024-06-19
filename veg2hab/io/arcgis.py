@@ -3,6 +3,7 @@ import os.path
 import random
 import string
 import tempfile
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -42,7 +43,7 @@ class ArcGISInterface(Interface):
     def shape_id_to_filename(self, shapefile_id: str) -> Path:
         import arcpy
 
-        filename = self._generate_random_gpkg_name("vegkart")
+        filename = self._generate_random_gpkg_name("kaart")
 
         gpkg_file = arcpy.management.CreateSQLiteDatabase(
             out_database_name=filename,
@@ -52,6 +53,8 @@ class ArcGISInterface(Interface):
         status = arcpy.conversion.FeatureClassToFeatureClass(
             in_features=shapefile_id, out_path=gpkg_file, out_name="main"
         )
+
+        time.sleep(0.5)  # screw you ArcGIS!
 
         if status.status != 4:
             raise RuntimeError(f"Failed to convert shapefile to GeoPackage: {status}")
