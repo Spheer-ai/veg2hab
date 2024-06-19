@@ -244,8 +244,8 @@ def test_matches_both_vvn_and_sbb(dt):
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("9b1"),
-            vegtype_in_dt=SBB("9b1"),
+            onderbouwend_vegtype=SBB.from_code("9b1"),
+            vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
@@ -254,6 +254,7 @@ def test_matches_both_vvn_and_sbb(dt):
             match_level=MatchLevel.ASSOCIATIE_SBB,
         ),
     ]
+    post2 = dt.find_habtypes(pre)
     assert dt.find_habtypes(pre) == post
 
 

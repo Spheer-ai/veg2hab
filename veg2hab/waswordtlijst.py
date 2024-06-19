@@ -86,7 +86,7 @@ class WasWordtLijst:
         new_VvN = self.match_SBB_to_VvN(info.SBB[0])
 
         return VegTypeInfo(
-            info.percentage,
+            percentage=info.percentage,
             SBB=info.SBB,
             VvN=new_VvN,
         )

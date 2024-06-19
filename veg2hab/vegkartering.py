@@ -9,6 +9,8 @@ from typing import ClassVar, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
+from pydantic import BaseModel as _BaseModel
+from pydantic import validator
 from typing_extensions import Literal, Self
 
 from veg2hab.access_db import read_access_tables
@@ -36,6 +38,11 @@ from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
 
+class BaseModel(_BaseModel):
+    class Config:
+        extra = "forbid"
+
+
 @dataclass
 class VegTypeInfo:
     """
@@ -45,6 +52,12 @@ class VegTypeInfo:
     percentage: Number
     SBB: List[_SBB]
     VvN: List[_VvN]
+
+    @validator("SBB")
+    def check_sbb_length(cls, v):
+        if len(v) > 1:
+            raise ValueError("Er kan niet meer dan 1 SBB type zijn")
+        return v
 
     def __post_init__(self):
         assert len(self.SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
@@ -991,7 +1004,9 @@ class Kartering:
             name: float for name in vegtypes_df.columns if name.startswith("perc")
         }
         vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
-        vegtypes_df[str_columns.keys()] = vegtypes_df[str_columns.keys()].fillna("")
+        vegtypes_df[list(str_columns.keys())] = vegtypes_df[
+            list(str_columns.keys())
+        ].fillna("")
 
         # move and rename vegtype info column to the end
         gdf = gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})

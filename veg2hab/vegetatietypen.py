@@ -245,10 +245,10 @@ class VvN:
             kwargs = {"klasse": match.group("klasse")}
             if match.group("type") == "dg":
                 kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
-                return cls(kwargs)
+                return cls(**kwargs)
             elif match.group("type") == "rg":
                 kwargs["rompgemeenschap"] = match.group("gemeenschap")
-                return cls(kwargs)
+                return cls(**kwargs)
             else:
                 raise ValueError(f"Invalide gemeenschap: {code}")
 

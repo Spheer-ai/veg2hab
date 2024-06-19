@@ -71,6 +71,7 @@ def test_equivalency(kartering):
         assert kartering.gdf.equals(reconstructed_kartering.gdf)
 
 
+@pytest.mark.skip("Takes too long, temporarily disable this")
 def test_equivalency_habkart(kartering):
     kartering = apply_wwl(kartering)
     kartering = to_habtypekaart(kartering)

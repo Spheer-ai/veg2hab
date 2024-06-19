@@ -4,7 +4,7 @@ import pytest
 from shapely.geometry import Polygon
 
 from veg2hab.criteria import GeenCriterium
-from veg2hab.enums import KeuzeStatus, Kwaliteit
+from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel
 from veg2hab.habitat import HabitatKeuze, HabitatVoorstel
 from veg2hab.mozaiek import (
     GeenMozaiekregel,
@@ -47,7 +47,7 @@ def gdf():
                 alleen_goede_kwaliteit=True,
                 ook_als_rand_langs=False,
             ),
-            match_level=None,
+            match_level=MatchLevel.NO_MATCH,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=None,
@@ -57,7 +57,7 @@ def gdf():
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
-            match_level=None,
+            match_level=MatchLevel.NO_MATCH,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=None,
@@ -67,7 +67,7 @@ def gdf():
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
-            match_level=None,
+            match_level=MatchLevel.NO_MATCH,
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=None,
@@ -77,7 +77,7 @@ def gdf():
             idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
-            match_level=None,
+            match_level=MatchLevel.NO_MATCH,
         ),
     ]
 
