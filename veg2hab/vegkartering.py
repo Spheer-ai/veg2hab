@@ -38,8 +38,9 @@ class VegTypeInfo(BaseModel):
     """
     Klasse met alle informatie over één vegetatietype van een vlak
     """
-    # class Config:
-    #     extra = "forbid"
+
+    class Config:
+        extra = "forbid"
 
     percentage: float
     SBB: List[vegetatietypen.SBB] = Field(default_factory=list)
@@ -248,7 +249,7 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
 
 
 def mozaiekregel_habtype_percentage_dict_to_string(
-    habtype_percentage_dict: Union[None, dict]
+    habtype_percentage_dict: Optional[List[Tuple[str, bool, Kwaliteit, float]]]
 ) -> str:
     """
     Maakt een mooie output-ready string van een habtype_percentage_dict voor mozaiekregels
@@ -268,6 +269,9 @@ def mozaiekregel_habtype_percentage_dict_to_string(
     # Als er nergens mozaiekregels zijn, is er ook geen dict
     if habtype_percentage_dict is None:
         return ""
+
+    # turn it back into a dict #TODO make this nicer
+    habtype_percentage_dict = {i[:3]: i[3] for i in habtype_percentage_dict}
 
     assert all(
         [v > 0 for v in habtype_percentage_dict.values()]
@@ -1013,7 +1017,9 @@ class Kartering:
         gdf = self.gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
         gdf = pd.concat([gdf, vegtypes_df], axis=1)
 
-        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
+        gdf["_VegTypeInfo"] = (
+            gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
+        )
 
         column_order = [
             *self.PREFIX_COLS,
@@ -1239,7 +1245,7 @@ class Kartering:
                 calc_nr_of_unresolved_habitatkeuzes_per_row(self.gdf).sum()
             )
 
-            print(
+            logging.debug(
                 f"Iteratie {i}: van {n_keuzes_still_to_determine_pre} naar {n_keuzes_still_to_determine_post} habitattypen nog te bepalen"
             )
 
@@ -1264,6 +1270,9 @@ class Kartering:
         assert (
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
+
+        # TODO: @jordy, wat wil je met deze kolom?
+        self.gdf = self.gdf.drop(columns=["finished_on_iteration"])
 
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
@@ -1307,7 +1316,9 @@ class Kartering:
                     voorstel.mozaiek.check(percentages_dict)
 
                     # We bewaren de dict voor bij de output
-                    voorstel.mozaiek_dict = percentages_dict
+                    voorstel.mozaiek_dict = [
+                        (*k, v) for k, v in percentages_dict.items()
+                    ]
 
     def functionele_samenhang(self) -> pd.DataFrame:
         """
@@ -1346,12 +1357,20 @@ class Kartering:
 
         gdf = pd.concat([gdf, habkeuzes_df], axis=1)
 
-        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
-        gdf["_HabitatKeuze"] = gdf["_HabitatKeuze"].apply(HabitatKeuze.serialize_list).astype("string")
-        gdf["_HabitatVoorstel"] = gdf["_HabitatVoorstel"].apply(HabitatVoorstel.serialize_list2).astype("string")
+        gdf["_VegTypeInfo"] = (
+            gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
+        )
+        gdf["_HabitatKeuze"] = (
+            gdf["_HabitatKeuze"].apply(HabitatKeuze.serialize_list).astype("string")
+        )
+        gdf["_HabitatVoorstel"] = (
+            gdf["_HabitatVoorstel"]
+            .apply(HabitatVoorstel.serialize_list2)
+            .astype("string")
+        )
 
         column_order = [
-            *self.PREFIX_COLS
+            *self.PREFIX_COLS,
             *habkeuzes_df.columns,
             "_HabitatKeuze",
             "_HabitatVoorstel",
@@ -1401,7 +1420,6 @@ class Kartering:
             "_HabitatVoorstel": HabitatVoorstel.deserialize_list2,
         }.items():
             gdf[col] = gdf[col].apply(deserialization_func)
-
 
         # check for changed habitatkeuzes
         altered_habkeuzes = gdf.apply(cls._multi_col_to_habkeuze, axis=1)

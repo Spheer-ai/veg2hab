@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, ClassVar, Optional, Union
 
@@ -14,6 +15,7 @@ from veg2hab.io.common import Interface
 class BaseModel(PydanticBaseModel):
     class Config:
         extra = "forbid"
+
 
 class SBB(BaseModel):
     """
@@ -148,14 +150,16 @@ class SBB(BaseModel):
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate_code(x) if pd.notna(x) else True)
+        valid_mask = series.apply(
+            lambda x: cls.validate_code(x) if pd.notna(x) else True
+        )
 
         if print_invalid:
             if valid_mask.all():
-                print("Alle SBB codes zijn valide")
+                logging.info("Alle SBB codes zijn valide")
             else:
                 invalid = series[~valid_mask]
-                print(f"De volgende SBB codes zijn niet valide: \n{invalid}")
+                logging.warning(f"De volgende SBB codes zijn niet valide: \n{invalid}")
 
         return valid_mask.all()
 
@@ -344,14 +348,16 @@ class VvN(BaseModel):
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate_code(x) if pd.notna(x) else True)
+        valid_mask = series.apply(
+            lambda x: cls.validate_code(x) if pd.notna(x) else True
+        )
 
         if print_invalid:
             if valid_mask.any():
-                print("Alle VvN codes zijn valide")
+                logging.info("Alle VvN codes zijn valide")
             else:
                 invalid = series[~valid_mask]
-                print(f"De volgende VvN codes zijn niet valide: \n{invalid}")
+                logging.warning(f"De volgende VvN codes zijn niet valide: \n{invalid}")
 
         return valid_mask.all()
 

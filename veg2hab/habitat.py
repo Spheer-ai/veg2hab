@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 from pydantic import BaseModel, root_validator
@@ -18,7 +18,8 @@ class HabitatVoorstel(BaseModel):
     """
     Een voorstel voor een habitattype voor een vegetatietype
     """
-    class config:
+
+    class Config:
         extra = "forbid"
 
     onderbouwend_vegtype: Union[_SBB, _VvN, None]
@@ -29,7 +30,9 @@ class HabitatVoorstel(BaseModel):
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
-    mozaiek_dict: Optional[dict] = None
+    # TODO: I turned this into a list of tuples instead of a dict
+    # maybe turn it into a named tuple
+    mozaiek_dict: Optional[List[Tuple[str, bool, Kwaliteit, float]]] = None
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -77,11 +80,16 @@ class HabitatVoorstel(BaseModel):
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
         # TODO dit is niet zo netjes, met de json.loads en json.dumps
         # maar v.dict, doet een werkte volgens mij niet lekker met enums.
-        return json.dumps([[json.loads(v.json()) for v in sublist] for sublist in voorstellen])
+        return json.dumps(
+            [[json.loads(v.json()) for v in sublist] for sublist in voorstellen]
+        )
 
     @staticmethod
     def deserialize_list2(serialized: str) -> List[List["HabitatVoorstel"]]:
-        return [[HabitatVoorstel(**v) for v in sublist] for sublist in json.loads(serialized)]
+        return [
+            [HabitatVoorstel(**v) for v in sublist]
+            for sublist in json.loads(serialized)
+        ]
 
 
 # TODO: dit zijn geen references meer nadat we ze opnieuw hebben ingeladen...
@@ -152,14 +160,14 @@ class HabitatKeuze(BaseModel):
     def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
         # TODO dit is niet zo netjes, met de json.loads en json.dumps
         # maar v.dict, doet een werkte volgens mij niet lekker met enums.
-        return json.dumps([json.loads(v.json()) for v in keuzes])
+        try:
+            return json.dumps([json.loads(v.json()) for v in keuzes])
+        except Exception as e:
+            return "HELLOWIE"
 
     @staticmethod
     def deserialize_list(serialized: str) -> List["HabitatKeuze"]:
         return [HabitatKeuze(**v) for v in json.loads(serialized)]
-
-
-
 
 
 def rank_habitatkeuzes(

@@ -1,12 +1,9 @@
-from collections import defaultdict, namedtuple
-from copy import deepcopy
-from typing import Dict, List, Set, Tuple
+from typing import List, Set, Tuple
 
 import geopandas as gpd
 import pandas as pd
 
-from veg2hab.enums import FuncSamenhangID, KeuzeStatus, Kwaliteit
-from veg2hab.habitat import HabitatKeuze
+from veg2hab.enums import FuncSamenhangID, KeuzeStatus
 from veg2hab.io.common import Interface
 
 

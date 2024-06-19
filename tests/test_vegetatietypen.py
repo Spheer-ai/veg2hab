@@ -6,6 +6,7 @@ from veg2hab.vegkartering import VegTypeInfo
 
 CLIInterface.get_instance()
 
+
 def test_vvn_from_str():
     vvn = VvN.from_code("42aa1e")
     assert vvn.klasse == "42"
@@ -221,23 +222,23 @@ def test_basic_ssb_equality():
 
 
 def test_vegtype_info():
-
     from typing import List
 
     from pydantic import BaseModel
 
     class A(BaseModel):
-        i : int
+        i: int
 
     class B(BaseModel):
-        a : List[A]
+        a: List[A]
 
     B(a=[A(i=1), A(i=2)]).dict()
 
     vegtypeinfo = VegTypeInfo(percentage=100, SBB=[SBB(klasse="42")], VvN=[])
 
-
-    vegtypeinfo = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["42a1e"], VvN_strings=["42aa1e"])
+    vegtypeinfo = VegTypeInfo.from_str_vegtypes(
+        100, SBB_strings=["42a1e"], VvN_strings=["42aa1e"]
+    )
     vegtypeinfo.SBB == SBB.from_code("42a1e")
 
 

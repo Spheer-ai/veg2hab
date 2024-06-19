@@ -50,11 +50,7 @@ def to_habtypekaart(kartering: Kartering) -> Kartering:
 
     kartering.apply_deftabel(deftabel)
 
-    kartering.bepaal_habitatkeuzes(
-        fgr,
-        bodemkaart,
-        lbk,
-    )
+    kartering.bepaal_mits_habitatkeuzes(fgr, bodemkaart, lbk)
     return kartering
 
 
@@ -71,7 +67,6 @@ def test_equivalency(kartering):
         assert kartering.gdf.equals(reconstructed_kartering.gdf)
 
 
-@pytest.mark.skip("Takes too long, temporarily disable this")
 def test_equivalency_habkart(kartering):
     kartering = apply_wwl(kartering)
     kartering = to_habtypekaart(kartering)
@@ -83,5 +78,5 @@ def test_equivalency_habkart(kartering):
         editable_habtype.to_file(temp_dir + "/habkartering.gpkg", driver="GPKG")
 
         editable_habtype2 = gpd.read_file(temp_dir + "/habkartering.gpkg")
-        reconstructed_kartering = Kartering.from_editable_vegtypes(editable_habtype2)
+        reconstructed_kartering = Kartering.from_editable_habtypes(editable_habtype2)
         assert kartering.gdf.equals(reconstructed_kartering.gdf)
