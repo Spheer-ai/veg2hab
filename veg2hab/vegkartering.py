@@ -1,18 +1,16 @@
-import dataclasses
 import json
 import logging
 from collections import defaultdict
-from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel as _BaseModel
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 from typing_extensions import Literal, Self
 
+from veg2hab import vegetatietypen
 from veg2hab.access_db import read_access_tables
 from veg2hab.bronnen import FGR, LBK, Bodemkaart
 from veg2hab.criteria import (
@@ -34,36 +32,24 @@ from veg2hab.mozaiek import (
     calc_mozaiek_percentages_from_overlay_gdf,
     make_buffered_boundary_overlay_gdf,
 )
-from veg2hab.vegetatietypen import SBB as _SBB
-from veg2hab.vegetatietypen import VvN as _VvN
 
 
-class BaseModel(_BaseModel):
-    class Config:
-        extra = "forbid"
-
-
-@dataclass
-class VegTypeInfo:
+class VegTypeInfo(BaseModel):
     """
     Klasse met alle informatie over één vegetatietype van een vlak
     """
+    # class Config:
+    #     extra = "forbid"
 
-    percentage: Number
-    SBB: List[_SBB]
-    VvN: List[_VvN]
+    percentage: float
+    SBB: List[vegetatietypen.SBB] = Field(default_factory=list)
+    VvN: List[vegetatietypen.VvN] = Field(default_factory=list)
 
     @validator("SBB")
     def check_sbb_length(cls, v):
         if len(v) > 1:
             raise ValueError("Er kan niet meer dan 1 SBB type zijn")
         return v
-
-    def __post_init__(self):
-        assert len(self.SBB) <= 1, "Er kan niet meer dan 1 SBB type zijn"
-        assert isinstance(
-            self.percentage, Number
-        ), f"Percentage moet een getal (int/float/double/etc) zijn. Nu is het {self.percentage} {type(self.percentage)}"
 
     @classmethod
     def from_str_vegtypes(
@@ -86,10 +72,10 @@ class VegTypeInfo:
             len(VvN_strings + SBB_strings) > 0
         ), "Er moet minstens 1 vegetatietype zijn"
 
-        vvn = [_VvN.from_string(i) for i in VvN_strings]
-        sbb = [_SBB.from_string(i) for i in SBB_strings]
+        vvn = [vegetatietypen.VvN.from_string(i) for i in VvN_strings]
+        sbb = [vegetatietypen.SBB.from_string(i) for i in SBB_strings]
 
-        return cls(
+        return VegTypeInfo(
             percentage=percentage,
             VvN=[v for v in vvn if v is not None],
             SBB=[s for s in sbb if s is not None],
@@ -123,6 +109,14 @@ class VegTypeInfo:
                 )
             )
         return lst
+
+    @staticmethod
+    def serialize_list(l: List[Self]) -> str:
+        return json.dumps([x.dict() for x in l])
+
+    @staticmethod
+    def deserialize_list(s: str) -> List[Self]:
+        return [VegTypeInfo(**x) for x in json.loads(s)]
 
     def __str__(self):
         return f"({self.percentage}%, SBB: {[str(x) for x in self.SBB]}, VvN: {[str(x) for x in self.VvN]})"
@@ -328,7 +322,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                         voorstel.idx_in_dt,
                         voorstel.habtype,
                     ]
-                    if isinstance(voorstel.vegtype_in_dt, _VvN)
+                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
                     else None
                 ),
                 f"_SBBdftbl{idx}": str(
@@ -337,7 +331,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                         voorstel.idx_in_dt,
                         voorstel.habtype,
                     ]
-                    if isinstance(voorstel.vegtype_in_dt, _SBB)
+                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
                     else None
                 ),
             }
@@ -389,7 +383,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                                 voorstel.habtype,
                             ]
                         )
-                        if isinstance(voorstel.vegtype_in_dt, _VvN)
+                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
                         else "---"
                     )
                     for voorstel in voorstellen
@@ -405,7 +399,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                                 voorstel.habtype,
                             ]
                         )
-                        if isinstance(voorstel.vegtype_in_dt, _SBB)
+                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
                         else "---"
                     )
                     for voorstel in voorstellen
@@ -624,26 +618,36 @@ def _single_to_multi(
 
 
 class Kartering:
-    VEGTYPE_COLS: ClassVar[List[str]] = [
+    PREFIX_COLS: ClassVar[List[str]] = [
+        # Met deze kolommen begint de dataframe
         "ElmID",
         "Opp",
-        "VegTypeInfo",
         "Datum",
         "Opmerking",
+    ]
+    POSTFIX_COLS: ClassVar[List[str]] = [
+        # dit zijn de laatste paar kolommen voor de dataframe
         "_LokVegTyp",
         "_LokVrtNar",
         "geometry",
     ]
+    VEGTYPE_COLS: ClassVar[List[str]] = [
+        # kolommen voor de vegtype kartering
+        "VegTypeInfo",
+    ]
     HABTYPE_COLS: ClassVar[List[str]] = [
+        # kolommen voor de habtype kartering
+        "VegTypeInfo",
         "HabitatVoorstel",
         "HabitatKeuze",
     ]
 
     def __init__(self, gdf: gpd.GeoDataFrame):
+        # TODO clean this up!
         try:
-            self.gdf = gdf[self.VEGTYPE_COLS + self.HABTYPE_COLS]
+            self.gdf = gdf[self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS]
         except KeyError:
-            self.gdf = gdf[self.VEGTYPE_COLS]
+            self.gdf = gdf[self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS]
 
         # Alle VegTypeInfo sorteren op percentage van hoog naar laag
         # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
@@ -910,10 +914,10 @@ class Kartering:
 
         # Opschonen
         if len(SBB_col) > 0:
-            gdf[SBB_col] = gdf[SBB_col].apply(_SBB.opschonen_series)
+            gdf[SBB_col] = gdf[SBB_col].apply(vegetatietypen.SBB.opschonen_series)
 
         if len(VvN_col) > 0:
-            gdf[VvN_col] = gdf[VvN_col].apply(_VvN.opschonen_series)
+            gdf[VvN_col] = gdf[VvN_col].apply(vegetatietypen.VvN.opschonen_series)
 
         # Standardiseren van kolomnamen
         gdf["Opp"] = gdf["geometry"].area
@@ -990,11 +994,8 @@ class Kartering:
         return result
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
-        # TODO: fix dtypes (string dtypes would be nice)
-        gdf = self.gdf[self.VEGTYPE_COLS]
-
         # unpack the vegtypeinfo
-        vegtypes_df = gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
+        vegtypes_df = self.gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
         str_columns = {
             name: "string"
             for name in vegtypes_df.columns
@@ -1009,25 +1010,16 @@ class Kartering:
         ].fillna("")
 
         # move and rename vegtype info column to the end
-        gdf = gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
+        gdf = self.gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
         gdf = pd.concat([gdf, vegtypes_df], axis=1)
 
-        gdf["_VegTypeInfo"] = (
-            gdf["_VegTypeInfo"]
-            .apply(lambda x: json.dumps([dataclasses.asdict(v) for v in x]))
-            .astype("string")
-        )
+        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
 
         column_order = [
-            "ElmID",
-            "Opp",
-            "Datum",
-            "Opmerking",
+            *self.PREFIX_COLS,
             *vegtypes_df.columns,
             "_VegTypeInfo",
-            "_LokVegTyp",
-            "_LokVrtNar",
-            "geometry",
+            *self.POSTFIX_COLS,
         ]
 
         gdf = gdf[column_order]
@@ -1045,10 +1037,10 @@ class Kartering:
     def _multi_col_to_vegtype(row: pd.Series) -> List[VegTypeInfo]:
         result = []
         for idx in range(1, 100):  # arbitrary number
-            sbb = row.get(f"SBB{idx}", None)
-            vvn = row.get(f"VvN{idx}", None)
+            sbb = row.get(f"SBB{idx}", "")
+            vvn = row.get(f"VvN{idx}", "")
             perc = row.get(f"perc{idx}", None)
-            if sbb is None and vvn is None:
+            if sbb == "" and vvn == "":
                 break
             result.append(
                 VegTypeInfo.from_str_vegtypes(
@@ -1071,9 +1063,7 @@ class Kartering:
         }
         gdf = gdf.rename(columns=rename_cols)
 
-        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(
-            lambda x: [VegTypeInfo(**v) for v in json.loads(x)]
-        )
+        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.deserialize_list)
 
         altered_vegtypes = gdf.apply(cls._multi_col_to_vegtype, axis=1)
 
@@ -1356,45 +1346,17 @@ class Kartering:
 
         gdf = pd.concat([gdf, habkeuzes_df], axis=1)
 
-        # vegtypeinfo is nog een dataclass.
-        gdf["_VegTypeInfo"] = (
-            gdf["_VegTypeInfo"]
-            .apply(lambda x: json.dumps([dataclasses.asdict(v) for v in x]))
-            .astype("string")
-        )
-
-        # vegtypeinfo is nog een dataclass.
-        gdf["_HabitatKeuze"] = (
-            gdf["_HabitatKeuze"]
-            .apply(
-                lambda x: json.dumps([json.loads(v.json()) for v in x])
-            )  # TODO, dit is niet netjes
-            .astype("string")
-        )
-
-        # habvoorstel zijn lists van lists van habvoorstellen:
-        gdf["_HabitatVoorstel"] = (
-            gdf["_HabitatVoorstel"]
-            .apply(
-                lambda x: json.dumps(
-                    [[json.loads(v.json()) for v in sublist] for sublist in x]
-                )  # TODO, dit is niet netjes, meerdere keren omzetten van de data..
-            )
-            .astype("string")
-        )
+        gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
+        gdf["_HabitatKeuze"] = gdf["_HabitatKeuze"].apply(HabitatKeuze.serialize_list).astype("string")
+        gdf["_HabitatVoorstel"] = gdf["_HabitatVoorstel"].apply(HabitatVoorstel.serialize_list2).astype("string")
 
         column_order = [
-            "ElmID",
-            "Opp",
-            "Datum",
-            "Opmerking",
+            *self.PREFIX_COLS
             *habkeuzes_df.columns,
             "_HabitatKeuze",
             "_HabitatVoorstel",
             "_VegTypeInfo",
-            "_LokVegTyp",
-            "_LokVrtNar",
-            "geometry",
+            *self.POSTFIX_COLS,
         ]
         # assert set(gdf.columns) - set(column_order)
 
@@ -1433,16 +1395,13 @@ class Kartering:
         gdf = gdf.rename(columns=rename_columns)
 
         # unpack json strings
-        for col, data_type in {
-            "_VegTypeInfo": VegTypeInfo,
-            "_HabitatKeuze": HabitatKeuze,
+        for col, deserialization_func in {
+            "_VegTypeInfo": VegTypeInfo.deserialize_list,
+            "_HabitatKeuze": HabitatKeuze.deserialize_list,
+            "_HabitatVoorstel": HabitatVoorstel.deserialize_list2,
         }.items():
-            gdf[col] = gdf[col].apply(lambda x: [data_type(**v) for v in json.loads(x)])
-        gdf["_HabitatVoorstel"] = gdf["_HabitatVoorstel"].apply(
-            lambda x: [
-                [HabitatVoorstel(**v) for v in sublist] for sublist in json.loads(x)
-            ]
-        )
+            gdf[col] = gdf[col].apply(deserialization_func)
+
 
         # check for changed habitatkeuzes
         altered_habkeuzes = gdf.apply(cls._multi_col_to_habkeuze, axis=1)

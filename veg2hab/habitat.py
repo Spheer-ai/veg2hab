@@ -1,10 +1,10 @@
+import json
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
@@ -18,7 +18,6 @@ class HabitatVoorstel(BaseModel):
     """
     Een voorstel voor een habitattype voor een vegetatietype
     """
-
     class config:
         extra = "forbid"
 
@@ -74,6 +73,16 @@ class HabitatVoorstel(BaseModel):
             match_level=MatchLevel.NO_MATCH,
         )
 
+    @staticmethod
+    def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
+        # TODO dit is niet zo netjes, met de json.loads en json.dumps
+        # maar v.dict, doet een werkte volgens mij niet lekker met enums.
+        return json.dumps([[json.loads(v.json()) for v in sublist] for sublist in voorstellen])
+
+    @staticmethod
+    def deserialize_list2(serialized: str) -> List[List["HabitatVoorstel"]]:
+        return [[HabitatVoorstel(**v) for v in sublist] for sublist in json.loads(serialized)]
+
 
 # TODO: dit zijn geen references meer nadat we ze opnieuw hebben ingeladen...
 # Mogelijk willen de habitatvoorstellen hier dus uit halen..
@@ -90,27 +99,32 @@ class HabitatKeuze(BaseModel):
     mozaiek_opmerking: str = ""
     debug_info: Optional[str] = ""
 
-    def __post_init__(self):
-        # Validatie
-        if self.status in [
+    @root_validator
+    def valideer_habtype_keuzestatus(cls, values):
+        status = values.get("status")
+        habtype = values.get("habtype")
+        kwaliteit = values.get("kwaliteit")
+
+        if status in [
             KeuzeStatus.HABITATTYPE_TOEGEKEND,
         ]:
-            assert self.habtype not in ["HXXXX", "H0000"]
-        elif self.status in [
+            assert habtype not in ["HXXXX", "H0000"]
+        elif status in [
             KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
-            assert self.habtype == "H0000"
-        elif self.status in [
+            assert habtype == "H0000"
+        elif status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         ]:
-            assert self.habtype == "HXXXX"
+            assert habtype == "HXXXX"
+        if habtype in ["H0000", "HXXXX"]:
+            assert kwaliteit == Kwaliteit.NVT
 
-        if self.habtype in ["H0000", "HXXXX"]:
-            assert self.kwaliteit == Kwaliteit.NVT
+        return values
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
@@ -133,6 +147,19 @@ class HabitatKeuze(BaseModel):
             return True
 
         return is_mozaiek_type_present(self.habitatvoorstellen, GeenMozaiekregel)
+
+    @staticmethod
+    def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
+        # TODO dit is niet zo netjes, met de json.loads en json.dumps
+        # maar v.dict, doet een werkte volgens mij niet lekker met enums.
+        return json.dumps([json.loads(v.json()) for v in keuzes])
+
+    @staticmethod
+    def deserialize_list(serialized: str) -> List["HabitatKeuze"]:
+        return [HabitatKeuze(**v) for v in json.loads(serialized)]
+
+
+
 
 
 def rank_habitatkeuzes(

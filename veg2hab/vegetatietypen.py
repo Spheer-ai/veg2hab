@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from typing import ClassVar, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import pandas as pd
+from pydantic import BaseModel as PydanticBaseModel
 from typing_extensions import Self
 
 from veg2hab.enums import MatchLevel
 from veg2hab.io.common import Interface
 
 
-@dataclass
-class SBB:
+class BaseModel(PydanticBaseModel):
+    class Config:
+        extra = "forbid"
+
+class SBB(BaseModel):
     """
     Format van SBB codes:
     ## is cijfer ('1', '5', '10', '32', zonder voorloopnul, dus geen '01' of '04')
@@ -24,11 +27,11 @@ class SBB:
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
     """
 
-    basis_sbb: ClassVar = re.compile(
+    basis_sbb: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?"
     )
     # 14e1a           1    4                   e                     1                       a
-    gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
+    gemeenschap: ClassVar[Any] = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
     # 16b/a                                        /                     a
 
     klasse: str
@@ -122,15 +125,15 @@ class SBB:
             return match_levels[0]
         return match_levels[len(self_tuple)]
 
-    @staticmethod
-    def validate(code: str) -> bool:
+    @classmethod
+    def validate_code(cls, code: str) -> bool:
         """
         Checkt of een string voldoet aan de SBB opmaak
         """
         # Strippen van evt rompgemeenschap of derivaatgemeenschap
-        code_gemeenschap = re.sub(SBB.gemeenschap, "", code)
+        code_gemeenschap = re.sub(cls.gemeenschap, "", code)
 
-        return SBB.basis_sbb.fullmatch(code) or SBB.basis_sbb.fullmatch(
+        return cls.basis_sbb.fullmatch(code) or cls.basis_sbb.fullmatch(
             code_gemeenschap
         )
 
@@ -145,7 +148,7 @@ class SBB:
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
+        valid_mask = series.apply(lambda x: cls.validate_code(x) if pd.notna(x) else True)
 
         if print_invalid:
             if valid_mask.all():
@@ -208,8 +211,7 @@ class SBB:
         return series
 
 
-@dataclass()
-class VvN:
+class VvN(BaseModel):
     """
     Format van VvN codes:
     ## is cijfer ('1', '5', '10', '32', niet '01' of '04'), x is letter ('a', 'b', 'c' etc)
@@ -220,11 +222,11 @@ class VvN:
     Derivaatgemeenschappen: ## dg ##, zoals 42dg2
     """
 
-    normale_vvn: ClassVar = re.compile(
+    normale_vvn: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<orde>[a-z])((?P<verbond>[a-z])((?P<associatie>[1-9][0-9]?)(?P<subassociatie>[a-z])?)?)?)?"
     )
     # 42aa1e          4    2                a                  a                     1                             e
-    gemeenschap: ClassVar = re.compile(
+    gemeenschap: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)(?P<type>[dr]g)(?P<gemeenschap>[1-9][0-9]?)"
     )
     # 37rg2           3    7               r  g                  2
@@ -325,7 +327,7 @@ class VvN:
         return match_levels[len(self_tuple)]
 
     @classmethod
-    def validate(cls, code: str) -> bool:
+    def validate_code(cls, code: str) -> bool:
         """
         Checkt of een string voldoet aan de VvN opmaak
         """
@@ -342,7 +344,7 @@ class VvN:
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
+        valid_mask = series.apply(lambda x: cls.validate_code(x) if pd.notna(x) else True)
 
         if print_invalid:
             if valid_mask.any():

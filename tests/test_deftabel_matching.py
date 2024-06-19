@@ -262,7 +262,7 @@ def test_niet_geautomatiseerde_codes(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["100"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("100"),
+            onderbouwend_vegtype=SBB(klasse="100"),
             vegtype_in_dt=None,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,

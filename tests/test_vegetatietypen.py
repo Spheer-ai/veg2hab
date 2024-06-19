@@ -1,7 +1,10 @@
 import pytest
 
+from veg2hab.io.cli import CLIInterface
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
+from veg2hab.vegkartering import VegTypeInfo
 
+CLIInterface.get_instance()
 
 def test_vvn_from_str():
     vvn = VvN.from_code("42aa1e")
@@ -215,3 +218,27 @@ def test_basic_ssb_equality():
     assert sbb == sbb
     assert sbb == sbb2
     assert sbb != sbb3
+
+
+def test_vegtype_info():
+
+    from typing import List
+
+    from pydantic import BaseModel
+
+    class A(BaseModel):
+        i : int
+
+    class B(BaseModel):
+        a : List[A]
+
+    B(a=[A(i=1), A(i=2)]).dict()
+
+    vegtypeinfo = VegTypeInfo(percentage=100, SBB=[SBB(klasse="42")], VvN=[])
+
+
+    vegtypeinfo = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["42a1e"], VvN_strings=["42aa1e"])
+    vegtypeinfo.SBB == SBB.from_code("42a1e")
+
+
+vegtypeinfo = VegTypeInfo(percentage=100, SBB=[SBB(klasse="42")], VvN=[])
