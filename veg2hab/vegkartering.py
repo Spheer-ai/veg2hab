@@ -311,7 +311,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
                 f"Opm{idx}": keuze.opmerking
-                + (" " if len(keuze.opmerking) > 0 else "")
+                + ("\n" if len(keuze.opmerking) > 0 else "")
                 + format_opmerkingen(voorstel),
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
                 f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
@@ -370,7 +370,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
             f"Opm{idx}": keuze.opmerking
-            + (" " if len(keuze.opmerking) > 0 else "")
+            + ("\n" if len(keuze.opmerking) > 0 else "")
             + format_opmerkingen(voorstellen),
             f"_Mits_opm{idx}": keuze.mits_opmerking,
             f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,

@@ -446,7 +446,6 @@ class LBKType(Enum):
     HERSTELLEND_HOOGVEEN = "Herstellend hoogveen"
     ZANDVERSTUIVING = "Zandverstuiving"
     ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "Onder invloed van beek of rivier"
-    DEMO_ZOWEL_POSITIEF_ALS_NEGATIEF = "demo_zowel_positief_als_negatief"
 
     _tuple_dict = {
         "HOOGVEENLANDSCHAP": LBKTuple(
@@ -478,12 +477,6 @@ class LBKType(Enum):
             codes=["HzBB", "HzBN", "HzBV", "HzBW", "HzBL", "HzBD", "HlDB", "HlDD"],
             enkel_negatieven=False,
             enkel_positieven=True,
-        ),
-        "DEMO_ZOWEL_POSITIEF_ALS_NEGATIEF": LBKTuple(
-            string="demo_zowel_positief_als_negatief",
-            codes=["demo"],
-            enkel_negatieven=False,
-            enkel_positieven=False,
         ),
     }
 
