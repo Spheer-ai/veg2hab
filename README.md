@@ -111,18 +111,27 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 ## Gebruikershandleiding
 
-Voor een uitgebreide gebruikershandleiding, zie [Handleiding voor gebruikers](./docs/HANDLEIDING.md).
-
 ### Gebruik in ArcGIS Pro
 
-De omzetting van veg2hab van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
+De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Python Toolbox `veg2hab.pyt`. De gehele omzetting verloopt via een aantal sequentiële stappen: 
 
-De omzettool komt in twee smaken:
-1. `digitale_standaard`, voor het omzetten van vegetatiekarteringen die de landelijke digitale standaard gebruiken, die bestaat uit een shapefile gecombineerd met een access database. De gebruiker voert in welke vegetatiekarteringen omgezet moet worden en waar de bijhorende access database te vinden is.
-2. `vector_bestand`, voor het omzetten van vegetatiekarteringen die alle benodigde informatie in de shapefile zelf bevatten. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat.
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
-Let op:
-- Wanneer de gebruiker beschikt over een access database, raden wij aan de  `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
+**Omschrijving van de stappen:**
+- `1a_digitale_standaard`: Laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. Deze bestaat uit een shapefile gecombineerd met een access database. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
+- `1b_vector_bestand`: Laadt een vegetatiekartering in die alle benodigde informatie in de shapefile zelf heeft staan. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
+- `2_optioneel_stapel_veg`: Optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
+- `3_definitietabel_en_mitsen`: Zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
+- `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
+- `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe. 
+
+Het opdelen van de omzetting in deze stappen zorgt ervoor dat de gebruiker tussentijds naar eigen inzicht aanpassingen kan aanbrengen in de bevindingen van veg2hab. veg2hab is zo gebouwd, dat het deze veranderingen opmerkt, en in de vervolgstappen meeneemt. Voorbeelden:
+- De vegetatiekartering hanteert een vertaling van SBB naar VvN die afwijkt van de waswordt lijst. In dit geval kan de gebruiker na het inladen van de kartering in stap `1` handmatig VvN codes in veld **VvN{i}** aanpassen. In de vervolgstappen gebruikt veg2hab de handmatige VvN-codes om op te zoeken in de definitie.
+- veg2hab kan in stap `3` niet alle beperkende criteria succesvol controleren, waardoor veel vlakken op Hxxxx blijven staan. Dit zorgt ervoor dat ook veel vlakken met een mozaiekregel niet goed gecontroleerd kunnen worden in stap `4`. De gebruiker kan handmatig vlakken omzetten van Hxxxx naar H0000 of een habitattype, en pas daarna verder gaan met stap `4`.
+
+**Let op:**
+- Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
+- Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft. De gebruiker dient deze velden ongemoeid te laten.
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN).
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart. Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 
