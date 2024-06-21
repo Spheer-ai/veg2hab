@@ -18,9 +18,9 @@ from veg2hab.criteria import (
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit
+from veg2hab.functionele_samenhang import apply_functionele_samenhang
 from veg2hab.habitat import (
     HabitatVoorstel,
-    apply_minimum_oppervlak,
     calc_nr_of_unresolved_habitatkeuzes_per_row,
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
@@ -166,6 +166,8 @@ def ingest_vegtype(
             )
 
             vegtype_list.append(vegtypeinfo)
+        if len(vegtype_list) == 0:
+            return [VegTypeInfo(percentage=100, SBB=[], VvN=[])]
         return vegtype_list
 
     return gdf.apply(_row_to_vegtypeinfo_list, axis=1)
@@ -277,9 +279,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     # Er is 1 HabitatVoorstel
     if len(keuze.habitatvoorstellen) == 1:
         if keuze.status in [
-            KeuzeStatus.DUIDELIJK,
+            KeuzeStatus.HABITATTYPE_TOEGEKEND,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
-            KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+            KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
@@ -299,45 +301,27 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-                f"VvN{idx}": (
-                    str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                    else None
-                ),
-                f"SBB{idx}": (
-                    str(voorstel.onderbouwend_vegtype)
-                    if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                    else None
-                ),
+                f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
+                f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
-                f"_VvNdftbl{idx}": (
-                    str(
-                        [
-                            str(voorstel.vegtype_in_dt),
-                            voorstel.idx_in_dt,
-                            voorstel.habtype,
-                        ]
-                    )
+                f"_VvNdftbl{idx}": str(
+                    [
+                        str(voorstel.vegtype_in_dt),
+                        voorstel.idx_in_dt,
+                        voorstel.habtype,
+                    ]
                     if isinstance(voorstel.vegtype_in_dt, _VvN)
                     else None
                 ),
-                f"_SBBdftbl{idx}": (
-                    str(
-                        [
-                            str(voorstel.vegtype_in_dt),
-                            voorstel.idx_in_dt,
-                            voorstel.habtype,
-                        ]
-                    )
+                f"_SBBdftbl{idx}": str(
+                    [
+                        str(voorstel.vegtype_in_dt),
+                        voorstel.idx_in_dt,
+                        voorstel.habtype,
+                    ]
                     if isinstance(voorstel.vegtype_in_dt, _SBB)
-                    else None
-                ),
-                # Als de status GEEN_OPGEGEVEN_VEGTYPEN is, dan willen we bij VgTypInf niks invullen
-                f"_VgTypInf{idx}": (
-                    str(vegtypeinfo)
-                    if keuze.status != KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN
                     else None
                 ),
             }
@@ -349,9 +333,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
         ), f"Er is 1 habitatvoorstel maar dat zou niet moeten kunnen in KeuzeStatus {keuze.status}"
 
     if keuze.status in [
-        KeuzeStatus.DUIDELIJK,
-        KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
-        KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+        KeuzeStatus.HABITATTYPE_TOEGEKEND,
+        KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
+        KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
         KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
@@ -369,30 +353,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-            f"VvN{idx}": str(
-                [
-                    (
-                        str(voorstel.onderbouwend_vegtype)
-                        if isinstance(voorstel.onderbouwend_vegtype, _VvN)
-                        else None
-                    )
-                    for voorstel in voorstellen
-                ]
-            ),
-            f"SBB{idx}": str(
-                [
-                    (
-                        str(voorstel.onderbouwend_vegtype)
-                        if isinstance(voorstel.onderbouwend_vegtype, _SBB)
-                        else None
-                    )
-                    for voorstel in voorstellen
-                ]
-            ),
+            f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
+            f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
-            f"_VvNdftbl{idx}": str(
+            f"_VvNdftbl{idx}": "\n".join(
                 [
                     (
                         str(
@@ -403,12 +369,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                             ]
                         )
                         if isinstance(voorstel.vegtype_in_dt, _VvN)
-                        else None
+                        else "---"
                     )
                     for voorstel in voorstellen
                 ]
             ),
-            f"_SBBdftbl{idx}": str(
+            f"_SBBdftbl{idx}": "\n".join(
                 [
                     (
                         str(
@@ -419,12 +385,11 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                             ]
                         )
                         if isinstance(voorstel.vegtype_in_dt, _SBB)
-                        else None
+                        else "---"
                     )
                     for voorstel in voorstellen
                 ]
             ),
-            f"_VgTypInf{idx}": str(vegtypeinfo),
         }
 
         return pd.Series(series_dict)
@@ -455,8 +420,8 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
             len(habitatkeuzes) == 1
         ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
         assert (
-            vegtypeinfos == []
-        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er geen VegTypeInfo zijn"
+            vegtypeinfos == [VegTypeInfo(percentage=100, SBB=[], VvN=[])],
+        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
         aggregate[
             (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit.as_letter())
         ] = 100
@@ -512,7 +477,6 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Opm{i}",
             f"SBB{i}",
             f"VvN{i}",
-            f"_VgTypInf{i}",
             f"_Status{i}",
             f"_Uitleg{i}",
             f"_SBBdftbl{i}",
@@ -1136,8 +1100,6 @@ class Kartering:
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-        self.check_minimum_oppervlak()
-
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
@@ -1182,17 +1144,13 @@ class Kartering:
                     # We bewaren de dict voor bij de output
                     voorstel.mozaiek_dict = percentages_dict
 
-    def check_minimum_oppervlak(self) -> None:
+    def functionele_samenhang(self) -> pd.DataFrame:
         """
-        Checkt of de toebedeelde habitattypes wel aan het minimum oppervlak voldoen
-
-        NOTE: Voor nu doen we alsof functionele samenhang niet bestaat
+        Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
         """
-        assert (
-            "HabitatKeuze" in self.gdf.columns
-        ), "Er is geen kolom met HabitatKeuze voor de check van minimum oppervlak"
+        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze"
 
-        self.gdf["HabitatKeuze"] = apply_minimum_oppervlak(self.gdf)
+        self.gdf = apply_functionele_samenhang(self.gdf)
 
     def as_final_format(self) -> pd.DataFrame:
         """
@@ -1244,7 +1202,7 @@ class Kartering:
             # Maar als we niet even veel keuzes als vegtypeinfos hebben, dan moet dat zijn
             # omdat dit vlak vanuit de vegetatiekartering geen vegtypen heeft gekregen
             assert (
-                vegtypeinfos == []
+                len(vegtypeinfos) == 0
             ), "Mismatch tussen aantal habitatkeuzes en vegtypeinfos; vegtypeinfos zijn niet leeg"
             assert (
                 len(keuzes) == 1

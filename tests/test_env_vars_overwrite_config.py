@@ -47,8 +47,32 @@ def test_minimum_oppervlak():
         }
     )
     assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 100
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 10
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 1000
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H6110"]
+        == 10
+    )
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H9110"]
+        == 1000
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("not_an_exception")
+        == 100
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H6110")
+        == 10
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H9110")
+        == 1000
+    )
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "200"
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
         {
@@ -57,5 +81,92 @@ def test_minimum_oppervlak():
         }
     )
     assert CLIInterface.get_instance().get_config().minimum_oppervlak_default == 200
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H6110"] == 20
-    assert CLIInterface.get_instance().get_config().minimum_oppervlak["H9110"] == 2000
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H6110"]
+        == 20
+    )
+    assert (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions["H9110"]
+        == 2000
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("not_an_exception")
+        == 200
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H6110")
+        == 20
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .get_minimum_oppervlak_for_habtype("H9110")
+        == 2000
+    )
+
+
+def test_functionele_samenhang():
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+        [
+            [100, 10.01],
+            [90, 5.01],
+            [50, 0.01],
+        ]
+    )
+    assert (
+        CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
+        == [
+            (100, 10.01),
+            (90, 5.01),
+            (50, 0.01),
+        ]
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+        [
+            [101, 10.02],
+            [91, 5.02],
+            [51, 0.02],
+        ]
+    )
+    assert (
+        CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
+        == [
+            (101, 10.02),
+            (91, 5.02),
+            (51, 0.02),
+        ]
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(
+        {
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
+        }
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+        == {
+            "H2130": "H2130/H4030",
+            "H4030": "H2130/H4030",
+        }
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(
+        {
+            "H2130": "H4030/H2130",
+            "H4030": "H4030/H2130",
+        }
+    )
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+        == {
+            "H2130": "H4030/H2130",
+            "H4030": "H4030/H2130",
+        }
+    )

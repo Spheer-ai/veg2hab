@@ -86,7 +86,7 @@ def gdf():
             "HabitatKeuze": [
                 [
                     HabitatKeuze(
-                        status=KeuzeStatus.DUIDELIJK,
+                        status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1",
                         kwaliteit=Kwaliteit.GOED,
                         opmerking="",
@@ -98,7 +98,7 @@ def gdf():
                 ],
                 [
                     HabitatKeuze(
-                        status=KeuzeStatus.DUIDELIJK,
+                        status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H2",
                         kwaliteit=Kwaliteit.GOED,
                         opmerking="",
@@ -110,7 +110,7 @@ def gdf():
                 ],
                 [
                     HabitatKeuze(
-                        status=KeuzeStatus.DUIDELIJK,
+                        status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H2",
                         kwaliteit=Kwaliteit.GOED,
                         opmerking="",
@@ -122,7 +122,7 @@ def gdf():
                 ],
                 [
                     HabitatKeuze(
-                        status=KeuzeStatus.DUIDELIJK,
+                        status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H3",
                         kwaliteit=Kwaliteit.GOED,
                         opmerking="",

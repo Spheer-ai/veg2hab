@@ -86,11 +86,11 @@ class HabitatKeuze:
     def __post_init__(self):
         # Validatie
         if self.status in [
-            KeuzeStatus.DUIDELIJK,
+            KeuzeStatus.HABITATTYPE_TOEGEKEND,
         ]:
             assert self.habtype not in ["HXXXX", "H0000"]
         elif self.status in [
-            KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+            KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
@@ -98,7 +98,7 @@ class HabitatKeuze:
         elif self.status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
-            KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+            KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         ]:
             assert self.habtype == "HXXXX"
 
@@ -113,7 +113,7 @@ class HabitatKeuze:
             status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
-            opmerking="Er is een mozaiekregel waarvoor nog te weinig info is om een keuze te maken.",
+            opmerking="",
             habitatvoorstellen=habitatvoorstellen,
             mits_opmerking="",
             mozaiek_opmerking="",
@@ -167,7 +167,6 @@ def try_to_determine_habkeuze(
     Probeert op basis van de voorstellen een HabitatKeuze te maken. Als er een keuze gemaakt kan worden
     wordt (
     """
-
     assert len(all_voorstellen) > 0, "Er zijn geen habitatvoorstellen"
 
     # Als er maar 1 habitatvoorstel is en dat is H0000, dan...
@@ -180,7 +179,7 @@ def try_to_determine_habkeuze(
                 habtype="H0000",
                 kwaliteit=all_voorstellen[0].kwaliteit,
                 habitatvoorstellen=all_voorstellen,
-                opmerking="Geen van de opgegeven vegetatietypen is teruggevonden in de definitietabel.",
+                opmerking="",
                 mits_opmerking="",
                 mozaiek_opmerking="",
                 debug_info="",
@@ -192,7 +191,7 @@ def try_to_determine_habkeuze(
             habtype="H0000",
             kwaliteit=all_voorstellen[0].kwaliteit,
             habitatvoorstellen=all_voorstellen,
-            opmerking="Er zijn geen vegetatietypen opgegeven voor dit vlak.",
+            opmerking="",
             mits_opmerking="",
             mozaiek_opmerking="",
             debug_info="",
@@ -213,7 +212,7 @@ def try_to_determine_habkeuze(
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 habitatvoorstellen=all_voorstellen,
-                opmerking="Dit vegetatietype is niet geautomatiseerd. Handmatige omzetting is vereist.",
+                opmerking="",
                 mits_opmerking="",
                 mozaiek_opmerking="",
                 debug_info="",
@@ -246,13 +245,13 @@ def try_to_determine_habkeuze(
             if len(true_voorstellen) == 1:
                 voorstel = true_voorstellen[0]
                 return HabitatKeuze(
-                    status=KeuzeStatus.DUIDELIJK,
+                    status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                     habtype=voorstel.habtype,
                     kwaliteit=voorstel.kwaliteit,
                     habitatvoorstellen=[voorstel],
-                    opmerking=f"Er is een duidelijke keuze. Kloppende mits en kloppende mozaiek. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                    mits_opmerking=f"Mits: {str(voorstel.mits)}, {str(voorstel.mits.evaluation)}",
-                    mozaiek_opmerking=f"Mozaiekregel: {str(voorstel.mozaiek)}, {str(voorstel.mozaiek.evaluation)}",
+                    opmerking="",
+                    mits_opmerking=f"Mits: {voorstel.mits}, {voorstel.mits.evaluation}",
+                    mozaiek_opmerking=f"Mozaiekregel: {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}",
                     debug_info="",
                 )
 
@@ -270,7 +269,7 @@ def try_to_determine_habkeuze(
                     ]
                 ):
                     return HabitatKeuze(
-                        status=KeuzeStatus.DUIDELIJK,
+                        status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype=true_voorstellen[0].habtype,
                         kwaliteit=true_voorstellen[0].kwaliteit,
                         habitatvoorstellen=true_voorstellen,
@@ -280,13 +279,23 @@ def try_to_determine_habkeuze(
                         debug_info="",
                     )
                 return HabitatKeuze(
-                    status=KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN,
+                    status=KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
                     habtype="HXXXX",
                     kwaliteit=Kwaliteit.NVT,
                     habitatvoorstellen=true_voorstellen,
-                    opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                    mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in true_voorstellen]}",
-                    mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in true_voorstellen]}",
+                    opmerking="",
+                    mits_opmerking="\n".join(
+                        [
+                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                            for voorstel in true_voorstellen
+                        ]
+                    ),
+                    mozaiek_opmerking="\n".join(
+                        [
+                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                            for voorstel in true_voorstellen
+                        ]
+                    ),
                     debug_info="",
                 )
 
@@ -318,9 +327,19 @@ def try_to_determine_habkeuze(
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 habitatvoorstellen=return_voorstellen,
-                opmerking=f"Er zijn mitsen of mozaiekregels die nog niet geimplementeerde zijn. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in return_voorstellen]}",
-                mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
+                opmerking="",
+                mits_opmerking="\n".join(
+                    [
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                        for voorstel in return_voorstellen
+                    ]
+                ),
+                mozaiek_opmerking="\n".join(
+                    [
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                        for voorstel in return_voorstellen
+                    ]
+                ),
                 debug_info="",
             )
 
@@ -348,21 +367,41 @@ def try_to_determine_habkeuze(
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 habitatvoorstellen=return_voorstellen,
-                opmerking="Dit vlak heeft mozaiekregels waarvoor nog te weinig info is om een keuze te maken. Dit gebeurt als het vlak omringd wordt door meer dan 90% HXXXX. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
-                mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in return_voorstellen]}",
-                mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in return_voorstellen]}",
+                opmerking="",
+                mits_opmerking="\n".join(
+                    [
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                        for voorstel in return_voorstellen
+                    ]
+                ),
+                mozaiek_opmerking="\n".join(
+                    [
+                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                        for voorstel in return_voorstellen
+                    ]
+                ),
                 debug_info="",
             )
 
     # Er zijn geen kloppende mitsen gevonden;
     return HabitatKeuze(
-        status=KeuzeStatus.GEEN_KLOPPENDE_MITSEN,
+        status=KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         habtype="H0000",
         kwaliteit=Kwaliteit.NVT,
         habitatvoorstellen=all_voorstellen,
-        opmerking=f"Er zijn geen habitatvoorstellen waarvan zowel de mits als de mozaiekregel klopt. Zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek].",
-        mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in all_voorstellen]}",
-        mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in all_voorstellen]}",
+        opmerking="",
+        mits_opmerking="\n".join(
+            [
+                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                for voorstel in all_voorstellen
+            ]
+        ),
+        mozaiek_opmerking="\n".join(
+            [
+                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                for voorstel in all_voorstellen
+            ]
+        ),
         debug_info="",
     )
 
@@ -382,33 +421,3 @@ def calc_nr_of_unresolved_habitatkeuzes_per_row(gdf):
             ]
         )
     )
-
-
-def apply_minimum_oppervlak(gdf) -> pd.Series:
-    """
-    Past de minimum oppervlak regeling toe
-
-    NOTE: Voor nu wordt functionele samenhang niet meegenomen
-    """
-    # NOTE: Deze zou ook best in vegkartering kunnen (of in zn eigen file), ben er nog niet helemaal over uit
-    assert "HabitatKeuze" in gdf.columns, "HabitatKeuze kolom niet aanwezig in gdf"
-    assert "Opp" in gdf.columns, "area kolom niet aanwezig in gdf"
-
-    min_area = Interface.get_instance().get_config().minimum_oppervlak
-    min_area_default = Interface.get_instance().get_config().minimum_oppervlak_default
-
-    # checken voor iedere habkeuze of het oppervlak boven min_area[keuze.habtype] is
-    def check_area(row):
-        new_keuzes = deepcopy(row.HabitatKeuze)
-        for idx, keuze in enumerate(new_keuzes):
-            if keuze.habtype in ["H0000", "HXXXX"]:
-                continue
-            area = row.Opp * (row.VegTypeInfo[idx].percentage / 100)
-            if area < min_area.get(keuze.habtype, min_area_default):
-                keuze.habtype = "H0000"
-                keuze.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-        return new_keuzes
-
-    new_keuzes = gdf.apply(check_area, axis=1)
-
-    return new_keuzes
