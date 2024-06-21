@@ -330,22 +330,17 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
 
         assert (
             False
-        ), f"Er is 1 habitatkeuze maar KeuzeStatus {keuze.status} is niet DUIDELIJK, VEGTYPEN_NIET_IN_DEFTABEL of GEEN_KLOPPENDE_MITSEN"
+        ), f"Er is 1 habitatvoorstel maar dat zou niet moeten kunnen in KeuzeStatus {keuze.status}"
 
     if keuze.status in [
+        KeuzeStatus.HABITATTYPE_TOEGEKEND,
         KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
     ]:
         voorstellen = keuze.habitatvoorstellen
-        # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
-        # NOTE: Wordt keuzestatus dan ook weer duidelijk? Moet deze check dan al in habitatkeuze_obv_mitsen gedaan worden?
-        voorgestelde_hab_en_kwal = [
-            [voorstel.habtype, voorstel.kwaliteit] for voorstel in voorstellen
-        ]
-        if all(hab == voorgestelde_hab_en_kwal[0] for hab in voorgestelde_hab_en_kwal):
-            voorgestelde_hab_en_kwal = [voorgestelde_hab_en_kwal[0]]
         series_dict = {
             f"Habtype{idx}": keuze.habtype,
             f"Perc{idx}": str(vegtypeinfo.percentage),
