@@ -19,7 +19,9 @@ class LBKTypeInfo:
 
     def __post_init__(self):
         if self.enkel_negatieven and self.enkel_positieven:
-            raise ValueError("Een LBKTypeInfo kan niet enkel negatieven en enkel positieven zijn")
+            raise ValueError(
+                "Een LBKTypeInfo kan niet enkel negatieven en enkel positieven zijn"
+            )
 
 
 class FuncSamenhangID(NamedTuple):

@@ -180,8 +180,11 @@ class BodemCriterium(BeperkendCriterium):
                 self._evaluation = MaybeBoolean.TRUE
                 break
 
-        if self.wanted_bodemtype.enkel_negatieven and self.evaluation == MaybeBoolean.TRUE:
-                self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+        if (
+            self.wanted_bodemtype.enkel_negatieven
+            and self.evaluation == MaybeBoolean.TRUE
+        ):
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         string = f"Bodem is {self.wanted_bodemtype}"
