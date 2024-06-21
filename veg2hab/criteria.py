@@ -1,8 +1,9 @@
 import json
+import logging
 from functools import reduce
 from itertools import chain
 from operator import and_, or_
-from typing import ClassVar, List, Optional, Union
+from typing import ClassVar, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -57,8 +58,8 @@ class BeperkendCriterium(BaseModel):
     def is_criteria_type_present(self, type):
         return isinstance(self, type)
 
-    def get_opm(self) -> str:
-        return None
+    def get_opm(self) -> Set[str]:
+        raise NotImplementedError()
 
     @property
     def evaluation(self) -> MaybeBoolean:
@@ -82,6 +83,9 @@ class GeenCriterium(BeperkendCriterium):
     def __str__(self):
         return "Geen mits (altijd waar)"
 
+    def get_opm(self) -> Set[str]:
+        return set()
+
 
 class NietGeautomatiseerdCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietGeautomatiseerd"
@@ -94,15 +98,21 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
 
+    def get_opm(self) -> Set[str]:
+        return set()
+
 
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
-    fgrtype: FGRType
+    wanted_fgrtype: FGRType
+    actual_fgrtype: Optional[FGRType] = None
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
+
+        self.actual_fgrtype = row["fgr"]
 
         if pd.isna(row["fgr"]):
             # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
@@ -110,32 +120,49 @@ class FGRCriterium(BeperkendCriterium):
             return
 
         self._evaluation = (
-            MaybeBoolean.TRUE if row["fgr"] == self.fgrtype else MaybeBoolean.FALSE
+            MaybeBoolean.TRUE
+            if row["fgr"] == self.wanted_fgrtype
+            else MaybeBoolean.FALSE
         )
 
     def __str__(self):
-        string = f"FGR is {self.fgrtype.value}"
+        string = f"FGR is {self.wanted_fgrtype.value}"
         if self._evaluation is not None:
             string += f" ({self._evaluation.as_letter()})"
         return string
 
-    # def get_opm(self) -> str:
-    #     if pd.isna(self.fgrtype):
-    #         return "vlak ligt niet binnen een FGR-vak"
-    #     return f"FGR type is {self.fgrtype.value}"
+    def get_opm(self) -> Set[str]:
+        if self._evaluation is None:
+            logging.warning(
+                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+            )
+            return set()
+
+        if pd.isna(self.actual_fgrtype):
+            return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
+        framework = "FGR type is {}{}{}."
+        return {
+            framework.format(
+                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+                self.wanted_fgrtype.value,
+                ", maar " + self.actual_fgrtype.value
+                if self._evaluation == MaybeBoolean.FALSE
+                else "",
+            )
+        }
 
 
 class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
-    bodemtype: BodemType
-    # actual_bodemtype: List[str]
+    wanted_bodemtype: BodemType
+    actual_bodemcode: List[Optional[str]] = [None]
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
-        assert row["bodem"] is not None, "bodem kolom is leeg"
+        assert isinstance(row["bodem"], list), "bodem kolom moet een list zijn"
 
-        # self.actual_bodemtype = row["bodem"]
+        self.actual_bodemcode = row["bodem"]
 
         if len(row["bodem"]) > 1:
             # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
@@ -147,32 +174,62 @@ class BodemCriterium(BeperkendCriterium):
             self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
-            MaybeBoolean.TRUE if row["bodem"] == self.bodemtype else MaybeBoolean.FALSE
-        )
+        self._evaluation = MaybeBoolean.FALSE
+        for code in row["bodem"]:
+            if code in self.wanted_bodemtype.codes:
+                self._evaluation = MaybeBoolean.TRUE
+                break
+
+        if (
+            self.wanted_bodemtype.enkel_negatieven
+            and self.evaluation == MaybeBoolean.TRUE
+        ):
+            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
-        string = f"Bodem is {self.bodemtype}"
+        string = f"Bodem is {self.wanted_bodemtype}"
         if self._evaluation is not None:
             string += f" ({self._evaluation.as_letter()})"
         return string
 
-    # def get_opm(self) -> str:
-    #     if len(self.actual_bodemtype) == 1:
-    #         if pd.isna(self.actual_bodemtype[0]):
-    #             return "vlak ligt niet binnen een bodemkaartvlak"
-    #         return f"bodemtype is {self.actual_bodemtype[0]}"
-    #     return f"bodemtypen zijn {', '.join(self.actual_bodemtype)}"
+    def get_opm(self) -> Set[str]:
+        if self._evaluation is None:
+            logging.warning(
+                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+            )
+
+        if len(self.actual_bodemcode) == 1:
+            if pd.isna(self.actual_bodemcode[0]):
+                return {"Dit vlak ligt niet mooi binnen één bodemkaartvlak."}
+
+        framework = (
+            "Dit is {}{}"
+            + str(self.wanted_bodemtype)
+            + " want bodemcode "
+            + ", ".join(self.actual_bodemcode)
+            + "."
+        )
+        return {
+            framework.format(
+                "mogelijk "
+                if self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                else "",
+                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+            )
+        }
 
 
 class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
-    lbktype: LBKType
+    wanted_lbktype: LBKType
+    actual_lbkcode: Optional[str] = None
     _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
         assert row["lbk"] is not None, "lbk kolom is leeg"
+
+        self.actual_lbkcode = row["lbk"]
 
         if pd.isna(row["lbk"]):
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
@@ -180,19 +237,65 @@ class LBKCriterium(BeperkendCriterium):
             return
 
         self._evaluation = (
-            MaybeBoolean.TRUE if row["lbk"] == self.lbktype else MaybeBoolean.FALSE
+            MaybeBoolean.TRUE
+            if row["lbk"] in self.wanted_lbktype.codes
+            else MaybeBoolean.FALSE
         )
 
+        if self.wanted_lbktype.enkel_negatieven:
+            if self.evaluation == MaybeBoolean.TRUE:
+                self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+
+        if self.wanted_lbktype.enkel_positieven:
+            if self.evaluation == MaybeBoolean.FALSE:
+                self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+
     def __str__(self):
-        string = f"LBK is {self.lbktype}"
+        string = f"LBK is {self.wanted_lbktype}"
         if self._evaluation is not None:
             string += f" ({self._evaluation.as_letter()})"
         return string
 
-    # def get_opm(self) -> str:
-    #     if pd.isna(self.lbktype):
-    #         return "vlak ligt niet binnen een LBK-vak"
-    #     return f"LBK type is {self.lbktype.value}"
+    def get_opm(self) -> Set[str]:
+        assert (
+            self._evaluation is not MaybeBoolean.POSTPONE
+        ), "Postpone is not a valid evaluation state for LBKCriterium"
+        if self._evaluation is None:
+            print("test")
+            logging.warning(
+                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+            )
+
+        if pd.isna(self.actual_lbkcode):
+            return {"Dit vlak ligt niet mooi binnen één LBK-vak"}
+
+        framework = (
+            "Dit is {}{}{}"
+            + str(self.wanted_lbktype)
+            + " {}LBK code "
+            + str(self.actual_lbkcode)
+            + "."
+        )
+        return {
+            framework.format(
+                "mogelijk "
+                if self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                else "",
+                "toch "
+                if (
+                    self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    and self.wanted_lbktype.enkel_positieven
+                )
+                else "",
+                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+                "ondanks "
+                if (
+                    self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    and self.wanted_lbktype.enkel_positieven
+                )
+                else "want ",
+            )
+        }
 
 
 class NietCriterium(BeperkendCriterium):
@@ -214,8 +317,8 @@ class NietCriterium(BeperkendCriterium):
     def __str__(self):
         return f"niet {self.sub_criterium}"
 
-    # def get_opm(self) -> str:
-    #     return self.sub_criterium.get_opm()
+    def get_opm(self) -> Set[str]:
+        return self.sub_criterium.get_opm()
 
 
 class OfCriteria(BeperkendCriterium):
@@ -245,11 +348,8 @@ class OfCriteria(BeperkendCriterium):
         of_crits = " of ".join(str(crit) for crit in self.sub_criteria)
         return f"({of_crits})"
 
-    # def get_opm(self) -> str:
-    #     opms = [crit.get_opm() for crit in self.sub_criteria]
-    #     # remove duplicates and None values
-    #     opms = list(set(filter(None, opms)))
-    #     return ", ".join(opms)
+    def get_opm(self) -> Set[str]:
+        return set.union(*[crit.get_opm() for crit in self.sub_criteria])
 
 
 class EnCriteria(BeperkendCriterium):
@@ -278,11 +378,8 @@ class EnCriteria(BeperkendCriterium):
         en_crits = " en ".join(str(crit) for crit in self.sub_criteria)
         return f"({en_crits})"
 
-    # def get_opm(self) -> str:
-    #     opms = [crit.get_opm() for crit in self.sub_criteria]
-    #     # remove duplicates and None values
-    #     opms = list(set(filter(None, opms)))
-    #     return ", ".join(opms)
+    def get_opm(self) -> Set[str]:
+        return set.union(*[crit.get_opm() for crit in self.sub_criteria])
 
 
 def is_criteria_type_present(

@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from numbers import Number
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -269,6 +269,22 @@ def mozaiekregel_habtype_percentage_dict_to_string(
     )
 
 
+def format_opmerkingen(
+    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]]
+) -> str:
+    """
+    Uit ieder habitatvoorstel.mits.get_opm() komt een Set(str)
+    Bij meerdere voorstellen zijn er meerdere mitsen, dus List[Set[str]]
+    Deze moeten onderling nog uniek gemaakt worden en daarna gejoined worden tot één string
+    """
+    if not isinstance(voorstellen, list):
+        voorstellen = [voorstellen]
+
+    opmerkingen = [voorstel.mits.get_opm() for voorstel in voorstellen]
+
+    return "\n".join(set.union(*opmerkingen))
+
+
 def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
     """
     Herformatteert een habitatkeuze en bijbehorende vegtypeinfo naar de kolommen zoals in het Gegevens Leverings Protocol
@@ -294,7 +310,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Perc{idx}": vegtypeinfo.percentage,
                 f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                f"Opm{idx}": keuze.opmerking,
+                f"Opm{idx}": keuze.opmerking
+                + ("\n" if len(keuze.opmerking) > 0 else "")
+                + format_opmerkingen(voorstel),
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
                 f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
                 f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
@@ -330,28 +348,25 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
 
         assert (
             False
-        ), f"Er is 1 habitatkeuze maar KeuzeStatus {keuze.status} is niet DUIDELIJK, VEGTYPEN_NIET_IN_DEFTABEL of GEEN_KLOPPENDE_MITSEN"
+        ), f"Er is 1 habitatvoorstel maar dat zou niet moeten kunnen in KeuzeStatus {keuze.status}"
 
     if keuze.status in [
+        KeuzeStatus.HABITATTYPE_TOEGEKEND,
         KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
         KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
         KeuzeStatus.WACHTEN_OP_MOZAIEK,
+        KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD,
     ]:
         voorstellen = keuze.habitatvoorstellen
-        # Als alle voorgestelde habtypen hetzelfde zijn kunnen we ze plat slaan
-        # NOTE: Wordt keuzestatus dan ook weer duidelijk? Moet deze check dan al in habitatkeuze_obv_mitsen gedaan worden?
-        voorgestelde_hab_en_kwal = [
-            [voorstel.habtype, voorstel.kwaliteit] for voorstel in voorstellen
-        ]
-        if all(hab == voorgestelde_hab_en_kwal[0] for hab in voorgestelde_hab_en_kwal):
-            voorgestelde_hab_en_kwal = [voorgestelde_hab_en_kwal[0]]
         series_dict = {
             f"Habtype{idx}": keuze.habtype,
             f"Perc{idx}": str(vegtypeinfo.percentage),
             f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-            f"Opm{idx}": keuze.opmerking,
+            f"Opm{idx}": keuze.opmerking
+            + ("\n" if len(keuze.opmerking) > 0 else "")
+            + format_opmerkingen(voorstellen),
             f"_Mits_opm{idx}": keuze.mits_opmerking,
             f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
             f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(

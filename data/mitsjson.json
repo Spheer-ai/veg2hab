@@ -7,11 +7,11 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     }
                 ]
             },
@@ -29,11 +29,11 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     }
                 ]
             },
@@ -51,11 +51,11 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     }
                 ]
             },
@@ -70,7 +70,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -86,11 +86,11 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     }
                 ]
             },
@@ -105,7 +105,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -118,7 +118,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -131,7 +131,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -200,13 +200,13 @@
             },
             {
                 "type": "LBKCriterium",
-                "lbktype": "hoogveenlandschap"
+                "wanted_lbktype": "Hoogveenlandschap"
             }
         ]
     },
     "mits in herstellend hoogveen": {
         "type": "LBKCriterium",
-        "lbktype": "herstellend hoogveen"
+        "wanted_lbktype": "Herstellend hoogveen"
     },
     "mits niet in mozaïek met vegetaties van H3110 en mits geen onderdeel van H7120 en niet in lijnvormige wateren": {
         "type": "NietGeautomatiseerd",
@@ -237,15 +237,15 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Noordzee"
+                "wanted_fgrtype": "Noordzee"
             },
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             },
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -268,15 +268,15 @@
             "sub_criteria": [
                 {
                     "type": "FGRCriterium",
-                    "fgrtype": "Noordzee"
+                    "wanted_fgrtype": "Noordzee"
                 },
                 {
                     "type": "FGRCriterium",
-                    "fgrtype": "Getijdengebied"
+                    "wanted_fgrtype": "Getijdengebied"
                 },
                 {
                     "type": "FGRCriterium",
-                    "fgrtype": "Duinen"
+                    "wanted_fgrtype": "Duinen"
                 },
                 {
                     "type": "NietGeautomatiseerd",
@@ -293,15 +293,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -323,15 +323,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -374,13 +374,13 @@
     },
     "mits in FGR Laagveengebied": {
         "type": "FGRCriterium",
-        "fgrtype": "Laagveengebied"
+        "wanted_fgrtype": "Laagveengebied"
     },
     "mits niet in hoogveen": {
         "type": "NietCriterium",
         "sub_criterium": {
             "type": "LBKCriterium",
-            "lbktype": "hoogveen"
+            "wanted_lbktype": "Hoogveen"
         }
     },
     "mits in FGR Hogere zandgronden zonder hoogveen": {
@@ -388,13 +388,13 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Hogere Zandgronden"
+                "wanted_fgrtype": "Hogere Zandgronden"
             },
             {
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "LBKCriterium",
-                    "lbktype": "hoogveen"
+                    "wanted_lbktype": "Hoogveen"
                 }
             }
         ]
@@ -407,15 +407,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -437,15 +437,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -464,7 +464,7 @@
         "sub_criteria": [
             {
                 "type": "LBKCriterium",
-                "lbktype": "hoogveenlandschap"
+                "wanted_lbktype": "Hoogveenlandschap"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -479,7 +479,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "LBKCriterium",
-                    "lbktype": "hoogveenlandschap"
+                    "wanted_lbktype": "Hoogveenlandschap"
                 }
             },
             {
@@ -490,7 +490,7 @@
     },
     "mits in zandverstuiving": {
         "type": "LBKCriterium",
-        "lbktype": "zandverstuiving"
+        "wanted_lbktype": "Zandverstuiving"
     },
     "mits op oeverwallen van rivieren of riviertjes": {
         "type": "NietGeautomatiseerd",
@@ -504,15 +504,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -541,15 +541,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -571,15 +571,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -601,15 +601,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -639,15 +639,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -669,15 +669,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -705,15 +705,15 @@
                     "sub_criteria": [
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Noordzee"
+                            "wanted_fgrtype": "Noordzee"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Getijdengebied"
+                            "wanted_fgrtype": "Getijdengebied"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Duinen"
+                            "wanted_fgrtype": "Duinen"
                         },
                         {
                             "type": "NietGeautomatiseerd",
@@ -738,7 +738,7 @@
     },
     "mits in FGR Heuvelland": {
         "type": "FGRCriterium",
-        "fgrtype": "Heuvelland"
+        "wanted_fgrtype": "Heuvelland"
     },
     "mits een vlakvormig, al dan niet nabeweid, hooiland en niet in FGR Heuvelland": {
         "type": "EnCriteria",
@@ -747,7 +747,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "FGRCriterium",
-                    "fgrtype": "Heuvelland"
+                    "wanted_fgrtype": "Heuvelland"
                 }
             },
             {
@@ -772,15 +772,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -804,15 +804,15 @@
                     "sub_criteria": [
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Noordzee"
+                            "wanted_fgrtype": "Noordzee"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Getijdengebied"
+                            "wanted_fgrtype": "Getijdengebied"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Duinen"
+                            "wanted_fgrtype": "Duinen"
                         },
                         {
                             "type": "NietGeautomatiseerd",
@@ -823,7 +823,7 @@
             },
             {
                 "type": "BodemCriterium",
-                "bodemtype": "vaaggronden"
+                "wanted_bodemtype": "Vaaggronden"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -841,15 +841,15 @@
                     "sub_criteria": [
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Noordzee"
+                            "wanted_fgrtype": "Noordzee"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Getijdengebied"
+                            "wanted_fgrtype": "Getijdengebied"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Duinen"
+                            "wanted_fgrtype": "Duinen"
                         },
                         {
                             "type": "NietGeautomatiseerd",
@@ -862,7 +862,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "BodemCriterium",
-                    "bodemtype": "vaaggronden"
+                    "wanted_bodemtype": "Vaaggronden"
                 }
             },
             {
@@ -881,15 +881,15 @@
                     "sub_criteria": [
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Noordzee"
+                            "wanted_fgrtype": "Noordzee"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Getijdengebied"
+                            "wanted_fgrtype": "Getijdengebied"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Duinen"
+                            "wanted_fgrtype": "Duinen"
                         },
                         {
                             "type": "NietGeautomatiseerd",
@@ -909,7 +909,7 @@
         "sub_criteria": [
             {
                 "type": "BodemCriterium",
-                "bodemtype": "vaaggronden"
+                "wanted_bodemtype": "Vaaggronden"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -941,15 +941,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -971,15 +971,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -1006,11 +1006,11 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Getijdengebied"
+                "wanted_fgrtype": "Getijdengebied"
             }
         ]
     },
@@ -1022,15 +1022,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Laagveengebied"
+                        "wanted_fgrtype": "Laagveengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Zeekleigebied"
+                        "wanted_fgrtype": "Zeekleigebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Afgesloten Zeearmen"
+                        "wanted_fgrtype": "Afgesloten Zeearmen"
                     }
                 ]
             },
@@ -1057,7 +1057,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -1077,15 +1077,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -1108,13 +1108,13 @@
             },
             {
                 "type": "LBKCriterium",
-                "lbktype": "onder invloed van beek of rivier"
+                "wanted_lbktype": "Onder invloed van beek of rivier"
             }
         ]
     },
     "mits in FGR Duinen": {
         "type": "FGRCriterium",
-        "fgrtype": "Duinen"
+        "wanted_fgrtype": "Duinen"
     },
     "mits met veenmosbedekking > 20%": {
         "type": "NietGeautomatiseerd",
@@ -1131,7 +1131,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "FGRCriterium",
-                    "fgrtype": "Duinen"
+                    "wanted_fgrtype": "Duinen"
                 }
             },
             {
@@ -1147,7 +1147,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "FGRCriterium",
-                    "fgrtype": "Duinen"
+                    "wanted_fgrtype": "Duinen"
                 }
             },
             {
@@ -1164,15 +1164,15 @@
                 "sub_criteria": [
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "leemarme humuspodzolgronden"
+                        "wanted_bodemtype": "Leemarme humuspodzolgronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "leemarme vaaggronden (H9190)"
+                        "wanted_bodemtype": "Leemarme vaaggronden (H9190)"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "podzolgronden met een zanddek (H9190)"
+                        "wanted_bodemtype": "Podzolgronden met een zanddek (H9190)"
                     }
                 ]
             },
@@ -1184,7 +1184,7 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "FGRCriterium",
-                    "fgrtype": "Duinen"
+                    "wanted_fgrtype": "Duinen"
                 }
             }
         ]
@@ -1197,19 +1197,19 @@
                 "sub_criteria": [
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "moderpodzolgronden"
+                        "wanted_bodemtype": "Moderpodzolgronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "lemige humuspodzolgronden"
+                        "wanted_bodemtype": "Lemige humuspodzolgronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "oude kleigronden"
+                        "wanted_bodemtype": "Oude kleigronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "leemgronden"
+                        "wanted_bodemtype": "Leemgronden"
                     }
                 ]
             },
@@ -1221,21 +1221,21 @@
                 "type": "NietCriterium",
                 "sub_criterium": {
                     "type": "FGRCriterium",
-                    "fgrtype": "Duinen"
+                    "wanted_fgrtype": "Duinen"
                 }
             }
         ]
     },
     "mits in FGR Rivierengebied": {
         "type": "FGRCriterium",
-        "fgrtype": "Rivierengebied"
+        "wanted_fgrtype": "Rivierengebied"
     },
     "mits in FGR Duinen, op een standplaats als van andere vegetaties van H2180_A": {
         "type": "EnCriteria",
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -1248,7 +1248,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -1261,7 +1261,7 @@
         "sub_criteria": [
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Duinen"
+                "wanted_fgrtype": "Duinen"
             },
             {
                 "type": "NietGeautomatiseerd",
@@ -1271,7 +1271,7 @@
     },
     "mits in FGR Hogere zandgronden": {
         "type": "FGRCriterium",
-        "fgrtype": "Hogere Zandgronden"
+        "wanted_fgrtype": "Hogere Zandgronden"
     },
     "mits op moderpodzolgronden, lemige humuspodzolgronden, oude kleigronden of leemgronden zonder hydromorfe kenmerken en mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand en mits niet in FGR Heuvelland of FGR Duinen": {
         "type": "EnCriteria",
@@ -1281,19 +1281,19 @@
                 "sub_criteria": [
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "moderpodzolgronden"
+                        "wanted_bodemtype": "Moderpodzolgronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "lemige humuspodzolgronden"
+                        "wanted_bodemtype": "Lemige humuspodzolgronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "oude kleigronden"
+                        "wanted_bodemtype": "Oude kleigronden"
                     },
                     {
                         "type": "BodemCriterium",
-                        "bodemtype": "leemgronden"
+                        "wanted_bodemtype": "Leemgronden"
                     }
                 ]
             },
@@ -1308,11 +1308,11 @@
                     "sub_criteria": [
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Heuvelland"
+                            "wanted_fgrtype": "Heuvelland"
                         },
                         {
                             "type": "FGRCriterium",
-                            "fgrtype": "Duinen"
+                            "wanted_fgrtype": "Duinen"
                         }
                     ]
                 }
@@ -1328,7 +1328,7 @@
             },
             {
                 "type": "FGRCriterium",
-                "fgrtype": "Hogere Zandgronden"
+                "wanted_fgrtype": "Hogere Zandgronden"
             }
         ]
     },
@@ -1352,15 +1352,15 @@
                 "sub_criteria": [
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Noordzee"
+                        "wanted_fgrtype": "Noordzee"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Getijdengebied"
+                        "wanted_fgrtype": "Getijdengebied"
                     },
                     {
                         "type": "FGRCriterium",
-                        "fgrtype": "Duinen"
+                        "wanted_fgrtype": "Duinen"
                     },
                     {
                         "type": "NietGeautomatiseerd",
