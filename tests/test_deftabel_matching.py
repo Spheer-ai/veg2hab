@@ -48,9 +48,9 @@ def test_perfect_match_VvN(dt):
             idx_in_dt=31,
             mits=OfCriteria(
                 sub_criteria=[
-                    FGRCriterium(fgrtype=FGRType.NZ),
-                    FGRCriterium(fgrtype=FGRType.GG),
-                    FGRCriterium(fgrtype=FGRType.DU),
+                    FGRCriterium(wanted_fgrtype=FGRType.NZ),
+                    FGRCriterium(wanted_fgrtype=FGRType.GG),
+                    FGRCriterium(wanted_fgrtype=FGRType.DU),
                     NietGeautomatiseerdCriterium(
                         toelichting='het vlak op andere wijze onder "kustgebied" valt'
                     ),
@@ -128,7 +128,7 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
+            mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
@@ -160,7 +160,7 @@ def test_perfect_and_less_specific_match_VvN(dt):
             idx_in_dt=169,
             mits=EnCriteria(
                 sub_criteria=[
-                    FGRCriterium(fgrtype=FGRType.DU),
+                    FGRCriterium(wanted_fgrtype=FGRType.DU),
                     NietGeautomatiseerdCriterium(toelichting="zachte berk dominant"),
                 ]
             ),
@@ -227,7 +227,7 @@ def test_matches_both_vvn_and_sbb(dt):
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
+            mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
