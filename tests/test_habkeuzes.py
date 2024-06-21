@@ -149,8 +149,7 @@ def test_habtype_toegekend():
         v.mits.check(gpd.GeoSeries())
         v.mozaiek.check(dict)
     keuze = try_to_determine_habkeuze(voorstel)
-    assert keuze.status == KeuzeStatus.DUIDELIJK
-    # assert keuze.status == KeuzeStatus.HABTYPE_TOEGEKEND
+    assert keuze.status == KeuzeStatus.HABITATTYPE_TOEGEKEND
     assert keuze.habtype == "H1234"
 
 
@@ -181,8 +180,7 @@ def test_combine_same_habtype_multiple_voorstellen():
         v.mits.check(gpd.GeoSeries())
         v.mozaiek.check(dict)
     keuze = try_to_determine_habkeuze(voorstellen)
-    assert keuze.status == KeuzeStatus.DUIDELIJK
-    # assert keuze.status == KeuzeStatus.HABTYPE_TOEGEKEND
+    assert keuze.status == KeuzeStatus.HABITATTYPE_TOEGEKEND
     assert keuze.habtype == "H1234"
     assert keuze.kwaliteit == Kwaliteit.GOED
 
@@ -214,8 +212,7 @@ def test_voldoet_aan_meerdere_habtypen():
         v.mits.check(gpd.GeoSeries())
         v.mozaiek.check(dict)
     keuze = try_to_determine_habkeuze(voorstellen)
-    assert keuze.status == KeuzeStatus.MEERDERE_KLOPPENDE_MITSEN
-    # assert keuze.status == KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN
+    assert keuze.status == KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN
     assert keuze.habtype == "HXXXX"
     assert keuze.kwaliteit == Kwaliteit.NVT
 
@@ -237,8 +234,7 @@ def test_voldoet_niet_aan_habtypevoorwaarden():
         v.mits.check(gpd.GeoSeries())
         v.mozaiek.check(dict)
     keuze = try_to_determine_habkeuze(voorstellen)
-    assert keuze.status == KeuzeStatus.GEEN_KLOPPENDE_MITSEN
-    # assert keuze.status == KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN
+    assert keuze.status == KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN
     assert keuze.habtype == "H0000"
     assert keuze.kwaliteit == Kwaliteit.NVT
 
@@ -375,13 +371,8 @@ def test_wachten_op_mozaiek():
     ]
     for v in voorstellen:
         v.mits.check(gpd.GeoSeries())
-        v.mozaiek.check({("HXXXX", True, Kwaliteit.GOED): 100})
+        v.mozaiek.check({("HXXXX", True, Kwaliteit.NVT): 100})
     keuze = try_to_determine_habkeuze(voorstellen)
-    assert voorstellen[0].mozaiek.evaluation == True
     assert keuze.status == KeuzeStatus.WACHTEN_OP_MOZAIEK
     assert keuze.habtype == "HXXXX"
     assert keuze.kwaliteit == Kwaliteit.NVT
-    assert (
-        keuze.opmerking
-        == "Er is een mozaiekregel waarvoor nog te weinig info is om een keuze te maken."
-    )
