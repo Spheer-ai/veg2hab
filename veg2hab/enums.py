@@ -165,15 +165,15 @@ class KeuzeStatus(Enum):
     WACHTEN_OP_MOZAIEK = auto()
 
     _toelichting = {
-        "HABITATTYPE_TOEGEKEND": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 meest specifieke definitietabelregel met kloppende mits/mozaiek.",
-        "MINIMUM_OPP_NIET_GEHAALD": "Er is een definitietabelregel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
-        "VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN": "Er is geen definitietabelregel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
-        "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
-        "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
-        "VOLDOET_AAN_MEERDERE_HABTYPEN": "Er zijn meerdere definitietabelregels met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
-        "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
-        "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet automatisch via de definitietabel kan worden omgezet naar een habitattype, dus Veg2Hab kan geen habitattype toekennen.",
-        "WACHTEN_OP_MOZAIEK": "De mozaiekregels moeten nog gecheckt worden, of rr is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        "HABITATTYPE_TOEGEKEND": "veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.",
+        "MINIMUM_OPP_NIET_GEHAALD": "Het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet de minimum benodigde oppervlakte.",
+        "VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN": "Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.",
+        "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. veg2hab kent aan dit vlak H0000 toe.",
+        "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. veg2hab kent aan dit vlak H0000 toe.",
+        "VOLDOET_AAN_MEERDERE_HABTYPEN": "veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.",
+        "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.",
+        "NIET_GEAUTOMATISEERD_VEGTYPE": "Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.",
+        "WACHTEN_OP_MOZAIEK": "De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).",
     }
 
     @property

@@ -227,14 +227,14 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie is opgegeven, en dat de waswordtlijst ook geen vertaling bevat.
 
 **_Status{i}**: Beslissings-status van veg2hab voor dit complex-deel. Kolom `_Uitleg{i}` geeft verdere uitleg over deze status. Mogelijke statussen en hun uitleg zijn:
-- `HABTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
+- `HABITATTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`: veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.
-- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. Veg2hab kent aan dit vlak H0000 toe.
-- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. Veg2hab kent aan dit vlak H0000 toe.
-- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen. Veg2hab kent aan dit vlak H0000 toe.
+- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.
+- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. veg2hab kent aan dit vlak H0000 toe.
+- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. veg2hab kent aan dit vlak H0000 toe.
 - `NIET_GEAUTOMATISEERD_VEGTYPE`: Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.
-- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn placeholder mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
-- `WACHTEN_OP_MOZAIEK`: Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)
+- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
+- `WACHTEN_OP_MOZAIEK`: De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).
 - `MINIMUM_OPP_NIET_GEHAALD`: het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet het minimum benodigde oppervlak.
 
 **_Uitleg{i}**: Uitleg bij de kolom `_Status{i}` van dit complex-deel.
@@ -244,7 +244,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
 - `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
-- `HABTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond.
+- `HABITATTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
 - `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
 
 Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
