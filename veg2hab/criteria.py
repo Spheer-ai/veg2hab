@@ -136,6 +136,7 @@ class FGRCriterium(BeperkendCriterium):
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
+            return set()
 
         if pd.isna(self.actual_fgrtype):
             return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
@@ -179,8 +180,7 @@ class BodemCriterium(BeperkendCriterium):
                 self._evaluation = MaybeBoolean.TRUE
                 break
 
-        if self.wanted_bodemtype.enkel_negatieven:
-            if self.evaluation == MaybeBoolean.TRUE:
+        if self.wanted_bodemtype.enkel_negatieven and self.evaluation == MaybeBoolean.TRUE:
                 self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):

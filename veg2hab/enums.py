@@ -1,4 +1,5 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import List, NamedTuple, Tuple
 
@@ -9,11 +10,16 @@ class BodemTuple(NamedTuple):
     enkel_negatieven: bool
 
 
-class LBKTuple(NamedTuple):
+@dataclass
+class LBKTypeInfo:
     string: str
     codes: List[str]
     enkel_negatieven: bool
     enkel_positieven: bool
+
+    def __post_init__(self):
+        if self.enkel_negatieven and self.enkel_positieven:
+            raise ValueError("Een LBKTypeInfo kan niet enkel negatieven en enkel positieven zijn")
 
 
 class FuncSamenhangID(NamedTuple):
@@ -448,31 +454,31 @@ class LBKType(Enum):
     ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "Onder invloed van beek of rivier"
 
     _tuple_dict = {
-        "HOOGVEENLANDSCHAP": LBKTuple(
+        "HOOGVEENLANDSCHAP": LBKTypeInfo(
             string="Hoogveenlandschap",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=False,
             enkel_positieven=True,
         ),
-        "HOOGVEEN": LBKTuple(
+        "HOOGVEEN": LBKTypeInfo(
             string="Hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "HERSTELLEND_HOOGVEEN": LBKTuple(
+        "HERSTELLEND_HOOGVEEN": LBKTypeInfo(
             string="Herstellend hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ZANDVERSTUIVING": LBKTuple(
+        "ZANDVERSTUIVING": LBKTypeInfo(
             string="Zandverstuiving",
             codes=["HzSD", "HzSDa", "HzSF", "HzSFa", "HzSL", "HzSLa", "HzSX", "HzSXa"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTuple(
+        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTypeInfo(
             string="Onder invloed van beek of rivier",
             codes=["HzBB", "HzBN", "HzBV", "HzBW", "HzBL", "HzBD", "HlDB", "HlDD"],
             enkel_negatieven=False,
