@@ -249,37 +249,34 @@ def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
 
 
 def mozaiekregel_habtype_percentage_dict_to_string(
-    habtype_percentage_dict: Optional[List[Tuple[str, bool, Kwaliteit, float]]]
+    habtype_percentage_tuples: Optional[List[Tuple[str, bool, Kwaliteit, float]]]
 ) -> str:
     """
     Maakt een mooie output-ready string van een habtype_percentage_dict voor mozaiekregels
     Dict heeft als keys (habtype (str), zelfstandig (bool), kwaliteit (Kwaliteit))
 
     Van:
-    {
-        ("H1234", True, Kwaliteit.GOED): 70.0,
-        ("H5678", False, Kwaliteit.MATIG): 20.0,
-        ("HXXXX", True, Kwaliteit.NVT): 10.0
-    }
+    [
+        ("H1234", True, Kwaliteit.GOED, 70.0),
+        ("H5678", False, Kwaliteit.MATIG, 20.0),
+        ("HXXXX", True, Kwaliteit.NVT, 10.0),
+    ]
 
     Naar:
     "70.00% goed zelfstandig H1234, 20.00% matig mozaiek H5678, 10.00% zelfstandig HXXXX"
 
     """
     # Als er nergens mozaiekregels zijn, is er ook geen dict
-    if habtype_percentage_dict is None:
+    if habtype_percentage_tuples is None:
         return ""
 
-    # turn it back into a dict #TODO make this nicer
-    habtype_percentage_dict = {i[:3]: i[3] for i in habtype_percentage_dict}
-
     assert all(
-        [v > 0 for v in habtype_percentage_dict.values()]
+        [v[-1] > 0 for v in habtype_percentage_tuples]
     ), "Alle percentages moeten groter dan 0 zijn"
 
     return ", ".join(
-        f"{v:.2f}% {'goed ' if k[2] == Kwaliteit.GOED else 'matig ' if k[2] == Kwaliteit.MATIG else ''}{'zelfstandig' if k[1] else 'mozaiek'} {k[0]}"
-        for k, v in habtype_percentage_dict.items()
+        f"{percentage:.2f}% {'goed ' if kwaliteit == Kwaliteit.GOED else 'matig ' if kwaliteit == Kwaliteit.MATIG else ''}{'zelfstandig' if zelfstandig else 'mozaiek'} {habtype}"
+        for habtype, zelfstandig, kwaliteit, percentage in habtype_percentage_tuples
     )
 
 
@@ -1194,8 +1191,6 @@ class Kartering:
             "HabitatKeuze" in self.gdf.columns
         ), "Er is geen kolom met HabitatKeuze (draai eerst bepaal_mits_habitatkeuzes)"
 
-        self.gdf["finished_on_iteration"] = 0
-
         ### Verkrijgen overlay gdf
         # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
         # Als er geen vlakken met mozaiekregels zijn of als deze vlakken allemaal nergens aan grenzen is overlayed None
@@ -1217,12 +1212,6 @@ class Kartering:
                     keuzes_still_to_determine_pre == 0
                 ].ElmID.to_list()
                 overlayed = overlayed[~overlayed.buffered_ElmID.isin(finished_ElmID)]
-
-                # obtain a series with 1 if there is at least 1 None habitatkeuze and 0 otherwise
-                finished_on_iteration_increment = self.gdf.HabitatKeuze.apply(
-                    lambda keuzes: 1 if keuzes.count(None) > 0 else 0
-                )
-                self.gdf["finished_on_iteration"] += finished_on_iteration_increment
 
                 # Mergen HabitatVoorstel met overlayed
                 # Nu hebben we dus per mozaiekregelvlak voor hoeveel procent het aan welke HabitatKeuzes grenst
@@ -1278,9 +1267,6 @@ class Kartering:
         assert (
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
-
-        # TODO: @jordy, wat wil je met deze kolom?
-        self.gdf = self.gdf.drop(columns=["finished_on_iteration"])
 
     def _check_mozaiekregels(self, habtype_percentages):
         for row in self.gdf.itertuples():
@@ -1437,7 +1423,7 @@ class Kartering:
         ):
             if len(new_keuzes) != len(old_keuzes):
                 logging.error(
-                    "Het aantal habitatkeuzes is veranderd. Wij kunnen niet garanderen dat de output correct is."
+                    "Het aantal complexdelen is veranderd door de gebruiker. Wij kunnen niet garanderen dat de output correct is."
                 )
             for new_keuze, old_keuze in zip(new_keuzes, old_keuzes):
                 new_habtype, new_kwaliteit, new_opm = new_keuze

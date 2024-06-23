@@ -79,7 +79,7 @@ class HabitatVoorstel(BaseModel):
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
         # TODO dit is niet zo netjes, met de json.loads en json.dumps
-        # maar v.dict, doet een werkte volgens mij niet lekker met enums.
+        # maar v.dict() werkte volgens mij niet lekker met enums.
         return json.dumps(
             [[json.loads(v.json()) for v in sublist] for sublist in voorstellen]
         )
@@ -92,8 +92,6 @@ class HabitatVoorstel(BaseModel):
         ]
 
 
-# TODO: dit zijn geen references meer nadat we ze opnieuw hebben ingeladen...
-# Mogelijk willen de habitatvoorstellen hier dus uit halen..
 class HabitatKeuze(BaseModel):
     class config:
         extra = "forbid"

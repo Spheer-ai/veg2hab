@@ -39,13 +39,15 @@ def apply_wwl(kartering: Kartering) -> Kartering:
 
 
 def to_habtypekaart(kartering: Kartering) -> Kartering:
+    mask = kartering.get_geometry_mask()
     deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
     fgr = FGR(Path(constants.FGR_PATH))
     bodemkaart = Bodemkaart.from_file(
-        path=Path(__file__).parent.joinpath("../data/bronbestanden/bodemkaart.gpkg")
+        path=Path(__file__).parent.joinpath("../data/bronbestanden/bodemkaart.gpkg"),
+        mask=mask,
     )
     lbk = LBK.from_file(
-        path=Path(__file__).parent.joinpath("../data/bronbestanden/lbk.gpkg")
+        path=Path(__file__).parent.joinpath("../data/bronbestanden/lbk.gpkg"), mask=mask
     )
 
     kartering.apply_deftabel(deftabel)
