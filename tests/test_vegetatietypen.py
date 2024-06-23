@@ -227,4 +227,4 @@ def test_vegtype_info():
     vegtypeinfo = VegTypeInfo.from_str_vegtypes(
         100, SBB_strings=["42a1e"], VvN_strings=["42aa1e"]
     )
-    assert vegtypeinfo.SBB == SBB.from_code("42a1e")
+    assert vegtypeinfo.SBB == [SBB.from_code("42a1e")]

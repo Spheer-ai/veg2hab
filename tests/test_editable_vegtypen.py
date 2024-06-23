@@ -1,3 +1,4 @@
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -25,9 +26,15 @@ def kartering():
     )
     shape_elm_id_column = "ElmID"
 
-    access_kartering = Kartering.from_access_db(
-        shape_path, shape_elm_id_column, csvs_path
-    )
+    try:
+        access_kartering = Kartering.from_access_db(
+            shape_path, shape_elm_id_column, csvs_path
+        )
+    except RuntimeError as e:
+        pytest.skip(
+            "Could not load kartering, probably because 'mdb-export' is not installed"
+        )
+
     access_kartering.gdf = access_kartering.gdf.iloc[:10]
     return access_kartering
 
@@ -81,4 +88,7 @@ def test_equivalency_habkart(kartering):
 
         editable_habtype2 = gpd.read_file(temp_dir + "/habkartering.gpkg")
         reconstructed_kartering = Kartering.from_editable_habtypes(editable_habtype2)
-        assert kartering.gdf.equals(reconstructed_kartering.gdf)
+        assert set(kartering.gdf.columns) == set(reconstructed_kartering.gdf.columns)
+        assert (kartering.gdf.index == reconstructed_kartering.gdf.index).all()
+        # we need to reorder the columns to compare.
+        assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
