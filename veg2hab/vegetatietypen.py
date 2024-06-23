@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+import logging
 import re
-from dataclasses import dataclass
-from typing import ClassVar, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import pandas as pd
+from pydantic import BaseModel as PydanticBaseModel
+from typing_extensions import Self
 
 from veg2hab.enums import MatchLevel
 from veg2hab.io.common import Interface
 
 
-@dataclass
-class SBB:
+class BaseModel(PydanticBaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class SBB(BaseModel):
     """
     Format van SBB codes:
     ## is cijfer ('1', '5', '10', '32', zonder voorloopnul, dus geen '01' of '04')
@@ -23,11 +29,11 @@ class SBB:
     Rompgemeenschappen: {normale sbb}-x, zoals 16-b
     """
 
-    basis_sbb: ClassVar = re.compile(
+    basis_sbb: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<verbond>[a-z])((?P<associatie>[1-9])(?P<subassociatie>[a-z])?)?)?"
     )
     # 14e1a           1    4                   e                     1                       a
-    gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
+    gemeenschap: ClassVar[Any] = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
     # 16b/a                                        /                     a
 
     klasse: str
@@ -37,40 +43,35 @@ class SBB:
     derivaatgemeenschap: Optional[str] = None
     rompgemeenschap: Optional[str] = None
 
-    def __init__(self, code: str):
+    @classmethod
+    def from_code(cls, code: str) -> Self:
         assert isinstance(code, str), "Code is not a string"
         # TODO: dit zou heel mooi naar een config kunnen later
         niet_geautomatiseerde_sbb = (
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )
         if code in niet_geautomatiseerde_sbb:
-            self.klasse = code
-            return
+            return cls(klasse=code)
 
-        # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
-        self.derivaatgemeenschap = None
-        self.rompgemeenschap = None
-
-        match = self.gemeenschap.search(code)
+        kwargs = {}
+        match = cls.gemeenschap.search(code)
         if match:
             # Strippen van gemeenschap
             code = code[:-2]
             if match.group("type") == "/":
-                self.derivaatgemeenschap = match.group("gemeenschap")
+                kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
             elif match.group("type") == "-":
-                self.rompgemeenschap = match.group("gemeenschap")
+                kwargs["rompgemeenschap"] = match.group("gemeenschap")
             else:
-                assert (
-                    False
-                ), "Onmogelijk om hier te komen; groep 'type' moet '/' of '-' zijn"
+                raise ValueError(f"Invalide gemeenschap: {code}")
 
-        match = self.basis_sbb.fullmatch(code)
+        match = cls.basis_sbb.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.verbond = match.group("verbond")
-            self.associatie = match.group("associatie")
-            self.subassociatie = match.group("subassociatie")
-            return
+            kwargs["klasse"] = match.group("klasse")
+            kwargs["verbond"] = match.group("verbond")
+            kwargs["associatie"] = match.group("associatie")
+            kwargs["subassociatie"] = match.group("subassociatie")
+            return cls(**kwargs)
 
         raise ValueError(f"Invalid SBB code: {code}")
 
@@ -84,9 +85,9 @@ class SBB:
 
     @classmethod
     def from_string(cls, code: Union[str, None]) -> Union[SBB, None]:
-        if pd.isnull(code):
+        if pd.isnull(code) or code == "":
             return None
-        return cls(code)
+        return cls.from_code(code)
 
     def match_up_to(self, other: Optional[SBB]) -> MatchLevel:
         """
@@ -126,15 +127,15 @@ class SBB:
             return match_levels[0]
         return match_levels[len(self_tuple)]
 
-    @staticmethod
-    def validate(code: str) -> bool:
+    @classmethod
+    def validate_code(cls, code: str) -> bool:
         """
         Checkt of een string voldoet aan de SBB opmaak
         """
         # Strippen van evt rompgemeenschap of derivaatgemeenschap
-        code_gemeenschap = re.sub(SBB.gemeenschap, "", code)
+        code_gemeenschap = re.sub(cls.gemeenschap, "", code)
 
-        return SBB.basis_sbb.fullmatch(code) or SBB.basis_sbb.fullmatch(
+        return cls.basis_sbb.fullmatch(code) or cls.basis_sbb.fullmatch(
             code_gemeenschap
         )
 
@@ -149,14 +150,16 @@ class SBB:
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
+        valid_mask = series.apply(
+            lambda x: cls.validate_code(x) if pd.notna(x) else True
+        )
 
         if print_invalid:
             if valid_mask.all():
-                print("Alle SBB codes zijn valide")
+                logging.info("Alle SBB codes zijn valide")
             else:
                 invalid = series[~valid_mask]
-                print(f"De volgende SBB codes zijn niet valide: \n{invalid}")
+                logging.warning(f"De volgende SBB codes zijn niet valide: \n{invalid}")
 
         return valid_mask.all()
 
@@ -212,8 +215,7 @@ class SBB:
         return series
 
 
-@dataclass()
-class VvN:
+class VvN(BaseModel):
     """
     Format van VvN codes:
     ## is cijfer ('1', '5', '10', '32', niet '01' of '04'), x is letter ('a', 'b', 'c' etc)
@@ -224,11 +226,11 @@ class VvN:
     Derivaatgemeenschappen: ## dg ##, zoals 42dg2
     """
 
-    normale_vvn: ClassVar = re.compile(
+    normale_vvn: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)((?P<orde>[a-z])((?P<verbond>[a-z])((?P<associatie>[1-9][0-9]?)(?P<subassociatie>[a-z])?)?)?)?"
     )
     # 42aa1e          4    2                a                  a                     1                             e
-    gemeenschap: ClassVar = re.compile(
+    gemeenschap: ClassVar[Any] = re.compile(
         r"(?P<klasse>[1-9][0-9]?)(?P<type>[dr]g)(?P<gemeenschap>[1-9][0-9]?)"
     )
     # 37rg2           3    7               r  g                  2
@@ -241,38 +243,30 @@ class VvN:
     derivaatgemeenschap: Optional[str] = None
     rompgemeenschap: Optional[str] = None
 
-    def __init__(self, code: str):
+    @classmethod
+    def from_code(cls, code: str):
         assert isinstance(code, str), "Code is not a string"
-        match = self.gemeenschap.fullmatch(code)
+        match = cls.gemeenschap.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.orde = None
-            self.verbond = None
-            self.associatie = None
-            self.subassociatie = None
+            kwargs = {"klasse": match.group("klasse")}
             if match.group("type") == "dg":
-                self.derivaatgemeenschap = match.group("gemeenschap")
-                self.rompgemeenschap = None
-                return
+                kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
+                return cls(**kwargs)
             elif match.group("type") == "rg":
-                self.derivaatgemeenschap = None
-                self.rompgemeenschap = match.group("gemeenschap")
-                return
+                kwargs["rompgemeenschap"] = match.group("gemeenschap")
+                return cls(**kwargs)
             else:
-                assert (
-                    False
-                ), "Onmogelijk om hier te komen; groep 'type' moet 'dg' of 'rg' zijn"
+                raise ValueError(f"Invalide gemeenschap: {code}")
 
-        match = self.normale_vvn.fullmatch(code)
+        match = cls.normale_vvn.fullmatch(code)
         if match:
-            self.klasse = match.group("klasse")
-            self.orde = match.group("orde")
-            self.verbond = match.group("verbond")
-            self.associatie = match.group("associatie")
-            self.subassociatie = match.group("subassociatie")
-            self.derivaatgemeenschap = None
-            self.rompgemeenschap = None
-            return
+            return cls(
+                klasse=match.group("klasse"),
+                orde=match.group("orde"),
+                verbond=match.group("verbond"),
+                associatie=match.group("associatie"),
+                subassociatie=match.group("subassociatie"),
+            )
 
         raise ValueError(f"Invalid VvN code: {code}")
 
@@ -280,7 +274,7 @@ class VvN:
     def from_string(cls, code) -> Union[VvN, None]:
         if pd.isnull(code) or code == "":
             return None
-        return cls(code)
+        return cls.from_code(code)
 
     def normal_VvN_as_tuple(
         self,
@@ -337,7 +331,7 @@ class VvN:
         return match_levels[len(self_tuple)]
 
     @classmethod
-    def validate(cls, code: str) -> bool:
+    def validate_code(cls, code: str) -> bool:
         """
         Checkt of een string voldoet aan de VvN opmaak
         """
@@ -354,14 +348,16 @@ class VvN:
         series = series.astype("string")
 
         # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
-        valid_mask = series.apply(lambda x: cls.validate(x) if pd.notna(x) else True)
+        valid_mask = series.apply(
+            lambda x: cls.validate_code(x) if pd.notna(x) else True
+        )
 
         if print_invalid:
             if valid_mask.any():
-                print("Alle VvN codes zijn valide")
+                logging.info("Alle VvN codes zijn valide")
             else:
                 invalid = series[~valid_mask]
-                print(f"De volgende VvN codes zijn niet valide: \n{invalid}")
+                logging.warning(f"De volgende VvN codes zijn niet valide: \n{invalid}")
 
         return valid_mask.all()
 
@@ -404,7 +400,7 @@ class VvN:
         # Verwijderen haakjes uit Vvn (voor wwl)
         series = series.str.replace("[()]", "", regex=True)
         # Verwijderen p.p. uit VvN (voor wwl)
-        series = series.str.replace("p.p.", "")
+        series = series.str.replace("p.p.", "", regex=False)
         # Vervangen 0[1-9] door [1-9]
         series = series.str.replace("0([1-9])", r"\1", regex=True)
         # Vervangen enkel "-" of "x" vegtypen door None

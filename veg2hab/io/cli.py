@@ -8,7 +8,15 @@ import click
 from geopandas.geodataframe import GeoDataFrame
 from typing_extensions import override
 
-from .common import AccessDBInputs, Interface, ShapefileInputs
+from .common import (
+    AccessDBInputs,
+    ApplyDefTabelInputs,
+    ApplyFunctioneleSamenhangInputs,
+    ApplyMozaiekInputs,
+    Interface,
+    ShapefileInputs,
+    StackVegKarteringInputs,
+)
 
 
 class CLIInterface(Interface):
@@ -16,7 +24,7 @@ class CLIInterface(Interface):
     def output_shapefile(self, shapefile_id: Optional[Path], gdf: GeoDataFrame) -> None:
         if shapefile_id is None:
             shapefile_id = Path(
-                f"./habkart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
+                f"./kaart_{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H-%M-%S')}.gpkg"
             )
         gdf.to_file(shapefile_id, driver="GPKG", layer="main")
 
@@ -42,6 +50,8 @@ def _decorate_click(func: Callable, param_schema: Dict):
                 field_name,
                 type=param_type,
                 required=is_required,
+                # allow multiple values in case of the step_2_stacking
+                nargs=-1 if field_info.get("type") == "array" else 1,
             )(func)
         else:
             func = click.option(
@@ -64,7 +74,7 @@ def _get_argument_description(description: str, param_schema: Dict):
     return description
 
 
-class CLIAccessDBInputs(AccessDBInputs):
+class CLIMixin:
     @classmethod
     def click_decorator(cls, func):
         return _decorate_click(func, cls.schema())
@@ -74,11 +84,25 @@ class CLIAccessDBInputs(AccessDBInputs):
         return _get_argument_description(cls.description, cls.schema())
 
 
-class CLIShapefileInputs(ShapefileInputs):
-    @classmethod
-    def click_decorator(cls, func):
-        return _decorate_click(func, cls.schema())
+class CLIAccessDBInputs(AccessDBInputs, CLIMixin):
+    pass
 
-    @classmethod
-    def get_argument_description(cls):
-        return _get_argument_description(cls.description, cls.schema())
+
+class CLIShapefileInputs(ShapefileInputs, CLIMixin):
+    pass
+
+
+class CLIStackVegKarteringInputs(StackVegKarteringInputs, CLIMixin):
+    pass
+
+
+class CLIApplyDefTabelInputs(ApplyDefTabelInputs, CLIMixin):
+    pass
+
+
+class CLIApplyMozaiekInputs(ApplyMozaiekInputs, CLIMixin):
+    pass
+
+
+class CLIApplyFunctioneleSamenhangInputs(ApplyFunctioneleSamenhangInputs, CLIMixin):
+    pass

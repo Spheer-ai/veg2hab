@@ -7,7 +7,7 @@ from typing import ClassVar, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
 
@@ -17,7 +17,7 @@ class BeperkendCriterium(BaseModel):
     Superclass voor alle beperkende criteria.
     Subclasses implementeren hun eigen check en non-standaard evaluation methodes.
     Niet-logic sublasses (dus niet EnCriteria, OfCriteria, NietCriterium) moeten een
-    _evaluation parameter hebben waar het resultaat van check gecached wordt.
+    cached_evaluation parameter hebben waar het resultaat van check gecached wordt.
     """
 
     type: ClassVar[Optional[str]] = None
@@ -50,7 +50,8 @@ class BeperkendCriterium(BaseModel):
 
     def json(self, *args, **kwargs):
         """Same here"""
-        return json.dumps(self.dict(*args, **kwargs))
+        data = self.dict(*args, **kwargs)
+        return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
     def check(self, row: gpd.GeoSeries):
         raise NotImplementedError()
@@ -66,19 +67,19 @@ class BeperkendCriterium(BaseModel):
         """
         Standaard evaluation method
         """
-        if self._evaluation is None:
+        if self.cached_evaluation is None:
             raise RuntimeError(
                 "Evaluation value requested before criteria has been checked"
             )
-        return self._evaluation
+        return self.cached_evaluation
 
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
-        self._evaluation = MaybeBoolean.TRUE
+        self.cached_evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
         return "Geen mits (altijd waar)"
@@ -90,10 +91,10 @@ class GeenCriterium(BeperkendCriterium):
 class NietGeautomatiseerdCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietGeautomatiseerd"
     toelichting: str
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
-        self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
@@ -106,7 +107,7 @@ class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     wanted_fgrtype: FGRType
     actual_fgrtype: Optional[FGRType] = None
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
@@ -116,10 +117,10 @@ class FGRCriterium(BeperkendCriterium):
 
         if pd.isna(row["fgr"]):
             # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
+        self.cached_evaluation = (
             MaybeBoolean.TRUE
             if row["fgr"] == self.wanted_fgrtype
             else MaybeBoolean.FALSE
@@ -127,12 +128,12 @@ class FGRCriterium(BeperkendCriterium):
 
     def __str__(self):
         string = f"FGR is {self.wanted_fgrtype.value}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     def get_opm(self) -> Set[str]:
-        if self._evaluation is None:
+        if self.cached_evaluation is None:
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
@@ -143,10 +144,10 @@ class FGRCriterium(BeperkendCriterium):
         framework = "FGR type is {}{}{}."
         return {
             framework.format(
-                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+                "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
                 self.wanted_fgrtype.value,
                 ", maar " + self.actual_fgrtype.value
-                if self._evaluation == MaybeBoolean.FALSE
+                if self.cached_evaluation == MaybeBoolean.FALSE
                 else "",
             )
         }
@@ -156,7 +157,7 @@ class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     wanted_bodemtype: BodemType
     actual_bodemcode: List[Optional[str]] = [None]
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
@@ -166,34 +167,34 @@ class BodemCriterium(BeperkendCriterium):
 
         if len(row["bodem"]) > 1:
             # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
         if pd.isna(row["bodem"]):
             # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = MaybeBoolean.FALSE
+        self.cached_evaluation = MaybeBoolean.FALSE
         for code in row["bodem"]:
             if code in self.wanted_bodemtype.codes:
-                self._evaluation = MaybeBoolean.TRUE
+                self.cached_evaluation = MaybeBoolean.TRUE
                 break
 
         if (
             self.wanted_bodemtype.enkel_negatieven
             and self.evaluation == MaybeBoolean.TRUE
         ):
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         string = f"Bodem is {self.wanted_bodemtype}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     def get_opm(self) -> Set[str]:
-        if self._evaluation is None:
+        if self.cached_evaluation is None:
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
@@ -212,9 +213,9 @@ class BodemCriterium(BeperkendCriterium):
         return {
             framework.format(
                 "mogelijk "
-                if self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
                 else "",
-                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+                "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
             )
         }
 
@@ -223,7 +224,7 @@ class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
     wanted_lbktype: LBKType
     actual_lbkcode: Optional[str] = None
-    _evaluation: Optional[MaybeBoolean] = PrivateAttr(default=None)
+    cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
@@ -233,10 +234,10 @@ class LBKCriterium(BeperkendCriterium):
 
         if pd.isna(row["lbk"]):
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
-            self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        self._evaluation = (
+        self.cached_evaluation = (
             MaybeBoolean.TRUE
             if row["lbk"] in self.wanted_lbktype.codes
             else MaybeBoolean.FALSE
@@ -244,23 +245,23 @@ class LBKCriterium(BeperkendCriterium):
 
         if self.wanted_lbktype.enkel_negatieven:
             if self.evaluation == MaybeBoolean.TRUE:
-                self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+                self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
         if self.wanted_lbktype.enkel_positieven:
             if self.evaluation == MaybeBoolean.FALSE:
-                self._evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+                self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
         string = f"LBK is {self.wanted_lbktype}"
-        if self._evaluation is not None:
-            string += f" ({self._evaluation.as_letter()})"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
     def get_opm(self) -> Set[str]:
         assert (
-            self._evaluation is not MaybeBoolean.POSTPONE
+            self.cached_evaluation is not MaybeBoolean.POSTPONE
         ), "Postpone is not a valid evaluation state for LBKCriterium"
-        if self._evaluation is None:
+        if self.cached_evaluation is None:
             print("test")
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
@@ -279,18 +280,18 @@ class LBKCriterium(BeperkendCriterium):
         return {
             framework.format(
                 "mogelijk "
-                if self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
                 else "",
                 "toch "
                 if (
-                    self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
                     and self.wanted_lbktype.enkel_positieven
                 )
                 else "",
-                "niet " if self._evaluation == MaybeBoolean.FALSE else "",
+                "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
                 "ondanks "
                 if (
-                    self._evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
                     and self.wanted_lbktype.enkel_positieven
                 )
                 else "want ",

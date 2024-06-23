@@ -1,9 +1,10 @@
+import json
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+from pydantic import BaseModel, root_validator
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
@@ -13,21 +14,25 @@ from veg2hab.vegetatietypen import SBB as _SBB
 from veg2hab.vegetatietypen import VvN as _VvN
 
 
-@dataclass
-class HabitatVoorstel:
+class HabitatVoorstel(BaseModel):
     """
     Een voorstel voor een habitattype voor een vegetatietype
     """
 
-    onderbouwend_vegtype: Optional[Union[_SBB, _VvN]]
-    vegtype_in_dt: Optional[Union[_SBB, _VvN]]
+    class Config:
+        extra = "forbid"
+
+    onderbouwend_vegtype: Union[_SBB, _VvN, None]
+    vegtype_in_dt: Union[_SBB, _VvN, None]
     habtype: str
     kwaliteit: Kwaliteit
     idx_in_dt: Optional[int]
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
-    mozaiek_dict: Optional[dict] = None
+    # TODO: I turned this into a list of tuples instead of a dict
+    # maybe turn it into a named tuple
+    mozaiek_dict: Optional[List[Tuple[str, bool, Kwaliteit, float]]] = None
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -71,9 +76,26 @@ class HabitatVoorstel:
             match_level=MatchLevel.NO_MATCH,
         )
 
+    @staticmethod
+    def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
+        # TODO dit is niet zo netjes, met de json.loads en json.dumps
+        # maar v.dict() werkte volgens mij niet lekker met enums.
+        return json.dumps(
+            [[json.loads(v.json()) for v in sublist] for sublist in voorstellen]
+        )
 
-@dataclass
-class HabitatKeuze:
+    @staticmethod
+    def deserialize_list2(serialized: str) -> List[List["HabitatVoorstel"]]:
+        return [
+            [HabitatVoorstel(**v) for v in sublist]
+            for sublist in json.loads(serialized)
+        ]
+
+
+class HabitatKeuze(BaseModel):
+    class config:
+        extra = "forbid"
+
     status: KeuzeStatus
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
@@ -83,27 +105,32 @@ class HabitatKeuze:
     mozaiek_opmerking: str = ""
     debug_info: Optional[str] = ""
 
-    def __post_init__(self):
-        # Validatie
-        if self.status in [
+    @root_validator
+    def valideer_habtype_keuzestatus(cls, values):
+        status = values.get("status")
+        habtype = values.get("habtype")
+        kwaliteit = values.get("kwaliteit")
+
+        if status in [
             KeuzeStatus.HABITATTYPE_TOEGEKEND,
         ]:
-            assert self.habtype not in ["HXXXX", "H0000"]
-        elif self.status in [
+            assert habtype not in ["HXXXX", "H0000"]
+        elif status in [
             KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
-            assert self.habtype == "H0000"
-        elif self.status in [
+            assert habtype == "H0000"
+        elif status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         ]:
-            assert self.habtype == "HXXXX"
+            assert habtype == "HXXXX"
+        if habtype in ["H0000", "HXXXX"]:
+            assert kwaliteit == Kwaliteit.NVT
 
-        if self.habtype in ["H0000", "HXXXX"]:
-            assert self.kwaliteit == Kwaliteit.NVT
+        return values
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
@@ -126,6 +153,19 @@ class HabitatKeuze:
             return True
 
         return is_mozaiek_type_present(self.habitatvoorstellen, GeenMozaiekregel)
+
+    @staticmethod
+    def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
+        # TODO dit is niet zo netjes, met de json.loads en json.dumps
+        # maar v.dict, doet een werkte volgens mij niet lekker met enums.
+        try:
+            return json.dumps([json.loads(v.json()) for v in keuzes])
+        except Exception as e:
+            return "HELLOWIE"
+
+    @staticmethod
+    def deserialize_list(serialized: str) -> List["HabitatKeuze"]:
+        return [HabitatKeuze(**v) for v in json.loads(serialized)]
 
 
 def rank_habitatkeuzes(

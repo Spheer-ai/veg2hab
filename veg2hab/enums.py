@@ -1,4 +1,3 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import List, NamedTuple, Tuple
@@ -164,6 +163,9 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
+    # habitat type is handmatig toegewezen
+    HANDMATIG_TOEGEKEND = auto()
+
     _toelichting = {
         "HABITATTYPE_TOEGEKEND": "veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.",
         "MINIMUM_OPP_NIET_GEHAALD": "Het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet de minimum benodigde oppervlakte.",
@@ -174,6 +176,7 @@ class KeuzeStatus(Enum):
         "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.",
         "NIET_GEAUTOMATISEERD_VEGTYPE": "Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.",
         "WACHTEN_OP_MOZAIEK": "De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).",
+        "HANDMATIG_TOEGEKEND": "Het habitattype is handmatig aangepast in een van de tussentijdse resultaten.",
     }
 
     @property
