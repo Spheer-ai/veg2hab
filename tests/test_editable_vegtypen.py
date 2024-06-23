@@ -12,6 +12,7 @@ from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.vegkartering import Kartering, VegTypeInfo, ingest_vegtype
 from veg2hab.waswordtlijst import WasWordtLijst
+import pyodbc
 
 CLIInterface.get_instance()
 
@@ -30,9 +31,9 @@ def kartering():
         access_kartering = Kartering.from_access_db(
             shape_path, shape_elm_id_column, csvs_path
         )
-    except RuntimeError as e:
+    except (RuntimeError, pyodbc.InterfaceError):
         pytest.skip(
-            "Could not load kartering, probably because 'mdb-export' is not installed"
+            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
         )
 
     access_kartering.gdf = access_kartering.gdf.iloc[:10]
