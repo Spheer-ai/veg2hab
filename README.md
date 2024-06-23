@@ -1,6 +1,5 @@
 # veg2hab
 
-- [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
   - [Installatie instructies](#installatie-instructies)
@@ -11,7 +10,6 @@
     - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
-    - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
   - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
     - [Lokale ontwikkeling](#lokale-ontwikkeling)
     - [Nieuwe release](#nieuwe-release)
@@ -30,7 +28,7 @@ veg2hab wordt gedistribueerd via PyPI, waar alle toekomstige versies aan toe wor
 
 ### Disclaimer
 
-Veg2hab is bedoeld als hulpmiddel om sneller vegetatiekarteringen om te zetten naar concept habitattypekaarten. Na de omzetting door veg2hab is over het algemeen nog handwerk van de gebruiker nodig, omdat sommige beperkende criteria niet te automatiseren zijn en expert judgment vereisen. Veg2hab geeft vlakken die het niet automatisch een habittatype (of `H0000`) kan toekennen de code `HXXXX`, en beschrijft in de output welke controles de gebruiker handmatig moet doen. 
+Veg2hab is bedoeld als hulpmiddel om sneller vegetatiekarteringen om te zetten naar concept habitattypekaarten. Na de omzetting door veg2hab is over het algemeen nog handwerk van de gebruiker nodig, omdat sommige beperkende criteria niet te automatiseren zijn en expert judgment vereisen. Veg2hab geeft vlakken die het niet automatisch een habittatype (of `H0000`) kan toekennen de code `HXXXX`, en beschrijft in de output welke controles de gebruiker handmatig moet doen.
 
 Het wordt gebruikers sterk aangeraden om:
 - het rapport van een vegetatiekartering door te lezen, om te controleren of er zaken expliciet afwijken van de typologie vertalingen in de was-wordt lijst, de profieldocumenten of de omzetregels uit het methodiekdocument.
@@ -47,28 +45,28 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
     - Open de 'Package Manager'.  
-        <img src="./images/package_manager.png" alt="package manager" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
-    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.  
-        <img src="./images/new_environment.png" alt="new python environment" width="400"/>
-        <img src="./images/environment_location.png" alt="location of new environment" width="400"/>
+    - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_environment.png" alt="new python environment" width="400"/>
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
     - Let op: het aanmaken van een nieuwe environment kan langer dan 5 minuten duren. De status van het aanmaken kan bekeken worden onder `Tasks` rechtsonderin de Package Manager.
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
-    - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.  
-        <img src="./images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.  
-        <img src="./images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
+    - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
+    - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
-    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.  
-        <img src="./images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
-<img src="./images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
 
 #### Aanvullende opmerkingen
 
@@ -77,9 +75,9 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 
 ### Installatie .mdb drivers op Windows
-Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`: 
+Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`:
 
-<img src="./images/odbc_drivers.png" alt="ODBC Drivers window" width="400"/>
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/odbc_drivers.png" alt="ODBC Drivers window" width="400"/>
 
 
 Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende stappen gevolgd worden (zie ook [deze video](https://www.youtube.com/watch?v=biSjA8ms_Wk)):
@@ -115,14 +113,25 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 ### Gebruik in ArcGIS Pro
 
-De omzetting van veg2hab van vegetatiekarteringen naar habitattypekaarten gebeurt in tools in de veg2hab Python Toolbox. Om de omzetting te doen, dient de gebruiker eerst de betreffende vegetatiekarteringen in te laden als kaart in ArcGIS Pro.
+De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Python Toolbox `veg2hab.pyt`. De gehele omzetting verloopt via een aantal sequentiële stappen: 
 
-De omzettool komt in twee smaken:
-1. `digitale_standaard`, voor het omzetten van vegetatiekarteringen die de landelijke digitale standaard gebruiken, die bestaat uit een shapefile gecombineerd met een access database. De gebruiker voert in welke vegetatiekarteringen omgezet moet worden en waar de bijhorende access database te vinden is.
-2. `vector_bestand`, voor het omzetten van vegetatiekarteringen die alle benodigde informatie in de shapefile zelf bevatten. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat.
+<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
-Let op:
-- Wanneer de gebruiker beschikt over een access database, raden wij aan de  `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
+**Omschrijving van de stappen:**
+- `1a_digitale_standaard`: Laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. Deze bestaat uit een shapefile gecombineerd met een access database. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
+- `1b_vector_bestand`: Laadt een vegetatiekartering in die alle benodigde informatie in de shapefile zelf heeft staan. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
+- `2_optioneel_stapel_veg`: Optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
+- `3_definitietabel_en_mitsen`: Zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
+- `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
+- `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe. 
+
+Het opdelen van de omzetting in deze stappen zorgt ervoor dat de gebruiker tussentijds naar eigen inzicht aanpassingen kan aanbrengen in de bevindingen van veg2hab. veg2hab is zo gebouwd, dat het deze veranderingen opmerkt, en in de vervolgstappen meeneemt. Voorbeelden:
+- De vegetatiekartering hanteert een vertaling van SBB naar VvN die afwijkt van de waswordt lijst. In dit geval kan de gebruiker na het inladen van de kartering in stap `1` handmatig VvN codes in veld **VvN{i}** aanpassen. In de vervolgstappen gebruikt veg2hab de handmatige VvN-codes om op te zoeken in de definitie.
+- veg2hab kan in stap `3` niet alle beperkende criteria succesvol controleren, waardoor veel vlakken op Hxxxx blijven staan. Dit zorgt ervoor dat ook veel vlakken met een mozaiekregel niet goed gecontroleerd kunnen worden in stap `4`. De gebruiker kan handmatig vlakken omzetten van Hxxxx naar H0000 of een habitattype, en pas daarna verder gaan met stap `4`.
+
+**Let op:**
+- Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
+- Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft. De gebruiker dient deze velden ongemoeid te laten.
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN).
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart. Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 
@@ -215,27 +224,27 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **Opm{i}**: Opsomming van informatie over het vlak dat veg2hab uit de FGR- en Bodemkaart heeft gehaald.
 
-**VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie is opgegeven, en dat de waswordtlijst ook geen vertaling bevat. 
+**VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie is opgegeven, en dat de waswordtlijst ook geen vertaling bevat.
 
 **_Status{i}**: Beslissings-status van veg2hab voor dit complex-deel. Kolom `_Uitleg{i}` geeft verdere uitleg over deze status. Mogelijke statussen en hun uitleg zijn:
-- `HABTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
+- `HABITATTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`: veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.
-- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. Veg2hab kent aan dit vlak H0000 toe.
-- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. Veg2hab kent aan dit vlak H0000 toe.
-- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen. Veg2hab kent aan dit vlak H0000 toe.
+- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.
+- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. veg2hab kent aan dit vlak H0000 toe.
+- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. veg2hab kent aan dit vlak H0000 toe.
 - `NIET_GEAUTOMATISEERD_VEGTYPE`: Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.
-- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn placeholder mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
-- `WACHTEN_OP_MOZAIEK`: Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)
+- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
+- `WACHTEN_OP_MOZAIEK`: De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).
 - `MINIMUM_OPP_NIET_GEHAALD`: het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet het minimum benodigde oppervlak.
 
-**_Uitleg{i}**: Uitleg bij de kolom `_Status{i}` van dit complex-deel. 
+**_Uitleg{i}**: Uitleg bij de kolom `_Status{i}` van dit complex-deel.
 
 **_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
 **_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
 - `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
-- `HABTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
+- `HABITATTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
 - `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
 
 Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
