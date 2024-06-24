@@ -639,9 +639,9 @@ class Kartering:
     PREFIX_COLS: ClassVar[List[str]] = [
         # Met deze kolommen begint de dataframe
         "ElmID",
-        "Opp",
+        "Area",
         "Datum",
-        "Opmerking",
+        "Opm",
     ]
     POSTFIX_COLS: ClassVar[List[str]] = [
         # dit zijn de laatste paar kolommen voor de dataframe
@@ -715,7 +715,7 @@ class Kartering:
 
         # Als kolommen niet aanwezig zijn in de shapefile dan vullen we ze met None
         for old_col, new_col in [
-            (opmerkingen_column, "Opmerking"),
+            (opmerkingen_column, "Opm"),
             (datum_column, "Datum"),
         ]:
             if old_col is None:
@@ -723,7 +723,7 @@ class Kartering:
             else:
                 gdf = gdf.rename(columns={old_col: new_col})
 
-        gdf["Opp"] = gdf["geometry"].area
+        gdf["Area"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
 
         element, veginfo_per_locatie = read_access_tables(access_mdb_path)
@@ -911,14 +911,14 @@ class Kartering:
             datum_col = "Datum"
             gdf[datum_col] = None
         if opmerking_col is None:
-            opmerking_col = "Opmerking"
+            opmerking_col = "Opm"
             gdf[opmerking_col] = None
 
         gdf = gdf.rename(
-            columns={ElmID_col: "ElmID", opmerking_col: "Opmerking", datum_col: "Datum"}
+            columns={ElmID_col: "ElmID", opmerking_col: "Opme", datum_col: "Datum"}
         )
         ElmID_col = "ElmID"
-        opmerking_col = "Opmerking"
+        opmerking_col = "Opm"
         datum_col = "Datum"
 
         gdf = fix_crs(gdf, shape_path)
@@ -941,7 +941,7 @@ class Kartering:
             gdf[VvN_col] = gdf[VvN_col].apply(vegetatietypen.VvN.opschonen_series)
 
         # Standardiseren van kolomnamen
-        gdf["Opp"] = gdf["geometry"].area
+        gdf["Area"] = gdf["geometry"].area
         LokVrtNar_string = sbb_of_vvn if sbb_of_vvn != "beide" else "zowel SBB als VvN"
         gdf[
             "_LokVrtNar"
@@ -1007,11 +1007,11 @@ class Kartering:
     def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
         result = pd.Series()
         for idx, info in enumerate(vegtypeinfos, 1):
-            result[f"SBB{idx}"] = ",".join(
+            result[f"EDIT_SBB{idx}"] = ",".join(
                 str(sbb) for sbb in info.SBB
             )  # convert to pandas string..
-            result[f"VvN{idx}"] = ",".join(str(vvn) for vvn in info.VvN)
-            result[f"perc{idx}"] = info.percentage
+            result[f"EDIT_VvN{idx}"] = ",".join(str(vvn) for vvn in info.VvN)
+            result[f"EDIT_perc{idx}"] = info.percentage
         return result
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
@@ -1020,10 +1020,10 @@ class Kartering:
         str_columns = {
             name: "string"
             for name in vegtypes_df.columns
-            if name.startswith("SBB") or name.startswith("VvN")
+            if name.startswith("EDT_SBB") or name.startswith("EDT_VvN")
         }
         perc_columns = {
-            name: float for name in vegtypes_df.columns if name.startswith("perc")
+            name: float for name in vegtypes_df.columns if name.startswith("EDIT_perc")
         }
         vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
         vegtypes_df[list(str_columns.keys())] = vegtypes_df[
@@ -1060,11 +1060,11 @@ class Kartering:
     def _multi_col_to_vegtype(row: pd.Series) -> List[VegTypeInfo]:
         result = []
         for idx in range(1, 100):  # arbitrary number
-            sbb = row.get(f"SBB{idx}", "")
+            sbb = row.get(f"EDIT_SBB{idx}", "")
             sbb = "" if pd.isnull(sbb) else str(sbb)
-            vvn = row.get(f"VvN{idx}", "")
+            vvn = row.get(f"EDIT_VvN{idx}", "")
             vvn = "" if pd.isnull(vvn) else str(vvn)
-            perc = row.get(f"perc{idx}", None)
+            perc = row.get(f"EDIT_perc{idx}", None)
             if sbb == "" and vvn == "":
                 break
             result.append(
@@ -1081,12 +1081,12 @@ class Kartering:
 
     @classmethod
     def from_editable_vegtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
-        rename_cols = {
+        rename_cols_intern = {
             col: col[len("INTERN") :]
             for col in gdf.columns
             if col.startswith("INTERN_")
         }
-        gdf = gdf.rename(columns=rename_cols)
+        gdf = gdf.rename(columns=rename_cols_intern)
 
         gdf["_VegTypeInfo"] = gdf["_VegTypeInfo"].apply(VegTypeInfo.deserialize_list)
 
@@ -1095,7 +1095,7 @@ class Kartering:
         changes = gdf["_VegTypeInfo"] != altered_vegtypes
         if changes.any():
             logging.warn(
-                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {changes['ElmID'][changes].to_list()}"
+                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {gdf['ElmID'][changes].to_list()}"
             )
 
         gdf["VegTypeInfo"] = altered_vegtypes
@@ -1196,15 +1196,20 @@ class Kartering:
 
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
-        # We starten alle HabitatKeuzes op None, en dan vullen we ze steeds verder in
-        self.gdf["HabitatKeuze"] = self.gdf.VegTypeInfo.apply(
-            lambda voorstellen_list: [None for sublist in voorstellen_list]
-        )
-
-        # TODO: hieronder de naam van de tool invoeren ipv bepaal_mits_habitatkeuzes zodat de gebruiker er ook wat aan heeft
         assert (
             "HabitatKeuze" in self.gdf.columns
-        ), "Er is geen kolom met HabitatKeuze (draai eerst bepaal_mits_habitatkeuzes)"
+        ), "Er is geen kolom met HabitatKeuze (draai eerst tool 3)"
+
+        # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
+        self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
+            lambda keuzes: [
+                keuze
+                if keuze.status
+                in [KeuzeStatus.HANDMATIG_TOEGEKEND, KeuzeStatus.HABITATTYPE_TOEGEKEND]
+                else None
+                for keuze in keuzes
+            ]
+        )
 
         ### Verkrijgen overlay gdf
         # Hier staat in welke vlakken er voor hoeveel procent aan welke andere vlakken grenzen
@@ -1247,10 +1252,20 @@ class Kartering:
             #####
             # Habitatkeuze proberen te bepalen per list habitatvoorstellen van een vegtypeingo
             #####
-            self.gdf["HabitatKeuze"] = self.gdf.HabitatVoorstel.apply(
-                lambda voorstellen: [
-                    try_to_determine_habkeuze(voorstel) for voorstel in voorstellen
-                ]
+
+            self.gdf["HabitatKeuze"] = self.gdf[
+                ["HabitatVoorstel", "HabitatKeuze"]
+            ].apply(
+                lambda row: [
+                    keuze
+                    if (
+                        keuze is not None
+                        and keuze.status == KeuzeStatus.HANDMATIG_TOEGEKEND
+                    )
+                    else try_to_determine_habkeuze(voorstel)
+                    for keuze, voorstel in zip(row.HabitatKeuze, row.HabitatVoorstel)
+                ],
+                axis=1,
             )
 
             n_keuzes_still_to_determine_post = (
@@ -1283,7 +1298,10 @@ class Kartering:
             self.gdf.HabitatKeuze.apply(lambda keuzes: keuzes.count(None)).sum() == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-    def _check_mozaiekregels(self, habtype_percentages):
+    def _check_mozaiekregels(self, habtype_percentages: Union[pd.DataFrame, None]):
+        if habtype_percentages is None:
+            return
+
         for row in self.gdf.itertuples():
             for idx, voorstel_list in enumerate(row.HabitatVoorstel):
                 # Als er geen habitatkeuzes zijn (want geen vegtypen opgegeven),
@@ -1351,52 +1369,36 @@ class Kartering:
         return pd.Series(result)
 
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
-        # it's all strings so thats easy.
-        habkeuzes_df = (
-            self.gdf["HabitatKeuze"]
-            .apply(self._habkeuzes_to_multi_col)
-            .astype("string")
-        )
-        rename_private_cols = {
-            "VegTypeInfo": "_VegTypeInfo",
-            "HabitatVoorstel": "_HabitatVoorstel",
-            "HabitatKeuze": "_HabitatKeuze",
+        editable_habtypes = self.as_final_format(sort_complexdelen=False)
+
+        # Aanpasbare kolommen taggen we met een EDIT_
+        editable_columns = ["Habtype", "Kwal", "Opm"]
+        rename_final_format_edit_cols = {
+            name: f"EDIT_{name}"
+            for name in editable_habtypes.columns
+            if (
+                any(name.startswith(col) for col in editable_columns)
+                and name[-1].isdigit()
+            )
         }
-        gdf = self.gdf.rename(columns=rename_private_cols)
-
-        gdf = pd.concat([gdf, habkeuzes_df], axis=1)
-
-        gdf["_VegTypeInfo"] = (
-            gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
+        editable_habtypes = editable_habtypes.rename(
+            columns=rename_final_format_edit_cols
         )
-        gdf["_HabitatKeuze"] = (
-            gdf["_HabitatKeuze"].apply(HabitatKeuze.serialize_list).astype("string")
+
+        # Kolommen die voor veg2hab nog van belang zijn taggen we INTERN_
+        editable_habtypes["INTERN_VegTypeInfo"] = (
+            self.gdf["VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
         )
-        gdf["_HabitatVoorstel"] = (
-            gdf["_HabitatVoorstel"]
+        editable_habtypes["INTERN_HabitatKeuze"] = (
+            self.gdf["HabitatKeuze"].apply(HabitatKeuze.serialize_list).astype("string")
+        )
+        editable_habtypes["INTERN_HabitatVoorstel"] = (
+            self.gdf["HabitatVoorstel"]
             .apply(HabitatVoorstel.serialize_list2)
             .astype("string")
         )
 
-        column_order = [
-            *self.PREFIX_COLS,
-            *habkeuzes_df.columns,
-            "_HabitatKeuze",
-            "_HabitatVoorstel",
-            "_VegTypeInfo",
-            *self.POSTFIX_COLS,
-        ]
-        # assert set(gdf.columns) - set(column_order)
-
-        gdf = gdf[column_order]
-
-        # annoying ARCGIS
-        rename_columns = {
-            col: "INTERN" + col for col in column_order if col.startswith("_")
-        }
-        gdf = gdf.rename(columns=rename_columns)
-
-        return gdf
+        return editable_habtypes
 
     @staticmethod
     def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str, str]]:
@@ -1432,6 +1434,10 @@ class Kartering:
             gdf[col] = gdf[col].apply(deserialization_func)
 
         # check for changed habitatkeuzes
+        rename_columns = {
+            col: col[len("EDIT_") :] for col in gdf.columns if col.startswith("EDIT_")
+        }
+        gdf = gdf.rename(columns=rename_columns)
         altered_habkeuzes = gdf.apply(cls._multi_col_to_habkeuze, axis=1)
         for row_idx, (new_keuzes, old_keuzes) in enumerate(
             zip(altered_habkeuzes, gdf["_HabitatKeuze"])
@@ -1447,20 +1453,22 @@ class Kartering:
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
                 ):
                     logging.warn(
-                        f"Er zijn handmatige wijzigingen in de habitatkeuzes. Deze worden overgenomen. In regel: elmID={gdf['ElmID'].iloc[row_idx]}"
+                        f"Er zijn handmatige wijzigingen in de habitattypes. Deze worden overgenomen. In regel: ElmID={gdf['ElmID'].iloc[row_idx]}"
                     )
                     old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
                     old_keuze.habtype = new_habtype
                     old_keuze.kwaliteit = Kwaliteit.from_letter(new_kwaliteit)
-                    old_keuze.opmerking = new_opm
-                    # we passen de habitatvoorstellen niet aan
-                    # net zoals de opmerkingen
+
+                # opmerking wordt altijd overgenomen.
+                old_keuze.opmerking = new_opm
 
         gdf = gdf.rename(
             columns={
                 "_VegTypeInfo": "VegTypeInfo",
                 "_HabitatVoorstel": "HabitatVoorstel",
                 "_HabitatKeuze": "HabitatKeuze",
+                "LokVrtNar": "_LokVrtNar",
+                "LokVegTyp": "_LokVegTyp",
             }
         )
         gdf = gdf.drop(
@@ -1468,7 +1476,7 @@ class Kartering:
         )
         return cls(gdf)
 
-    def as_final_format(self) -> gpd.GeoDataFrame:
+    def as_final_format(self, sort_complexdelen=True) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
@@ -1480,8 +1488,8 @@ class Kartering:
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[
             [
-                "Opp",
-                "Opmerking",
+                "Area",
+                "Opm",
                 "Datum",
                 "ElmID",
                 "geometry",
@@ -1492,10 +1500,9 @@ class Kartering:
             ]
         ]
 
-        # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
-        base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
-
-        base = base.rename(columns={"Opp": "Area", "Opmerking": "Opm"})
+        if sort_complexdelen:
+            # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
+            base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
