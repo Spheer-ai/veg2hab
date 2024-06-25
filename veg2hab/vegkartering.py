@@ -281,7 +281,7 @@ def mozaiekregel_habtype_percentage_dict_to_string(
 
 
 def format_opmerkingen(
-    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: str
+    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: Optional[str]
 ) -> str:
     """
     Uit ieder habitatvoorstel.mits.get_opm() komt een Set(str)
@@ -291,10 +291,11 @@ def format_opmerkingen(
     if not isinstance(voorstellen, list):
         voorstellen = [voorstellen]
 
+    if pd.isnull(keuze_opm):
+        keuze_opm == ""
+
     opmerkingen = set.union(*[voorstel.mits.get_opm() for voorstel in voorstellen])
     if keuze_opm != "":
-        print(keuze_opm)
-    if len(keuze_opm) > 1:
         opmerkingen = [opm for opm in opmerkingen if opm not in keuze_opm]
         opmerkingen.append(keuze_opm)
     return "\n".join(opmerkingen)
