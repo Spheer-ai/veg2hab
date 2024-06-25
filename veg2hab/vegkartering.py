@@ -1020,7 +1020,7 @@ class Kartering:
         str_columns = {
             name: "string"
             for name in vegtypes_df.columns
-            if name.startswith("EDT_SBB") or name.startswith("EDT_VvN")
+            if name.startswith("EDIT_SBB") or name.startswith("EDIT_VvN")
         }
         perc_columns = {
             name: float for name in vegtypes_df.columns if name.startswith("EDIT_perc")
@@ -1397,7 +1397,6 @@ class Kartering:
             .apply(HabitatVoorstel.serialize_list2)
             .astype("string")
         )
-
 
         # fille empty strings with pd.NA
         editable_habtypes = editable_habtypes.replace("", pd.NA)
