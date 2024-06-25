@@ -10,12 +10,13 @@
     - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
-  - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
-    - [Lokale ontwikkeling](#lokale-ontwikkeling)
-    - [Nieuwe release](#nieuwe-release)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
     - [Algemene kolommen voor het hele vlak](#algemene-kolommen-voor-het-hele-vlak)
     - [Kolommen per deel van het complex](#kolommen-per-deel-van-het-complex)
+  - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
+  - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
+    - [Lokale ontwikkeling](#lokale-ontwikkeling)
+    - [Nieuwe release](#nieuwe-release)
 
 ## Introductie
 
@@ -135,59 +136,9 @@ Het opdelen van de omzetting in deze stappen zorgt ervoor dat de gebruiker tusse
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN).
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 
+### Gebruik via de Command Line Interface (CLI)
 
-### Bronbestanden die veg2hab gebruikt
-
-Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
-
- - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten.
- - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten.
- - [Fysisch-Geografische Regio kaart (afgekort tot FGR)](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
- - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
- - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
-
-Let op: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
-
-
-
-## Handleiding voor ontwikkelaars
-### Lokale ontwikkeling
-Download de git repository:
-```sh
-git clone https://github.com/Spheer-ai/veg2hab
-```
-
-En installeer alle lokale (developmment) dependencies met:
-```sh
-poetry install
-```
-
-Binnen het project zijn onderstaande stappen gevolgd om deze data in te lezen:
-- Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
-- Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
-- De SBB-codes staan in Element.csv
-
-Linting doen we met isort en black:
-```sh
-poetry run black .
-poetry run isort .
-```
-
-Unittests worden gedraaid met pytest:
-```sh
-poetry run pytest tests/
-```
-
-### Nieuwe release
-1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`
-2. Maak een nieuwe versie met poetry (major, minor, patch): `poetry version {{rule}}`
-3. Pas de [\_\_init\_\_.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version.
-4. Pas [veg2hab.pyt](veg2hab/package_data/veg2hab.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan veg2hab.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
-5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
-6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github: (`git add`, `git commit`, `git push`)
-7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
-8. Push de tag naar git `git push origin tag v$(poetry version -s)`
-9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
+TO DO
 
 
 ## Interpretatie van de output-habitattypekartering
@@ -250,3 +201,60 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
 
 **_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
+
+
+
+## Bronbestanden die veg2hab gebruikt
+
+Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
+
+ - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten.
+ - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten.
+ - [Fysisch-Geografische Regio kaart (afgekort tot FGR)](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
+ - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
+ - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
+
+Let op: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
+
+
+
+
+
+## Handleiding voor ontwikkelaars
+### Lokale ontwikkeling
+Download de git repository:
+```sh
+git clone https://github.com/Spheer-ai/veg2hab
+```
+
+En installeer alle lokale (developmment) dependencies met:
+```sh
+poetry install
+```
+
+Binnen het project zijn onderstaande stappen gevolgd om deze data in te lezen:
+- Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
+- Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
+- De SBB-codes staan in Element.csv
+
+Linting doen we met isort en black:
+```sh
+poetry run black .
+poetry run isort .
+```
+
+Unittests worden gedraaid met pytest:
+```sh
+poetry run pytest tests/
+```
+
+### Nieuwe release
+1. Zorg ervoor dat de laatste bronbestanden in package_data staan met `poetry run python release.py create-package-data`
+2. Maak een nieuwe versie met poetry (major, minor, patch): `poetry version {{rule}}`
+3. Pas de [\_\_init\_\_.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version.
+4. Pas [veg2hab.pyt](veg2hab/package_data/veg2hab.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan veg2hab.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
+5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
+6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github: (`git add`, `git commit`, `git push`)
+7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
+8. Push de tag naar git `git push origin tag v$(poetry version -s)`
+9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
