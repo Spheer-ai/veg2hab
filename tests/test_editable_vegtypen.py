@@ -95,4 +95,5 @@ def test_equivalency_habkart(kartering):
         assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
 
 
-#TODO: Needs test that tests changing something in step 1/3/4 will keep it until end of step 5
+# TODO: Needs test that tests changing something in between step 1/3/4 will carry forward until end of step 5
+#       The tool_by_tool_walkthrough notebook shows it working in practice though
