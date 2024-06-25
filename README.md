@@ -123,7 +123,7 @@ De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Pyt
 
 <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
-**Omschrijving van de omzetstappen:**
+Omschrijving van de omzetstappen:
 - `1a_digitale_standaard`: Laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. Deze bestaat uit een vectorbestand (zoals een shapefile of geopackage) gecombineerd met een access database. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
 - `1b_vector_bestand`: Laadt een vegetatiekartering in die alle benodigde informatie in het vectorbestand (zoals een shape file of geopackage)zelf heeft staan. Omdat vectorbestanden geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. Voor de locatie van het vectorbestand kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
 - `2_optioneel_stapel_veg`: Optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
