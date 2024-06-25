@@ -224,7 +224,7 @@ def make_buffered_boundary_overlay_gdf(
 
 def calc_mozaiek_percentages_from_overlay_gdf(
     overlayed: gpd.GeoDataFrame,
-) -> gpd.GeoDataFrame:
+) -> Optional[gpd.GeoDataFrame]:
     """
     Ontvangt een overlayed gdf van make_buffered_boundary_overlay_gdf die de HabitatKeuze kolom bevat.
     Uit deze kolom wordt het habitattype gehaald en op basis hiervan wordt per buffered_ElmID
@@ -272,6 +272,10 @@ def calc_mozaiek_percentages_from_overlay_gdf(
         return habtype_percentage_dict
 
     result = overlayed.groupby("buffered_ElmID").apply(row_to_habtype_percentage_dict)
+
+    if len(result) == 0:
+        # Geen aan elkaar grenzende vlakken
+        return None
 
     # Nu is de index de ElmID, maar we willen een expliciete kolom
     result = result.reset_index()

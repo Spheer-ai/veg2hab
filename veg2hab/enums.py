@@ -102,6 +102,8 @@ class Kwaliteit(Enum):
             return cls.GOED
         elif letter == "M":
             return cls.MATIG
+        elif letter == "X":
+            return cls.NVT
         else:
             raise ValueError("Letter moet G of M zijn")
 

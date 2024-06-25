@@ -313,7 +313,7 @@ def try_to_determine_habkeuze(
                         habtype=true_voorstellen[0].habtype,
                         kwaliteit=true_voorstellen[0].kwaliteit,
                         habitatvoorstellen=true_voorstellen,
-                        opmerking=f"Er zijn meerdere habitatvoorstellen die aan hun mitsen/mozaieken voldoen; zie mits/mozk_opm voor meer info in format [opgegeven vegtype, potentieel habtype, mits/mozaiek]",
+                        opmerking=f"",
                         mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in true_voorstellen]}",
                         mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in true_voorstellen]}",
                         debug_info="",
