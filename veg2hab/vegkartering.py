@@ -1028,7 +1028,7 @@ class Kartering:
         vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
         vegtypes_df[list(str_columns.keys())] = vegtypes_df[
             list(str_columns.keys())
-        ].fillna("")
+        ].replace("", pd.NA)
 
         # move and rename vegtype info column to the end
         gdf = self.gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
@@ -1397,6 +1397,10 @@ class Kartering:
             .apply(HabitatVoorstel.serialize_list2)
             .astype("string")
         )
+
+
+        # fille empty strings with pd.NA
+        editable_habtypes = editable_habtypes.replace("", pd.NA)
 
         return editable_habtypes
 
