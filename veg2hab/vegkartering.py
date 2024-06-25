@@ -1398,12 +1398,6 @@ class Kartering:
             .astype("string")
         )
 
-        # arcgis kan geen kolommen beginnend met een _ laten zien, dus zetten we er even wat voor
-        fix_arcgis_underscore = {
-            col: f"f_{col}" for col in editable_habtypes.columns if col.startswith("_")
-        }
-        editable_habtypes = editable_habtypes.rename(columns=fix_arcgis_underscore)
-
         return editable_habtypes
 
     @staticmethod
@@ -1519,6 +1513,12 @@ class Kartering:
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
         final = finalize_final_format(final)
+
+        # arcgis kan geen kolommen beginnend met een _ laten zien, dus zetten we er even wat voor
+        fix_arcgis_underscore = {
+            col: f"f_{col}" for col in final.columns if col.startswith("_")
+        }
+        final = final.rename(columns=fix_arcgis_underscore)
 
         return final
 
