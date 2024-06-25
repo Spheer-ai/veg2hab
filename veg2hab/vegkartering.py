@@ -292,7 +292,7 @@ def format_opmerkingen(
         voorstellen = [voorstellen]
 
     if pd.isnull(keuze_opm):
-        keuze_opm == ""
+        keuze_opm = ""
 
     opmerkingen = set.union(*[voorstel.mits.get_opm() for voorstel in voorstellen])
     if keuze_opm != "":
