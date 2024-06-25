@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 from typing import Type, Union
 
+import veg2hab.constants
 import veg2hab.io.arcgis
 import veg2hab.main
-import veg2hab.constants
-import logging
 
-SUPPORTED_VERSIONS = ["0.3.0a1"]
+SUPPORTED_VERSIONS = ["0.3.0a1", "0.3.0a2"]
 
 # this instantiates the arcgis interface and configures the logging
 veg2hab.io.arcgis.ArcGISInterface.get_instance().instantiate_loggers()
