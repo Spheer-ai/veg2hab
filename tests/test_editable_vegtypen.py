@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 
 import geopandas as gpd
+import pyodbc
 import pytest
 
 from veg2hab import constants
@@ -12,7 +13,6 @@ from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.vegkartering import Kartering, VegTypeInfo, ingest_vegtype
 from veg2hab.waswordtlijst import WasWordtLijst
-import pyodbc
 
 CLIInterface.get_instance()
 
@@ -93,3 +93,6 @@ def test_equivalency_habkart(kartering):
         assert (kartering.gdf.index == reconstructed_kartering.gdf.index).all()
         # we need to reorder the columns to compare.
         assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
+
+
+#TODO: Needs test that tests changing something in step 1/3/4 will keep it until end of step 5

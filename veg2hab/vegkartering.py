@@ -281,7 +281,7 @@ def mozaiekregel_habtype_percentage_dict_to_string(
 
 
 def format_opmerkingen(
-    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]]
+    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: str
 ) -> str:
     """
     Uit ieder habitatvoorstel.mits.get_opm() komt een Set(str)
@@ -291,9 +291,13 @@ def format_opmerkingen(
     if not isinstance(voorstellen, list):
         voorstellen = [voorstellen]
 
-    opmerkingen = [voorstel.mits.get_opm() for voorstel in voorstellen]
-
-    return "\n".join(set.union(*opmerkingen))
+    opmerkingen = set.union(*[voorstel.mits.get_opm() for voorstel in voorstellen])
+    if keuze_opm != "":
+        print(keuze_opm)
+    if len(keuze_opm) > 1:
+        opmerkingen = [opm for opm in opmerkingen if opm not in keuze_opm]
+        opmerkingen.append(keuze_opm)
+    return "\n".join(opmerkingen)
 
 
 def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
@@ -322,9 +326,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Perc{idx}": vegtypeinfo.percentage,
                 f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                f"Opm{idx}": keuze.opmerking
-                + ("\n" if len(keuze.opmerking) > 0 else "")
-                + format_opmerkingen(voorstel),
+                f"Opm{idx}": format_opmerkingen(voorstel, keuze.opmerking),
                 f"_Mits_opm{idx}": keuze.mits_opmerking,
                 f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
                 f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
@@ -377,9 +379,7 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Perc{idx}": str(vegtypeinfo.percentage),
             f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-            f"Opm{idx}": keuze.opmerking
-            + ("\n" if len(keuze.opmerking) > 0 else "")
-            + format_opmerkingen(voorstellen),
+            f"Opm{idx}": format_opmerkingen(voorstellen, keuze.opmerking),
             f"_Mits_opm{idx}": keuze.mits_opmerking,
             f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
             f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
@@ -915,7 +915,7 @@ class Kartering:
             gdf[opmerking_col] = None
 
         gdf = gdf.rename(
-            columns={ElmID_col: "ElmID", opmerking_col: "Opme", datum_col: "Datum"}
+            columns={ElmID_col: "ElmID", opmerking_col: "Opm", datum_col: "Datum"}
         )
         ElmID_col = "ElmID"
         opmerking_col = "Opm"
