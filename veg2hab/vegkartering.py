@@ -1398,6 +1398,12 @@ class Kartering:
             .astype("string")
         )
 
+        # arcgis kan geen kolommen beginnend met een _ laten zien, dus zetten we er even wat voor
+        fix_arcgis_underscore = {
+            col: f"f_{col}" for col in editable_habtypes.columns if col.startswith("_")
+        }
+        editable_habtypes = editable_habtypes.rename(columns=fix_arcgis_underscore)
+
         return editable_habtypes
 
     @staticmethod
@@ -1417,6 +1423,12 @@ class Kartering:
 
     @classmethod
     def from_editable_habtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
+        # arcgis kan geen kolommen beginnend met een _ laten zien, dus de ervoor gezette f kan weer weg
+        fix_arcgis_underscore = {
+            col: col[len("f_") :] for col in gdf.columns if col.startswith("f_")
+        }
+        gdf = gdf.rename(columns=fix_arcgis_underscore)
+
         # rename the INTERN columns
         rename_columns = {
             col: col[len("INTERN") :]
