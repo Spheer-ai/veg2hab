@@ -1,6 +1,5 @@
 # veg2hab
 
-- [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
   - [Installatie instructies](#installatie-instructies)
@@ -11,6 +10,8 @@
     - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
+      - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
+      - [Handmatige correctie van de omzetting](#handmatige-correctie-van-de-omzetting)
     - [Gebruik via de Command Line Interface (CLI)](#gebruik-via-de-command-line-interface-cli)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
     - [Algemene kolommen voor het hele vlak](#algemene-kolommen-voor-het-hele-vlak)
