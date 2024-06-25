@@ -281,7 +281,7 @@ def mozaiekregel_habtype_percentage_dict_to_string(
 
 
 def format_opmerkingen(
-    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: str
+    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: Optional[str]
 ) -> str:
     """
     Uit ieder habitatvoorstel.mits.get_opm() komt een Set(str)
@@ -291,10 +291,11 @@ def format_opmerkingen(
     if not isinstance(voorstellen, list):
         voorstellen = [voorstellen]
 
+    if pd.isnull(keuze_opm):
+        keuze_opm = ""
+
     opmerkingen = set.union(*[voorstel.mits.get_opm() for voorstel in voorstellen])
     if keuze_opm != "":
-        print(keuze_opm)
-    if len(keuze_opm) > 1:
         opmerkingen = [opm for opm in opmerkingen if opm not in keuze_opm]
         opmerkingen.append(keuze_opm)
     return "\n".join(opmerkingen)
@@ -1020,7 +1021,7 @@ class Kartering:
         str_columns = {
             name: "string"
             for name in vegtypes_df.columns
-            if name.startswith("EDT_SBB") or name.startswith("EDT_VvN")
+            if name.startswith("EDIT_SBB") or name.startswith("EDIT_VvN")
         }
         perc_columns = {
             name: float for name in vegtypes_df.columns if name.startswith("EDIT_perc")
@@ -1028,7 +1029,7 @@ class Kartering:
         vegtypes_df = vegtypes_df.astype({**str_columns, **perc_columns})
         vegtypes_df[list(str_columns.keys())] = vegtypes_df[
             list(str_columns.keys())
-        ].fillna("")
+        ].replace("", pd.NA)
 
         # move and rename vegtype info column to the end
         gdf = self.gdf.rename(columns={"VegTypeInfo": "_VegTypeInfo"})
@@ -1397,6 +1398,9 @@ class Kartering:
             .apply(HabitatVoorstel.serialize_list2)
             .astype("string")
         )
+
+        # fille empty strings with pd.NA
+        editable_habtypes = editable_habtypes.replace("", pd.NA)
 
         return editable_habtypes
 
