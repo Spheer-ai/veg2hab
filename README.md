@@ -123,11 +123,25 @@ De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Pyt
 
 <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
-Omschrijving van de omzetstappen:
-- `1a_digitale_standaard`: Laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. Deze bestaat uit een vectorbestand (zoals een shapefile of geopackage) gecombineerd met een access database. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
-- `1b_vector_bestand`: Laadt een vegetatiekartering in die alle benodigde informatie in het vectorbestand (zoals een shape file of geopackage)zelf heeft staan. Omdat vectorbestanden geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. Voor de locatie van het vectorbestand kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
-- `2_optioneel_stapel_veg`: Optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
-- `3_definitietabel_en_mitsen`: Zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
+In iedere stap dient de gebruiker in ieder geval twee dingen aan te geven:
+- `Bestandslocatie van de kartering`: een vectorbestand (zoals een shapefile of geopackage). Dit is een bestandslocatie buiten ArcGIS Pro, óf een kaart die reeds ingeladen is in ArcGIS Pro.
+- `Output bestand`: De naam en locatie waar de output van de stap wordt opgeslagen. Als de gebruiker niets opgeeft, genereert veg2hab een unieke (maar weinig informatieve) naam. 
+
+Beschrijving van de omzetstappen en aanvullende inputvelden:
+- `1a_digitale_standaard`: laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. De volgende inputvelden worden gevraagd:
+  - `Kolomnaam van de ElementID`: de kolom die per vegetatievlak een unieke code bevat, die de link vormt met de access database.
+  - `Locatie van de access database`: het access database bestand (.mdb) dat hoort bij de kartering.
+  - `Datum kolom (optioneel)`: de kolom in de kartering waar de datum in staat aangegeven.
+  - `Opmerking kolom (optioneel)`: de kolom in de kartering waar opmerkingen in staan aangegeven.
+- `1b_vector_bestand`: laadt een vegetatiekartering in die alle benodigde informatie in het vectorbestand (zoals een shape file of geopackage) zelf heeft staan. Deze bevat dezelfde inputvelden als `1a`, maar heeft daarnaast extra informatie nodig, omdat vectorbestanden geen standaard format hebben:
+  - `single / multi`: zit informatie over complexen in één kolom of in meerdere kolommen?
+  - `VvN / SBB`: gebruikt de kartering SBB, VvN of beide als landelijke typologie?
+  - `SBB- / VvN-kolommen`: uit welke kolom moet veg2hab de vegetatiecodes halen?
+  - `Percentage kolom (optioneel)`: in welke kolom(men) staat het percentage voor complexen? 
+  - `Lokale vegetatietypen kolom (optioneel)`: welke kolom(men) bevatten informatie over het lokale vegetatietype.
+  - `Splits karakter`: Indien er complexinformatie in één enkele kolom staat, welke karakter moet veg2hab gebruiken om de complexdelen te splitsen?
+- `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
+- `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
 - `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
 - `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe.
 
