@@ -1,5 +1,6 @@
 # veg2hab
 
+- [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
   - [Installatie instructies](#installatie-instructies)
@@ -147,9 +148,11 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
 
 **Let op:**
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
-- Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft. De gebruiker dient deze velden ongemoeid te laten.
+- Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast.
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN (rVvN werkt in de huidige versie nog niet).
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
+- Wanneer veg2hab bezig is met een omzetting, dient de gebruiker het Map-venster in ArcGIS geopend te houden. Andere vensters openen kan resulteren in een fout van veg2hab, met de foutcode `ERROR - 'NoneType' object has no attribute 'addLayer'`.
+- Tip: Wanneer de gebruiker wil achterhalen welke keuzes veg2hab voor een specifiek vlak heeft gemaakt, raden we aan de velden van dit vlak in het *Pop-up*-venster te bekijken. Dit venster bevat dezelfde informatie als de *Attribute table*, maar geeft de informatie overzichtelijker weer.
 
 Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van de hierin gemaakte keuzes, is te vinden in document [Omzetstappen](./docs/OMZETSTAPPEN.md) te vinden.
 
