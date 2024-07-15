@@ -1399,7 +1399,7 @@ class Kartering:
             .astype("string")
         )
 
-        # fille empty strings with pd.NA
+        # fill empty strings with pd.NA
         editable_habtypes = editable_habtypes.replace("", pd.NA)
 
         return editable_habtypes
@@ -1520,7 +1520,7 @@ class Kartering:
 
         # arcgis kan geen kolommen beginnend met een _ laten zien, dus zetten we er even wat voor
         fix_arcgis_underscore = {
-            col: f"f_{col}" for col in final.columns if col.startswith("_")
+            col: f"f{col}" for col in final.columns if col.startswith("_")
         }
         final = final.rename(columns=fix_arcgis_underscore)
 
