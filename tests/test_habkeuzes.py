@@ -1,16 +1,15 @@
 import geopandas as gpd
-import pytest
 
 from veg2hab.criteria import GeenCriterium, NietCriterium, NietGeautomatiseerdCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel
-from veg2hab.habitat import HabitatKeuze, HabitatVoorstel, try_to_determine_habkeuze
+from veg2hab.habitat import HabitatVoorstel, try_to_determine_habkeuze
 from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import (
     GeenMozaiekregel,
     NietGeimplementeerdeMozaiekregel,
     StandaardMozaiekregel,
 )
-from veg2hab.vegetatietypen import SBB, VvN
+from veg2hab.vegetatietypen import SBB
 
 CLIInterface.get_instance()
 
