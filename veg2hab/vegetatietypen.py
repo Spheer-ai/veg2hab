@@ -43,7 +43,6 @@ class SBB(BaseModel):
     derivaatgemeenschap: Optional[str] = None
     rompgemeenschap: Optional[str] = None
 
-
     @classmethod
     def from_code(cls, code: str) -> Self:
         assert isinstance(code, str), "Code is not a string"
