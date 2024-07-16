@@ -530,7 +530,9 @@ def fix_crs(
     Zet gdfs met een andere crs dan EPSG:28992 om naar EPSG:28992
     """
     if gdf.crs is None:
-        logging.warn(f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992")
+        logging.warning(
+            f"CRS van {shape_path} was None en is nu gelezen als EPSG:28992"
+        )
         gdf = gdf.set_crs(epsg=28992)
     elif gdf.crs.to_epsg() != 28992:
         logging.info(
@@ -768,10 +770,10 @@ class Kartering:
         # We laten alle NA vegtype-informatie vallen - dit kan komen door geometry die lijnen zijn in plaats van vormen,
         # maar ook aan ontbrekende waarden in een van de csv-bestanden.
         if gdf.VegTypeInfo.isnull().any():
-            logging.warn(
+            logging.warning(
                 f"Er zijn {gdf.VegTypeInfo.isnull().sum()} vlakken zonder VegTypeInfo in {shape_path}. Deze worden verwijderd."
             )
-            logging.warn(
+            logging.warning(
                 f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
             )
             gdf = gdf.dropna(subset=["VegTypeInfo"])
@@ -860,7 +862,7 @@ class Kartering:
         shapefile = gpd.read_file(shape_path)
 
         if ElmID_col and not shapefile[ElmID_col].is_unique:
-            logging.warn(
+            logging.warning(
                 f"""De kolom {ElmID_col} bevat niet-unieke waarden in {shape_path}.
                 Eerste paar dubbele waarden:
                 {
@@ -995,7 +997,7 @@ class Kartering:
             lambda infos: any(len(info.VvN) > 0 for info in infos)
         )
         if VvN_already_present.any() and not override_existing_VvN:
-            logging.warn(
+            logging.warning(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )
             return
@@ -1095,7 +1097,7 @@ class Kartering:
 
         changes = gdf["_VegTypeInfo"] != altered_vegtypes
         if changes.any():
-            logging.warn(
+            logging.warning(
                 f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {gdf['ElmID'][changes].to_list()}"
             )
 
@@ -1283,7 +1285,7 @@ class Kartering:
             ):
                 break
         else:
-            logging.warn(
+            logging.warning(
                 f"Maximaal aantal iteraties ({max_iter}) bereikt in de mozaiekregel loop."
             )
 
@@ -1462,7 +1464,7 @@ class Kartering:
                     new_habtype != old_keuze.habtype
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
                 ):
-                    logging.warn(
+                    logging.warning(
                         f"Er zijn handmatige wijzigingen in de habitattypes. Deze worden overgenomen. In regel: ElmID={gdf['ElmID'].iloc[row_idx]}"
                     )
                     old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
