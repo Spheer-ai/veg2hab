@@ -1,5 +1,6 @@
 # veg2hab
 
+- [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
   - [Installatie instructies](#installatie-instructies)
@@ -10,12 +11,16 @@
     - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
-  - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
-    - [Lokale ontwikkeling](#lokale-ontwikkeling)
-    - [Nieuwe release](#nieuwe-release)
+      - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
+      - [Handmatige correctie van de omzetting](#handmatige-correctie-van-de-omzetting)
+    - [Gebruik via de Command Line Interface (CLI)](#gebruik-via-de-command-line-interface-cli)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
     - [Algemene kolommen voor het hele vlak](#algemene-kolommen-voor-het-hele-vlak)
     - [Kolommen per deel van het complex](#kolommen-per-deel-van-het-complex)
+  - [Bronbestanden die veg2hab gebruikt](#bronbestanden-die-veg2hab-gebruikt)
+  - [Handleiding voor ontwikkelaars](#handleiding-voor-ontwikkelaars)
+    - [Lokale ontwikkeling](#lokale-ontwikkeling)
+    - [Nieuwe release](#nieuwe-release)
 
 ## Introductie
 
@@ -113,40 +118,134 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 ### Gebruik in ArcGIS Pro
 
+#### Sequentiële omzetstappen
+
 De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Python Toolbox `veg2hab.pyt`. De gehele omzetting verloopt via een aantal sequentiële stappen: 
 
 <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
-**Omschrijving van de stappen:**
-- `1a_digitale_standaard`: Laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. Deze bestaat uit een shapefile gecombineerd met een access database. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
-- `1b_vector_bestand`: Laadt een vegetatiekartering in die alle benodigde informatie in de shapefile zelf heeft staan. Omdat shapefiles geen standaard kolomnamen hebben, dient de gebruiker hier een handvol inputvelden in te vullen, bijvoorbeeld welke kolom de te gebruiken landelijke typologie bevat. Voor de shapefile kan de gebruiker verwijzen naar een bestandslocatie óf naar een kaart die reeds ingeladen is in ArcGIS Pro.
-- `2_optioneel_stapel_veg`: Optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
-- `3_definitietabel_en_mitsen`: Zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
-- `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
-- `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe. 
+In iedere stap dient de gebruiker in ieder geval twee dingen aan te geven:
+- `Bestandslocatie van de kartering`: een vectorbestand (zoals een shapefile of geopackage). Dit is een bestandslocatie buiten ArcGIS Pro, óf een kaart die reeds ingeladen is in ArcGIS Pro.
+- `Output bestand`: De naam en locatie waar de output van de stap wordt opgeslagen. Als de gebruiker niets opgeeft, genereert veg2hab een unieke (maar weinig informatieve) naam. 
 
-Het opdelen van de omzetting in deze stappen zorgt ervoor dat de gebruiker tussentijds naar eigen inzicht aanpassingen kan aanbrengen in de bevindingen van veg2hab. veg2hab is zo gebouwd, dat het deze veranderingen opmerkt, en in de vervolgstappen meeneemt. Voorbeelden:
-- De vegetatiekartering hanteert een vertaling van SBB naar VvN die afwijkt van de waswordt lijst. In dit geval kan de gebruiker na het inladen van de kartering in stap `1` handmatig VvN codes in veld **VvN{i}** aanpassen. In de vervolgstappen gebruikt veg2hab de handmatige VvN-codes om op te zoeken in de definitie.
-- veg2hab kan in stap `3` niet alle beperkende criteria succesvol controleren, waardoor veel vlakken op Hxxxx blijven staan. Dit zorgt ervoor dat ook veel vlakken met een mozaiekregel niet goed gecontroleerd kunnen worden in stap `4`. De gebruiker kan handmatig vlakken omzetten van Hxxxx naar H0000 of een habitattype, en pas daarna verder gaan met stap `4`.
+Beschrijving van de omzetstappen en aanvullende inputvelden:
+- `1a_digitale_standaard`: laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. De volgende inputvelden worden gevraagd:
+  - `Kolomnaam van de ElementID`: de kolom die per vegetatievlak een unieke code bevat, die de link vormt met de access database.
+  - `Locatie van de access database`: het access database bestand (.mdb) dat hoort bij de kartering.
+  - `Datum kolom (optioneel)`: de kolom in de kartering waar de datum in staat aangegeven.
+  - `Opmerking kolom (optioneel)`: de kolom in de kartering waar opmerkingen in staan aangegeven.
+- `1b_vector_bestand`: laadt een vegetatiekartering in die alle benodigde informatie in het vectorbestand (zoals een shape file of geopackage) zelf heeft staan. Deze bevat dezelfde inputvelden als `1a`, maar heeft daarnaast extra informatie nodig, omdat vectorbestanden geen standaard format hebben:
+  - `single / multi`: zit informatie over complexen in één kolom of in meerdere kolommen?
+  - `VvN / SBB`: gebruikt de kartering SBB, VvN of beide als landelijke typologie?
+  - `SBB- / VvN-kolommen`: uit welke kolom moet veg2hab de vegetatiecodes halen?
+  - `Percentage kolom (optioneel)`: in welke kolom(men) staat het percentage voor complexen? 
+  - `Lokale vegetatietypen kolom (optioneel)`: welke kolom(men) bevatten informatie over het lokale vegetatietype.
+  - `Splits karakter`: Indien er complexinformatie in één enkele kolom staat, welke karakter moet veg2hab gebruiken om de complexdelen te splitsen?
+- `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
+- `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
+- `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
+- `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe.
 
 **Let op:**
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
-- Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft. De gebruiker dient deze velden ongemoeid te laten.
-- Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie (SBB, VvN of rVvN).
-- De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart. Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
+- Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast.
+- Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN (rVvN werkt in de huidige versie nog niet).
+- De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
+- Wanneer veg2hab bezig is met een omzetting, dient de gebruiker het Map-venster in ArcGIS geopend te houden. Andere vensters openen kan resulteren in een fout van veg2hab, met de foutcode `ERROR - 'NoneType' object has no attribute 'addLayer'`.
+- Tip: Wanneer de gebruiker wil achterhalen welke keuzes veg2hab voor een specifiek vlak heeft gemaakt, raden we aan de velden van dit vlak in het *Pop-up*-venster te bekijken. Dit venster bevat dezelfde informatie als de *Attribute table*, maar geeft de informatie overzichtelijker weer.
+
+Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van de hierin gemaakte keuzes, is te vinden in document [Omzetstappen](./docs/OMZETSTAPPEN.md) te vinden.
+
+#### Handmatige correctie van de omzetting
+
+Het opdelen van de omzetting in sequentiële stappen zorgt ervoor dat de gebruiker tussentijds aanpassingen kan aanbrengen in de bevindingen van veg2hab. veg2hab is zo gebouwd, dat het deze veranderingen opmerkt, en in de vervolgstappen meeneemt. Velden die beginnen met `EDIT_` mogen door de gebruiker na iedere stap van veg2hab aangepast worden. Wanneer andere velden worden aangepast, kan dit ervoor zorgen dat de vervolgstappen niet goed werken.
+
+Voorbeelden:
+- De vegetatiekartering hanteert een vertaling van SBB naar VvN die afwijkt van de waswordt lijst. In dit geval kan de gebruiker na het inladen van de kartering in stap `1` handmatig VvN codes in veld **VvN{i}** aanpassen. In de vervolgstappen gebruikt veg2hab de handmatige VvN-codes om op te zoeken in de definitie.
+- veg2hab kan in stap `3` niet alle beperkende criteria succesvol controleren, waardoor veel vlakken op Hxxxx blijven staan. Dit zorgt ervoor dat ook veel vlakken met een mozaiekregel niet goed gecontroleerd kunnen worden in stap `4`. De gebruiker kan handmatig vlakken omzetten van Hxxxx naar H0000 of een habitattype, en pas daarna verder gaan met stap `4`.
 
 
-### Bronbestanden die veg2hab gebruikt
+### Gebruik via de Command Line Interface (CLI)
+
+TO DO
+
+
+## Interpretatie van de output-habitattypekartering
+
+De habitattypekaarten die door veg2hab gemaakt worden, bevatten twee soorten attribute kolommen:
+- Kolommen die vanuit het Gegevens Leverings Protol verplicht zijn.
+- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken (`_` of `f_` in ArcGIS Pro) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
+
+Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen die een deel van een complex beschrijven. Deze laatsten eindigen altijd op een cijfer, om het deel van het complex aan te geven. In geval van een niet-complex vlak, zijn alleen de kolommen `<kolomnaam>1` ingevuld.
+
+### Algemene kolommen voor het hele vlak
+**Area**: Oppervlakte van het vlak in m2.
+
+**Opm**: Opmerkingen bij het vlak, overgenomen uit de bronkartering. Hiervoor moet de gebruiker expliciet een opmerkingenkolom selecteren bij het draaien van veg2hab.
+
+**Datum**: Datum waarop een vlak is ingetekend, overgenomen uit de bronkartering. Hiervoor moet de gebruiker expliciet een datumkolom selecteren bij het draaien van veg2hab.
+
+**ElmID**: Een uniek ID voor ieder vlak. Deze wordt in eerste instantie overgenomen uit de bronkartering, tenzij deze niet voor ieder vlak uniek is; in dat geval is een warning gegeven en is er een nieuw uniek ID voor ieder vlak aangemaakt.
+
+**_Samnvttng**: Verkorte weergave met toegekende habitattypen en hun percentages in het complex. Dit is een combinatie van alle kolommen `Habtype{i}` en `Perc{i}`.
+
+**_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
+
+**_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN of beide). Als dit SBB is, zijn de bijbehorende VvN-typen door veg2hab uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, wordt deze stap overgeslagen.
+
+### Kolommen per deel van het complex
+**Habtype{i}**: Habitattype dat door veg2hab is toegekend aan dit complex-deel. HXXXX betekent dat er nog geen eenduidig habitattype kan worden toegekend. Hiervoor is nog een vervolgstap in veg2hab of handmatige inspectie nodig.
+
+**Perc{i}**: Percentage van het vlak dat door dit complex-deel wordt bedekt.
+
+**Opp{i}**: Oppervlakte van dit complex-deel in m2.
+
+**Kwal{i}**: Kwaliteit van dit complex-deel. Dit kan zijn G (goed), M (matig) of X (nvt).
+
+**Opm{i}**: Opsomming van informatie over het vlak dat veg2hab uit bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart heeft gehaald.
+
+**VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie is opgegeven, en dat de waswordtlijst ook geen vertaling bevat.
+
+**_Status{i}**: Beslissings-status van veg2hab voor dit complex-deel. Kolom `_Uitleg{i}` geeft verdere uitleg over deze status. Mogelijke statussen en hun uitleg zijn:
+- `HABITATTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
+- `VOLDOET_AAN_MEERDERE_HABTYPEN`: veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.
+- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.
+- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. veg2hab kent aan dit vlak H0000 toe.
+- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. veg2hab kent aan dit vlak H0000 toe.
+- `NIET_GEAUTOMATISEERD_VEGTYPE`: Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.
+- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
+- `WACHTEN_OP_MOZAIEK`: De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).
+- `MINIMUM_OPP_NIET_GEHAALD`: het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet het minimum benodigde oppervlak.
+
+**_Uitleg{i}**: Uitleg bij de kolom `_Status{i}` van dit complex-deel.
+
+**_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
+
+**_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
+- `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
+- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
+- `HABITATTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
+- `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
+
+Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
+
+**_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
+
+
+
+## Bronbestanden die veg2hab gebruikt
 
 Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
 
  - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten.
  - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten.
- - [Fysisch-Geografische Regio kaart](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
- - [Landschappelijke Bodem Kaart](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
+ - [Fysisch-Geografische Regio kaart (afgekort tot FGR)](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
+ - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
  - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
 
 Let op: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
+
+
 
 
 
@@ -188,65 +287,3 @@ poetry run pytest tests/
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
 8. Push de tag naar git `git push origin tag v$(poetry version -s)`
 9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
-
-
-## Interpretatie van de output-habitattypekartering
-
-De habitattypekaarten die door veg2hab gemaakt worden, bevatten twee soorten attribute kolommen:
-- Kolommen die vanuit het Gegevens Leverings Protol verplicht zijn.
-- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken ( `_` ) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
-
-Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen die een deel van een complex beschrijven. Deze laatsten eindigen altijd op een cijfer, om het deel van het complex aan te geven. In geval van een niet-complex vlak, zijn alleen de kolommen `<kolomnaam>1` ingevuld.
-
-### Algemene kolommen voor het hele vlak
-**Area**: Oppervlakte van het vlak in m2.
-
-**Opm**: Opmerkingen bij het vlak, overgenomen uit de bronkartering. Hiervoor moet de gebruiker expliciet een opmerkingenkolom selecteren bij het draaien van veg2hab.
-
-**Datum**: Datum waarop een vlak is ingetekend, overgenomen uit de bronkartering. Hiervoor moet de gebruiker expliciet een datumkolom selecteren bij het draaien van veg2hab.
-
-**ElmID**: Een uniek ID voor ieder vlak. Deze wordt in eerste instantie overgenomen uit de bronkartering, tenzij deze niet voor ieder vlak uniek is; in dat geval is een warning gegeven en is er een nieuw uniek ID voor ieder vlak aangemaakt.
-
-**_Samnvttng**: Verkorte weergave met toegekende habitattypen en hun percentages in het complex. Dit is een combinatie van alle kolommen `Habtype{i}` en `Perc{i}`.
-
-**_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
-
-**_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN of beide). Als dit SBB is, zijn de bijbehorende VvN-typen door veg2hab uit de waswordtlijst gehaald. Als er naar VvN of naar beide is vertaald, wordt deze stap overgeslagen.
-
-### Kolommen per deel van het complex
-**Habtype{i}**: Habitattype dat door veg2hab is toegekend aan dit complex-deel. HXXXX betekent dat er nog geen eenduidig habitattype kan worden toegekend. Hiervoor is nog een vervolgstap in veg2hab of handmatige inspectie nodig.
-
-**Perc{i}**: Percentage van het vlak dat door dit complex-deel wordt bedekt.
-
-**Opp{i}**: Oppervlakte van dit complex-deel in m2.
-
-**Kwal{i}**: Kwaliteit van dit complex-deel. Dit kan zijn G (goed), M (matig) of X (nvt).
-
-**Opm{i}**: Opsomming van informatie over het vlak dat veg2hab uit de FGR- en Bodemkaart heeft gehaald.
-
-**VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie is opgegeven, en dat de waswordtlijst ook geen vertaling bevat.
-
-**_Status{i}**: Beslissings-status van veg2hab voor dit complex-deel. Kolom `_Uitleg{i}` geeft verdere uitleg over deze status. Mogelijke statussen en hun uitleg zijn:
-- `HABTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
-- `VOLDOET_AAN_MEERDERE_HABTYPEN`: veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.
-- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. Veg2hab kent aan dit vlak H0000 toe.
-- `VEGTYPEN_NIET_IN_DEFTABEL`: De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. Veg2hab kent aan dit vlak H0000 toe.
-- `GEEN_OPGEGEVEN_VEGTYPEN`: Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen. Veg2hab kent aan dit vlak H0000 toe.
-- `NIET_GEAUTOMATISEERD_VEGTYPE`: Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.
-- `NIET_GEAUTOMATISEERD_CRITERIUM`: Er zijn placeholder mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.
-- `WACHTEN_OP_MOZAIEK`: Er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)
-- `MINIMUM_OPP_NIET_GEHAALD`: het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet het minimum benodigde oppervlak.
-
-**_Uitleg{i}**: Uitleg bij de kolom `_Status{i}` van dit complex-deel.
-
-**_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
-
-**_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
-- `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
-- `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
-- `HABTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond.
-- `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
-
-Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
-
-**_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).

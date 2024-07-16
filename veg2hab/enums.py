@@ -1,4 +1,4 @@
-from collections import namedtuple
+from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import List, NamedTuple, Tuple
 
@@ -9,11 +9,18 @@ class BodemTuple(NamedTuple):
     enkel_negatieven: bool
 
 
-class LBKTuple(NamedTuple):
+@dataclass
+class LBKTypeInfo:
     string: str
     codes: List[str]
     enkel_negatieven: bool
     enkel_positieven: bool
+
+    def __post_init__(self):
+        if self.enkel_negatieven and self.enkel_positieven:
+            raise ValueError(
+                "Een LBKTypeInfo kan niet enkel negatieven en enkel positieven zijn"
+            )
 
 
 class FuncSamenhangID(NamedTuple):
@@ -95,6 +102,8 @@ class Kwaliteit(Enum):
             return cls.GOED
         elif letter == "M":
             return cls.MATIG
+        elif letter == "X":
+            return cls.NVT
         else:
             raise ValueError("Letter moet G of M zijn")
 
@@ -156,16 +165,20 @@ class KeuzeStatus(Enum):
     # Er is meer dan threshold % HXXXX in de omliggende vlakken
     WACHTEN_OP_MOZAIEK = auto()
 
+    # habitat type is handmatig toegewezen
+    HANDMATIG_TOEGEKEND = auto()
+
     _toelichting = {
-        "HABITATTYPE_TOEGEKEND": "Als alle regels gevolgd worden is er 1 duidelijke optie; er is maar 1 meest specifieke definitietabelregel met kloppende mits/mozaiek.",
-        "MINIMUM_OPP_NIET_GEHAALD": "Er is een definitietabelregel met kloppende mits/mozaiek, maar de minimum oppervlakte van het habitattype is niet gehaald.",
-        "VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN": "Er is geen definitietabelregel met kloppende mits/mozaiek. Er kan dus geen habitattype toegekend worden.",
-        "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn niet in de definitietabel gevonden en leiden dus niet tot een habitattype.",
-        "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen (habitatwaardige)vegetatietypen opgegeven voor dit vlak. Er is dus geen habitattype toe te kennen.",
-        "VOLDOET_AAN_MEERDERE_HABTYPEN": "Er zijn meerdere definitietabelregels met kloppende mits/mozaiek. Er is geen duidelijke keuze te maken.",
-        "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door Veg2Hab worden gecontroleerd.",
-        "NIET_GEAUTOMATISEERD_VEGTYPE": "Er is een vegetatietype dat niet automatisch via de definitietabel kan worden omgezet naar een habitattype, dus Veg2Hab kan geen habitattype toekennen.",
-        "WACHTEN_OP_MOZAIEK": "De mozaiekregels moeten nog gecheckt worden, of rr is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX)",
+        "HABITATTYPE_TOEGEKEND": "veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.",
+        "MINIMUM_OPP_NIET_GEHAALD": "Het vlak voldoet aan de voorwaarden voor een habitattype, maar haalt (in functionele samenhang) niet de minimum benodigde oppervlakte.",
+        "VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN": "Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.",
+        "VEGTYPEN_NIET_IN_DEFTABEL": "De vegetatietypen van het vlak zijn op geen enkel syntaxonomisch niveau in de definitietabel gevonden en leiden dus niet tot een habitattype. veg2hab kent aan dit vlak H0000 toe.",
+        "GEEN_OPGEGEVEN_VEGTYPEN": "Er zijn in de vegetatiekartering geen vegetatietypen opgegeven voor dit vlak. veg2hab kent aan dit vlak H0000 toe.",
+        "VOLDOET_AAN_MEERDERE_HABTYPEN": "veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.",
+        "NIET_GEAUTOMATISEERD_CRITERIUM": "Er zijn niet-geautomatiseerde mitsen/mozaiekregels gevonden; deze kunnen niet door veg2hab worden gecontroleerd. De gebruiker moet hier een handmatige controle uitvoeren.",
+        "NIET_GEAUTOMATISEERD_VEGTYPE": "Het vlak heeft een vegetatietype dat niet geautomatiseerd kan worden omgezet naar een habitattype. De gebruiker moet hier een handmatige controle uitvoeren.",
+        "WACHTEN_OP_MOZAIEK": "De mozaiekregels zijn nog niet toegepast, of er is te weinig informatie over de habitattypen van omliggende vlakken (teveel HXXXX).",
+        "HANDMATIG_TOEGEKEND": "Het habitattype is handmatig aangepast in een van de tussentijdse resultaten.",
     }
 
     @property
@@ -200,20 +213,20 @@ class BodemType(Enum):
         - Is dit type sluitend of is het enkel voor negatieven?
     """
 
-    LEEMARME_HUMUSPODZOLGRONDEN = "leemarme humuspodzolgronden"
-    LEMIGE_HUMUSPODZOLGRONDEN = "lemige humuspodzolgronden"
-    VAAGGRONDEN = "vaaggronden"
-    LEEMARME_VAAGGRONDEN_H9190 = "leemarme vaaggronden (H9190)"
-    PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190 = "podzolgronden met een zanddek (H9190)"
-    MODERPODZOLGRONDEN = "moderpodzolgronden"
-    OUDE_KLEIGRONDEN = "oude kleigronden"
-    LEEMGRONDEN = "leemgronden"
+    LEEMARME_HUMUSPODZOLGRONDEN = "Leemarme humuspodzolgronden"
+    LEMIGE_HUMUSPODZOLGRONDEN = "Lemige humuspodzolgronden"
+    VAAGGRONDEN = "Vaaggronden"
+    LEEMARME_VAAGGRONDEN_H9190 = "Leemarme vaaggronden (H9190)"
+    PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190 = "Podzolgronden met een zanddek (H9190)"
+    MODERPODZOLGRONDEN = "Moderpodzolgronden"
+    OUDE_KLEIGRONDEN = "Oude kleigronden"
+    LEEMGRONDEN = "Leemgronden"
 
     # TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifieke te forceren?
 
     _tuple_dict = {
         "LEEMARME_HUMUSPODZOLGRONDEN": BodemTuple(
-            string="leemarme humuspodzolgronden",
+            string="Leemarme humuspodzolgronden",
             codes=[
                 "Hn21",
                 "Hn30",
@@ -227,12 +240,12 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "LEMIGE_HUMUSPODZOLGRONDEN": BodemTuple(
-            string="lemige humuspodzolgronden",
+            string="Lemige humuspodzolgronden",
             codes=["Hn23", "cHn23", "Hd23", "cHd23"],
             enkel_negatieven=False,
         ),
         "VAAGGRONDEN": BodemTuple(
-            string="vaaggronden",
+            string="Vaaggronden",
             codes=[
                 # Kalkloze zandgronden -> Vaaggronden
                 "Zn21",
@@ -367,17 +380,17 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "LEEMARME_VAAGGRONDEN_H9190": BodemTuple(
-            string="leemarme vaaggronden",
+            string="Leemarme vaaggronden",
             codes=["Zn21", "Zd21", "Zb21", "Zn30", "Zd30", "Zb30"],
             enkel_negatieven=True,
         ),
         "PODZOLGRONDEN_MET_EEN_ZANDDEK_H9190": BodemTuple(
-            string="podzolgronden met een zanddek",
+            string="Podzolgronden met een zanddek",
             codes=["zY21", "zhY21", "zY21g", "zY30", "zhY30", "zY30g"],
             enkel_negatieven=False,
         ),
         "MODERPODZOLGRONDEN": BodemTuple(
-            string="moderpodzolgronden",
+            string="Moderpodzolgronden",
             codes=[
                 "Y21",
                 "Y23",
@@ -391,12 +404,12 @@ class BodemType(Enum):
             enkel_negatieven=False,
         ),
         "OUDE_KLEIGRONDEN": BodemTuple(
-            string="oude kleigronden",
+            string="Oude kleigronden",
             codes=["KT", "KX"],
             enkel_negatieven=False,
         ),
         "LEEMGRONDEN": BodemTuple(
-            string="leemgronden",
+            string="Leemgronden",
             codes=[
                 "pLn5",
                 "pLn6",
@@ -441,39 +454,39 @@ class LBKType(Enum):
         - Is dit type sluitend of is het enkel voor negatieven?
     """
 
-    HOOGVEENLANDSCHAP = "hoogveenlandschap"
-    HOOGVEEN = "hoogveen"
-    HERSTELLEND_HOOGVEEN = "herstellend hoogveen"
-    ZANDVERSTUIVING = "zandverstuiving"
-    ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "onder invloed van beek of rivier"
+    HOOGVEENLANDSCHAP = "Hoogveenlandschap"
+    HOOGVEEN = "Hoogveen"
+    HERSTELLEND_HOOGVEEN = "Herstellend hoogveen"
+    ZANDVERSTUIVING = "Zandverstuiving"
+    ONDER_INVLOED_VAN_BEEK_OF_RIVIER = "Onder invloed van beek of rivier"
 
     _tuple_dict = {
-        "HOOGVEENLANDSCHAP": LBKTuple(
-            string="hoogveenlandschap",
+        "HOOGVEENLANDSCHAP": LBKTypeInfo(
+            string="Hoogveenlandschap",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=False,
             enkel_positieven=True,
         ),
-        "HOOGVEEN": LBKTuple(
-            string="hoogveen",
+        "HOOGVEEN": LBKTypeInfo(
+            string="Hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "HERSTELLEND_HOOGVEEN": LBKTuple(
-            string="herstellend hoogveen",
+        "HERSTELLEND_HOOGVEEN": LBKTypeInfo(
+            string="Herstellend hoogveen",
             codes=["HzHL", "HzHD", "HzHO", "HzHK"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ZANDVERSTUIVING": LBKTuple(
-            string="zandverstuiving",
+        "ZANDVERSTUIVING": LBKTypeInfo(
+            string="Zandverstuiving",
             codes=["HzSD", "HzSDa", "HzSF", "HzSFa", "HzSL", "HzSLa", "HzSX", "HzSXa"],
             enkel_negatieven=True,
             enkel_positieven=False,
         ),
-        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTuple(
-            string="onder invloed van beek of rivier",
+        "ONDER_INVLOED_VAN_BEEK_OF_RIVIER": LBKTypeInfo(
+            string="Onder invloed van beek of rivier",
             codes=["HzBB", "HzBN", "HzBV", "HzBW", "HzBL", "HzBD", "HlDB", "HlDD"],
             enkel_negatieven=False,
             enkel_positieven=True,
@@ -490,3 +503,7 @@ class LBKType(Enum):
     @property
     def enkel_negatieven(self):
         return LBKType._tuple_dict.value[self.name].enkel_negatieven
+
+    @property
+    def enkel_positieven(self):
+        return LBKType._tuple_dict.value[self.name].enkel_positieven

@@ -15,7 +15,8 @@ from veg2hab.enums import FGRType
 #       binnen een bronvlak liggen NaN krijgen. Beter zou zijn dat ze alles krijgen waar ze op liggen, en als
 #       dat steeds dezelfde is, het karteringvlak alsnog dat type krijgt. Dit kan voorkomen bij LBK en bij
 #       de bodemkaart, omdat hier regelmatig vlakken met dezelfde typering toch naast elkaar liggen, omdat ze
-#       verschillen in zaken waar wij niet naar kijken.
+#       verschillen in zaken waar wij niet naar kijken. Het kan ook zijn dat 1 vlak in 2 bronvlakken ligt, en
+#       dat beide bronvlakken andere typeringen hebben die toch onder dezelfde categorie vallen.
 
 
 def get_checksum(path: Path) -> str:
@@ -69,7 +70,7 @@ class LBK:
 
     @classmethod
     def from_github(cls, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
-        local_path = get_datadir("veg2hab", "data", veg2hab.__version__) / "lbk.gpkg"
+        local_path = get_datadir("veg2hab", "data") / "lbk.gpkg"
         remote_path = f"https://github.com/Spheer-ai/veg2hab/releases/download/v{veg2hab.__version__}/lbk.gpkg"
 
         if (

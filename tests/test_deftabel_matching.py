@@ -41,16 +41,16 @@ def test_perfect_match_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["25aa3"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("25aa3"),
-            vegtype_in_dt=VvN("25aa3"),
+            onderbouwend_vegtype=VvN.from_code("25aa3"),
+            vegtype_in_dt=VvN.from_code("25aa3"),
             habtype="H1310_A",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=31,
             mits=OfCriteria(
                 sub_criteria=[
-                    FGRCriterium(fgrtype=FGRType.NZ),
-                    FGRCriterium(fgrtype=FGRType.GG),
-                    FGRCriterium(fgrtype=FGRType.DU),
+                    FGRCriterium(wanted_fgrtype=FGRType.NZ),
+                    FGRCriterium(wanted_fgrtype=FGRType.GG),
+                    FGRCriterium(wanted_fgrtype=FGRType.DU),
                     NietGeautomatiseerdCriterium(
                         toelichting='het vlak op andere wijze onder "kustgebied" valt'
                     ),
@@ -67,7 +67,7 @@ def test_non_existing_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["99aa3a"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("99aa3a"),
+            onderbouwend_vegtype=VvN.from_code("99aa3a"),
             vegtype_in_dt=None,
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
@@ -84,8 +84,8 @@ def test_match_to_less_specific_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["5ca2a"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("5ca2a"),
-            vegtype_in_dt=VvN("5ca2"),
+            onderbouwend_vegtype=VvN.from_code("5ca2a"),
+            vegtype_in_dt=VvN.from_code("5ca2"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=353,
@@ -104,8 +104,8 @@ def test_gemeenschap_perfect_match_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["5rg8"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("5rg8"),
-            vegtype_in_dt=VvN("5rg8"),
+            onderbouwend_vegtype=VvN.from_code("5rg8"),
+            vegtype_in_dt=VvN.from_code("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=356,
@@ -123,18 +123,18 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["14bb1a"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("14bb1a"),
-            vegtype_in_dt=VvN("14bb1a"),
+            onderbouwend_vegtype=VvN.from_code("14bb1a"),
+            vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
+            mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("14bb1a"),
-            vegtype_in_dt=VvN("14bb1a"),
+            onderbouwend_vegtype=VvN.from_code("14bb1a"),
+            vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=404,
@@ -153,14 +153,14 @@ def test_perfect_and_less_specific_match_VvN(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, VvN_strings=["36aa2a"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("36aa2a"),
-            vegtype_in_dt=VvN("36aa2a"),
+            onderbouwend_vegtype=VvN.from_code("36aa2a"),
+            vegtype_in_dt=VvN.from_code("36aa2a"),
             habtype="H2180_B",
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=169,
             mits=EnCriteria(
                 sub_criteria=[
-                    FGRCriterium(fgrtype=FGRType.DU),
+                    FGRCriterium(wanted_fgrtype=FGRType.DU),
                     NietGeautomatiseerdCriterium(toelichting="zachte berk dominant"),
                 ]
             ),
@@ -168,8 +168,8 @@ def test_perfect_and_less_specific_match_VvN(dt):
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("36aa2a"),
-            vegtype_in_dt=VvN("36aa2"),
+            onderbouwend_vegtype=VvN.from_code("36aa2a"),
+            vegtype_in_dt=VvN.from_code("36aa2"),
             habtype="H91D0",
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=640,
@@ -191,8 +191,8 @@ def test_perfect_match_SBB(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["9b1"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("9b1"),
-            vegtype_in_dt=SBB("9b1"),
+            onderbouwend_vegtype=SBB.from_code("9b1"),
+            vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
@@ -210,8 +210,8 @@ def test_matches_both_vvn_and_sbb(dt):
     )
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("5rg8"),
-            vegtype_in_dt=VvN("5rg8"),
+            onderbouwend_vegtype=VvN.from_code("5rg8"),
+            vegtype_in_dt=VvN.from_code("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
             idx_in_dt=356,
@@ -222,18 +222,18 @@ def test_matches_both_vvn_and_sbb(dt):
             match_level=MatchLevel.GEMEENSCHAP_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("14bb1a"),
-            vegtype_in_dt=VvN("14bb1a"),
+            onderbouwend_vegtype=VvN.from_code("14bb1a"),
+            vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=276,
-            mits=LBKCriterium(lbktype=LBKType.ZANDVERSTUIVING),
+            mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=VvN("14bb1a"),
-            vegtype_in_dt=VvN("14bb1a"),
+            onderbouwend_vegtype=VvN.from_code("14bb1a"),
+            vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=404,
@@ -244,8 +244,8 @@ def test_matches_both_vvn_and_sbb(dt):
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("9b1"),
-            vegtype_in_dt=SBB("9b1"),
+            onderbouwend_vegtype=SBB.from_code("9b1"),
+            vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=340,
@@ -254,6 +254,7 @@ def test_matches_both_vvn_and_sbb(dt):
             match_level=MatchLevel.ASSOCIATIE_SBB,
         ),
     ]
+    post2 = dt.find_habtypes(pre)
     assert dt.find_habtypes(pre) == post
 
 
@@ -261,7 +262,7 @@ def test_niet_geautomatiseerde_codes(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["100"])
     post = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("100"),
+            onderbouwend_vegtype=SBB(klasse="100"),
             vegtype_in_dt=None,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,

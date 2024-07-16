@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from veg2hab.criteria import BeperkendCriterium
+from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import MozaiekRegel
 
@@ -34,3 +35,15 @@ def test_mitsjson(mitsjson):
 def test_mozaiekjson(mozaiekjson):
     for value in mozaiekjson.values():
         MozaiekRegel.parse_raw(json.dumps(value))
+
+
+def test_evaluation_can_be_serialized():
+    criterium = GeenCriterium()
+    assert criterium.cached_evaluation is None
+    criterium.check(row=pd.Series())
+    assert criterium.cached_evaluation is not None
+
+    json_str = criterium.json()
+
+    criterium2 = BeperkendCriterium(**json.loads(json_str))
+    assert criterium2.cached_evaluation == criterium.cached_evaluation

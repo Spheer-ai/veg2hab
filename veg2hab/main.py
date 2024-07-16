@@ -8,7 +8,15 @@ import geopandas as gpd
 from veg2hab import constants
 from veg2hab.bronnen import FGR, LBK, Bodemkaart
 from veg2hab.definitietabel import DefinitieTabel
-from veg2hab.io.common import AccessDBInputs, Interface, ShapefileInputs
+from veg2hab.io.common import (
+    AccessDBInputs,
+    ApplyDefTabelInputs,
+    ApplyFunctioneleSamenhangInputs,
+    ApplyMozaiekInputs,
+    Interface,
+    ShapefileInputs,
+    StackVegKarteringInputs,
+)
 from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
 
@@ -25,29 +33,34 @@ def installatie_instructies():
     )
 
 
-def run(params: Union[AccessDBInputs, ShapefileInputs]):
+# TODO: ik ben niet zo blij met dit lijstje isinstance.
+def run(
+    params: Union[
+        AccessDBInputs,
+        ShapefileInputs,
+        StackVegKarteringInputs,
+        ApplyDefTabelInputs,
+        ApplyMozaiekInputs,
+        ApplyFunctioneleSamenhangInputs,
+    ]
+):
     logging.info(f"Starting veg2hab met input parameters: {params.json()}")
 
-    wwl = WasWordtLijst.from_excel(Path(constants.WWL_PATH))
+    if isinstance(params, (AccessDBInputs, ShapefileInputs)):
+        return run_1_inladen_vegkartering(params)
+    elif isinstance(params, StackVegKarteringInputs):
+        return run_2_stack_vegkartering(params)
+    elif isinstance(params, ApplyDefTabelInputs):
+        return run_3_definitietabel_en_mitsen(params)
+    elif isinstance(params, ApplyMozaiekInputs):
+        return run_4_mozaiekregels(params)
+    elif isinstance(params, ApplyFunctioneleSamenhangInputs):
+        return run_5_functionele_samenhang_en_min_opp(params)
+    else:
+        raise TypeError("INvalid input parameter")
 
-    logging.info(f"WasWordtLijst is ingelezen van {constants.WWL_PATH}")
 
-    deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
-
-    logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
-
-    fgr = FGR(Path(constants.FGR_PATH))
-
-    logging.info(f"FGR is ingelezen van {constants.FGR_PATH}")
-
-    bodemkaart = Bodemkaart.from_github()
-
-    logging.info(f"Bodemkaart is ingelezen")
-
-    lbk = LBK.from_github()
-
-    logging.info(f"LBK is ingelezen")
-
+def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
@@ -82,21 +95,126 @@ def run(params: Union[AccessDBInputs, ShapefileInputs]):
 
     logging.info(f"Vegetatie kartering is succesvol ingelezen")
 
+    wwl = WasWordtLijst.from_excel(Path(constants.WWL_PATH))
+
+    logging.info(f"WasWordtLijst is ingelezen van {constants.WWL_PATH}")
+
     kartering.apply_wwl(wwl)
 
     logging.info(f"Was wordt lijst is toegepast op de vegetatie kartering")
+
+    gdf_vegkart = kartering.to_editable_vegtypes()
+    Interface.get_instance().output_shapefile(params.output, gdf_vegkart)
+
+
+def run_2_stack_vegkartering(params: StackVegKarteringInputs):
+    gpkg_files = []
+
+    for single_shapefile in params.shapefile:
+        newfilename = Interface.get_instance().shape_id_to_filename(single_shapefile)
+        gpkg_files.append(newfilename)
+
+        if newfilename != single_shapefile:
+            logging.info(
+                f"Tijdelijke versie van {single_shapefile} is opgeslagen in {newfilename}"
+            )
+
+    logging.error(
+        "Stapelen is nog niet geimplementeerd, voor nu wordt de eerste geselecteerd"
+    )
+
+    gdf = gpd.read_file(gpkg_files[0])
+    kartering = Kartering.from_editable_vegtypes(gdf)
+
+    logging.info("Kartering is succesvol ingelezen")
+
+    # TODO implement this!!
+
+    gdf_vegkart = kartering.to_editable_vegtypes()
+    Interface.get_instance().output_shapefile(params.output, gdf_vegkart)
+
+
+def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
+    filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
+
+    if filename != params.shapefile:
+        logging.info(
+            f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
+        )
+
+    kartering = Kartering.from_editable_vegtypes(gpd.read_file(filename))
+
+    logging.info("Kartering is succesvol ingelezen")
+
+    deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
+
+    logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
 
     kartering.apply_deftabel(deftabel)
 
     logging.info(f"Definitietabel is toegepast op de vegetatie kartering")
 
-    kartering.bepaal_habitatkeuzes(
+    fgr = FGR(Path(constants.FGR_PATH))
+
+    logging.info(f"FGR is ingelezen van {constants.FGR_PATH}")
+
+    mask = kartering.get_geometry_mask()
+
+    bodemkaart = Bodemkaart.from_github(mask=mask)
+
+    logging.info(f"Bodemkaart is ingelezen")
+
+    lbk = LBK.from_github(mask=mask)
+
+    logging.info(f"LBK is ingelezen")
+
+    kartering.bepaal_mits_habitatkeuzes(
         fgr,
         bodemkaart,
         lbk,
     )
 
     logging.info(f"Mitsen zijn gecheckt")
+
+    gdf_habkart = kartering.to_editable_habtypes()
+    Interface.get_instance().output_shapefile(params.output, gdf_habkart)
+
+
+def run_4_mozaiekregels(params: ApplyMozaiekInputs):
+    filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
+
+    if filename != params.shapefile:
+        logging.info(
+            f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
+        )
+
+    kartering = Kartering.from_editable_habtypes(gpd.read_file(filename))
+
+    logging.info("Kartering is succesvol ingelezen")
+
+    kartering.bepaal_mozaiek_habitatkeuzes()
+
+    logging.info(f"Mozaiekregels zijn gecheckt")
+
+    gdf_habkart = kartering.to_editable_habtypes()
+    Interface.get_instance().output_shapefile(params.output, gdf_habkart)
+
+
+def run_5_functionele_samenhang_en_min_opp(params: ApplyFunctioneleSamenhangInputs):
+    filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
+
+    if filename != params.shapefile:
+        logging.info(
+            f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
+        )
+
+    kartering = Kartering.from_editable_habtypes(gpd.read_file(filename))
+
+    logging.info("Kartering is succesvol ingelezen")
+
+    kartering.functionele_samenhang()
+
+    logging.info(f"Functionele samenhang en minimum oppervlakken zijn gecheckt")
 
     final_format = kartering.as_final_format()
 

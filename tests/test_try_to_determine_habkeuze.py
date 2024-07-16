@@ -17,8 +17,8 @@ CLIInterface.get_instance()
 def test_habtype_toegekend():
     voorstel = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
@@ -38,8 +38,8 @@ def test_habtype_toegekend():
 def test_combine_same_habtype_multiple_voorstellen():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=None,
@@ -48,8 +48,8 @@ def test_combine_same_habtype_multiple_voorstellen():
             match_level=MatchLevel.SUBASSOCIATIE_SBB,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=None,
@@ -70,8 +70,8 @@ def test_combine_same_habtype_multiple_voorstellen():
 def test_voldoet_aan_meerdere_habtypen():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=None,
@@ -80,8 +80,8 @@ def test_voldoet_aan_meerdere_habtypen():
             match_level=MatchLevel.SUBASSOCIATIE_SBB,
         ),
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1235",
             kwaliteit=Kwaliteit.GOED,
             idx_in_dt=None,
@@ -102,8 +102,8 @@ def test_voldoet_aan_meerdere_habtypen():
 def test_voldoet_niet_aan_habtypevoorwaarden():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
@@ -124,8 +124,8 @@ def test_voldoet_niet_aan_habtypevoorwaarden():
 def test_vegtypen_niet_in_deftabel():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
@@ -171,7 +171,7 @@ def test_niet_geautomatiseerd_vegtype():
     )
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB(niet_geautomatiseerd_vegtype),
+            onderbouwend_vegtype=SBB.from_code(niet_geautomatiseerd_vegtype),
             vegtype_in_dt=None,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
@@ -193,8 +193,8 @@ def test_niet_geautomatiseerd_vegtype():
 def test_niet_geautomatiseerd_criterium():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
@@ -214,8 +214,8 @@ def test_niet_geautomatiseerd_criterium():
     assert keuze.kwaliteit == Kwaliteit.NVT
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,
@@ -236,8 +236,8 @@ def test_niet_geautomatiseerd_criterium():
 def test_wachten_op_mozaiek():
     voorstellen = [
         HabitatVoorstel(
-            onderbouwend_vegtype=SBB("25a1a"),
-            vegtype_in_dt=SBB("25a1a"),
+            onderbouwend_vegtype=SBB.from_code("25a1a"),
+            vegtype_in_dt=SBB.from_code("25a1a"),
             habtype="H1234",
             kwaliteit=Kwaliteit.NVT,
             idx_in_dt=None,

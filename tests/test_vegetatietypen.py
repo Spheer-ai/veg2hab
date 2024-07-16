@@ -1,10 +1,14 @@
 import pytest
 
+from veg2hab.io.cli import CLIInterface
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
+from veg2hab.vegkartering import VegTypeInfo
+
+CLIInterface.get_instance()
 
 
 def test_vvn_from_str():
-    vvn = VvN("42aa1e")
+    vvn = VvN.from_code("42aa1e")
     assert vvn.klasse == "42"
     assert vvn.orde == "a"
     assert vvn.verbond == "a"
@@ -15,7 +19,7 @@ def test_vvn_from_str():
 
 
 def test_partial_vvn_from_str():
-    vvn = VvN("42aa")
+    vvn = VvN.from_code("42aa")
     assert vvn.klasse == "42"
     assert vvn.orde == "a"
     assert vvn.verbond == "a"
@@ -27,11 +31,11 @@ def test_partial_vvn_from_str():
 
 def test_invalid_vvn_from_str():
     with pytest.raises(ValueError):
-        vvn = VvN("some-random-str")
+        vvn = VvN.from_code("some-random-str")
 
 
 def test_vvn_with_derivaat_gemeenschap():
-    vvn = VvN("42dg2")
+    vvn = VvN.from_code("42dg2")
     assert vvn.klasse == "42"
     assert vvn.orde is None
     assert vvn.verbond is None
@@ -42,7 +46,7 @@ def test_vvn_with_derivaat_gemeenschap():
 
 
 def test_vvn_with_rompgemeenschap():
-    vvn = VvN("37rg2")
+    vvn = VvN.from_code("37rg2")
     assert vvn.klasse == "37"
     assert vvn.orde is None
     assert vvn.verbond is None
@@ -54,13 +58,13 @@ def test_vvn_with_rompgemeenschap():
 
 def test_vvn_rompgemeenschap_is_only_possible_on_klasse():
     with pytest.raises(ValueError):
-        vvn = VvN("37aa17rg2")
+        vvn = VvN.from_code("37aa17rg2")
 
 
 def test_match_vvn_codes():
-    vvn = VvN("42aa1e")
-    vvn2 = VvN("42aa")
-    vvn3 = VvN("42aa1f")
+    vvn = VvN.from_code("42aa1e")
+    vvn2 = VvN.from_code("42aa")
+    vvn3 = VvN.from_code("42aa1f")
 
     assert (
         vvn.match_up_to(vvn) == MatchLevel.SUBASSOCIATIE_VVN
@@ -81,9 +85,9 @@ def test_match_vvn_codes():
 
 
 def test_match_vvn_rompgemeenschap():
-    vvn = VvN("42rg2")
-    vvn2 = VvN("42rg3")
-    vvn3 = VvN("42")
+    vvn = VvN.from_code("42rg2")
+    vvn2 = VvN.from_code("42rg3")
+    vvn3 = VvN.from_code("42")
 
     vvn.match_up_to(vvn2) == MatchLevel.NO_MATCH, "Does not match to other RG"
     vvn.match_up_to(vvn3) == MatchLevel.NO_MATCH, "Does not match to not RG"
@@ -91,9 +95,9 @@ def test_match_vvn_rompgemeenschap():
 
 
 def test_basic_vvn_equality():
-    vvn = VvN("42aa1e")
-    vvn2 = VvN("42aa1e")
-    vvn3 = VvN("42aa")
+    vvn = VvN.from_code("42aa1e")
+    vvn2 = VvN.from_code("42aa1e")
+    vvn3 = VvN.from_code("42aa")
 
     assert vvn == vvn
     assert vvn == vvn2
@@ -101,7 +105,7 @@ def test_basic_vvn_equality():
 
 
 def test_sbb_from_str():
-    sbb = SBB("42a1e")
+    sbb = SBB.from_code("42a1e")
     assert sbb.klasse == "42"
     assert sbb.verbond == "a"
     assert sbb.associatie == "1"
@@ -111,7 +115,7 @@ def test_sbb_from_str():
 
 
 def test_partial_sbb_from_str():
-    sbb = SBB("42a")
+    sbb = SBB.from_code("42a")
     assert sbb.klasse == "42"
     assert sbb.verbond == "a"
     assert sbb.associatie is None
@@ -122,12 +126,12 @@ def test_partial_sbb_from_str():
 
 def test_invalid_sbb_from_str():
     with pytest.raises(ValueError):
-        sbb = SBB("some-random-str")
+        sbb = SBB.from_code("some-random-str")
 
 
 def test_sbb_with_derivaat_gemeenschap():
-    sbb = SBB("37/b")
-    sbb2 = SBB("37a3a/b")
+    sbb = SBB.from_code("37/b")
+    sbb2 = SBB.from_code("37a3a/b")
 
     assert sbb.klasse == "37"
     assert sbb.verbond is None
@@ -145,8 +149,8 @@ def test_sbb_with_derivaat_gemeenschap():
 
 
 def test_sbb_with_rompgemeenschap():
-    sbb = SBB("37-b")
-    sbb2 = SBB("37a3a-b")
+    sbb = SBB.from_code("37-b")
+    sbb2 = SBB.from_code("37a3a-b")
 
     assert sbb.klasse == "37"
     assert sbb.verbond is None
@@ -164,9 +168,9 @@ def test_sbb_with_rompgemeenschap():
 
 
 def test_match_sbb_codes():
-    sbb = SBB("42a1e")
-    sbb2 = SBB("42a")
-    sbb3 = SBB("42a1f")
+    sbb = SBB.from_code("42a1e")
+    sbb2 = SBB.from_code("42a")
+    sbb3 = SBB.from_code("42a1f")
 
     assert (
         sbb.match_up_to(sbb) == MatchLevel.SUBASSOCIATIE_SBB
@@ -187,10 +191,10 @@ def test_match_sbb_codes():
 
 
 def test_match_sbb_rompgemeenschap():
-    sbb = SBB("42-b")
-    sbb2 = SBB("42-c")
-    sbb3 = SBB("42")
-    sbb4 = SBB("42a1e-b")
+    sbb = SBB.from_code("42-b")
+    sbb2 = SBB.from_code("42-c")
+    sbb3 = SBB.from_code("42")
+    sbb4 = SBB.from_code("42a1e-b")
 
     # NOTE: is dit een logische manier om score te geven? Match to self
     #       geeft 5 zodat de ranking met minder specifieke ssb niet de
@@ -208,10 +212,19 @@ def test_match_sbb_rompgemeenschap():
 
 
 def test_basic_ssb_equality():
-    sbb = SBB("42a1e")
-    sbb2 = SBB("42a1e")
-    sbb3 = SBB("42a")
+    sbb = SBB.from_code("42a1e")
+    sbb2 = SBB.from_code("42a1e")
+    sbb3 = SBB.from_code("42a")
 
     assert sbb == sbb
     assert sbb == sbb2
     assert sbb != sbb3
+
+
+def test_vegtype_info():
+    vegtypeinfo = VegTypeInfo(percentage=100, SBB=[SBB(klasse="42")], VvN=[])
+
+    vegtypeinfo = VegTypeInfo.from_str_vegtypes(
+        100, SBB_strings=["42a1e"], VvN_strings=["42aa1e"]
+    )
+    assert vegtypeinfo.SBB == [SBB.from_code("42a1e")]
