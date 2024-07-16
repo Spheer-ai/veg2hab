@@ -139,6 +139,8 @@ class FGRCriterium(BeperkendCriterium):
 
         if pd.isna(self.actual_fgrtype):
             return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
+
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = "FGR type is {}{}{}."
         return {
             framework.format(
@@ -202,6 +204,7 @@ class BodemCriterium(BeperkendCriterium):
             if pd.isna(self.actual_bodemcode[0]):
                 return {"Dit vlak ligt niet mooi binnen één bodemkaartvlak."}
 
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = (
             "Dit is {}{}"
             + str(self.wanted_bodemtype)
@@ -217,7 +220,7 @@ class BodemCriterium(BeperkendCriterium):
                 "niet " if self._evaluation == MaybeBoolean.FALSE else "",
             )
         }
-
+    
     def get_format_string(self):
         return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
@@ -272,6 +275,7 @@ class LBKCriterium(BeperkendCriterium):
         if pd.isna(self.actual_lbkcode):
             return {"Dit vlak ligt niet mooi binnen één LBK-vak"}
 
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = (
             "Dit is {}{}{}"
             + str(self.wanted_lbktype)
