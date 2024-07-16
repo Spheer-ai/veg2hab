@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar, Optional, Union
 
 import pandas as pd
@@ -30,31 +30,33 @@ class SBB:
     gemeenschap: ClassVar = re.compile(r"(?P<type>[-\/])(?P<gemeenschap>[a-z])$")
     # 16b/a                                        /                     a
 
-    klasse: str
-    verbond: Optional[str] = None
-    associatie: Optional[str] = None
-    subassociatie: Optional[str] = None
-    derivaatgemeenschap: Optional[str] = None
-    rompgemeenschap: Optional[str] = None
+    klasse: str = field(init=False)
+    verbond: Optional[str] = field(default=None, init=False)
+    associatie: Optional[str] = field(default=None, init=False)
+    subassociatie: Optional[str] = field(default=None, init=False)
+    derivaatgemeenschap: Optional[str] = field(default=None, init=False)
+    rompgemeenschap: Optional[str] = field(default=None, init=False)
 
-    def __init__(self, code: str):
-        assert isinstance(code, str), "Code is not a string"
+    code: str
+
+    def __post_init__(self):
+        assert isinstance(self.code, str), "Code is not a string"
         # TODO: dit zou heel mooi naar een config kunnen later
         niet_geautomatiseerde_sbb = (
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )
-        if code in niet_geautomatiseerde_sbb:
-            self.klasse = code
+        if self.code in niet_geautomatiseerde_sbb:
+            self.klasse = self.code
             return
 
         # Zet de gemeenschappen alvast op None zodat we ze kunnen overschrijven als het een gemeenschap is
         self.derivaatgemeenschap = None
         self.rompgemeenschap = None
 
-        match = self.gemeenschap.search(code)
+        match = self.gemeenschap.search(self.code)
         if match:
             # Strippen van gemeenschap
-            code = code[:-2]
+            self.code = self.code[:-2]
             if match.group("type") == "/":
                 self.derivaatgemeenschap = match.group("gemeenschap")
             elif match.group("type") == "-":
@@ -64,7 +66,7 @@ class SBB:
                     False
                 ), "Onmogelijk om hier te komen; groep 'type' moet '/' of '-' zijn"
 
-        match = self.basis_sbb.fullmatch(code)
+        match = self.basis_sbb.fullmatch(self.code)
         if match:
             self.klasse = match.group("klasse")
             self.verbond = match.group("verbond")
@@ -72,7 +74,7 @@ class SBB:
             self.subassociatie = match.group("subassociatie")
             return
 
-        raise ValueError(f"Invalid SBB code: {code}")
+        raise ValueError(f"Invalid SBB code: {self.code}")
 
     def base_SBB_as_tuple(
         self,
