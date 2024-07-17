@@ -2,7 +2,7 @@
 
 Habitattypen vormen de basis voor leefgebieden van beschermde diersoorten in de Vogel- en Habitatrichtlijn (VHR-soorten). Deze leefgebieden kunnen echter groter zijn; vegetatietypen die niet kwalificeren voor een habitattype, kunnen wel onderdeel zijn van het leefgebied van een VHR-soort. Deze aanvullende gebieden worden LG-typen genoemd.
 
-Dit document beschrijft kort de samenhang tussen LG-typen, habitattypen en leefgebiedkaarten. We bechrijven welke stappen in het bepalen van LG-typen overlap vertonen met veg2hab, welke modules hergebruikt kunnen worden, en welke stappen er nodig zijn om het vervaardigen van leefgebiedkaarten te automatiseren. In andere worden: hoe kan `veg2hab` uitgebreid worden naar `veg2leef`?
+Dit document beschrijft welke stappen in het bepalen van LG-typen overlap vertonen met veg2hab, welke modules hergebruikt kunnen worden, en welke stappen er nodig zijn om het vervaardigen van leefgebiedkaarten te automatiseren. In andere worden: hoe kan `veg2hab` uitgebreid worden naar `veg2leef`?
 
 
 ## Bronnen
