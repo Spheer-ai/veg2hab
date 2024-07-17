@@ -15,7 +15,7 @@ We baseren ons voor het onderstaande op:
 ## Leefgebieden VHR-soorten en LG-typen
 Habitattypen en LG-typen vormen samen de leefgebieden voor VHR-soorten. LG-typen vormen een aanvulling op habitattypen; een karteervlak(deel) heeft nooit tegelijkertijd een habitattype én een LG-type, deze sluiten elkaar uit.
 
-Het Methodendocument begrenzing en afbakening LG-typen M17 (dit document is nog in concept, en niet officieel vastgesteld) definieert 14 LG-typen. Voor ieder LG-type beschrijft dit document:
+Het methodendocument definieert 14 LG-typen. Voor ieder LG-type beschrijft het document:
 - welke beschermde VHR-soorten er leven;
 - op welk(e) habitattype(n) dit LG-type een aanvulling is;
 - welke plantengemeenschappen (i.e. VvN-typen) er tot het type behoren;
