@@ -4,11 +4,14 @@ Habitattypen vormen de basis voor leefgebieden van beschermde diersoorten in de 
 
 Dit document beschrijft welke stappen in het bepalen van LG-typen overlap vertonen met veg2hab, welke modules hergebruikt kunnen worden, en welke stappen er nodig zijn om het vervaardigen van leefgebiedkaarten te automatiseren. In andere worden: hoe kan `veg2hab` uitgebreid worden naar `veg2leef`?
 
+#### Disclaimer
+We gaan in dit advies uit van leefgebiedenkaarten die direct gebaseerd worden op vegetatiekarteringen, zoals in het Methodendocument (zie [Bronnen](#bronnen)). Voor het vervaardigen van leefgebiedenkaarten via een andere route dan een vegetatiekartering, heeft veg2hab vrijwel zeker geen waarde.
+
 
 ## Bronnen
 We baseren ons voor het onderstaande op:
-- Het *Methodendocument begrenzing en afbakening LG-typen M17, versie 21-09-2016*. Omdat het een conceptversie betreft, is dit document (nog) niet online beschikbaar.
-- De *Toelichting Leefgebiedenkaart Dwingelderveld T0, versie 07-dec-2023 (N2K_LK_30_Dwingelderveld_T0_231207)*, opgemaakt door Prolander. Ook dit document is niet online beschikbaar.
+- Het *Methodendocument begrenzing en afbakening LG-typen M17, versie 21-09-2016*. Dit document is een conceptversie, en niet landelijk officieel vastgesteld. Het document is daarom niet online beschikbaar.
+- De *Toelichting Leefgebiedenkaart Dwingelderveld T0, versie 07-dec-2023 (N2K_LK_30_Dwingelderveld_T0_231207)*, opgemaakt door Prolander, dat voortborduurt op het Methodendocument. Ook dit document is niet online beschikbaar.
 - [Rapport Sovon Leefgebiedenkaarten N2000 en PAS](https://www.bij12.nl/wp-content/uploads/2023/11/Rapport-Sovon-2016-21-Leefgebiedenkaarten-N2000-PAS.pdf)
 
 
@@ -22,7 +25,7 @@ Het methodendocument definieert 14 LG-typen. Voor ieder LG-type beschrijft het d
 - in welke FGR gebieden de plantengemeenschap moet liggen om tot het type te behoren. Deze voorwaarde geldt in feite als een beperkend criterium;
 - aanvullende abiotische en ruimtelijke criteria. Deze criteria zijn met name relevant voor aquatische typen. Methodendocument: *"In het geval van terrestrische vegetaties zijn plantengemeenschappen [...] veelal wel als zuivere bron bruikbaar."*
 
-N.B.: De plantengemeenschappen uit het Methodendocument zijn later aangevuld met extra vegetatietypen. Ook zijn er door Prolander voor het maken van leefgebiedenkaarten voor Dwingelderveld extra LG-typen aan toegevoegd (LG4010 en LG4030). Onduidelijk is of dit landelijk geldende typen zijn, of dat ze alleen op Dwingelderveld van toepassing zijn.
+N.B.: De plantengemeenschappen uit het Methodendocument zijn later door Prolander aangepast. Ook zijn er door Prolander voor het maken van leefgebiedenkaarten voor Dwingelderveld extra LG-typen aan toegevoegd (LG4010 en LG4030).
 
 
 ## Stappenplan automatiseren LG-typenkaart veg2leef
