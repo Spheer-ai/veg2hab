@@ -128,7 +128,7 @@ Een aantal beperkende criteria is niet of slechts deels te automatiseren. Hiervo
 
 Alle criteria die niet automatisch gecontroleerd kunnen worden, worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`. De gebruiker dient deze criteria zelf na te lopen en een keuze te maken. Om dit te vergemakkelijken, geeft veg2hab de optie om bij het uitvoeren van stap 3 beperkende criteria te selecteren en aan te geven:
 - dat een criterium voor een kartering *altijd* waar of niet-waar is.
-- dat een criterium waar is voor een deel van het gebied, en niet-waar op de overige plekken. Hiervoor dient de gebruiker zelf een kaart aan te leveren. Van deze kaart gebruikt veg2hab uitsluitend de geopolygonen, waarvan wordt uitgegaan dat ze de gebieden representeren waar het criterium geldt.
+- dat een criterium voor een deel van de een gebied waar is, en niet-waar op de overige plekken, of andersom. Hiervoor dient de gebruiker zelf een kaart aan te leveren. Van deze kaart gebruikt veg2hab uitsluitend de geopolygonen, waarvan wordt uitgegaan dat ze de gebieden representeren waar het criterium geldt / niet-geldt.
 
 Tip: de gebruiker kan eerst stap 3 uitvoeren zonder handmatig criteria aan te geven. In de output kan de gebruiker vervolgens zien welke criteria niet automatisch gecontroleerd konden worden. Voor deze criteria kan de gebruiker vervolgens kaarten intekenen, en stap 3 nogmaals draaien.
 
