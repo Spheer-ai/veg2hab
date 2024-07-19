@@ -19,6 +19,11 @@ def test_mozaiek_als_rand_langs_threshold():
     os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "48.0"
     assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == 48.0
 
+def test_mozaiek_minimum_bedekking():
+    os.environ["VEG2HAB_MOZAIEK_MINIMUM_BEDEKKING"] = "91.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking == 91.0
+    os.environ["VEG2HAB_MOZAIEK_MINIMUM_BEDEKKING"] = "90.0"
+    assert CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking == 90.0
 
 def test_niet_geautomatiseerde_sbb():
     os.environ["VEG2HAB_NIET_GEAUTOMATISEERDE_SBB"] = '["100","200","300","400","500"]'
