@@ -56,28 +56,62 @@ De definitietabel bevat tientallen regels voor het vegetatietype 'vegetatieloos'
 #### Opzoeken van mogelijke habitattypen
 Veg2hab matcht de vegetatiecodes van een vlak(deel) als volgt met regels in de definitietabel:
 - Zowel de SBB-code als alle VvN-codes van het vlak(deel) worden in de definitietabel opgezocht;
-- De definitietabel wordt niet alleen doorzocht op het syntaxonomisch niveau van de vegetatiecode, maar ook op alle algemenere niveau's. De aanname hierbij is dat specifieke vegetatietypen ook op een algemener niveau in aanmerking kunnen komen voor een habitattype. Andersom geldt dit niet. In het geval van romp- of derivaatgemeenschappen wordt INVULLEN.
+- De definitietabel wordt niet alleen doorzocht op het syntaxonomisch niveau van de vegetatiecode, maar ook op alle algemenere niveau's. De aanname hierbij is dat specifieke vegetatietypen ook op een algemener niveau in aanmerking kunnen komen voor een habitattype. Andersom geldt dit niet. In het geval van romp- of derivaatgemeenschappen wordt er enkel gekeken naar exacte matches.
   - Voorbeeld 1: subassociatie 32Aa01a staat niet in de definitietabel, maar kan gezien worden als specifiek voorbeeld van verbond 32Aa, dat wel in de definitietabel staat.
   - Voorbeeld 2: verbond 35Aa staat niet in de definitietabel (de klasse en orde ook niet), maar associatie 35Aa03 wel. Er kan echter niet van uitgegaan worden dat het verbond voldoet aan de specifieke eisen voor de associatie, dus in dit geval wordt er niets gevonden in de definitietabel en krijgt het vlak(deel) H0000 toegekend.
-  - Voorbeeld 3: VOORBEELD VAN EEN DERIVAAT OF ROMPGEMEENSCHAP
+  - Voorbeeld 3: Rompgemeenschap 36Aa1-a staat niet in de definitietabel, maar de klasse 36Aa1 wel. Aangezien rompgemeenschappen en derivaatgemeenschappen exact moeten matchen, wordt er in dit geval niks gevonden in de definitietabel en krijgt het vlak H0000 toegekend.
 
-Iedere match met de definitietabel wordt door veg2hab intern omgezet naar een `HabitatVoorstel`, met beperkende criteria en mozaïekregels die gecontroleerd moeten worden; De mozaïekregels worden uitgesteld tot stap 4; stap 3 controleert voor ieder habitatvoorstel of er wordt voldaan aan de beperkende criteria. Omdat een vlak(deel) meerdere SBB- en VvN-codes kan hebben, kan het ook meerdere habitatvoorstellen hebben en daarmee potentieel kwalificeren voor meerdere habitattypen. In praktijk zal na het controleren van de beperkende criteria hiervan slechts één (of geen) overblijven.
+Iedere match met de definitietabel wordt door veg2hab intern omgezet naar een `HabitatVoorstel`, met beperkende criteria en mozaïekregels die gecontroleerd moeten worden; stap 3 controleert voor ieder habitatvoorstel of er wordt voldaan aan de beperkende criteria en de mozaïekregels worden behandeld in stap 4. Omdat een vlak(deel) meerdere SBB- en VvN-codes kan hebben, kan het ook meerdere habitatvoorstellen hebben en daarmee potentieel kwalificeren voor meerdere habitattypen. In praktijk zal na het controleren van de beperkende criteria hiervan slechts één (of geen) overblijven.
 
 #### Automatisch controleren van beperkende criteria
 Veg2hab kan een aantal beperkende criteria (soms slechts deels) controleren op basis van landelijke bronkaarten. Wanneer deze kaarten van toepassing zijn, geeft veg2hab in de output van stap 3 aan welke informatie in de bronkaarten is gevonden. Voor veel vlakken geldt dat ze niet geheel binnen één vlak van een bronkaart vallen. In dat geval wordt gekeken met welk vlak van de bronkaart er het meest overlap is, en dit bronkaartvlak gekozen. Het percentage overlap wordt gemeld in de output.
 
-**Bodemkaart**
-INVULLEN
+**Bodemkaart** -
+De bodemkaart wordt gebruikt om de volgende termen in beperkende criteria te controleren:
+- *Leemarme humuspodzolgronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - Hn21, Hn30, Hd21, Hd30, cHn21, cHn30, cHd21, cHd30
+- *Lemige humuspodzolgronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - Hn23, cHn23, Hd23, cHd23
+- *Vaaggronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - *Vaaggronden van kalkloze zandgronden*: Zn21, Zn23, Zn30, Zd21, Zd23, Zd30, Zb21, Zb23, Zb30
+  - *Vaaggronden van kalkhoudende zandgronden*: Zn10A, Zn30A, Zn40A, Zn50A, Zn30Ab, Zn50Ab, Zd20A, Zd30A, Zd20Ab, Zb20A, Zb30A
+  - *Vlakvaaggronden van kalkhoudende bijzondere lutumarme gronden*: Sn13A, Sn14A
+  - *Niet-gerijpte minerale gronden van slikvaaggronden/gorsvaaggronden*: MOo02, MOo05, ROo02, ROo05, MOb12, MOb15, MOb72, MOb75, ROb12, ROb15, ROb72, ROb75
+  - *Vaaggronden van zeekleigronden*: Mv51A, Mv81A, Mv61C, Mv41C, Mo10A, Mo20A, Mo80A, Mo50C, Mo80C, Mn12A, Mn15A, Mn22A, Mn25A, Mn35A, Mn45A, Mn56A, Mn82A, Mn86A, Mn15C, Mn25C, Mn52C, Mn56C, Mn82C, Mn86C, Mn85C, gMn15C, gMn25C, gMn52C, gMn53C, gMn58C, gMn82C, gMn83C, gMn88C, gMn85C, kMn63C, kMn68C, kMn43C, kMn48C
+  - *Vaaggronden van rivierkleigronden*: Rv01A, Rv01C, Ro40A, Ro60A, Ro40C, Ro60C, Rn15A, Rn46A, Rn45A, Rn52A, Rn66A, Rn82A, Rn95A, Rn14C, Rn15C, Rn42C, Rn44C, bRn46C, Rn47C, Rn45C, Rn62C, Rn67C, Rn94C, Rn95C, Rd10A, Rd90A, Rd40A, Rd10C, Rd90C, Rd40C
+  - *Vaaggronden van oude zeekleigronden*: KRn1, KRn2, KRn8, KRd1, KRd7
+  - *Vaaggronden van leemgronden*: pLn5, pLn6, Ln5, Lnd5, Lnh5, Ln6, Lnd6, Lnh6, Lh5, Lh6, Ld5, Ldd5, Ldh5, Ld6, Ldd6, Ldh6
+- *Leemarme vaaggronden*; Dit mitsdeel wordt als CANNOT_BE_AUTOMATED beschouwd als het vlak een van de volgende bodemtypen ligt, en als FALSE als het er niet in ligt:
+  - Zn21, Zd21, Zb21, Zn30, Zd30, Zb30
+- *Podzolgronden met een zanddek*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - zY21, zhY21, zY21g, zY30, zhY30, zY30g
+- *Moderpodzolgronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - Y21, Y23, Y30, Y21b, Y23b, cY21, cY23, cY30
+- *Oude kleigronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - KT, KX
+- *Leemgronden*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende bodemtypen ligt, en als FALSE als dat niet zo is:
+  - pLn5, pLn6, Ln5, Lnd5, Lnh5, Ln6, Lnd6, Lnh6, Lh5, Lh6, Ld5, Ldd5, Ldh5, Ld6, Ldd6, Ldh6
 
-**Landelijke bodemkaart (LBK)**
-INVULLEN
+**Landelijke bodemkaart (LBK)** -
+De LBK wordt gebruikt om de volgende termen in beperkende criteria te controleren:
+- *Hoogveenlandschap*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende LBK-typen ligt, en als CANNOT_BE_AUTOMATED als dat niet zo is:
+  - HzHL, HzHD, HzHO, HzHK
+- *Hoogveen*; Dit mitsdeel wordt als CANNOT_BE_AUTOMATED beschouwd als het vlak in een van de volgende LBK-typen ligt, en als FALSE als dat niet zo is:
+  - HzHL, HzHD, HzHO, HzHK
+- *Herstellend hoogveen*; Dit mitsdeel wordt als CANNOT_BE_AUTOMATED beschouwd als het vlak in een van de volgende LBK-typen ligt, en als FALSE als dat niet zo is:
+  - HzHL, HzHD, HzHO, HzHK
+- *Zandverstuiving*; Dit mitsdeel wordt als CANNOT_BE_AUTOMATED beschouwd als het vlak in een van de volgende LBK-typen ligt, en als FALSE als dat niet zo is:
+  - HzSD, HzSDa, HzSF, HzSFa, HzSL, HzSLa, HzSX, HzSXa
+- *Onder invloed van beek of rivier*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende LBK-typen ligt, en als CANNOT_BE_AUTOMATED als dat niet zo is:
+  - HzBB, HzBN, HzBV, HzBW, HzBL, HzBD, HlDB, HlDD
 
-**Fysisch Geografische Regiokaart (FGR)**
+
+**Fysisch Geografische Regiokaart (FGR)** -
 De FGR kaart wordt gebruikt om alle beperkende criteria te controleren die:
 - expliciet verwijzen naar een FGR-gebiedstype, zoals `mits in FGR Duinen`;
 - impliciet verwijzen naar een FGR-gebiedstype, als dit beschreven is in het methodiekdocument, zoals `mits in het kustgebied`.
 
-**De Oude-Bossen kaart**
+**De Oude-Bossen kaart** -
 Beperkende criteria met betrekking tot oude bossen, zoals `mits op een bosgroeiplaats ouder dan 1850 ...`, worden gecontroleerd met de Oude-Bossen kaart van Alterra. Deze bestaat uit vlakken van 500 bij 500 meter, die voor zowel H9120 en H9190 een code 0, 1 of 2 krijgen toegewezen.
 - Een vegetatievlak met een oude-bossen-criterium dat buiten de 500m vlakken valt, komt niet door het criterium;
 - Een vegetatievlak met een oude-bossen-criterium dat binnen een 500m hok valt, wordt gecontroleerd op de cijfercode bij het voor dat vlak relevante habitattype:
@@ -104,15 +138,15 @@ Tip: de gebruiker kan eerst stap 3 uitvoeren zonder handmatig criteria aan te ge
 Veg2hab gebruikt voor het controleren van mozaiekregels de volgende methode:
 - Het neemt het vlak waarvoor de mozaiekregel gecontroleerd moet worden;
 - Het blaast het vlak een heel klein beetje op (0.1 meter) en controleert met welke andere vlakken de omtrek overlapt. De kleine opblazing zorgt ervoor dat geometrische foutjes en afrondingen geen probleem vormen; 
-- Het controleert of de omliggende vlakken het juiste habitattype bevatten, en in welke hoeveelheid.
+- Het controleert of de omliggende vlakken het juiste habitattype/mozaiëkvegetatietype bevatten, en in welke hoeveelheid.
 
 #### Normale mozaiekregels
-Voor het controleren van de standaard mozaiekregels `alleen in mozaïek met zelfstandige vegetaties van H....` volgt veg2hab het methodiekdocument nauwgezet:
+Voor het controleren van de standaard mozaiekregels `alleen in mozaïek met (goede) zelfstandige vegetaties van H....` volgt veg2hab het methodiekdocument nauwgezet:
 - De omtrek moet voor minimaal 95% in vlakken liggen die het benodigde habitattype bevatten; Dit heeft als consequentie dat vlakken die aan de rand van een kartering liggen (vrijwel) nooit door deze regel heen komen;
 - Omliggende vlakken waarbij het benodigde habitattype minder dan 90% van het complex bedekken, worden hierbij niet meegeteld.
 
 #### Aan de rand van
-Voor het controleren van mozaiekregels `als rand langs zelfstandige vegetaties van H....`, gebruikt veg2hab dezelfde stappen als hierboven, maar met een minimum van 25% in plaats van 95%. Dit percentage is gekozen vanuit de gedachte dat een vierkant vlak met een mozaiekregel tegen een zelfstandig vegetatie aan nog nèt gezien kan worden als 'rand langs'. 
+Voor het controleren van mozaiekregels `als rand langs zelfstandige vegetaties van H....`, gebruikt veg2hab dezelfde stappen als hierboven, maar met een minimum van 25% in plaats van 95%. Dit percentage is gekozen vanuit de gedachte dat een vierkant vlak met een mozaiekregel die met 1 zijde grenst aan een zelfstandige vegetatie nog nèt gezien kan worden als 'rand langs'. 
 
 #### Mozaiekregels binnen en tussen complexe vlakken
 Hier wijkt veg2hab sterk af van het methodiekdocument. Voor het beoordelen van de mozaiekregels binnen een complex vlak, dient de omzetter volgens het methodiekdocument onderscheid te maken tussen complexdelen die met elkaar in een 'fijnmazig patroon' bestaan of die elkaar 'omsluiten'. *"Er kan niet zonder meer van uitgegaan worden dat verschillende vegetaties die als complex in één vlak zijn gekarteerd een fijnmazig patroon vormen [...] in feite moet dit tijdens het karteren aangegeven worden en anders zo goed mogelijk gecontroleerd met de luchtfoto"*. Veg2hab heeft geen mogelijkheid om dit te beoordelen, en kijkt in het geval van een complexdeel met een mozaiekregel uitsluitend naar de omliggende vlakken in de kartering.
