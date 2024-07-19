@@ -56,7 +56,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_environment.png" alt="new python environment" width="400"/>
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
-    - Let op: het aanmaken van een nieuwe environment kan langer dan 5 minuten duren. De status van het aanmaken kan bekeken worden onder `Tasks` rechtsonderin de Package Manager.
+    - **Let op**: het aanmaken van een nieuwe environment kan langer dan 5 minuten duren. De status van het aanmaken kan bekeken worden onder `Tasks` rechtsonderin de Package Manager.
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
@@ -91,6 +91,8 @@ Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende sta
 2. Klik op `Add...`
 3. Selecteer `Microsoft Access Driver (*.mdb, *.accdb)` en klik op `Finish`.
 4. Geef de source een naam naar keuze en klik op `OK`.
+
+**Let op**: Wanneer de gebruiker Microsoft Access 32-bit heeft geïnstalleerd, zorgt het installeren van 64-bit drivers wellicht voor problemen. Er is sinds kort een versie van de digitale standaard beschikbaar voor Access 64-bit, zodat gebruikers van Microsoft Access 32-bit kunnen overstappen naar de 64-bit versie.
 
 
 ### Installatie veg2hab op linux
@@ -243,7 +245,7 @@ Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van 
  - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
  - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
 
-Let op: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
+**Let op**: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
 
 
 
