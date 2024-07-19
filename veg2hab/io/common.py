@@ -155,8 +155,12 @@ class Veg2HabConfig(BaseSettings):
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
     mozaiek_als_rand_threshold: Union[int, float] = Field(
-        default=50.0,
+        default=95.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
+    )
+    mozaiek_minimum_bedekking: Union[int, float] = Field(
+        default=90.0,
+        description="Minimum percentage dat geschikte habitattypen/vegetatietypen in een omringend vlak moet hebben voordat deze mee telt",
     )
 
     niet_geautomatiseerde_sbb: List[str] = Field(

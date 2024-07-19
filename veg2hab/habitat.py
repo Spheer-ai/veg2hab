@@ -290,8 +290,8 @@ def try_to_determine_habkeuze(
                     kwaliteit=voorstel.kwaliteit,
                     habitatvoorstellen=[voorstel],
                     opmerking="",
-                    mits_opmerking=f"Mits: {voorstel.mits}, {voorstel.mits.evaluation}",
-                    mozaiek_opmerking=f"Mozaiekregel: {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}",
+                    mits_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]",
+                    mozaiek_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]",
                     debug_info="",
                 )
 
@@ -314,8 +314,18 @@ def try_to_determine_habkeuze(
                         kwaliteit=true_voorstellen[0].kwaliteit,
                         habitatvoorstellen=true_voorstellen,
                         opmerking=f"",
-                        mits_opmerking=f"Mitsen: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mits), str(voorstel.mits.evaluation)] for voorstel in true_voorstellen]}",
-                        mozaiek_opmerking=f"Mozaiekregels: {[[str(voorstel.onderbouwend_vegtype), voorstel.habtype, str(voorstel.mozaiek), str(voorstel.mozaiek.evaluation)] for voorstel in true_voorstellen]}",
+                        mits_opmerking="\n".join(
+                            [
+                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
+                                for voorstel in true_voorstellen
+                            ]
+                        ),
+                        mozaiek_opmerking="\n".join(
+                            [
+                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
+                                for voorstel in true_voorstellen
+                            ]
+                        ),
                         debug_info="",
                     )
                 return HabitatKeuze(

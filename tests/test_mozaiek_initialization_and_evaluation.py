@@ -1,154 +1,313 @@
+import os
 from collections import defaultdict
+from pathlib import Path
 
+import pandas as pd
+import pytest
+
+from veg2hab.definitietabel import DefinitieTabel, opschonen_definitietabel
 from veg2hab.enums import Kwaliteit, MaybeBoolean
+from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import StandaardMozaiekregel
+from veg2hab.vegetatietypen import SBB, VvN
+
+CLIInterface.get_instance()
+os.environ["VEG2HAB_MOZAIEK_THRESHOLD"] = "95.0"
+os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = "25.0"
+os.environ["VEG2HAB_MOZAIEK_MINIMUM_BEDEKKING"] = "90.0"
 
 
-def test_key_determination_zelfstandig_goed():
+@pytest.fixture(scope="module")
+def dt():
+    path_in = (
+        Path(__file__).resolve().parent
+        / "../data/definitietabel habitattypen (versie 24 maart 2009)_0.xls"
+    )
+    path_mitsjson = Path(__file__).resolve().parent / "../data/mitsjson.json"
+    path_mozaiekjson = Path(__file__).resolve().parent / "../data/mozaiekjson.json"
+    path_out = (
+        Path(__file__).resolve().parent / "../testing/opgeschoonde_definitietabel.xlsx"
+    )
+    path_out.parent.mkdir(exist_ok=True)
+    opschonen_definitietabel(path_in, path_mitsjson, path_mozaiekjson, path_out)
+    return DefinitieTabel.from_excel(path_out)
+
+
+def test_determine_kwalificerende_vegtypen_normal_case(dt):
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H2130_C",
+        ook_mozaiekvegetaties=True,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    regel.determine_keys()
-    assert regel.keys == [("H1", True, Kwaliteit.GOED)]
-
-
-def test_key_determination_mozaiek_matig():
-    regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=False,
-        alleen_goede_kwaliteit=False,
-        ook_als_rand_langs=False,
+    # Normal case
+    regel.determine_kwalificerende_vegtypen(
+        dt.df[dt.df["Habitattype"] == regel.kwalificerend_habtype]
     )
-    regel.determine_keys()
-    assert regel.keys == [
-        ("H1", True, Kwaliteit.GOED),
-        ("H1", False, Kwaliteit.GOED),
-        ("H1", True, Kwaliteit.MATIG),
-        ("H1", False, Kwaliteit.MATIG),
-    ]
+    assert regel.kwalificerende_vegtypen == {
+        VvN.from_code("19aa3"),
+        VvN.from_code("19rg1"),
+        SBB.from_code("19a-c"),
+        SBB.from_code("50c"),
+    }
 
 
-def test_100_percent_requested_true():
+def test_determine_kwalificerende_vegtypen_unfiltered_dt_df(dt):
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H2130_C",
+        ook_mozaiekvegetaties=True,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    regel.determine_keys()
-    habtype_percentage_dict = defaultdict(int)
-    habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 100
-    regel.check(habtype_percentage_dict)
+    with pytest.raises(AssertionError):
+        regel.determine_kwalificerende_vegtypen(dt.df)
+
+
+def test_1_omringend_100_procent_kwalificerend_habtype():
+    regel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")]],
+            "complexdeel_percentage": [100],
+            "omringing_percentage": [100],
+        }
+    )
+    # 1 complexdeel
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.TRUE
+
+    # 2 complexdelen
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 1],
+            "habtype": ["H1", "H1"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [50, 50],
+            "omringing_percentage": [100, 100],
+        }
+    )
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.TRUE
 
 
-def test_50_percent_requested_50_percent_unknown_postpone():
+def test_1_omringend_50_kwalificerend_50_niet_kwalificerend():
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    regel.determine_keys()
-    habtype_percentage_dict = defaultdict(int)
-    # Omdat we een threshold van 90 moeten halen, en we daar nog niet zijn,
-    # maar we het in de toekomst nog wel zouden kunnen halen, doen we POSTPONE
-    habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 50
-    habtype_percentage_dict[("HXXXX", True, Kwaliteit.NVT)] = 50
-    regel.check(habtype_percentage_dict)
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 1],
+            "habtype": ["H1", "H2"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [50, 50],
+            "omringing_percentage": [100, 100],
+        }
+    )
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.FALSE
+
+
+def test_1_omringend_50_kwalificerend_50_HXXXX():
+    regel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 1],
+            "habtype": ["H1", "HXXXX"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [50, 50],
+            "omringing_percentage": [100, 100],
+        }
+    )
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.POSTPONE
 
 
-def test_100_percent_unrequested_false():
+def test_1_omringend_100_procent_kwalificerend_vegtype(dt):
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H2130_C",
+        ook_mozaiekvegetaties=True,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    regel.determine_keys()
-    habtype_percentage_dict = defaultdict(int)
-    # Omdat we een threshold van 90 moeten halen, en meer dan dat al in de dict
-    # zit, doen we FALSE
-    habtype_percentage_dict[("H2", False, Kwaliteit.MATIG)] = 100
-    regel.check(habtype_percentage_dict)
-    assert regel.evaluation == MaybeBoolean.FALSE
-
-
-def test_50_percent_requested_50_percent_unrequested_false():
-    regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
-        alleen_goede_kwaliteit=True,
-        ook_als_rand_langs=False,
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.GOED],
+            "vegtypen": [[VvN.from_code("19aa3")]],
+            "complexdeel_percentage": [100],
+            "omringing_percentage": [100],
+        }
     )
-    regel.determine_keys()
-    habtype_percentage_dict = defaultdict(int)
-    # Omdat we een threshold van 90 moeten halen, en 50 procent al een ongevraagd
-    # habtype is, zullen we nooit 90 halen, en doen we FALSE
-    habtype_percentage_dict[("HXXXX", True, Kwaliteit.NVT)] = 50
-    habtype_percentage_dict[("H2", False, Kwaliteit.MATIG)] = 50
-    regel.check(habtype_percentage_dict)
-    assert regel.evaluation == MaybeBoolean.FALSE
-
-
-def test_matig_mozaiek_true():
-    regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=False,
-        alleen_goede_kwaliteit=False,
-        ook_als_rand_langs=False,
+    # 1 complexdeel
+    regel.determine_kwalificerende_vegtypen(
+        dt.df[dt.df["Habitattype"] == regel.kwalificerend_habtype]
     )
-    regel.determine_keys()
-    habtype_percentage_dict = defaultdict(int)
-    habtype_percentage_dict[("H1", False, Kwaliteit.MATIG)] = 100
-    regel.check(habtype_percentage_dict)
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.TRUE
 
 
-def test_addition_of_acceptable_habtypen():
+def test_1_omringend_50_kwalificerend_vegtype_50_kwalificerend_habtype(dt):
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
-        alleen_goede_kwaliteit=False,
+        kwalificerend_habtype="H2130_C",
+        ook_mozaiekvegetaties=True,
+        alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    habtype_percentage_dict = defaultdict(int)
-    habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 50
-    habtype_percentage_dict[("H1", True, Kwaliteit.MATIG)] = 50
-    regel.determine_keys()
-    regel.check(habtype_percentage_dict)
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 1],
+            "habtype": ["H2130_C", "HXXXX"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [VvN.from_code("19aa3")]],
+            "complexdeel_percentage": [50, 50],
+            "omringing_percentage": [100, 100],
+        }
+    )
+    regel.determine_kwalificerende_vegtypen(
+        dt.df[dt.df["Habitattype"] == regel.kwalificerend_habtype]
+    )
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.TRUE
 
 
-def test_exclusion_of_unacceptable_habtypen():
+def test_1_omringend_100_procent_kwalificerend_habtype_goed_matig():
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
-        alleen_goede_kwaliteit=False,
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
-    habtype_percentage_dict = defaultdict(int)
-    habtype_percentage_dict[("H1", True, Kwaliteit.MATIG)] = 50
-    habtype_percentage_dict[("H1", False, Kwaliteit.MATIG)] = 50
-    regel.determine_keys()
-    regel.check(habtype_percentage_dict)
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.MATIG],
+            "vegtypen": [[SBB.from_code("1a1a")]],
+            "complexdeel_percentage": [100],
+            "omringing_percentage": [100],
+        }
+    )
+
+    # Goede kwaliteit vereist, matige in de omringing
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.FALSE
+
+    # Goede kwaliteit niet vereist, matige in de omringing
+    regel.alleen_goede_kwaliteit = False
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.TRUE
+
+    # Goede kwaliteit niet vereist, goede in de omringing
+    omringd_door_df["kwaliteit"].iloc[0] = Kwaliteit.GOED
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.TRUE
+
+
+def test_2_omringend_beide_100_procent_kwalificerend_habtype():
+    regel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 2],
+            "habtype": ["H1", "H1"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [100, 100],
+            "omringing_percentage": [50, 50],
+        }
+    )
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.TRUE
+
+
+def test_2_omringend_eentje_kwalificerend_eentje_niet():
+    regel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 2],
+            "habtype": ["H1", "H2"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [100, 100],
+            "omringing_percentage": [50, 50],
+        }
+    )
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.FALSE
 
 
-def test_ook_als_rand_langs_true():
+def test_2_omringend_eentje_kwalificerend_eentje_HXXXX():
     regel = StandaardMozaiekregel(
-        habtype="H1",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
         alleen_goede_kwaliteit=True,
-        ook_als_rand_langs=True,
+        ook_als_rand_langs=False,
     )
-    habtype_percentage_dict = defaultdict(int)
-    habtype_percentage_dict[("H1", True, Kwaliteit.GOED)] = 50
-    habtype_percentage_dict[("H1", True, Kwaliteit.MATIG)] = 50
-    regel.determine_keys()
-    regel.check(habtype_percentage_dict)
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1, 2],
+            "habtype": ["H1", "HXXXX"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")], [SBB.from_code("2a1a")]],
+            "complexdeel_percentage": [100, 100],
+            "omringing_percentage": [50, 50],
+        }
+    )
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.POSTPONE
+
+
+def test_als_rand_langs():
+    regel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=False,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=False,
+    )
+    omringd_door_df = pd.DataFrame(
+        {
+            "ElmID": [1],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.GOED],
+            "vegtypen": [[SBB.from_code("1a1a")]],
+            "complexdeel_percentage": [100],
+            "omringing_percentage": [70],
+        }
+    )
+    # Niet ook_als_rand_langs
+    regel.check(omringd_door_df)
+    assert regel.evaluation == MaybeBoolean.FALSE
+
+    # Ook ook_als_rand_langs
+    regel.ook_als_rand_langs = True
+    regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.TRUE
