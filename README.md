@@ -92,7 +92,7 @@ Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende sta
 3. Selecteer `Microsoft Access Driver (*.mdb, *.accdb)` en klik op `Finish`.
 4. Geef de source een naam naar keuze en klik op `OK`.
 
-**Let op**: Wanneer de gebruiker Microsoft Access 32-bit heeft geïnstalleerd, zorgt het installeren van 64-bit drivers wellicht voor problemen. Er is sinds kort een 64-bit versie van de digitale standaard beschikbaar, zodat gebruikers van Microsoft Access 32-bit kunnen overstappen naar en 64-bits versie.
+**Let op**: Wanneer de gebruiker Microsoft Access 32-bit heeft geïnstalleerd, zorgt het installeren van 64-bit drivers wellicht voor problemen. Er is sinds kort een versie van de digitale standaard beschikbaar voor Access 64-bit, zodat gebruikers van Microsoft Access 32-bit kunnen overstappen naar de 64-bit versie.
 
 
 ### Installatie veg2hab op linux
