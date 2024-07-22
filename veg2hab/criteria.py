@@ -220,7 +220,7 @@ class BodemCriterium(BeperkendCriterium):
                 "niet " if self._evaluation == MaybeBoolean.FALSE else "",
             )
         }
-    
+
     def get_format_string(self):
         return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
