@@ -342,7 +342,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"_VvNdftbl{idx}": str(
                     [
                         str(voorstel.vegtype_in_dt),
-                        voorstel.idx_in_dt,
                         voorstel.habtype,
                     ]
                     if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
@@ -351,7 +350,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"_SBBdftbl{idx}": str(
                     [
                         str(voorstel.vegtype_in_dt),
-                        voorstel.idx_in_dt,
                         voorstel.habtype,
                     ]
                     if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
@@ -398,7 +396,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                         str(
                             [
                                 str(voorstel.vegtype_in_dt),
-                                voorstel.idx_in_dt,
                                 voorstel.habtype,
                             ]
                         )
@@ -414,7 +411,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                         str(
                             [
                                 str(voorstel.vegtype_in_dt),
-                                voorstel.idx_in_dt,
                                 voorstel.habtype,
                             ]
                         )

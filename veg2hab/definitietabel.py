@@ -64,7 +64,6 @@ class DefinitieTabel:
             path,
             engine="openpyxl",
             usecols=[
-                "DT regel",
                 "Habitattype",
                 "Kwaliteit",
                 "SBB",
@@ -77,7 +76,6 @@ class DefinitieTabel:
             dtype="string",
         )
 
-        df["DT regel"] = df["DT regel"].astype(int)
         return cls(df)
 
     def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
@@ -133,7 +131,6 @@ class DefinitieTabel:
                     vegtype_in_dt=vegtype_in_dt,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
-                    idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
                     mozaiek=row["Mozaiekregel"],
                     match_level=match_levels[idx],
@@ -184,8 +181,6 @@ def opschonen_definitietabel(
             "alleen in mozaïek": "mozaiek",
         }
     )
-    # Toevoegen index als kolom
-    dt["DT regel"] = dt.index + 2
 
     ### Opschonen
     # Verwijderen rijen met missende data in VvN
@@ -208,7 +203,7 @@ def opschonen_definitietabel(
     ), "Niet alle VvN codes zijn valid"
 
     # Reorder
-    dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
+    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     ### Mits json definities toevoegen
     with open(path_in_mitsjson, "r", encoding="utf-8") as file:
