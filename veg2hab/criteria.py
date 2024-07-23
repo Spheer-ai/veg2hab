@@ -197,10 +197,9 @@ class BodemCriterium(BeperkendCriterium):
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
 
-        if len(self.actual_bodemcode) == 1:
-            if pd.isna(self.actual_bodemcode[0]):
-                return {"Dit vlak ligt niet mooi binnen één bodemkaartvlak."}
-
+        if not isinstance(self.actual_bodemcode, list) and pd.isna(self.actual_bodemcode):
+            return {"Dit vlak ligt niet binnen een bodemkaartvlak."}
+        
         framework = (
             "Dit is {}{}"
             + str(self.wanted_bodemtype)
