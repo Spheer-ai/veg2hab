@@ -291,12 +291,15 @@ def test_multiple_mozaiek_present_shapes(gdf):
     # 1 en 2, beide met mozaiekregel
     pre = gdf[gdf["ElmID"].isin([1, 2])].copy()
     # Omdat de voorstellen in HabitatKeuze uit dezelfde list komen hoeven we enkel HabitatVoorstel te updaten.
-    pre["HabitatVoorstel"].iloc[1][0][0].mozaiek = StandaardMozaiekregel(
+    nieuwe_regel = StandaardMozaiekregel(
         habtype="H2",
         alleen_zelfstandig=True,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
+    pre["HabitatKeuze"].iloc[1][0].habitatvoorstellen[0].mozaiek = nieuwe_regel
+    pre["HabitatVoorstel"].iloc[1][0][0].mozaiek = nieuwe_regel
+
     post = pd.DataFrame(
         {
             "ElmID": [1, 2],
@@ -314,7 +317,7 @@ def test_multiple_mozaiek_present_shapes(gdf):
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        pre[["ElmID", "HabitatKeuze"]],
         on="ElmID",
         how="left",
     )

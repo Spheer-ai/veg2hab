@@ -13,10 +13,7 @@ from veg2hab.functionele_samenhang import (
     apply_functionele_samenhang,
 )
 from veg2hab.habitat import HabitatKeuze
-from veg2hab.io.cli import CLIInterface
 from veg2hab.vegkartering import VegTypeInfo
-
-CLIInterface.get_instance()
 
 """
        20m                10m
