@@ -1153,8 +1153,10 @@ class Kartering:
         if lbk_needed.any():
             mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed])
         if bodem_needed.any():
-            mits_info_df["bodem"] = bodemkaart.for_geometry(mits_info_df.loc[bodem_needed])
-        
+            mits_info_df["bodem"] = bodemkaart.for_geometry(
+                mits_info_df.loc[bodem_needed]
+            )
+
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
             mits_info_row = mits_info_df.loc[idx]
