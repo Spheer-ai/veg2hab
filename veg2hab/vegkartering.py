@@ -41,6 +41,7 @@ class VegTypeInfo(BaseModel):
 
     class Config:
         extra = "forbid"
+        validate_assignment = True
 
     percentage: float
     SBB: List[vegetatietypen.SBB] = Field(default_factory=list)
@@ -453,9 +454,9 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
         assert (
             len(habitatkeuzes) == 1
         ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
-        assert (
-            vegtypeinfos == [VegTypeInfo(percentage=100, SBB=[], VvN=[])],
-        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
+        assert vegtypeinfos == [
+            VegTypeInfo(percentage=100, SBB=[], VvN=[])
+        ], "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
         aggregate[
             (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit.as_letter())
         ] = 100
