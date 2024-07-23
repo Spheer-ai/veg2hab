@@ -161,17 +161,15 @@ class BodemCriterium(BeperkendCriterium):
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
-        assert isinstance(row["bodem"], list), "bodem kolom moet een list zijn"
-
         self.actual_bodemcode = row["bodem"]
+        if not isinstance(row["bodem"], List) and pd.isna(row["bodem"]):
+            # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+        assert isinstance(row["bodem"], list), "bodem kolom moet een list zijn"
 
         if len(row["bodem"]) > 1:
             # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
-            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
-            return
-
-        if pd.isna(row["bodem"]):
-            # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
