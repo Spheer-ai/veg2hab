@@ -327,9 +327,11 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Perc{idx}": vegtypeinfo.percentage,
                 f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                f"Opm{idx}": format_opmerkingen(voorstel, keuze.opmerking),
-                f"_Mits_opm{idx}": keuze.mits_opmerking,
-                f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
+                f"_V2H_bronnen_info{idx}": format_opmerkingen(
+                    voorstel, keuze.opmerking
+                ),
+                f"_Mits_info{idx}": keuze.mits_opmerking,
+                f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
                 f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                     keuze.habitatvoorstellen[0].mozaiek_dict
                 ),
@@ -380,9 +382,9 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Perc{idx}": str(vegtypeinfo.percentage),
             f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-            f"Opm{idx}": format_opmerkingen(voorstellen, keuze.opmerking),
-            f"_Mits_opm{idx}": keuze.mits_opmerking,
-            f"_Mozk_opm{idx}": keuze.mozaiek_opmerking,
+            f"_V2H_bronnen_info{idx}": format_opmerkingen(voorstellen, keuze.opmerking),
+            f"_Mits_info{idx}": keuze.mits_opmerking,
+            f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
             f"_MozkPerc{idx}": mozaiekregel_habtype_percentage_dict_to_string(
                 keuze.habitatvoorstellen[0].mozaiek_dict
             ),
@@ -508,16 +510,16 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"Perc{i}",
             f"Opp{i}",
             f"Kwal{i}",
-            f"Opm{i}",
             f"SBB{i}",
             f"VvN{i}",
-            f"_Status{i}",
-            f"_Uitleg{i}",
             f"_SBBdftbl{i}",
             f"_VvNdftbl{i}",
-            f"_Mits_opm{i}",
-            f"_Mozk_opm{i}",
+            f"_Mits_info{i}",
+            f"_V2H_bronnen_info{i}",
+            f"_Mozk_info{i}",
             f"_MozkPerc{i}",
+            f"_Status{i}",
+            f"_Uitleg{i}",
         ]
     return gdf[new_columns]
 
@@ -1366,7 +1368,7 @@ class Kartering:
                 {
                     f"Habtype{idx}": keuze.habtype,
                     f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                    f"Opm{idx}": keuze.opmerking,
+                    f"_V2H_bronnen_info{idx}": keuze.opmerking,
                 }
             )
         return pd.Series(result)
@@ -1412,7 +1414,7 @@ class Kartering:
         for idx in range(1, 100):  # arbitrary number
             habtype = row.get(f"Habtype{idx}", None)
             habkeuze = row.get(f"Kwal{idx}", None)
-            opm = row.get(f"Opm{idx}", None)
+            opm = row.get(f"_V2H_bronnen_info{idx}", None)
             if habtype is None and habkeuze is None:
                 break
             result.append((habtype, habkeuze, opm))
