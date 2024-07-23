@@ -182,7 +182,7 @@ def make_buffered_boundary_overlay_gdf(
         raise ValueError(f"Buffer moet positief zijn, maar is {buffer}")
 
     if buffer == 0:
-        logging.warn("Buffer is 0. Dit kan leiden tot onverwachte resultaten.")
+        logging.warning("Buffer is 0. Dit kan leiden tot onverwachte resultaten.")
 
     assert (
         "ElmID" in gdf.columns
