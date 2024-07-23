@@ -96,9 +96,6 @@ def sjoin_largest_overlap(
         kartering_gdf
     ), "DF met bronvlakcodes moet even lang zijn als de kartering_gdf"
 
-    # if len(only_largest_overlaps) == 0:
-    #     return pd.Series(index=kartering_gdf.index, name=bron_col_name)
-
     return only_largest_overlaps[bron_col_name]
 
 
