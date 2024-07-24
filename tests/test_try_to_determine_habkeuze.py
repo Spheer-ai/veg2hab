@@ -12,8 +12,6 @@ from veg2hab.mozaiek import (
 )
 from veg2hab.vegetatietypen import SBB, VvN
 
-CLIInterface.get_instance()
-
 
 def test_habtype_toegekend():
     voorstel = [

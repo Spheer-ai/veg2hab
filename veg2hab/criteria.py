@@ -20,6 +20,9 @@ class BeperkendCriterium(BaseModel):
     cached_evaluation parameter hebben waar het resultaat van check gecached wordt.
     """
 
+    class Config:
+        validate_assignment = True
+
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
 
@@ -113,13 +116,13 @@ class FGRCriterium(BeperkendCriterium):
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
 
-        self.actual_fgrtype = row["fgr"]
-
-        if pd.isna(row["fgr"]):
-            # Er is een NaN als het vlak niet mooi binnen een FGR vlak valt
+        if pd.isnull(row["fgr"]):
+            self.actual_fgrtype = None
+            # Er is een NaN als het vlak niet overlapt met een FGR vlak
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
+        self.actual_fgrtype = row["fgr"]
         self.cached_evaluation = (
             MaybeBoolean.TRUE
             if row["fgr"] == self.wanted_fgrtype
