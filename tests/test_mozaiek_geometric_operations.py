@@ -369,11 +369,7 @@ def test_multiple_mozaiek_present_shapes(gdf):
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-<<<<<<< HEAD
         gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
-=======
-        pre[["ElmID", "HabitatKeuze"]],
->>>>>>> master
         on="ElmID",
         how="left",
     )

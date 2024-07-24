@@ -8,7 +8,9 @@ class BodemTuple(NamedTuple):
     codes: List[str]
     enkel_negatieven: bool
 
+
 NumberType = Union[int, float]
+
 
 @dataclass
 class LBKTypeInfo:

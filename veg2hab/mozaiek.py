@@ -153,21 +153,21 @@ class StandaardMozaiekregel(MozaiekRegel):
             ElmID | habtype | kwaliteit | vegtypen | complexdeel_percentage | omringing_percentage
             Er is een rij voor ieder complexdeel in de omliggende vlakken.
 
-        De benodigde gegevens (omringings% kwalificerende vlakken en omringings% HXXXX) 
-        om tot een truth value te komen worden door _bepaal_kwalificerende_en_HXXXX_omringing() 
+        De benodigde gegevens (omringings% kwalificerende vlakken en omringings% HXXXX)
+        om tot een truth value te komen worden door _bepaal_kwalificerende_en_HXXXX_omringing()
         onttrokken aan de omringd_door df.
-            
+
         Vult ook de tegengekomen_kwal_vegtypen en mozk_perc_dict in.
         """
-        assert all(
-            omringd_door.columns == [
+        assert set(omringd_door.columns).issuperset(
+            {
                 "ElmID",
                 "habtype",
                 "kwaliteit",
                 "vegtypen",
                 "complexdeel_percentage",
                 "omringing_percentage",
-            ]
+            }
         ), "Not all expected columns found in omringd_door in mozaiekregel.check"
 
         assert (
@@ -266,7 +266,7 @@ class StandaardMozaiekregel(MozaiekRegel):
         """
         Bepaalt dmv _bepaal_kwalificerende_en_HXXXX_bedekking() per vlak het bedekkings% kwalificerende
         complexdelen en het bedekkings% HXXXX complexdelen. Hiermee wordt bepaald of het vlak telt als een
-        kwalificerend vlak, als een HXXXX vlak, of als geen van beide, en wordt het omringingspercentage 
+        kwalificerend vlak, als een HXXXX vlak, of als geen van beide, en wordt het omringingspercentage
         van het vlak opgeteld bij het corresponderende lopende totaal (omringing_kwal_vlakken, omringing_HXXXX, of nergens).
 
         Ook worden de tegengekomen kwalificerende vegetatietypen geaggeregeerd ter communicatie naar de gebruiker.
