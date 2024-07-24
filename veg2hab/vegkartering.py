@@ -669,14 +669,17 @@ class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
         # TODO clean this up!
         try:
-            self.gdf = gdf[self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS].copy()
+            self.gdf = gdf[
+                self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
+            ].copy()
         except KeyError:
-            self.gdf = gdf[self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS].copy()
+            self.gdf = gdf[
+                self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
+            ].copy()
 
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
-        
         # Alle VegTypeInfo sorteren op percentage van hoog naar laag
         # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
         #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
@@ -984,7 +987,6 @@ class Kartering:
         )
 
         return cls(gdf)
-
 
     def apply_wwl(
         self, wwl: "WasWordtLijst", override_existing_VvN: bool = False
