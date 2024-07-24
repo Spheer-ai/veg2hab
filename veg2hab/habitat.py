@@ -30,9 +30,6 @@ class HabitatVoorstel(BaseModel):
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
-    # TODO: I turned this into a list of tuples instead of a dict
-    # maybe turn it into a named tuple
-    mozaiek_dict: Optional[List[Tuple[str, bool, Kwaliteit, float]]] = None
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):

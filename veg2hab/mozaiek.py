@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from numbers import Number
 from typing import ClassVar, Dict, List, Optional, Set, Tuple, Union
 
@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field, PrivateAttr
 from veg2hab.enums import Kwaliteit, MaybeBoolean
 from veg2hab.io.common import Interface
 from veg2hab.vegetatietypen import SBB, VvN
+
+MozkPercTuple = namedtuple("MozkPercTuple", ["habtype", "kwaliteit", "percentage"])
 
 
 class MozaiekRegel(BaseModel):
@@ -107,10 +109,13 @@ class StandaardMozaiekregel(MozaiekRegel):
     alleen_goede_kwaliteit: bool
     ook_als_rand_langs: bool
 
-    kwalificerende_vegtypen: Set[Union[SBB, VvN]] = set()
-    tegengekomen_kwal_vegtypen: Set[Union[SBB, VvN]] = set()
+    # Uitgesplits in SBB en VvN lijsten voor (de)serializatie
+    kwalificerende_SBB: List[SBB] = []
+    kwalificerende_VvN: List[VvN] = []
+    tegengekomen_kwal_SBB: List[SBB] = []
+    tegengekomen_kwal_VvN: List[VvN] = []
 
-    mozk_perc_dict: Dict[Tuple[str, Kwaliteit], Union[int, float]] = defaultdict(int)
+    mozk_perc_tuples: List[MozkPercTuple] = []
 
     cached_evaluation: MaybeBoolean = MaybeBoolean.POSTPONE
 
@@ -124,12 +129,22 @@ class StandaardMozaiekregel(MozaiekRegel):
             deftabel_section.Habitattype == self.kwalificerend_habtype
         ), f"Not all Habitattype values are the expected {self.kwalificerend_habtype} in deftabel_section in determine_valid_vegtypen"
 
-        self.kwalificerende_vegtypen = {
-            vegtype
-            for vegtype in deftabel_section.SBB.to_list()
-            + deftabel_section.VvN.to_list()
-            if vegtype is not None
-        }
+        # Casten naar list voor (de)serializatie
+        self.kwalificerende_SBB = list(
+            {
+                vegtype
+                for vegtype in deftabel_section.SBB.to_list()
+                if vegtype is not None
+            }
+        )
+
+        self.kwalificerende_VvN = list(
+            {
+                vegtype
+                for vegtype in deftabel_section.VvN.to_list()
+                if vegtype is not None
+            }
+        )
 
     def check(self, omringd_door: pd.DataFrame) -> None:
         """
@@ -170,7 +185,7 @@ class StandaardMozaiekregel(MozaiekRegel):
             tegengekomen_kwal_vegtypen,
         ) = self._bepaal_kwalificerende_en_HXXXX_omringing(omringd_door)
 
-        self.tegengekomen_kwal_vegtypen = tegengekomen_kwal_vegtypen
+        self._vul_tegengekomen_kwal_SBB_VvN(tegengekomen_kwal_vegtypen)
 
         if omringing_kwal_vlakken >= threshold:
             self.cached_evaluation = MaybeBoolean.TRUE
@@ -190,7 +205,7 @@ class StandaardMozaiekregel(MozaiekRegel):
 
         Is gescheiden van _bepaal_kwalificerende_en_HXXXX_omringing om de logica netter te houden
         """
-        self.mozk_perc_dict = defaultdict(int)
+        mozk_perc_dict = defaultdict(int)
 
         grouped_by_vlak = omringd_door.groupby("ElmID")
 
@@ -206,22 +221,41 @@ class StandaardMozaiekregel(MozaiekRegel):
                 ].complexdeel_percentage.sum()
 
                 if bedekking_goed_habtype >= self.mozaiek_minimum_bedekking:
-                    self.mozk_perc_dict[
-                        (habtype, Kwaliteit.GOED)
-                    ] += habtype_group.iloc[0].omringing_percentage
+                    mozk_perc_dict[(habtype, Kwaliteit.GOED)] += habtype_group.iloc[
+                        0
+                    ].omringing_percentage
                     continue
 
                 bedekking_matig_habtype = habtype_group.complexdeel_percentage.sum()
                 if bedekking_matig_habtype >= self.mozaiek_minimum_bedekking:
                     if habtype in ["H0000", "HXXXX"]:
                         # H0000 en HXXXX hebben altijd kwaliteit NVT
-                        self.mozk_perc_dict[
-                            (habtype, Kwaliteit.NVT)
-                        ] += habtype_group.iloc[0].omringing_percentage
+                        mozk_perc_dict[(habtype, Kwaliteit.NVT)] += habtype_group.iloc[
+                            0
+                        ].omringing_percentage
                     else:
-                        self.mozk_perc_dict[
+                        mozk_perc_dict[
                             (habtype, Kwaliteit.MATIG)
                         ] += habtype_group.iloc[0].omringing_percentage
+
+        # We slaan dit op als tuples ipv gewoon als de dict zodat we mozaiekregels kunnen serializen
+        self.mozk_perc_tuples = []
+
+        for (habtype, kwaliteit), perc in mozk_perc_dict.items():
+            self.mozk_perc_tuples.append(
+                MozkPercTuple(habtype=habtype, kwaliteit=kwaliteit, percentage=perc)
+            )
+
+    def _vul_tegengekomen_kwal_SBB_VvN(
+        self, tegengekomen_vegtypen: Set[Union[SBB, VvN]]
+    ):
+        # Casten naar list voor (de)serializatie
+        self.tegengekomen_kwal_SBB = list(
+            {vegtype for vegtype in tegengekomen_vegtypen if isinstance(vegtype, SBB)}
+        )
+        self.tegengekomen_kwal_VvN = list(
+            {vegtype for vegtype in tegengekomen_vegtypen if isinstance(vegtype, VvN)}
+        )
 
     def _bepaal_kwalificerende_en_HXXXX_omringing(
         self, omringd_door: pd.DataFrame
@@ -285,8 +319,9 @@ class StandaardMozaiekregel(MozaiekRegel):
                 bedekking_kwal_complexdelen += row.complexdeel_percentage
                 tegengekomen_kwal_vegtypen.update(
                     [
-                        vegtype 
-                        for vegtype in row.vegtypen if vegtype in self.kwalificerende_vegtypen
+                        vegtype
+                        for vegtype in row.vegtypen
+                        if vegtype in self.kwalificerende_vegtypen
                     ]
                 )
 
@@ -302,9 +337,7 @@ class StandaardMozaiekregel(MozaiekRegel):
 
     def __str__(self):
         complete_string = f"{'als rand langs ' if self.ook_als_rand_langs else ''}"
-        complete_string += (
-            f"{'zelfstndg' if not self.ook_mozaiekvegetaties else 'zelfstndg/mozkveg van'} "
-        )
+        complete_string += f"{'zelfstndg' if not self.ook_mozaiekvegetaties else 'zelfstndg/mozkveg van'} "
         complete_string += f"{'G' if self.alleen_goede_kwaliteit else 'G/M'} "
         complete_string += f"{self.kwalificerend_habtype}"
         return complete_string
@@ -336,7 +369,7 @@ class StandaardMozaiekregel(MozaiekRegel):
             ", ".join(
                 [
                     f"{percentage:.2f}% {kwal_strs[kwaliteit]}{habtype}"
-                    for (habtype, kwaliteit), percentage in self.mozk_perc_dict.items()
+                    for (habtype, kwaliteit, percentage) in self.mozk_perc_tuples
                 ]
             )
             + "."
@@ -357,6 +390,14 @@ class StandaardMozaiekregel(MozaiekRegel):
             ]
         )
         return vegtypen_str + "."
+
+    @property
+    def kwalificerende_vegtypen(self) -> Set[Union[SBB, VvN]]:
+        return self.kwalificerende_SBB + self.kwalificerende_VvN
+
+    @property
+    def tegengekomen_kwal_vegtypen(self) -> Set[Union[SBB, VvN]]:
+        return self.tegengekomen_kwal_SBB + self.tegengekomen_kwal_VvN
 
 
 def make_buffered_boundary_overlay_gdf(
@@ -483,7 +524,7 @@ def construct_elmid_omringd_door_gdf(
         )
 
     result = augmented_overlayed.apply(expand_habkeuze_vegtypeinfo_columns, axis=1)
-    return pd.concat(result.values)
+    return pd.concat(result.values).reset_index(drop=True)
 
 
 def is_mozaiek_type_present(

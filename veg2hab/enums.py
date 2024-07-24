@@ -105,14 +105,14 @@ class Kwaliteit(Enum):
         elif letter == "X":
             return cls.NVT
         else:
-            raise ValueError("Letter moet G of M zijn")
+            raise ValueError("Letter moet G, M of X zijn")
 
     def as_letter(self) -> str:
         if self == Kwaliteit.GOED:
             return "G"
         elif self == Kwaliteit.MATIG:
             return "M"
-        elif self in [Kwaliteit.NVT]:
+        elif self == Kwaliteit.NVT:
             return "X"
         else:
             raise ValueError("GoedMatig is niet Goed of Matig")

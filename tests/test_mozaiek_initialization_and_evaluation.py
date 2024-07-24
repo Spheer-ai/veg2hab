@@ -44,7 +44,7 @@ def test_determine_kwalificerende_vegtypen_normal_case(dt):
     regel.determine_kwalificerende_vegtypen(
         dt.df[dt.df["Habitattype"] == regel.kwalificerend_habtype]
     )
-    assert regel.kwalificerende_vegtypen == {
+    assert set(regel.kwalificerende_vegtypen) == {
         VvN.from_code("19aa3"),
         VvN.from_code("19rg1"),
         SBB.from_code("19a-c"),
