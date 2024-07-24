@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
-from typing import List, NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple, Union
 
 
 class BodemTuple(NamedTuple):
@@ -8,6 +8,7 @@ class BodemTuple(NamedTuple):
     codes: List[str]
     enkel_negatieven: bool
 
+NumberType = Union[int, float]
 
 @dataclass
 class LBKTypeInfo:

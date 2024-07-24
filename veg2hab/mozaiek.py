@@ -7,7 +7,7 @@ import geopandas as gpd
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr
 
-from veg2hab.enums import Kwaliteit, MaybeBoolean
+from veg2hab.enums import Kwaliteit, MaybeBoolean, NumberType
 from veg2hab.io.common import Interface
 from veg2hab.vegetatietypen import SBB, VvN
 
@@ -19,15 +19,15 @@ class MozaiekRegel(BaseModel):
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
-    mozaiek_threshold: Union[int, float] = Field(
+    mozaiek_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
-    mozaiek_als_rand_threshold: Union[int, float] = Field(
+    mozaiek_als_rand_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance()
         .get_config()
         .mozaiek_als_rand_threshold
     )
-    mozaiek_minimum_bedekking: Union[int, float] = Field(
+    mozaiek_minimum_bedekking: NumberType = Field(
         default_factory=lambda: Interface.get_instance()
         .get_config()
         .mozaiek_minimum_bedekking
@@ -153,11 +153,14 @@ class StandaardMozaiekregel(MozaiekRegel):
             ElmID | habtype | kwaliteit | vegtypen | complexdeel_percentage | omringing_percentage
             Er is een rij voor ieder complexdeel in de omliggende vlakken.
 
+        De benodigde gegevens (omringings% kwalificerende vlakken en omringings% HXXXX) 
+        om tot een truth value te komen worden door _bepaal_kwalificerende_en_HXXXX_omringing() 
+        onttrokken aan de omringd_door df.
+            
         Vult ook de tegengekomen_kwal_vegtypen en mozk_perc_dict in.
         """
         assert all(
-            col in omringd_door.columns
-            for col in [
+            omringd_door.columns == [
                 "ElmID",
                 "habtype",
                 "kwaliteit",
@@ -259,7 +262,15 @@ class StandaardMozaiekregel(MozaiekRegel):
 
     def _bepaal_kwalificerende_en_HXXXX_omringing(
         self, omringd_door: pd.DataFrame
-    ) -> Tuple[Union[int, float], Union[int, float], Set[Union[SBB, VvN]]]:
+    ) -> Tuple[NumberType, NumberType, Set[Union[SBB, VvN]]]:
+        """
+        Bepaalt dmv _bepaal_kwalificerende_en_HXXXX_bedekking() per vlak het bedekkings% kwalificerende
+        complexdelen en het bedekkings% HXXXX complexdelen. Hiermee wordt bepaald of het vlak telt als een
+        kwalificerend vlak, als een HXXXX vlak, of als geen van beide, en wordt het omringingspercentage 
+        van het vlak opgeteld bij het corresponderende lopende totaal (omringing_kwal_vlakken, omringing_HXXXX, of nergens).
+
+        Ook worden de tegengekomen kwalificerende vegetatietypen geaggeregeerd ter communicatie naar de gebruiker.
+        """
         omringing_kwal_vlakken = 0
         omringing_HXXXX = 0
         tegengekomen_kwal_vegtypen = set()
@@ -280,12 +291,15 @@ class StandaardMozaiekregel(MozaiekRegel):
             # Bijhouden welke vegetatietypen als kwalificerend zijn gerekend
             tegengekomen_kwal_vegtypen.update(tegengekomen_kwal_vegtypen_vlak)
 
+            # Als we al over de threshold zitten, kunnen we stoppen met
+            # tellen en dit vlak zien als kwalificerend
             if bedekking_kwal_complexdelen >= self.mozaiek_minimum_bedekking:
                 omringing_kwal_vlakken += vlak_group.iloc[0].omringing_percentage
                 continue
 
             # Als de totale bedekking kwalificerende complexdelen + HXXXX bedekking meer is dan
             # de minimale bedekkingsthreshold, zou dit vlak in volgende ronden alsnog kunnen gaan kwalificeren
+            # en kunnen we dit vlak zien als een HXXXX vlak
             if (
                 bedekking_HXXXX + bedekking_kwal_complexdelen
                 > self.mozaiek_minimum_bedekking
@@ -297,12 +311,18 @@ class StandaardMozaiekregel(MozaiekRegel):
 
     def _bepaal_kwalificerende_en_HXXXX_bedekking(
         self, vlak_group: pd.DataFrame
-    ) -> Tuple[Union[int, float], Union[int, float], Set[Union[SBB, VvN]]]:
-        # Bepalen we of alle kwalificerende complexdelen samen meer dan self.mozaiek_minimum_bedekking bedekking hebben
+    ) -> Tuple[NumberType, NumberType, Set[Union[SBB, VvN]]]:
+        """
+        Bepaalt voor een vlak wat de bedekking is van kwalificerende complexdelen en HXXXX complexdelen.
+
+        Ook houdt het bij welke kwalificerende vegetatietypen tegengekomen zijn.
+        """
         bedekking_kwal_complexdelen = 0
         bedekking_HXXXX = 0
         tegengekomen_kwal_vegtypen = set()
 
+        # NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
+        #       door ze te vervangen voor set operaties (set.issubset/set.intersection etc)
         for row in vlak_group.itertuples():
             if (
                 # Als het habitattype matcht en er wordt aan de kwaliteitseisen voldaan
