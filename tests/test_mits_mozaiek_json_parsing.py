@@ -5,10 +5,7 @@ import pandas as pd
 import pytest
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
-from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import MozaiekRegel
-
-CLIInterface.get_instance()
 
 # Simpelweg elke mits en elke mozaiekregel in de .jsons instancen en dan (hopelijk) merken dat alles werkt
 

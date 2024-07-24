@@ -21,6 +21,7 @@ class HabitatVoorstel(BaseModel):
 
     class Config:
         extra = "forbid"
+        validate_assignment = True
 
     onderbouwend_vegtype: Union[_SBB, _VvN, None]
     vegtype_in_dt: Union[_SBB, _VvN, None]
@@ -95,6 +96,7 @@ class HabitatVoorstel(BaseModel):
 class HabitatKeuze(BaseModel):
     class config:
         extra = "forbid"
+        validate_assignment = True
 
     status: KeuzeStatus
     habtype: str  # format = "H1123"
@@ -158,10 +160,7 @@ class HabitatKeuze(BaseModel):
     def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
         # TODO dit is niet zo netjes, met de json.loads en json.dumps
         # maar v.dict, doet een werkte volgens mij niet lekker met enums.
-        try:
-            return json.dumps([json.loads(v.json()) for v in keuzes])
-        except Exception as e:
-            return "HELLOWIE"
+        return json.dumps([json.loads(v.json()) for v in keuzes])
 
     @staticmethod
     def deserialize_list(serialized: str) -> List["HabitatKeuze"]:

@@ -3,8 +3,6 @@ import os
 
 from veg2hab.io.cli import CLIInterface
 
-CLIInterface.get_instance()
-
 
 def test_mozaiek_threshold():
     os.environ["VEG2HAB_MOZAIEK_THRESHOLD"] = "99.0"
