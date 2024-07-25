@@ -76,6 +76,9 @@ class BeperkendCriterium(BaseModel):
             )
         return self.cached_evaluation
 
+    def get_format_string(self) -> Optional[str]:
+        return None
+
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
@@ -144,6 +147,8 @@ class FGRCriterium(BeperkendCriterium):
 
         if pd.isna(self.actual_fgrtype):
             return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
+
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = "FGR type is {}{}{}."
         return {
             framework.format(
@@ -154,6 +159,9 @@ class FGRCriterium(BeperkendCriterium):
                 else "",
             )
         }
+
+    def get_format_string(self):
+        return f"FGR is {self.wanted_fgrtype.value}" + " ({})"
 
 
 class BodemCriterium(BeperkendCriterium):
@@ -206,6 +214,7 @@ class BodemCriterium(BeperkendCriterium):
             if pd.isna(self.actual_bodemcode[0]):
                 return {"Dit vlak ligt niet mooi binnen één bodemkaartvlak."}
 
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = (
             "Dit is {}{}"
             + str(self.wanted_bodemtype)
@@ -221,6 +230,9 @@ class BodemCriterium(BeperkendCriterium):
                 "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
             )
         }
+
+    def get_format_string(self):
+        return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
 
 class LBKCriterium(BeperkendCriterium):
@@ -273,6 +285,7 @@ class LBKCriterium(BeperkendCriterium):
         if pd.isna(self.actual_lbkcode):
             return {"Dit vlak ligt niet mooi binnen één LBK-vak"}
 
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = (
             "Dit is {}{}{}"
             + str(self.wanted_lbktype)
@@ -301,6 +314,9 @@ class LBKCriterium(BeperkendCriterium):
             )
         }
 
+    def get_format_string(self):
+        return f"LBK is {self.wanted_lbktype}" + " ({})"
+
 
 class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
@@ -319,7 +335,14 @@ class NietCriterium(BeperkendCriterium):
         return ~self.sub_criterium.evaluation
 
     def __str__(self):
-        return f"niet {self.sub_criterium}"
+        # Hier veranderen we "niet FGR is Duinen (F)" naar "niet FGR is Duinen (T)",
+        # want niet false == true
+        format_str = self.sub_criterium.get_format_string()
+        if format_str is not None:
+            return "niet " + format_str.format(
+                (~self.sub_criterium.evaluation).as_letter()
+            )
+        return f"niet ({self.sub_criterium})"
 
     def get_opm(self) -> Set[str]:
         return self.sub_criterium.get_opm()
