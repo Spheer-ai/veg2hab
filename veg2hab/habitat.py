@@ -27,7 +27,6 @@ class HabitatVoorstel(BaseModel):
     vegtype_in_dt: Union[_SBB, _VvN, None]
     habtype: str
     kwaliteit: Kwaliteit
-    idx_in_dt: Optional[int]
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
@@ -44,7 +43,6 @@ class HabitatVoorstel(BaseModel):
             vegtype_in_dt=None,
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
-            idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
@@ -57,7 +55,6 @@ class HabitatVoorstel(BaseModel):
             vegtype_in_dt=None,
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
-            idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
@@ -71,7 +68,6 @@ class HabitatVoorstel(BaseModel):
             vegtype_in_dt=None,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
-            idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
@@ -212,7 +208,6 @@ def try_to_determine_habkeuze(
     if len(all_voorstellen) == 1 and all_voorstellen[0].habtype == "H0000":
         # ...zat of geen van de vegtypen in de deftabel
         if all_voorstellen[0].onderbouwend_vegtype:
-            assert all_voorstellen[0].idx_in_dt is None
             return HabitatKeuze(
                 status=KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
                 habtype="H0000",
