@@ -665,9 +665,13 @@ class Kartering:
     def __init__(self, gdf: gpd.GeoDataFrame):
         # TODO clean this up!
         try:
-            self.gdf = gdf[self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS]
+            self.gdf = gdf[
+                self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
+            ].copy()
         except KeyError:
-            self.gdf = gdf[self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS]
+            self.gdf = gdf[
+                self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
+            ].copy()
 
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
