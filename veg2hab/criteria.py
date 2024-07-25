@@ -72,6 +72,9 @@ class BeperkendCriterium(BaseModel):
             )
         return self._evaluation
 
+    def get_format_string(self) -> Optional[str]:
+        return None
+
 
 class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
@@ -327,9 +330,10 @@ class NietCriterium(BeperkendCriterium):
     def __str__(self):
         # Hier veranderen we "niet FGR is Duinen (F)" naar "niet FGR is Duinen (T)",
         # want niet false == true
-        if type(self.sub_criterium) in [FGRCriterium, BodemCriterium, LBKCriterium]:
-            return "(niet " + self.sub_criterium.get_format_string().format(
-                (~self.sub_criterium.evaluation).as_letter() + ")"
+        format_str = self.sub_criterium.get_format_string()
+        if format_str is not None:
+            return "niet " + format_str.format(
+                (~self.sub_criterium.evaluation).as_letter()
             )
         return f"niet ({self.sub_criterium})"
 
