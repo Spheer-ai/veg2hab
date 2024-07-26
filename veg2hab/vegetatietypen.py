@@ -73,7 +73,7 @@ class SBB(BaseModel):
             kwargs["subassociatie"] = match.group("subassociatie")
             return cls(**kwargs)
 
-        raise ValueError(f"Invalid SBB code: {code}")
+        raise ValueError(f"Invalid SBB code: '{code}'")
 
     def base_SBB_as_tuple(
         self,
@@ -268,7 +268,7 @@ class VvN(BaseModel):
                 subassociatie=match.group("subassociatie"),
             )
 
-        raise ValueError(f"Invalid VvN code: {code}")
+        raise ValueError(f"Invalid VvN code: '{code}'")
 
     @classmethod
     def from_string(cls, code) -> Union[VvN, None]:
@@ -382,12 +382,197 @@ class VvN(BaseModel):
             )
         )
 
+    @staticmethod
     def opschonen_series(series: pd.Series) -> pd.Series:
         """
         Voert een aantal opschoningen uit op een pandas series van VvN codes
         Hierna zijn ze nog niet per se valide, dus check dat nog
         """
         series = series.astype("string")
+        # Maak lowercase
+        series = series.str.lower()
+        # Verwijderen whitespace uit VvN
+        series = series.str.replace(" ", "")
+        series = series.str.strip()
+        # Verwijderen '-' (voor deftabel)
+        series = series.str.replace("-", "")
+        # Converteren rompgemeenschappen en derivaaatgemeenschappen (voor deftabel)
+        series = series.str.replace(r"\[.*\]", "", regex=True)
+        # Verwijderen haakjes uit Vvn (voor wwl)
+        series = series.str.replace("[()]", "", regex=True)
+        # Verwijderen p.p. uit VvN (voor wwl)
+        series = series.str.replace("p.p.", "", regex=False)
+        # Vervangen 0[1-9] door [1-9]
+        series = series.str.replace("0([1-9])", r"\1", regex=True)
+        # Vervangen enkel "-" of "x" vegtypen door None
+        series = series.apply(
+            lambda x: None if (pd.notna(x) and x in ["-", "x"]) else x
+        )
+        # Vervang lege of door opschoningen hierboven leeg gemaakte strings door None
+        series = series.apply(lambda x: None if pd.isnull(x) or x == "" else x)
+
+        return series
+
+
+class rVvN(BaseModel):
+    """
+    Format van VvN codes:
+    ## is cijfer ('1', '5', '10', '32', niet '01' of '04'), x is letter ('a', 'b', 'c' etc)
+    Normale VvN: ##xx##x, zoals 42aa1e
+    Behalve klasse is elke taxonomiegroep optioneel, zolang de meer specifieke ook
+    afwezig zijn (klasse-orde-verbond is valid, klasse-verbond-associatie niet)
+    Rompgemeenschappeen: ## rg ##, zoals 37rg2
+    Derivaatgemeenschappen: ## dg ##, zoals 42dg2
+    """
+
+    normale_rvvn: ClassVar[Any] = re.compile(
+        r"r(?P<klasse>[1-9][0-9]?)((?P<orde>[a-z])((?P<verbond>[a-z])((?P<associatie>[1-9][0-9]?)(?P<subassociatie>[a-z])?)?)?)?"
+    )
+    # r42aa1e         4    2                a                  a                     1                             e
+    gemeenschap: ClassVar[Any] = re.compile(
+        r"r(?P<klasse>[1-9][0-9]?)(?P<type>[dr]g)(?P<gemeenschap>[1-9][0-9]?)"
+    )
+    # r37rg2          3    7               r  g                  2
+
+    klasse: str
+    orde: Optional[str] = None
+    verbond: Optional[str] = None
+    associatie: Optional[str] = None
+    subassociatie: Optional[str] = None
+    derivaatgemeenschap: Optional[str] = None
+    rompgemeenschap: Optional[str] = None
+
+    @classmethod
+    def from_code(cls, code: str):
+        assert isinstance(code, str), "Code is not a string"
+        match = cls.gemeenschap.fullmatch(code)
+        if match:
+            kwargs = {"klasse": match.group("klasse")}
+            if match.group("type") == "dg":
+                kwargs["derivaatgemeenschap"] = match.group("gemeenschap")
+                return cls(**kwargs)
+            elif match.group("type") == "rg":
+                kwargs["rompgemeenschap"] = match.group("gemeenschap")
+                return cls(**kwargs)
+            else:
+                raise ValueError(f"Invalide gemeenschap: {code}")
+
+        match = cls.normale_rvvn.fullmatch(code)
+        if match:
+            return cls(
+                klasse=match.group("klasse"),
+                orde=match.group("orde"),
+                verbond=match.group("verbond"),
+                associatie=match.group("associatie"),
+                subassociatie=match.group("subassociatie"),
+            )
+
+        raise ValueError(f"Invalid rVvN code: '{code}'")
+
+    @classmethod
+    def from_string(cls, code) -> Union[VvN, None]:
+        if pd.isnull(code) or code == "":
+            return None
+        return cls.from_code(code)
+
+    def normal_rVvN_as_tuple(
+        self,
+    ) -> tuple[
+        str, Union[str, None], Union[str, None], Union[str, None], Union[str, None]
+    ]:
+        if self.derivaatgemeenschap or self.rompgemeenschap:
+            raise ValueError("Dit is geen normale (niet derivaat-/rompgemeenschap) VvN")
+        return (
+            self.klasse,
+            self.orde,
+            self.verbond,
+            self.associatie,
+            self.subassociatie,
+        )
+
+    # I dont think this is needed
+    # def normal_VvN_as_tuple(
+    #     self,
+    # ) -> tuple[
+    #     str, Union[str, None], Union[str, None], Union[str, None], Union[str, None]
+    # ]:
+    #     if self.derivaatgemeenschap or self.rompgemeenschap:
+    #         raise ValueError("Dit is geen normale (niet derivaat-/rompgemeenschap) VvN")
+    #     return (
+    #         self.klasse,
+    #         self.orde,
+    #         self.verbond,
+    #         self.associatie,
+    #         self.subassociatie,
+    #     )
+
+    def match_up_to(self, other: Optional[VvN]) -> MatchLevel:
+        raise
+
+    @classmethod
+    def validate_code(cls, code: str) -> bool:
+        """
+        Checkt of een string voldoet aan de VvN opmaak
+        """
+        return cls.normale_rvvn.fullmatch(code) or cls.gemeenschap.fullmatch(code)
+
+    @classmethod
+    def validate_pandas_series(
+        cls, series: pd.Series, print_invalid: bool = False
+    ) -> bool:
+        """
+        Valideert een pandas series van rVvN codes
+        NATypes worden als valide beschouwd
+        """
+        series = series.astype("string")
+
+        # NATypes op true zetten, deze zijn in principe valid maar validate verwacht str
+        valid_mask = series.apply(
+            lambda x: cls.validate_code(x) if pd.notna(x) else True
+        )
+
+        if print_invalid:
+            if valid_mask.any():
+                logging.info("Alle rVvN codes zijn valide")
+            else:
+                invalid = series[~valid_mask]
+                logging.warning(f"De volgende rVvN codes zijn niet valide: \n{invalid}")
+
+        return valid_mask.all()
+
+    def __str__(self):
+        if self.derivaatgemeenschap:
+            return f"r{self.klasse}dg{self.derivaatgemeenschap}"
+        if self.rompgemeenschap:
+            return f"r{self.klasse}rg{self.rompgemeenschap}"
+        classification = [x for x in self.normal_rVvN_as_tuple() if x is not None]
+        return "r" + "".join(classification)
+
+    def __hash__(self):
+        return hash(
+            (
+                self.klasse,
+                self.orde,
+                self.verbond,
+                self.associatie,
+                self.subassociatie,
+                self.derivaatgemeenschap,
+                self.rompgemeenschap,
+            )
+        )
+
+    @staticmethod
+    def opschonen_series(series: pd.Series) -> pd.Series:
+        """
+        Voert een aantal opschoningen uit op een pandas series van rVvN codes
+        Hierna zijn ze nog niet per se valide, dus check dat nog
+        """
+        series = series.astype("string")
+        # Verwijderen Niet overgenomen in Revisie
+        series.loc[series == "Niet overgenomen in Revisie"] = None
+        series.loc[series == "Niet overgenomen in Revisie (grasland-deel)"] = None
+        # Fixen foute code
+        series.loc[series == "r43A0A1B"] = "r43AA1B"
         # Maak lowercase
         series = series.str.lower()
         # Verwijderen whitespace uit VvN

@@ -68,6 +68,8 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             f"Tijdelijke versie van {params.shapefile} is opgeslagen in {filename}"
         )
 
+    wwl = WasWordtLijst.from_excel(Path(constants.WWL_PATH))
+
     if isinstance(params, AccessDBInputs):
         kartering = Kartering.from_access_db(
             shape_path=filename,
@@ -81,7 +83,7 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             shape_path=filename,
             ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
-            sbb_of_vvn=params.sbb_of_vvn,
+            welke_typologie=params.sbb_of_vvn,
             datum_col=params.datum_col,
             opmerking_col=params.opmerking_col,
             SBB_col=params.sbb_col,
@@ -89,13 +91,12 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             split_char=params.split_char,
             perc_col=params.perc_col,
             lok_vegtypen_col=params.lok_vegtypen_col,
+            wwl=wwl,
         )
     else:
         raise RuntimeError("Something went wrong with the input parameters")
 
     logging.info(f"Vegetatie kartering is succesvol ingelezen")
-
-    wwl = WasWordtLijst.from_excel(Path(constants.WWL_PATH))
 
     logging.info(f"WasWordtLijst is ingelezen van {constants.WWL_PATH}")
 

@@ -1,10 +1,10 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 
-from veg2hab.vegetatietypen import SBB, VvN
+from veg2hab.vegetatietypen import SBB, VvN, rVvN
 from veg2hab.vegkartering import VegTypeInfo
 
 
@@ -15,18 +15,15 @@ class WasWordtLijst:
 
         assert df.dtypes["VvN"] == "string", "VvN kolom is geen string"
         assert df.dtypes["SBB"] == "string", "SBB kolom is geen string"
+        assert df.dtypes["rVvN"] == "string", "rVvN kolom is geen string"
 
         # Checken
-        assert self.check_validity_SBB(
-            print_invalid=True
-        ), "Niet alle SBB codes zijn valid"
-        assert self.check_validity_VvN(
-            print_invalid=True
-        ), "Niet alle VvN codes zijn valid"
+        self.check_validity_vegtypen()
 
         # Omvormen naar SBB en VvN klasses
         self.df["SBB"] = self.df["SBB"].apply(SBB.from_string)
         self.df["VvN"] = self.df["VvN"].apply(VvN.from_string)
+        self.df["rVvN"] = self.df["rVvN"].apply(rVvN.from_string)
 
         # Replace pd.NA with None
         # NOTE: kunnen we ook alle rows met een NA gewoon verwijderen? Als we of geen VvN of
@@ -37,25 +34,21 @@ class WasWordtLijst:
     def from_excel(cls, path: Path) -> "WasWordtLijst":
         # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
         df = pd.read_excel(
-            path, engine="openpyxl", usecols=["VvN", "SBB"], dtype="string"
+            path, engine="openpyxl", usecols=["VvN", "SBB", "rVvN"], dtype="string"
         )
         return cls(df)
-
-    def check_validity_SBB(self, print_invalid: bool = False) -> bool:
-        """
-        Checkt of de SBB codes in de wwl valide zijn.
-        """
-        wwl_SBB = self.df["SBB"].astype("string")
-
-        return SBB.validate_pandas_series(wwl_SBB, print_invalid=print_invalid)
-
-    def check_validity_VvN(self, print_invalid: bool = False) -> bool:
+    
+    def check_validity_vegtypen(self, print_invalid: bool = False) -> bool:
         """
         Checkt of de VvN valide in de wwl zijn.
         """
+        wwl_SBB = self.df["SBB"].astype("string")
         wwl_VvN = self.df["VvN"].astype("string")
+        wwl_rVvN = self.df["rVvN"].astype("string")
 
-        return VvN.validate_pandas_series(wwl_VvN, print_invalid=print_invalid)
+        assert SBB.validate_pandas_series(wwl_SBB, print_invalid=print_invalid), "Niet alle SBB codes zijn valid"
+        assert VvN.validate_pandas_series(wwl_VvN, print_invalid=print_invalid), "Niet alle VvN codes zijn valid"
+        assert rVvN.validate_pandas_series(wwl_rVvN, print_invalid=print_invalid), "Niet alle rVvN codes zijn valid"
 
     @lru_cache(maxsize=256)
     def match_SBB_to_VvN(self, code: SBB) -> List[VvN]:
@@ -67,6 +60,18 @@ class WasWordtLijst:
         matching_VvN = self.df[self.df.SBB == code].VvN
         # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
         return matching_VvN.dropna().to_list()
+    
+    @lru_cache(maxsize=256)
+    def match_rVvN_to_VvN_SBB(self, code: rVvN) -> Tuple[List[VvN], List[SBB]]:
+        """
+        Zoekt de VvN en SBB codes die bij een rVvN code horen
+        """
+        assert isinstance(code, rVvN), "Code is geen rVvN object"
+
+        matching_VvN = self.df[self.df.rVvN == code].VvN
+        matching_SBB = self.df[self.df.rVvN == code].SBB
+        # dropna om niet None uit lege VvN cellen in de wwl als VvN/SBB te krijgen
+        return matching_VvN.dropna().to_list(), matching_SBB.dropna().to_list()
 
     def toevoegen_VvN_aan_VegTypeInfo(self, info: VegTypeInfo) -> VegTypeInfo:
         """
@@ -96,9 +101,44 @@ class WasWordtLijst:
     ) -> List[VegTypeInfo]:
         """
         Voert alle elementen in een lijst door toevoegen_VvN_aan_VegTypeInfo en returned het geheel
-        Handig voor
         """
         return [self.toevoegen_VvN_aan_VegTypeInfo(info) for info in infos]
+
+    def van_rVvN_naar_SBB_en_VvN(self, vegtypeinfo: pd.Series) -> None:
+        """
+        Zet een series met lijsten van VegTypeInfos met enkel rVvN om naar een
+        series met lijsten van VegTypeInfos met SBB en VvN, zonder rVvN
+        """
+        assert vegtypeinfo.apply(
+            lambda infos: all(len(info.VvN) == 0 and len(info.SBB) == 0 for info in infos)
+        ).all(), "VegTypeInfo in de Series mag geen VvN of SBB bevatten"
+
+        def _rVvN_info_to_SBB_VvN(info: VegTypeInfo) -> VegTypeInfo:
+            """
+            Zet een VegTypeInfo met alleen rVvN om naar een VegTypeInfo met SBB en VvN
+            """
+            assert len(info.SBB) == 0, "SBB is niet leeg"
+            assert len(info.VvN) == 0, "VvN is niet leeg"
+            assert len(info.rVvN) <= 1, "Er zijn meerdere rVvN codes"
+
+            if len(info.rVvN) == 0:
+                return VegTypeInfo(
+                    percentage=info.percentage,
+                    SBB=[],
+                    VvN=[],
+                    rVvN=[],
+                )
+
+            new_VvN, new_SBB = self.match_rVvN_to_VvN_SBB(info.rVvN[0])
+            
+            return VegTypeInfo(
+                percentage=info.percentage,
+                SBB=new_SBB,
+                VvN=new_VvN,
+                rVvN=[],
+            )
+        
+        return vegtypeinfo.apply(lambda infos: [_rVvN_info_to_SBB_VvN(info) for info in infos])
 
 
 def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
@@ -110,9 +150,10 @@ def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
     # assert path out is an xlsx file
     assert path_out.suffix == ".xlsx", "Output file is not an xlsx file"
 
-    wwl = pd.read_excel(path_in, engine="openpyxl", usecols=["VvN", "SBB-code"])
+    wwl = pd.read_excel(path_in, engine="openpyxl", usecols=["rVvN", "VvN", "SBB-code"])
     wwl = wwl.rename(columns={"SBB-code": "SBB"})
     wwl = wwl.dropna(how="all")
+    wwl = wwl.where(pd.notnull(wwl), None)
 
     # Rijen met meerdere VvN in 1 cel opsplitsen
     wwl["VvN"] = wwl["VvN"].str.split(",")
@@ -121,6 +162,7 @@ def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
     # Whitespace velden vervangen door None
     wwl = wwl.replace(r"^\s*$", None, regex=True)
 
+    wwl["rVvN"] = rVvN.opschonen_series(wwl["rVvN"])
     wwl["VvN"] = VvN.opschonen_series(wwl["VvN"])
     wwl["SBB"] = SBB.opschonen_series(wwl["SBB"])
 
@@ -131,5 +173,8 @@ def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
     assert VvN.validate_pandas_series(
         wwl["VvN"], print_invalid=True
     ), "Niet alle VvN codes zijn valid"
+    assert rVvN.validate_pandas_series(
+        wwl["rVvN"], print_invalid=True
+    ), "Niet alle rVvN codes zijn valid"
 
     wwl.to_excel(path_out, index=False)

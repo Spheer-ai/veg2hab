@@ -8,6 +8,8 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
+from veg2hab.enums import WelkeTypologie
+
 import pandas as pd
 import pyodbc
 
@@ -155,13 +157,13 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
     vegetatietype.Code = vegetatietype.Code.str.lower()
 
-    sbbtype = read_table(
+    vegtype = read_table(
         locatie,
         TableNames.SBBTYPE,
         {"Cata_ID": int, "Code": str},
     )
     # Code hernoemen want er zit al een "Code" in Vegetatietype.csv
-    sbbtype = sbbtype.rename(columns={"Code": "Sbb"})
+    vegtype = vegtype.rename(columns={"Code": "vegtype"})
 
     # SBB code toevoegen aan KarteringVegetatietype
     kart_veg = kart_veg.merge(
@@ -173,13 +175,14 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
     kart_veg = kart_veg.merge(
         # TODO: validate="one_to_one"?
-        sbbtype,
+        vegtype,
         left_on="SbbType",
         right_on="Cata_ID",
         how="left",
     )
 
-    # Opschonen SBB codes
+    # Opschonen vegtypen
+    if welke_vegtypen == :
     kart_veg["Sbb"] = _SBB.opschonen_series(kart_veg["Sbb"])
 
     # Groeperen van alle verschillende SBBs per Locatie

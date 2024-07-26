@@ -25,8 +25,8 @@ def gdf():
 def test_single_SBB(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1"],
-        vvn_cols=[],
+        SBB_cols=["SBB1"],
+        VvN_cols=[],
         perc_cols=["perc1"],
     )
     expected = pd.Series(
@@ -43,8 +43,8 @@ def test_single_SBB(gdf):
 def test_single_VvN(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=[],
-        vvn_cols=["VvN1"],
+        SBB_cols=[],
+        VvN_cols=["VvN1"],
         perc_cols=["perc1"],
     )
     expected = pd.Series(
@@ -61,8 +61,8 @@ def test_single_VvN(gdf):
 def test_both_SBB_and_VvN(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1"],
-        vvn_cols=["VvN1"],
+        SBB_cols=["SBB1"],
+        VvN_cols=["VvN1"],
         perc_cols=["perc1"],
     )
     expected = pd.Series(
@@ -91,8 +91,8 @@ def test_both_SBB_and_VvN(gdf):
 def test_multiple_SBB(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=[],
+        SBB_cols=["SBB1", "SBB2"],
+        VvN_cols=[],
         perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
@@ -118,8 +118,8 @@ def test_multiple_SBB(gdf):
 def test_multiple_SBB_and_VvN(gdf):
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=["VvN1", "VvN2"],
+        SBB_cols=["SBB1", "SBB2"],
+        VvN_cols=["VvN1", "VvN2"],
         perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
@@ -159,8 +159,8 @@ def test_SBB_with_some_VvN(gdf):
     gdf["SBB2"] = ["26a1", None, "26a3"]
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=["VvN1", "VvN2"],
+        SBB_cols=["SBB1", "SBB2"],
+        VvN_cols=["VvN1", "VvN2"],
         perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
@@ -198,8 +198,8 @@ def test_none_SBB(gdf):
     gdf["SBB2"] = [None] * 3
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=["VvN1", "VvN2"],
+        SBB_cols=["SBB1", "SBB2"],
+        VvN_cols=["VvN1", "VvN2"],
         perc_cols=["perc1", "perc2"],
     )
     expected = pd.Series(
@@ -230,8 +230,8 @@ def test_mixed_complex_and_non_complex(gdf):
 
     post = ingest_vegtype(
         gdf=gdf,
-        sbb_cols=["SBB1", "SBB2"],
-        vvn_cols=["VvN1", "VvN2"],
+        SBB_cols=["SBB1", "SBB2"],
+        VvN_cols=["VvN1", "VvN2"],
         perc_cols=["perc1", "perc2"],
     )
 
@@ -265,16 +265,16 @@ def test_mismatch_num_columns(gdf):
     with pytest.raises(ValueError):
         ingest_vegtype(
             gdf=gdf,
-            sbb_cols=["SBB1", "SBB2"],
-            vvn_cols=["VvN1"],
+            SBB_cols=["SBB1", "SBB2"],
+            VvN_cols=["VvN1"],
             perc_cols=["perc1", "perc2"],
         )
 
     with pytest.raises(ValueError):
         ingest_vegtype(
             gdf=gdf,
-            sbb_cols=["SBB1"],
-            vvn_cols=None,
+            SBB_cols=["SBB1"],
+            VvN_cols=None,
             perc_cols=["perc1", "perc2"],
         )
 
@@ -283,7 +283,7 @@ def test_columns_dont_exist(gdf):
     with pytest.raises(KeyError):
         ingest_vegtype(
             gdf=gdf,
-            sbb_cols=["SBB1", "SBB3"],
-            vvn_cols=[],
+            SBB_cols=["SBB1", "SBB3"],
+            VvN_cols=[],
             perc_cols=["perc1", "perc2"],
         )
