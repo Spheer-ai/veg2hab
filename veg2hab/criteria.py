@@ -172,22 +172,24 @@ class BodemCriterium(BeperkendCriterium):
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
-        assert isinstance(row["bodem"], list), "bodem kolom moet een list zijn"
+        self.actual_bodemcode = (
+            None
+            if not isinstance(row["bodem"], list) and pd.isna(row["bodem"])
+            else row["bodem"]
+        )
+        if self.actual_bodemcode is None:
+            # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
+            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+            return
+        assert isinstance(self.actual_bodemcode, list), "bodem kolom moet een list zijn"
 
-        self.actual_bodemcode = row["bodem"]
-
-        if len(row["bodem"]) > 1:
+        if len(self.actual_bodemcode) > 1:
             # Vlak heeft meerdere bodemtypen, kunnen we niet automatiseren
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
 
-        if pd.isna(row["bodem"]):
-            # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
-            self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
-            return
-
         self.cached_evaluation = MaybeBoolean.FALSE
-        for code in row["bodem"]:
+        for code in self.actual_bodemcode:
             if code in self.wanted_bodemtype.codes:
                 self.cached_evaluation = MaybeBoolean.TRUE
                 break
@@ -210,9 +212,10 @@ class BodemCriterium(BeperkendCriterium):
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
 
-        if len(self.actual_bodemcode) == 1:
-            if pd.isna(self.actual_bodemcode[0]):
-                return {"Dit vlak ligt niet mooi binnen één bodemkaartvlak."}
+        if not isinstance(self.actual_bodemcode, list) and pd.isna(
+            self.actual_bodemcode
+        ):
+            return {"Dit vlak ligt niet binnen een bodemkaartvlak."}
 
         # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
         framework = (

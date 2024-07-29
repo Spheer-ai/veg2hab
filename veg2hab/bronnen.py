@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 import geopandas as gpd
+import pandas as pd
 from typing_extensions import Self
 
 import veg2hab.constants
@@ -52,6 +53,56 @@ def get_datadir(app_author: str, app_name: str) -> Path:
     return p / app_author / app_name
 
 
+def sjoin_largest_overlap(
+    kartering_gdf: gpd.GeoDataFrame, bron_gdf: gpd.GeoDataFrame, bron_col_name: str
+) -> gpd.GeoSeries:
+    """
+    Voegt de kolommen van bron_gdf toe aan kartering_gdf op basis van de grootste overlap.
+    """
+    assert (
+        bron_col_name in bron_gdf.columns
+    ), f"Kolom {bron_col_name} moet in bron_gdf zitten"
+    # assert index is unique
+    assert len(kartering_gdf.index) == len(
+        kartering_gdf.index.unique()
+    ), "Index moet uniek zijn"
+    if bron_col_name in kartering_gdf.columns:
+        kartering_gdf = kartering_gdf.drop(columns=[bron_col_name])
+
+    # Extra kolom met de geometry zodat deze blijft bestaan na de sjoin
+    bron_gdf["geometry_bron"] = bron_gdf["geometry"]
+
+    joined = gpd.sjoin(kartering_gdf, bron_gdf, how="left", predicate="intersects")
+    joined["overlap_area"] = joined.geometry.intersection(joined.geometry_bron).area
+
+    def _retain_largest_overlap_area_row(group):
+        assert len(group) > 0, "Group mag niet leeg zijn"
+
+        # Als er maar 1 is hoeven we niks te doen
+        if len(group) == 1:
+            return group
+
+        highest_overlap_area = group["overlap_area"].max()
+        # Enkel de eerste teruggeven voor het geval er meerdere met dezelfde area zijn
+        if len(group[group["overlap_area"] == highest_overlap_area]) > 1:
+            logging.warning(
+                f"Meerdere bronvlakken met dezelfde overlap area gevonden; alleen de eerste wordt gebruikt"
+            )
+        return group[group["overlap_area"] == highest_overlap_area].iloc[[0]]
+
+    # Groupby index, zodat we groepen maken per karteringvlak
+    grouped = joined.groupby(level=0, group_keys=False)
+    only_largest_overlaps = grouped.apply(_retain_largest_overlap_area_row)
+
+    bron_gdf = bron_gdf.drop(columns=["geometry_bron"])
+
+    assert len(only_largest_overlaps) == len(
+        kartering_gdf
+    ), "DF met bronvlakcodes moet even lang zijn als de kartering_gdf"
+
+    return only_largest_overlaps[bron_col_name]
+
+
 class LBK:
     def __init__(self, gdf: gpd.GeoDataFrame):
         if set(gdf.columns) != {"geometry", "lbk"}:
@@ -78,9 +129,9 @@ class LBK:
             or get_checksum(local_path) != veg2hab.constants.LBK_CHECKSUM
         ):
             logging.warning(
-                "Lokale versie LBK kaart komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
+                "Lokale versie LBK komt niet overeen of bestaat nog niet. Downloaden van github kan enkele minuten duren. Even geduld aub."
             )
-            logging.debug(f"Download bodemkaart van {remote_path} naar {local_path}")
+            logging.debug(f"Download LBK van {remote_path} naar {local_path}")
             local_path.parent.mkdir(parents=True, exist_ok=True)
             urllib.request.urlretrieve(remote_path, local_path)
 
@@ -88,10 +139,10 @@ class LBK:
 
     def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
         """
-        Returns bodemkaart codes voor de gegeven geometrie
+        Returns LBK codes voor de gegeven geometrie
         """
         assert "geometry" in other_gdf.columns
-        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").lbk
+        return sjoin_largest_overlap(other_gdf, self.gdf, "lbk")
 
 
 class FGR:
@@ -108,7 +159,7 @@ class FGR:
         Returns fgr codes voor de gegeven geometrie
         """
         assert "geometry" in other_gdf.columns
-        return gpd.sjoin(other_gdf, self.gdf, how="left", predicate="within").fgr
+        return sjoin_largest_overlap(other_gdf, self.gdf, "fgr")
 
 
 class Bodemkaart:
@@ -130,6 +181,12 @@ class Bodemkaart:
             layer="soilarea_soilunit",
             include_fields=["maparea_id", "soilunit_code"],
             ignore_geometry=True,
+        )
+        # Samenvoegen meerdere bodemtypen voor 1 vlak/maparea_id
+        soil_units_table = (
+            soil_units_table.groupby("maparea_id")["soilunit_code"]
+            .apply(list)
+            .reset_index()
         )
         gdf = soil_area.merge(soil_units_table, on="maparea_id")[
             ["geometry", "soilunit_code"]
@@ -160,11 +217,4 @@ class Bodemkaart:
         Returns bodemkaart codes voor de gegeven geometrie
         """
         assert "geometry" in other_gdf.columns
-        bodemtypen_per_index = gpd.sjoin(
-            other_gdf, self.gdf, how="left", predicate="within"
-        ).bodem
-        # Vlakken kunnen meer dan 1 bodemtype krijgen, die gevallen moeten gecombineerd worden
-        bodemtypen_per_index = bodemtypen_per_index.groupby(
-            bodemtypen_per_index.index
-        ).apply(lambda bodemtypen: [bodemtype for bodemtype in bodemtypen])
-        return bodemtypen_per_index
+        return sjoin_largest_overlap(other_gdf, self.gdf, "bodem")

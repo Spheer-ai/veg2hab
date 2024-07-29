@@ -1119,15 +1119,14 @@ class Kartering:
         )
 
         ### Verrijken met de benodigde informatie
-        mits_info_df["fgr"] = fgr.for_geometry(mits_info_df.loc[fgr_needed]).drop(
-            columns="index_right"
-        )
-        mits_info_df["bodem"] = bodemkaart.for_geometry(
-            mits_info_df.loc[bodem_needed]
-        ).drop(columns="index_right")
-        mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed]).drop(
-            columns="index_right"
-        )
+        if fgr_needed.any():
+            mits_info_df["fgr"] = fgr.for_geometry(mits_info_df.loc[fgr_needed])
+        if lbk_needed.any():
+            mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed])
+        if bodem_needed.any():
+            mits_info_df["bodem"] = bodemkaart.for_geometry(
+                mits_info_df.loc[bodem_needed]
+            )
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
