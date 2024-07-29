@@ -497,24 +497,8 @@ class rVvN(BaseModel):
             self.subassociatie,
         )
 
-    # I dont think this is needed
-    # def normal_VvN_as_tuple(
-    #     self,
-    # ) -> tuple[
-    #     str, Union[str, None], Union[str, None], Union[str, None], Union[str, None]
-    # ]:
-    #     if self.derivaatgemeenschap or self.rompgemeenschap:
-    #         raise ValueError("Dit is geen normale (niet derivaat-/rompgemeenschap) VvN")
-    #     return (
-    #         self.klasse,
-    #         self.orde,
-    #         self.verbond,
-    #         self.associatie,
-    #         self.subassociatie,
-    #     )
-
     def match_up_to(self, other: Optional[VvN]) -> MatchLevel:
-        raise
+        raise NotImplementedError("Match up to is not implemented for rVvN")
 
     @classmethod
     def validate_code(cls, code: str) -> bool:
@@ -578,8 +562,6 @@ class rVvN(BaseModel):
         # Verwijderen Niet overgenomen in Revisie
         series.loc[series == "Niet overgenomen in Revisie"] = None
         series.loc[series == "Niet overgenomen in Revisie (grasland-deel)"] = None
-        # Fixen foute code
-        series.loc[series == "r43A0A1B"] = "r43AA1B"
         # Maak lowercase
         series = series.str.lower()
         # Verwijderen whitespace uit VvN

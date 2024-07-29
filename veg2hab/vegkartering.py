@@ -477,31 +477,18 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
     # Hierin krijgen we per (habtype, kwaliteit) tuple de som van de percentages
     aggregate = defaultdict(float)
 
-    # # Als het vlak geen opgegeven habitattype heeft, heeft het geen vegtype infos,
-    # # dus heeft het ook geen opgegeven percentage, dus moeten we die handmatig op 100 zetten
-    # if len(habitatkeuzes) == 1 and habitatkeuzes[0].status == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
-    #     if len(habitatkeuzes) > 1:
-    #         print("hiero")
-    #     assert (
-    #         len(habitatkeuzes) == 1
-    #     ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
-    #     assert vegtypeinfos == [
-    #         VegTypeInfo(percentage=100, SBB=[], VvN=[])
-    #     ], "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
-    #     aggregate[
-    #         (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit)
-    #     ] = 100
-    # else:
-    #     # In alle andere gevallen kunnen we gewoon de percentages bij de habitatkeuze
-    #     # horende VegTypeInfos gebuiken
-
     for keuze, info in zip(habitatkeuzes, vegtypeinfos):
         aggregate[(keuze.habtype, keuze.kwaliteit)] += info.percentage
 
     # Sorteren op (percentage, habtype, kwaliteit) zodat de string
     # altijd hetzelfde is bij dezelfde habtype/kwaliteit/percentage permutaties
+    kwal_dict = {
+        Kwaliteit.GOED: 0,
+        Kwaliteit.MATIG: 1,
+        Kwaliteit.NVT: 2,
+    }
     aggregate = dict(
-        sorted(aggregate.items(), key=(lambda item: (-item[1], item[0][0], item[0][1])))
+        sorted(aggregate.items(), key=(lambda item: (-item[1], item[0][0], kwal_dict[item[0][1]])))
     )
 
     # Maken van alle losse strings
@@ -752,6 +739,10 @@ class Kartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
+        assert (
+            welke_typologie in [WelkeTypologie.SBB, WelkeTypologie.rVvN]
+        ), "Voor digitale standaard karteringen wordt enkel SBB of rVvN ondersteund"
+
         gdf = gpd.read_file(shape_path)
 
         gdf = fix_crs(gdf, shape_path)
@@ -873,26 +864,26 @@ class Kartering:
         if welke_typologie == WelkeTypologie.VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0:
-                raise ValueError("VvN_col moet worden opgegeven als sbb_of_vvn == VvN")
+                raise ValueError("VvN_col moet worden opgegeven als welke_typologie \'VvN\' is.")
         elif welke_typologie == WelkeTypologie.SBB:
             num_cols = len(SBB_col)
             if len(SBB_col) == 0:
-                raise ValueError("SBB_col moet worden opgegeven als sbb_of_vvn == SBB")
+                raise ValueError("SBB_col moet worden opgegeven als welke_typologie \'SBB\' is.")
         elif welke_typologie == WelkeTypologie.SBB_en_VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0 or len(SBB_col) == 0:
                 raise ValueError(
-                    "Zowel VvN_col als SBB_col moeten worden opgegeven als sbb_of_vvn == SBB en VvN"
+                    "Zowel VvN_col als SBB_col moeten worden opgegeven als welke_typologie \'SBB en VvN\' is."
                 )
             if len(VvN_col) != len(SBB_col):
                 raise ValueError(
-                    "VvN_col en SBB_col moeten even lang zijn als sbb_of_vvn == SBB en VvN"
+                    "VvN_col en SBB_col moeten even lang zijn als welke_typologie \'SBB en VvN\' is."
                 )
         elif welke_typologie == WelkeTypologie.rVvN:
             num_cols = len(rVvN_col)
             if len(rVvN_col) == 0:
                 raise ValueError(
-                    "rVvN_col moet worden opgegeven als sbb_of_vvn == rVvN"
+                    "rVvN_col moet worden opgegeven als welke_typologie \'rVvN\' is."
                 )
 
         if vegtype_col_format == "single":
@@ -913,7 +904,7 @@ class Kartering:
 
         if len(lok_vegtypen_col) != num_cols and len(lok_vegtypen_col) != 0:
             raise ValueError(
-                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col/rVvN_col"
+                "Aantal kolommen moet gelijk zijn tussen perc_col en lok_vegtypen_col"
             )
 
         # VALIDEREN, OPSCHONEN EN AANVULLEN VAN DE SHAPEFILE
@@ -1007,7 +998,6 @@ class Kartering:
 
         # Standardiseren van kolomnamen
         gdf["Area"] = gdf["geometry"].area
-        # LokVrtNar_string = welke_typologie if welke_typologie != "beide" else "zowel SBB als VvN"
         gdf[
             "_LokVrtNar"
         ] = f"Lokale typologie is primair vertaald naar {welke_typologie.value}."

@@ -139,7 +139,7 @@ class WasWordtLijst:
 
             new_VvN, new_SBB = self.match_rVvN_to_VvN_SBB(info.rVvN[0])
 
-            # Dast naar set om dubbelingen te verwijderen
+            # Cast naar set om dubbelingen te verwijderen
             return VegTypeInfo(
                 percentage=info.percentage,
                 SBB=list(set(new_SBB)),
@@ -172,6 +172,9 @@ def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
 
     # Whitespace velden vervangen door None
     wwl = wwl.replace(r"^\s*$", None, regex=True)
+
+    # Fixen foute rVvN code
+    wwl.rVvN.loc[wwl.rVvN == "r43A0A1B"] = "r43AA1B"
 
     wwl["rVvN"] = rVvN.opschonen_series(wwl["rVvN"])
     wwl["VvN"] = VvN.opschonen_series(wwl["VvN"])
