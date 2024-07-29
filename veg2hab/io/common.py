@@ -20,13 +20,13 @@ class AccessDBInputs(BaseModel):
     description: ClassVar[str] = "Inladen van vegkartering o.b.v. de digitale standaard"
 
     shapefile: str = Field(
-        description="Bestandslocatie van de vegetatiekartering",
+        description="Vegetatiekartering (geovectorbestand / shapefile)",
     )
     elmid_col: str = Field(
         description="De kolomnaam van de ElementID in de Shapefile; deze wordt gematched aan de Element tabel in de AccessDB",
     )
     access_mdb_path: Path = Field(
-        description="Locatie van de .mdb file van de digitale standaard",
+        description="Bestandslocatie van de .mdb file van de digitale standaard",
     )
     datum_col: Optional[str] = Field(
         default=None,
@@ -47,7 +47,7 @@ class ShapefileInputs(BaseModel):
     description: ClassVar[str] = "Inladen van vegkartering o.b.v. een vector bestand"
 
     shapefile: str = Field(
-        description="Bestandslocatie van de vegetatiekartering",
+        description="Vegetatiekartering (geovectorbestand)",
     )
     elmid_col: Optional[str] = Field(
         description="De kolomnaam van de ElementID in de Shapefile; uniek per vlak",
@@ -97,7 +97,7 @@ class StackVegKarteringInputs(BaseModel):
     description: ClassVar[str] = "Stapel verschillende vegetatiekarteringen"
 
     shapefile: List[str] = Field(
-        description="Bestandslocatie van de vegetatiekarteringen, op volgerde van prioriteit (belangrijkste eerst)",
+        description="Vegetatiekarteringen, op volgerde van prioriteit (belangrijkste eerst). Outputs van stap 1",
     )
     output: Optional[Path] = Field(
         default=None,
@@ -110,7 +110,7 @@ class ApplyDefTabelInputs(BaseModel):
     description: ClassVar[str] = "Pas de definitie tabel toe en check de mitsen"
 
     shapefile: str = Field(
-        description="Bestandslocatie van de vegetatiekarteringen",
+        description="Vegetatiekartering (output van stap 1 of 2)",
     )
     output: Optional[Path] = Field(
         default=None,
@@ -123,7 +123,7 @@ class ApplyMozaiekInputs(BaseModel):
     description: ClassVar[str] = "Pas de mozaiekregels toe "
 
     shapefile: str = Field(
-        description="Bestandslocatie van de vegetatiekarteringen",
+        description="Habitattypekartering (output van stap 3)",
     )
     output: Optional[Path] = Field(
         default=None,
@@ -138,7 +138,7 @@ class ApplyFunctioneleSamenhangInputs(BaseModel):
     ] = "Functionele samenhang en creeer de definitieve habitatkaart"
 
     shapefile: str = Field(
-        description="Bestandslocatie van de vegetatiekarteringen",
+        description="Habitattypekartering (output van stap 4)",
     )
     output: Optional[Path] = Field(
         default=None,
