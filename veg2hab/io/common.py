@@ -169,6 +169,16 @@ class Veg2HabConfig(BaseSettings):
         description="SBB vegetatietypen die niet geautomatiseerd kunnen worden",
     )
 
+    niet_geautomatiseerde_rvvn: List[str] = Field(
+        default=[
+            "r100",
+            "r200",
+            "r300",
+            "r400",
+        ],
+        description="rVvN vegetatietypen die niet geautomatiseerd kunnen worden",
+    )
+
     functionele_samenhang_vegetatiekundig_identiek: Dict[str, str] = Field(
         default={
             "H2130": "H2130/H4030",

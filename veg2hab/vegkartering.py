@@ -94,9 +94,9 @@ class VegTypeInfo(BaseModel):
     def create_vegtypen_list_from_access_rows(
         cls,
         rows: pd.DataFrame,
-        # welke_typologie: SuppliedVegtypen,
+        welke_typologie: WelkeTypologie,
         perc_col: str,
-        SBB_col: str,
+        vegtype_col: str,
     ) -> List["VegTypeInfo"]:
         """
         Maakt van alle rijen met vegetatietypes van een vlak
@@ -109,13 +109,14 @@ class VegTypeInfo(BaseModel):
             if pd.isna(row[perc_col]) or row[perc_col] == 0:
                 continue
             # Als er geen vegtypen zijn, willen we ook geen VegTypeInfo,
-            if pd.isna(row[SBB_col]):
+            if pd.isna(row[vegtype_col]):
                 continue
             lst.append(
                 cls.from_str_vegtypes(
                     row[perc_col],
                     VvN_strings=[],
-                    SBB_strings=[row[SBB_col]] if SBB_col else [],
+                    SBB_strings=[row[vegtype_col]] if vegtype_col and welke_typologie == WelkeTypologie.SBB else [],
+                    rVvN_strings=[row[vegtype_col]] if vegtype_col and welke_typologie == WelkeTypologie.rVvN else [],
                 )
             )
         return lst
@@ -465,27 +466,31 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
     vegtypeinfos = row["VegTypeInfo"]
 
     assert len(habitatkeuzes) > 0, "Er moet minstens 1 habitatkeuze zijn"
+    assert len(habitatkeuzes) == len(vegtypeinfos), "Er moet voor iedere habitatkeuze een VegTypeInfo zijn"
 
     # Hierin krijgen we per (habtype, kwaliteit) tuple de som van de percentages
     aggregate = defaultdict(float)
 
-    # Als het vlak geen opgegeven habitattype heeft, heeft het geen vegtype infos,
-    # dus heeft het ook geen opgegeven percentage, dus moeten we die handmatig op 100 zetten
-    if habitatkeuzes[0].status == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
-        assert (
-            len(habitatkeuzes) == 1
-        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
-        assert vegtypeinfos == [
-            VegTypeInfo(percentage=100, SBB=[], VvN=[])
-        ], "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
-        aggregate[
-            (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit.as_letter())
-        ] = 100
-    else:
-        # In alle andere gevallen kunnen we gewoon de percentages bij de habitatkeuze
-        # horende VegTypeInfos gebuiken
-        for keuze, info in zip(habitatkeuzes, vegtypeinfos):
-            aggregate[(keuze.habtype, keuze.kwaliteit.as_letter())] += info.percentage
+    # # Als het vlak geen opgegeven habitattype heeft, heeft het geen vegtype infos,
+    # # dus heeft het ook geen opgegeven percentage, dus moeten we die handmatig op 100 zetten
+    # if len(habitatkeuzes) == 1 and habitatkeuzes[0].status == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
+    #     if len(habitatkeuzes) > 1:
+    #         print("hiero")
+    #     assert (
+    #         len(habitatkeuzes) == 1
+    #     ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
+    #     assert vegtypeinfos == [
+    #         VegTypeInfo(percentage=100, SBB=[], VvN=[])
+    #     ], "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
+    #     aggregate[
+    #         (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit)
+    #     ] = 100
+    # else:
+    #     # In alle andere gevallen kunnen we gewoon de percentages bij de habitatkeuze
+    #     # horende VegTypeInfos gebuiken
+
+    for keuze, info in zip(habitatkeuzes, vegtypeinfos):
+        aggregate[(keuze.habtype, keuze.kwaliteit)] += info.percentage
 
     # Sorteren op (percentage, habtype, kwaliteit) zodat de string
     # altijd hetzelfde is bij dezelfde habtype/kwaliteit/percentage permutaties
@@ -496,12 +501,13 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
     # Maken van alle losse strings
     aggregate_strings = []
     for key, value in aggregate.items():
-        aggregate_string = f"{float(value)}% {key[0]}"
+        aggregate_string = f"{float(value)}%"
         if key[1] in [
             Kwaliteit.GOED,
             Kwaliteit.MATIG,
         ]:
-            aggregate_string += f" ({key[1]})"
+            aggregate_string += f" ({key[1].value})"
+        aggregate_string += f" {key[0]}"
         aggregate_strings.append(aggregate_string)
 
     return ", ".join(aggregate_strings)
@@ -770,7 +776,7 @@ class Kartering:
         gdf["Area"] = gdf["geometry"].area
         gdf["_LokVrtNar"] = f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
 
-        element, veginfo_per_locatie = read_access_tables(access_mdb_path)
+        element, veginfo_per_locatie = read_access_tables(access_mdb_path, welke_typologie)
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -837,7 +843,6 @@ class Kartering:
         split_char: Optional[str] = "+",
         perc_col: List[str] = [],
         lok_vegtypen_col: List[str] = [],
-        wwl: Optional["WasWordtLijst"] = None,
     ) -> Self:
         """
         Deze method wordt gebruikt om een Kartering te maken van een shapefile.

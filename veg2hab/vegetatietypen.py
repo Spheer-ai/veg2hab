@@ -445,6 +445,13 @@ class rVvN(BaseModel):
     @classmethod
     def from_code(cls, code: str):
         assert isinstance(code, str), "Code is not a string"
+
+        niet_geautomatiseerde_rvvn = (
+            Interface.get_instance().get_config().niet_geautomatiseerde_rvvn
+        )
+        if code in niet_geautomatiseerde_rvvn:
+            return cls(klasse=code)
+
         match = cls.gemeenschap.fullmatch(code)
         if match:
             kwargs = {"klasse": match.group("klasse")}

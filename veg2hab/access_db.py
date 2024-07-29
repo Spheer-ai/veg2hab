@@ -8,8 +8,6 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
-from veg2hab.enums import WelkeTypologie
-
 import pandas as pd
 import pyodbc
 
@@ -116,14 +114,17 @@ def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
     return ", ".join(return_strings)
 
 
-def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def read_access_tables(acces_mdb: Path, welke_typologie: "WelkeTypologie") -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Read the tables from the access database and return them as pandas dataframes"""
     # TODO fix circular imports
-    from veg2hab.vegetatietypen import SBB as _SBB
+    from veg2hab.enums import WelkeTypologie
+    from veg2hab.vegetatietypen import SBB, rVvN
     from veg2hab.vegkartering import VegTypeInfo
 
     if not acces_mdb.is_file() and not acces_mdb.suffix == ".mdb":
         raise ValueError("Geen geldige access database, verwacht een .mdb bestand.")
+
+    assert welke_typologie in [WelkeTypologie.SBB, WelkeTypologie.rVvN], "Accesskarteringen zijn of SBB, of rVvN."
 
     if sys.platform == "win32":
         temp_dir = None
@@ -182,16 +183,20 @@ def read_access_tables(acces_mdb: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
 
     # Opschonen vegtypen
-    if welke_vegtypen == :
-    kart_veg["Sbb"] = _SBB.opschonen_series(kart_veg["Sbb"])
+    if welke_typologie == WelkeTypologie.SBB:
+        kart_veg["vegtype"] = SBB.opschonen_series(kart_veg["vegtype"])
+    elif welke_typologie == WelkeTypologie.rVvN:
+        kart_veg["vegtype"] = rVvN.opschonen_series(kart_veg["vegtype"])
 
-    # Groeperen van alle verschillende SBBs per Locatie
+
+    # Groeperen van alle verschillende vegtypen per Locatie
     grouped_kart_veg = (
         kart_veg.groupby("Locatie")
         .apply(
             VegTypeInfo.create_vegtypen_list_from_access_rows,
+            welke_typologie=welke_typologie,
             perc_col="Bedekking_num",
-            SBB_col="Sbb",
+            vegtype_col="vegtype",
         )
         .reset_index(name="VegTypeInfo")
     )
