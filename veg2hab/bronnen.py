@@ -62,6 +62,10 @@ def sjoin_largest_overlap(
     assert (
         bron_col_name in bron_gdf.columns
     ), f"Kolom {bron_col_name} moet in bron_gdf zitten"
+    # assert index is unique
+    assert len(kartering_gdf.index) == len(
+        kartering_gdf.index.unique()
+    ), "Index moet uniek zijn"
     if bron_col_name in kartering_gdf.columns:
         kartering_gdf = kartering_gdf.drop(columns=[bron_col_name])
 
