@@ -37,7 +37,7 @@ class WasWordtLijst:
             path, engine="openpyxl", usecols=["VvN", "SBB", "rVvN"], dtype="string"
         )
         return cls(df)
-    
+
     def check_validity_vegtypen(self, print_invalid: bool = False) -> bool:
         """
         Checkt of de VvN valide in de wwl zijn.
@@ -46,9 +46,15 @@ class WasWordtLijst:
         wwl_VvN = self.df["VvN"].astype("string")
         wwl_rVvN = self.df["rVvN"].astype("string")
 
-        assert SBB.validate_pandas_series(wwl_SBB, print_invalid=print_invalid), "Niet alle SBB codes zijn valid"
-        assert VvN.validate_pandas_series(wwl_VvN, print_invalid=print_invalid), "Niet alle VvN codes zijn valid"
-        assert rVvN.validate_pandas_series(wwl_rVvN, print_invalid=print_invalid), "Niet alle rVvN codes zijn valid"
+        assert SBB.validate_pandas_series(
+            wwl_SBB, print_invalid=print_invalid
+        ), "Niet alle SBB codes zijn valid"
+        assert VvN.validate_pandas_series(
+            wwl_VvN, print_invalid=print_invalid
+        ), "Niet alle VvN codes zijn valid"
+        assert rVvN.validate_pandas_series(
+            wwl_rVvN, print_invalid=print_invalid
+        ), "Niet alle rVvN codes zijn valid"
 
     @lru_cache(maxsize=256)
     def match_SBB_to_VvN(self, code: SBB) -> List[VvN]:
@@ -60,7 +66,7 @@ class WasWordtLijst:
         matching_VvN = self.df[self.df.SBB == code].VvN
         # dropna om niet None uit lege VvN cellen in de wwl als VvN te krijgen
         return matching_VvN.dropna().to_list()
-    
+
     @lru_cache(maxsize=256)
     def match_rVvN_to_VvN_SBB(self, code: rVvN) -> Tuple[List[VvN], List[SBB]]:
         """
@@ -110,7 +116,9 @@ class WasWordtLijst:
         series met lijsten van VegTypeInfos met SBB en VvN, zonder rVvN
         """
         assert vegtypeinfo.apply(
-            lambda infos: all(len(info.VvN) == 0 and len(info.SBB) == 0 for info in infos)
+            lambda infos: all(
+                len(info.VvN) == 0 and len(info.SBB) == 0 for info in infos
+            )
         ).all(), "VegTypeInfo in de Series mag geen VvN of SBB bevatten"
 
         def _rVvN_info_to_SBB_VvN(info: VegTypeInfo) -> VegTypeInfo:
@@ -130,15 +138,18 @@ class WasWordtLijst:
                 )
 
             new_VvN, new_SBB = self.match_rVvN_to_VvN_SBB(info.rVvN[0])
-            
+
+            # Dast naar set om dubbelingen te verwijderen
             return VegTypeInfo(
                 percentage=info.percentage,
-                SBB=new_SBB,
-                VvN=new_VvN,
+                SBB=list(set(new_SBB)),
+                VvN=list(set(new_VvN)),
                 rVvN=[],
             )
-        
-        return vegtypeinfo.apply(lambda infos: [_rVvN_info_to_SBB_VvN(info) for info in infos])
+
+        return vegtypeinfo.apply(
+            lambda infos: [_rVvN_info_to_SBB_VvN(info) for info in infos]
+        )
 
 
 def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:

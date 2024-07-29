@@ -49,7 +49,7 @@ class VegTypeInfo(BaseModel):
     rVvN: List[vegetatietypen.rVvN] = Field(default_factory=list)
 
     # Support voor meerdere rVvN is niet onmogelijk, maar volgensmij niet nodig,
-    # en aangezien er in van_rVvN_naar_SBB_en_VvN uit wordt gegaan van maar 1 rVvN, 
+    # en aangezien er in van_rVvN_naar_SBB_en_VvN uit wordt gegaan van maar 1 rVvN,
     # leek me dit valideren wel zo handig
     @validator("rVvN")
     def check_rvvn_length(cls, v):
@@ -115,8 +115,12 @@ class VegTypeInfo(BaseModel):
                 cls.from_str_vegtypes(
                     row[perc_col],
                     VvN_strings=[],
-                    SBB_strings=[row[vegtype_col]] if vegtype_col and welke_typologie == WelkeTypologie.SBB else [],
-                    rVvN_strings=[row[vegtype_col]] if vegtype_col and welke_typologie == WelkeTypologie.rVvN else [],
+                    SBB_strings=[row[vegtype_col]]
+                    if vegtype_col and welke_typologie == WelkeTypologie.SBB
+                    else [],
+                    rVvN_strings=[row[vegtype_col]]
+                    if vegtype_col and welke_typologie == WelkeTypologie.rVvN
+                    else [],
                 )
             )
         return lst
@@ -466,7 +470,9 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
     vegtypeinfos = row["VegTypeInfo"]
 
     assert len(habitatkeuzes) > 0, "Er moet minstens 1 habitatkeuze zijn"
-    assert len(habitatkeuzes) == len(vegtypeinfos), "Er moet voor iedere habitatkeuze een VegTypeInfo zijn"
+    assert len(habitatkeuzes) == len(
+        vegtypeinfos
+    ), "Er moet voor iedere habitatkeuze een VegTypeInfo zijn"
 
     # Hierin krijgen we per (habtype, kwaliteit) tuple de som van de percentages
     aggregate = defaultdict(float)
@@ -774,9 +780,13 @@ class Kartering:
                 gdf = gdf.rename(columns={old_col: new_col})
 
         gdf["Area"] = gdf["geometry"].area
-        gdf["_LokVrtNar"] = f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
+        gdf[
+            "_LokVrtNar"
+        ] = f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
 
-        element, veginfo_per_locatie = read_access_tables(access_mdb_path, welke_typologie)
+        element, veginfo_per_locatie = read_access_tables(
+            access_mdb_path, welke_typologie
+        )
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -1005,7 +1015,12 @@ class Kartering:
         # Aangezien we de rVvN gaan verliezen in apply_wll(), zetten we deze in _LokVrtNar zodat
         # de gebruiker ze nog wel kan terugvinden
         if welke_typologie == WelkeTypologie.rVvN:
-            gdf["_LokVrtNar"] = gdf[["_LokVrtNar"] + rVvN_col].apply(lambda row: row._LokVrtNar + " " + ", ".join([row[col] for col in rVvN_col if row[col]]), axis=1)
+            gdf["_LokVrtNar"] = gdf[["_LokVrtNar"] + rVvN_col].apply(
+                lambda row: row._LokVrtNar
+                + " "
+                + ", ".join([row[col] for col in rVvN_col if row[col]]),
+                axis=1,
+            )
 
         # Percentages invullen als die er niet zijn
         if len(perc_col) == 0:
@@ -1054,10 +1069,14 @@ class Kartering:
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
 
         # Als er rVvN aanwezig zijn
-        if self.gdf["VegTypeInfo"].apply(
-            lambda infos: any(len(info.rVvN) > 0 for info in infos)
-        ).any():
-            self.gdf["VegTypeInfo"] = wwl.van_rVvN_naar_SBB_en_VvN(self.gdf["VegTypeInfo"])
+        if (
+            self.gdf["VegTypeInfo"]
+            .apply(lambda infos: any(len(info.rVvN) > 0 for info in infos))
+            .any()
+        ):
+            self.gdf["VegTypeInfo"] = wwl.van_rVvN_naar_SBB_en_VvN(
+                self.gdf["VegTypeInfo"]
+            )
             return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
@@ -1091,9 +1110,9 @@ class Kartering:
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
         # rVvN karteringen moeten al omgezet zijn op dit punt
         assert (
-            self.gdf["VegTypeInfo"].apply(
-                lambda infos: all(len(info.rVvN) == 0 for info in infos)
-            ).all()
+            self.gdf["VegTypeInfo"]
+            .apply(lambda infos: all(len(info.rVvN) == 0 for info in infos))
+            .all()
         ), "Er zijn nog rVvN vegetatietypen aanwezig"
 
         # unpack the vegtypeinfo
