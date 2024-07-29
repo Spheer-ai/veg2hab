@@ -45,12 +45,14 @@ class DefinitieTabel:
             .loc[self.df["mozaiekjson"].notnull()]
             .apply(MozaiekRegel.parse_raw)
         )
-        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken
+        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken\
         # TODO: Om deze isinstance heenwerken voor modulariteit
         # TODO: Idealiter komt dit een een soort post_init (https://stackoverflow.com/questions/66571079/alter-field-after-instantiation-in-pydantic-basemodel-class)
         self.df["Mozaiekregel"].apply(
-            lambda regel: regel.determine_keys()
-            if isinstance(regel, StandaardMozaiekregel)
+            lambda regel: regel.determine_kwalificerende_vegtypen(
+                self.df[self.df.Habitattype == regel.kwalificerend_habtype]
+            )
+            if isinstance(regel, StandaardMozaiekregel) and regel.ook_mozaiekvegetaties
             else None
         )
 
@@ -183,6 +185,9 @@ def opschonen_definitietabel(
     )
 
     ### Opschonen
+    # Verwijderen whitespace in Habitattype
+    dt["Habitattype"] = dt["Habitattype"].str.strip()
+
     # Verwijderen rijen met missende data in VvN
     dt = dt.dropna(subset=["VvN"])
 

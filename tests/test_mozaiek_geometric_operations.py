@@ -1,3 +1,5 @@
+import logging
+
 import geopandas as gpd
 import pandas as pd
 import pytest
@@ -6,12 +8,17 @@ from shapely.geometry import Polygon
 from veg2hab.criteria import GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel
 from veg2hab.habitat import HabitatKeuze, HabitatVoorstel
+from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import (
     GeenMozaiekregel,
     StandaardMozaiekregel,
-    calc_mozaiek_percentages_from_overlay_gdf,
+    construct_elmid_omringd_door_gdf,
     make_buffered_boundary_overlay_gdf,
 )
+from veg2hab.vegetatietypen import VvN
+from veg2hab.vegkartering import VegTypeInfo
+
+CLIInterface.get_instance()
 
 """
 Test layout
@@ -41,8 +48,8 @@ def gdf():
             kwaliteit=Kwaliteit.GOED,
             mits=GeenCriterium(),
             mozaiek=StandaardMozaiekregel(
-                habtype="H1",
-                alleen_zelfstandig=True,
+                kwalificerend_habtype="H1",
+                ook_mozaiekvegetaties=False,
                 alleen_goede_kwaliteit=True,
                 ook_als_rand_langs=False,
             ),
@@ -130,6 +137,12 @@ def gdf():
                 ],
             ],
             "ElmID": [1, 2, 3, 4],
+            "VegTypeInfo": [
+                [VegTypeInfo.from_str_vegtypes(percentage=100, VvN_strings=["1aa1"])],
+                [VegTypeInfo.from_str_vegtypes(percentage=100, VvN_strings=["2bb2"])],
+                [VegTypeInfo.from_str_vegtypes(percentage=100, VvN_strings=["3cc3"])],
+                [VegTypeInfo.from_str_vegtypes(percentage=100, VvN_strings=["4dd4"])],
+            ],
             "HabitatVoorstel": [
                 [[voorstellen[0]]],
                 [[voorstellen[1]]],
@@ -151,26 +164,33 @@ def test_value_error_buffer_less_than_zero(gdf):
         make_buffered_boundary_overlay_gdf(gdf, buffer=-0.1)
 
 
-# TODO fix this?
-@pytest.mark.xfail(reason="Changed it to a logging.warning")
-def test_warning_buffer_equals_zero(gdf):
-    with pytest.warns(UserWarning):
-        make_buffered_boundary_overlay_gdf(gdf, buffer=0)
+def test_warning_buffer_equals_zero(gdf, caplog):
+    caplog.set_level(logging.WARNING)
+    make_buffered_boundary_overlay_gdf(gdf, buffer=0)
+    assert "Buffer is 0. Dit kan leiden tot onverwachte resultaten." in caplog.text
 
 
 def test_single_shape(gdf):
     # Enkel 1
     pre = gdf[gdf["ElmID"].isin([1])]
     post = pd.DataFrame(
-        {"ElmID": [1], "dict": [{("H1", False, Kwaliteit.GOED): 100.0}]}
+        {
+            "buffered_ElmID": [1.0],
+            "ElmID": [1],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.GOED],
+            "vegtypen": [[VvN.from_code("1aa1")]],
+            "complexdeel_percentage": [100.0],
+            "omringing_percentage": [100.0],
+        }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
 
 
 def test_single_shape_matig_mozaiek(gdf):
@@ -178,61 +198,75 @@ def test_single_shape_matig_mozaiek(gdf):
     pre = gdf[gdf["ElmID"].isin([1])]
     pre["HabitatKeuze"].iloc[0][0].kwaliteit = Kwaliteit.MATIG
     post = pd.DataFrame(
-        {"ElmID": [1], "dict": [{("H1", False, Kwaliteit.MATIG): 100.0}]}
-    )
-    overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
-    overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
-        on="ElmID",
-        how="left",
-    )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
-
-
-def test_two_shapes(gdf):
-    # 1 en 2
-    pre = gdf[gdf["ElmID"].isin([1, 2])]
-    post = pd.DataFrame(
         {
+            "buffered_ElmID": [1.0],
             "ElmID": [1],
-            "dict": [
-                {
-                    ("H1", False, Kwaliteit.GOED): 100.0,
-                    ("H2", True, Kwaliteit.GOED): 12.5,
-                },
-            ],
+            "habtype": ["H1"],
+            "kwaliteit": [Kwaliteit.MATIG],
+            "vegtypen": [[VvN.from_code("1aa1")]],
+            "complexdeel_percentage": [100.0],
+            "omringing_percentage": [100.0],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
+
+
+def test_two_shapes(gdf):
+    pass
+    # 1 en 2
+    pre = gdf[gdf["ElmID"].isin([1, 2])]
+    post = pd.DataFrame(
+        {
+            "buffered_ElmID": [1.0, 1.0],
+            "ElmID": [1, 2],
+            "habtype": ["H1", "H2"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [[VvN.from_code("1aa1")], [VvN.from_code("2bb2")]],
+            "complexdeel_percentage": [100.0, 100.0],
+            "omringing_percentage": [100.0, 12.5],
+        }
+    )
+    overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
+    overlayed = overlayed.merge(
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
+        on="ElmID",
+        how="left",
+    )
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
 
 
 def test_habtype_percentage_addition(gdf):
     # 1 en 2 en 3
     pre = gdf[gdf["ElmID"].isin([1, 2, 3])]
     post = pd.DataFrame(
+        # construct it from above commented dataframe
         {
-            "ElmID": [1],
-            "dict": [
-                {
-                    ("H1", False, Kwaliteit.GOED): 100.0,
-                    ("H2", True, Kwaliteit.GOED): 25.0,
-                },
+            "buffered_ElmID": [1.0, 1.0, 1.0],
+            "ElmID": [1, 2, 3],
+            "habtype": ["H1", "H2", "H2"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [
+                [VvN.from_code("1aa1")],
+                [VvN.from_code("2bb2")],
+                [VvN.from_code("3cc3")],
             ],
+            "complexdeel_percentage": [100.0, 100.0, 100.0],
+            "omringing_percentage": [100.0, 12.5, 12.5],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
 
 
 def test_two_habtypes(gdf):
@@ -240,23 +274,26 @@ def test_two_habtypes(gdf):
     pre = gdf[gdf["ElmID"].isin([1, 3, 4])]
     post = pd.DataFrame(
         {
-            "ElmID": [1],
-            "dict": [
-                {
-                    ("H1", False, Kwaliteit.GOED): 100.0,
-                    ("H2", True, Kwaliteit.GOED): 12.5,
-                    ("H3", True, Kwaliteit.GOED): 12.5,
-                },
+            "buffered_ElmID": [1.0, 1.0, 1.0],
+            "ElmID": [1, 3, 4],
+            "habtype": ["H1", "H2", "H3"],
+            "kwaliteit": [Kwaliteit.GOED, Kwaliteit.GOED, Kwaliteit.GOED],
+            "vegtypen": [
+                [VvN.from_code("1aa1")],
+                [VvN.from_code("3cc3")],
+                [VvN.from_code("4dd4")],
             ],
+            "complexdeel_percentage": [100.0, 100.0, 100.0],
+            "omringing_percentage": [100.0, 12.5, 12.5],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
 
 
 def test_all_shapes(gdf):
@@ -264,23 +301,32 @@ def test_all_shapes(gdf):
     pre = gdf
     post = pd.DataFrame(
         {
-            "ElmID": [1],
-            "dict": [
-                {
-                    ("H1", False, Kwaliteit.GOED): 100.0,
-                    ("H2", True, Kwaliteit.GOED): 25.0,
-                    ("H3", True, Kwaliteit.GOED): 12.5,
-                },
+            "buffered_ElmID": [1.0, 1.0, 1.0, 1.0],
+            "ElmID": [1, 2, 3, 4],
+            "habtype": ["H1", "H2", "H2", "H3"],
+            "kwaliteit": [
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
             ],
+            "vegtypen": [
+                [VvN.from_code("1aa1")],
+                [VvN.from_code("2bb2")],
+                [VvN.from_code("3cc3")],
+                [VvN.from_code("4dd4")],
+            ],
+            "complexdeel_percentage": [100.0, 100.0, 100.0, 100.0],
+            "omringing_percentage": [100.0, 12.5, 12.5, 12.5],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        gdf[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()
 
 
 def test_multiple_mozaiek_present_shapes(gdf):
@@ -288,8 +334,8 @@ def test_multiple_mozaiek_present_shapes(gdf):
     pre = gdf[gdf["ElmID"].isin([1, 2])].copy()
     # Omdat de voorstellen in HabitatKeuze uit dezelfde list komen hoeven we enkel HabitatVoorstel te updaten.
     nieuwe_regel = StandaardMozaiekregel(
-        habtype="H2",
-        alleen_zelfstandig=True,
+        kwalificerend_habtype="H2",
+        ook_mozaiekvegetaties=False,
         alleen_goede_kwaliteit=True,
         ook_als_rand_langs=False,
     )
@@ -298,23 +344,29 @@ def test_multiple_mozaiek_present_shapes(gdf):
 
     post = pd.DataFrame(
         {
-            "ElmID": [1, 2],
-            "dict": [
-                {
-                    ("H1", False, Kwaliteit.GOED): 100.0,
-                    ("H2", False, Kwaliteit.GOED): 12.5,
-                },
-                {
-                    ("H1", False, Kwaliteit.GOED): 25.0,
-                    ("H2", False, Kwaliteit.GOED): 100.0,
-                },
+            "buffered_ElmID": [1.0, 2.0, 1.0, 2.0],
+            "ElmID": [1, 1, 2, 2],
+            "habtype": ["H1", "H1", "H2", "H2"],
+            "kwaliteit": [
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
+                Kwaliteit.GOED,
             ],
+            "vegtypen": [
+                [VvN.from_code("1aa1")],
+                [VvN.from_code("1aa1")],
+                [VvN.from_code("2bb2")],
+                [VvN.from_code("2bb2")],
+            ],
+            "complexdeel_percentage": [100.0, 100.0, 100.0, 100.0],
+            "omringing_percentage": [100.0, 25.0, 12.5, 100.0],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)
     overlayed = overlayed.merge(
-        pre[["ElmID", "HabitatKeuze"]],
+        gdf[["ElmID", "HabitatKeuze", "VegTypeInfo"]],
         on="ElmID",
         how="left",
     )
-    assert (calc_mozaiek_percentages_from_overlay_gdf(overlayed) == post).all().all()
+    assert (construct_elmid_omringd_door_gdf(overlayed) == post).all().all()

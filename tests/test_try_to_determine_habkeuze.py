@@ -1,4 +1,5 @@
 import geopandas as gpd
+import pandas as pd
 
 from veg2hab.criteria import GeenCriterium, NietCriterium, NietGeautomatiseerdCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel
@@ -9,7 +10,7 @@ from veg2hab.mozaiek import (
     NietGeimplementeerdeMozaiekregel,
     StandaardMozaiekregel,
 )
-from veg2hab.vegetatietypen import SBB
+from veg2hab.vegetatietypen import SBB, VvN
 
 
 def test_habtype_toegekend():
@@ -229,8 +230,8 @@ def test_wachten_op_mozaiek():
             kwaliteit=Kwaliteit.NVT,
             mits=GeenCriterium(),
             mozaiek=StandaardMozaiekregel(
-                habtype="H1234",
-                alleen_zelfstandig=True,
+                kwalificerend_habtype="H1234",
+                ook_mozaiekvegetaties=False,
                 alleen_goede_kwaliteit=False,
                 ook_als_rand_langs=False,
             ),
@@ -239,7 +240,19 @@ def test_wachten_op_mozaiek():
     ]
     for v in voorstellen:
         v.mits.check(gpd.GeoSeries())
-        v.mozaiek.check({("HXXXX", True, Kwaliteit.NVT): 100})
+        v.mozaiek.check(
+            pd.DataFrame(
+                {
+                    "buffered_ElmID": [1.0],
+                    "ElmID": [1],
+                    "habtype": ["HXXXX"],
+                    "kwaliteit": [Kwaliteit.NVT],
+                    "vegtypen": [[VvN.from_code("1aa1")]],
+                    "complexdeel_percentage": [100.0],
+                    "omringing_percentage": [100.0],
+                }
+            )
+        )
     keuze = try_to_determine_habkeuze(voorstellen)
     assert keuze.status == KeuzeStatus.WACHTEN_OP_MOZAIEK
     assert keuze.habtype == "HXXXX"

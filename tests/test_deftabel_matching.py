@@ -167,15 +167,14 @@ def test_perfect_and_less_specific_match_VvN(dt):
             kwaliteit=Kwaliteit.MATIG,
             mits=GeenCriterium(),
             mozaiek=StandaardMozaiekregel(
-                habtype="H91D0",
-                alleen_zelfstandig=True,
+                kwalificerend_habtype="H91D0",
+                ook_mozaiekvegetaties=False,
                 alleen_goede_kwaliteit=False,
                 ook_als_rand_langs=True,
             ),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
-    post[1].mozaiek.determine_keys()
     assert dt.find_habtypes(pre) == post
 
 
