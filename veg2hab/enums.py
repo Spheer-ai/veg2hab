@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
-from typing import List, NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple, Union
 
 
 class BodemTuple(NamedTuple):
     string: str
     codes: List[str]
     enkel_negatieven: bool
+
+
+NumberType = Union[int, float]
 
 
 @dataclass
@@ -112,14 +115,14 @@ class Kwaliteit(Enum):
         elif letter == "X":
             return cls.NVT
         else:
-            raise ValueError("Letter moet G of M zijn")
+            raise ValueError("Letter moet G, M of X zijn")
 
     def as_letter(self) -> str:
         if self == Kwaliteit.GOED:
             return "G"
         elif self == Kwaliteit.MATIG:
             return "M"
-        elif self in [Kwaliteit.NVT]:
+        elif self == Kwaliteit.NVT:
             return "X"
         else:
             raise ValueError("GoedMatig is niet Goed of Matig")

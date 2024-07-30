@@ -5,6 +5,7 @@ from veg2hab.criteria import (
     BodemCriterium,
     EnCriteria,
     FGRCriterium,
+    GeenCriterium,
     LBKCriterium,
     NietCriterium,
     NietGeautomatiseerdCriterium,
@@ -13,6 +14,12 @@ from veg2hab.criteria import (
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
 
 # For "tests" of criteria.get_opm, please see demo_criteria_opmerkingen.py
+
+
+def test_GeenCriterium():
+    crit = GeenCriterium()
+    crit.check(pd.Series())
+    assert crit.evaluation == MaybeBoolean.TRUE
 
 
 def test_FGRCriterium():
