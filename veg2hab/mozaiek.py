@@ -11,10 +11,12 @@ from veg2hab.enums import Kwaliteit, MaybeBoolean, NumberType
 from veg2hab.io.common import Interface
 from veg2hab.vegetatietypen import SBB, VvN
 
+
 class MozkPercTuple(NamedTuple):
     habtype: str
     kwaliteit: Kwaliteit
     percentage: NumberType
+
 
 class MozaiekRegel(BaseModel):
     # NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
