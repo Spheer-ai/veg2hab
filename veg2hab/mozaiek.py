@@ -1,14 +1,17 @@
-import json
 import logging
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import ClassVar, Dict, List, Optional, Tuple, Union
+from typing import ClassVar, Dict, List, Optional, Set, Tuple, Union
 
 import geopandas as gpd
+import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr
 
-from veg2hab.enums import Kwaliteit, MaybeBoolean
+from veg2hab.enums import Kwaliteit, MaybeBoolean, NumberType
 from veg2hab.io.common import Interface
+from veg2hab.vegetatietypen import SBB, VvN
+
+MozkPercTuple = namedtuple("MozkPercTuple", ["habtype", "kwaliteit", "percentage"])
 
 
 class MozaiekRegel(BaseModel):
@@ -16,13 +19,18 @@ class MozaiekRegel(BaseModel):
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
-    mozaiek_threshold: Union[int, float] = Field(
+    mozaiek_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
-    mozaiek_als_rand_threshold: Union[int, float] = Field(
+    mozaiek_als_rand_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance()
         .get_config()
         .mozaiek_als_rand_threshold
+    )
+    mozaiek_minimum_bedekking: NumberType = Field(
+        default_factory=lambda: Interface.get_instance()
+        .get_config()
+        .mozaiek_minimum_bedekking
     )
 
     def __init_subclass__(cls):
@@ -58,8 +66,11 @@ class MozaiekRegel(BaseModel):
     def is_mozaiek_type_present(self, type) -> bool:
         return isinstance(self, type)
 
-    def check(self, habtype_percentage_dict: Dict) -> None:
+    def check(self, omringd_door: pd.DataFrame) -> None:
         raise NotImplementedError()
+
+    def get_mozk_perc_str(self) -> str:
+        return ""
 
     @property
     def evaluation(self) -> MaybeBoolean:
@@ -73,7 +84,7 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
     cached_evaluation: MaybeBoolean = MaybeBoolean.CANNOT_BE_AUTOMATED
 
-    def check(self, habtype_percentage_dict: Dict) -> None:
+    def check(self, omringd_door: pd.DataFrame) -> None:
         assert self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
@@ -84,7 +95,7 @@ class GeenMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "GeenMozaiekregel"
     cached_evaluation: MaybeBoolean = MaybeBoolean.TRUE
 
-    def check(self, habtype_percentage_dict: Dict) -> None:
+    def check(self, omringd_door: pd.DataFrame) -> None:
         assert self.cached_evaluation == MaybeBoolean.TRUE
 
     def __str__(self):
@@ -93,42 +104,75 @@ class GeenMozaiekregel(MozaiekRegel):
 
 class StandaardMozaiekregel(MozaiekRegel):
     type: ClassVar[str] = "StandaardMozaiekregel"
-    # Habtype waarmee gematcht moet worden
-    habtype: str
-    alleen_zelfstandig: bool
+    kwalificerend_habtype: str
+    ook_mozaiekvegetaties: bool
     alleen_goede_kwaliteit: bool
     ook_als_rand_langs: bool
 
-    keys: List[Tuple[str, bool, Kwaliteit]] = []
-    habtype_percentage_dict: Dict = None
+    # Uitgesplits in SBB en VvN lijsten voor (de)serializatie
+    kwalificerende_SBB: List[SBB] = []
+    kwalificerende_VvN: List[VvN] = []
+    tegengekomen_kwal_SBB: List[SBB] = []
+    tegengekomen_kwal_VvN: List[VvN] = []
+
+    mozk_perc_tuples: List[MozkPercTuple] = []
 
     cached_evaluation: MaybeBoolean = MaybeBoolean.POSTPONE
 
-    def determine_keys(self) -> None:
-        assert not self.habtype in [
-            "H0000",
-            "HXXXX",
-        ], "Habtype van een mozaiekregel mag niet H0000 of HXXXX zijn"
+    def determine_kwalificerende_vegtypen(self, deftabel_section: pd.DataFrame) -> None:
+        # assert columns Habitattype, SBB and VvN are present
+        assert all(
+            col in deftabel_section.columns for col in ["Habitattype", "SBB", "VvN"]
+        ), "Habitattype, SBB and VvN columns not all found in deftabel_section in determine_valid_vegtypen"
 
-        # Keys zijn (habtype: str, zelfstandig: bool, kwaliteit: Kwaliteit)
-        self.keys = []
+        assert all(
+            deftabel_section.Habitattype == self.kwalificerend_habtype
+        ), f"Not all Habitattype values are the expected {self.kwalificerend_habtype} in deftabel_section in determine_valid_vegtypen"
 
-        # Zelfstandig Goed is altijd acceptabel
-        self.keys.append((self.habtype, True, Kwaliteit.GOED))
+        # Casten naar list voor (de)serializatie
+        self.kwalificerende_SBB = list(
+            {
+                vegtype
+                for vegtype in deftabel_section.SBB.to_list()
+                if vegtype is not None
+            }
+        )
 
-        if not self.alleen_zelfstandig:
-            self.keys.append((self.habtype, False, Kwaliteit.GOED))
+        self.kwalificerende_VvN = list(
+            {
+                vegtype
+                for vegtype in deftabel_section.VvN.to_list()
+                if vegtype is not None
+            }
+        )
 
-        if not self.alleen_goede_kwaliteit:
-            self.keys.append((self.habtype, True, Kwaliteit.MATIG))
+    def check(self, omringd_door: pd.DataFrame) -> None:
+        """
+        Checkt of er aan de mozaiekregel wordt voldaan adhv een omringd_door DataFrame met kolommen
 
-            if not self.alleen_zelfstandig:
-                self.keys.append((self.habtype, False, Kwaliteit.MATIG))
+            ElmID | habtype | kwaliteit | vegtypen | complexdeel_percentage | omringing_percentage
+            Er is een rij voor ieder complexdeel in de omliggende vlakken.
 
-    def check(self, habtype_percentage_dict: Dict) -> None:
-        requested_habtype_percentage = 0
-        for key in self.keys:
-            requested_habtype_percentage += habtype_percentage_dict.get(key, 0)
+        De benodigde gegevens (omringings% kwalificerende vlakken en omringings% HXXXX)
+        om tot een truth value te komen worden door _bepaal_kwalificerende_en_HXXXX_omringing()
+        onttrokken aan de omringd_door df.
+
+        Vult ook de tegengekomen_kwal_vegtypen en mozk_perc_dict in.
+        """
+        assert set(omringd_door.columns).issuperset(
+            {
+                "ElmID",
+                "habtype",
+                "kwaliteit",
+                "vegtypen",
+                "complexdeel_percentage",
+                "omringing_percentage",
+            }
+        ), "Not all expected columns found in omringd_door in mozaiekregel.check"
+
+        assert (
+            not self.ook_mozaiekvegetaties or self.kwalificerende_vegtypen is not None
+        ), "kwalificerende_vegtypen not set in mozaiekregel.check"
 
         threshold = (
             self.mozaiek_threshold
@@ -136,32 +180,244 @@ class StandaardMozaiekregel(MozaiekRegel):
             else self.mozaiek_als_rand_threshold
         )
 
-        # Threshold is behaald, dus TRUE
-        if requested_habtype_percentage >= threshold:
+        self._vul_mozk_perc_dict(omringd_door)
+
+        (
+            omringing_kwal_vlakken,
+            omringing_HXXXX,
+            tegengekomen_kwal_vegtypen,
+        ) = self._bepaal_kwalificerende_en_HXXXX_omringing(omringd_door)
+
+        self._vul_tegengekomen_kwal_SBB_VvN(tegengekomen_kwal_vegtypen)
+
+        if omringing_kwal_vlakken >= threshold:
             self.cached_evaluation = MaybeBoolean.TRUE
             return
 
-        unknown_habtype_percentage = habtype_percentage_dict.get(
-            ("HXXXX", True, Kwaliteit.NVT),
-            0,
-        )
-        # Threshold kan nog behaald worden, dus POSTPONE
-        if requested_habtype_percentage + unknown_habtype_percentage >= threshold:
+        # Als de totale omringing van kwalificerende vlakken + HXXXX voldoende is, kan deze
+        # in volgende ronden nog TRUE worden, dus voor nu dan POSTPONE
+        if omringing_kwal_vlakken + omringing_HXXXX >= threshold:
             self.cached_evaluation = MaybeBoolean.POSTPONE
             return
 
-        # Threshold kan niet meer behaald worden, dus FALSE
         self.cached_evaluation = MaybeBoolean.FALSE
 
-    def __str__(self):
-        complete_string = ""
-        complete_string += f"{'(als rand langs)' if self.ook_als_rand_langs else ''} "
-        complete_string += (
-            f"{'zelfstndg' if self.alleen_zelfstandig else 'zelfstndg/mozk'} "
+    def _vul_mozk_perc_dict(self, omringd_door: pd.DataFrame) -> None:
+        """
+        Vult de mozk_perc_dict met keys (habtype, kwaliteit) en values (omringing percentage)
+
+        Is gescheiden van _bepaal_kwalificerende_en_HXXXX_omringing om de logica netter te houden
+        """
+        mozk_perc_dict = defaultdict(int)
+
+        grouped_by_vlak = omringd_door.groupby("ElmID")
+
+        for _, vlak_group in grouped_by_vlak:
+            assert (
+                len(vlak_group.omringing_percentage.unique()) == 1
+            ), f"Omringing percentage is niet hetzelfde voor alle complexdelen in vlak met ElmID {vlak_group.ElmID.iloc[0]}"
+
+            grouped_by_habtype = vlak_group.groupby("habtype")
+            for habtype, habtype_group in grouped_by_habtype:
+                bedekking_goed_habtype = habtype_group[
+                    habtype_group.kwaliteit == Kwaliteit.GOED
+                ].complexdeel_percentage.sum()
+
+                if bedekking_goed_habtype >= self.mozaiek_minimum_bedekking:
+                    mozk_perc_dict[(habtype, Kwaliteit.GOED)] += habtype_group.iloc[
+                        0
+                    ].omringing_percentage
+                    continue
+
+                bedekking_matig_habtype = habtype_group.complexdeel_percentage.sum()
+                if bedekking_matig_habtype >= self.mozaiek_minimum_bedekking:
+                    if habtype in ["H0000", "HXXXX"]:
+                        # H0000 en HXXXX hebben altijd kwaliteit NVT
+                        mozk_perc_dict[(habtype, Kwaliteit.NVT)] += habtype_group.iloc[
+                            0
+                        ].omringing_percentage
+                    else:
+                        mozk_perc_dict[
+                            (habtype, Kwaliteit.MATIG)
+                        ] += habtype_group.iloc[0].omringing_percentage
+
+        # We slaan dit op als tuples ipv gewoon als de dict zodat we mozaiekregels kunnen serializen
+        self.mozk_perc_tuples = []
+
+        for (habtype, kwaliteit), perc in mozk_perc_dict.items():
+            self.mozk_perc_tuples.append(
+                MozkPercTuple(habtype=habtype, kwaliteit=kwaliteit, percentage=perc)
+            )
+
+    def _vul_tegengekomen_kwal_SBB_VvN(
+        self, tegengekomen_vegtypen: Set[Union[SBB, VvN]]
+    ):
+        # Casten naar list voor (de)serializatie
+        self.tegengekomen_kwal_SBB = list(
+            {vegtype for vegtype in tegengekomen_vegtypen if isinstance(vegtype, SBB)}
         )
+        self.tegengekomen_kwal_VvN = list(
+            {vegtype for vegtype in tegengekomen_vegtypen if isinstance(vegtype, VvN)}
+        )
+
+    def _bepaal_kwalificerende_en_HXXXX_omringing(
+        self, omringd_door: pd.DataFrame
+    ) -> Tuple[NumberType, NumberType, Set[Union[SBB, VvN]]]:
+        """
+        Bepaalt dmv _bepaal_kwalificerende_en_HXXXX_bedekking() per vlak het bedekkings% kwalificerende
+        complexdelen en het bedekkings% HXXXX complexdelen. Hiermee wordt bepaald of het vlak telt als een
+        kwalificerend vlak, als een HXXXX vlak, of als geen van beide, en wordt het omringingspercentage
+        van het vlak opgeteld bij het corresponderende lopende totaal (omringing_kwal_vlakken, omringing_HXXXX, of nergens).
+
+        Ook worden de tegengekomen kwalificerende vegetatietypen geaggeregeerd ter communicatie naar de gebruiker.
+        """
+        omringing_kwal_vlakken = 0
+        omringing_HXXXX = 0
+        tegengekomen_kwal_vegtypen = set()
+
+        grouped_by_vlak = omringd_door.groupby("ElmID")
+
+        for _, vlak_group in grouped_by_vlak:
+            assert (
+                len(vlak_group.omringing_percentage.unique()) == 1
+            ), f"Omringing percentage is niet hetzelfde voor alle complexdelen in vlak met ElmID {vlak_group.ElmID.iloc[0]}"
+
+            (
+                bedekking_kwal_complexdelen,
+                bedekking_HXXXX,
+                tegengekomen_kwal_vegtypen_vlak,
+            ) = self._bepaal_kwalificerende_en_HXXXX_bedekking(vlak_group)
+
+            # Bijhouden welke vegetatietypen als kwalificerend zijn gerekend
+            tegengekomen_kwal_vegtypen.update(tegengekomen_kwal_vegtypen_vlak)
+
+            # Als we al over de threshold zitten, kunnen we stoppen met
+            # tellen en dit vlak zien als kwalificerend
+            if bedekking_kwal_complexdelen >= self.mozaiek_minimum_bedekking:
+                omringing_kwal_vlakken += vlak_group.iloc[0].omringing_percentage
+                continue
+
+            # Als de totale bedekking kwalificerende complexdelen + HXXXX bedekking meer is dan
+            # de minimale bedekkingsthreshold, zou dit vlak in volgende ronden alsnog kunnen gaan kwalificeren
+            # en kunnen we dit vlak zien als een HXXXX vlak
+            if (
+                bedekking_HXXXX + bedekking_kwal_complexdelen
+                > self.mozaiek_minimum_bedekking
+            ):
+                omringing_HXXXX += vlak_group.iloc[0].omringing_percentage
+                continue
+
+        return (omringing_kwal_vlakken, omringing_HXXXX, tegengekomen_kwal_vegtypen)
+
+    def _bepaal_kwalificerende_en_HXXXX_bedekking(
+        self, vlak_group: pd.DataFrame
+    ) -> Tuple[NumberType, NumberType, Set[Union[SBB, VvN]]]:
+        """
+        Bepaalt voor een vlak wat de bedekking is van kwalificerende complexdelen en HXXXX complexdelen.
+
+        Ook houdt het bij welke kwalificerende vegetatietypen tegengekomen zijn.
+        """
+        bedekking_kwal_complexdelen = 0
+        bedekking_HXXXX = 0
+        tegengekomen_kwal_vegtypen = set()
+
+        # NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
+        #       door ze te vervangen voor set operaties (set.issubset/set.intersection etc)
+        for row in vlak_group.itertuples():
+            if (
+                # Als het habitattype matcht en er wordt aan de kwaliteitseisen voldaan
+                row.habtype == self.kwalificerend_habtype
+                and (row.kwaliteit == Kwaliteit.GOED or not self.alleen_goede_kwaliteit)
+            ) or (
+                # Of als de mozaiekvegetaties ook toegestaan zijn en daar is een match
+                self.ook_mozaiekvegetaties
+                and any(
+                    vegtype in self.kwalificerende_vegtypen for vegtype in row.vegtypen
+                )
+            ):
+                # Dan tellen we het percentage van het complexdeel mee
+                bedekking_kwal_complexdelen += row.complexdeel_percentage
+                tegengekomen_kwal_vegtypen.update(
+                    [
+                        vegtype
+                        for vegtype in row.vegtypen
+                        if vegtype in self.kwalificerende_vegtypen
+                    ]
+                )
+
+            if row.habtype == "HXXXX":
+                bedekking_HXXXX += row.complexdeel_percentage
+                continue
+
+        return (
+            bedekking_kwal_complexdelen,
+            bedekking_HXXXX,
+            tegengekomen_kwal_vegtypen,
+        )
+
+    def __str__(self):
+        complete_string = f"{'als rand langs ' if self.ook_als_rand_langs else ''}"
+        complete_string += f"{'zelfstndg' if not self.ook_mozaiekvegetaties else 'zelfstndg/mozkveg van'} "
         complete_string += f"{'G' if self.alleen_goede_kwaliteit else 'G/M'} "
-        complete_string += f"{self.habtype}."
+        complete_string += f"{self.kwalificerend_habtype}"
         return complete_string
+
+    def get_mozk_perc_str(self) -> str:
+        """
+        Geeft de string voor in het _MozkPerc{i} veld in de output.
+        Als dit een mozaiekregel is die ook mozaiekvegetaties accepteerd, worden
+        alle gevonden kwalificerende vegetatietypen ook weergegeven.
+        """
+        mozk_percs_str = self._mozk_perc_dict_to_str()
+        if len(self.tegengekomen_kwal_vegtypen) > 0:
+            mozk_percs_str += " " + self._tegengekomen_kwal_vegtypen_to_str()
+        return mozk_percs_str
+
+    def _mozk_perc_dict_to_str(self) -> str:
+        """
+        Vertaald de mozk_perc_dict naar een string
+
+        {('H1234', Kwaliteit.GOED): 50, ('H4321', Kwaliteit.MATIG): 50}
+        "50% goed H1234, 50% matig H4321."
+        """
+        kwal_strs = {
+            Kwaliteit.GOED: "goed ",
+            Kwaliteit.MATIG: "matig ",
+            Kwaliteit.NVT: "",
+        }
+        return (
+            ", ".join(
+                [
+                    f"{percentage:.2f}% {kwal_strs[kwaliteit]}{habtype}"
+                    for (habtype, kwaliteit, percentage) in self.mozk_perc_tuples
+                ]
+            )
+            + "."
+        )
+
+    def _tegengekomen_kwal_vegtypen_to_str(self) -> str:
+        """
+        Zet de tegengekomen_kwal_vegtypen om naar een string
+
+        {SBB('1a1a'), SBB('2a4'), VvN('3ab3c')}
+        "Mozaiekvegetatietypen: 1a1a (SBB), 2a4 (SBB), 3ab3c (VvN)."
+        """
+        vegtypen_str = "Mozaiekvegetatietypen: "
+        vegtypen_str += ", ".join(
+            [
+                f"{str(vegtype)} ({'SBB' if isinstance(vegtype, SBB) else 'VvN'})"
+                for vegtype in self.tegengekomen_kwal_vegtypen
+            ]
+        )
+        return vegtypen_str + "."
+
+    @property
+    def kwalificerende_vegtypen(self) -> Set[Union[SBB, VvN]]:
+        return self.kwalificerende_SBB + self.kwalificerende_VvN
+
+    @property
+    def tegengekomen_kwal_vegtypen(self) -> Set[Union[SBB, VvN]]:
+        return self.tegengekomen_kwal_SBB + self.tegengekomen_kwal_VvN
 
 
 def make_buffered_boundary_overlay_gdf(
@@ -216,72 +472,79 @@ def make_buffered_boundary_overlay_gdf(
     )
     # We droppen alle lijnen die niet over een vlak liggen
     overlayed = overlayed.dropna(subset=["ElmID"])
-    overlayed["part_line_percentage"] = (
+    overlayed["omringing_percentage"] = (
         overlayed.length / overlayed.full_line_length
     ) * 100
-    return overlayed
+
+    # Geometry is niet meer nodig hierna
+    return overlayed.drop(columns=["geometry"])
 
 
-def calc_mozaiek_percentages_from_overlay_gdf(
-    overlayed: gpd.GeoDataFrame,
-) -> Optional[gpd.GeoDataFrame]:
+def construct_elmid_omringd_door_gdf(
+    augmented_overlayed: pd.DataFrame,
+) -> pd.DataFrame:
     """
-    Ontvangt een overlayed gdf van make_buffered_boundary_overlay_gdf die de HabitatKeuze kolom bevat.
-    Uit deze kolom wordt het habitattype gehaald en op basis hiervan wordt per buffered_ElmID
-    gekeken door hoeveel procent van elk habitattype het vlak omringd wordt.
+    ### Ontvangt een gdf met
+        buffered_ElmID | full_line_length | ElmID | omringing_percentage | VegTypeInfo | HabitatKeuze
 
-    NOTE:
-    NOTE: Ter versimpeling wordt nu even aangenomen dat de eerste habitatkeuze per vlak de enige is.
-    NOTE:
+    Hierin is aangegeven voor ieder vlak (buffered_ElmID) door welke vlakken deze omgringd word (ElmID),
+    samen met info over de omringing (full_line_length, omringing_percentage) en de habitatkeuzes/vegtypen
+    van de omliggende vlakken.
+
+    ### Maakt hiervan een gdf met
+        buffered_ElmID | ElmID | habtype | vegtypen | complexdeel_percentage | omringing_percentage
+
+    Elk complexdeel in alle vlakken rondom een buffered_ElmID krijgt een rij in de gdf
+    met daarin het habitattype, de vegetatietypen en het percentage van het complexdeel.
+    omringing_percentage is hetzelfde voor elk complexdeel binnen een ElmID
     """
+    expected_cols = [
+        "buffered_ElmID",
+        "full_line_length",
+        "ElmID",
+        "omringing_percentage",
+        "VegTypeInfo",
+        "HabitatKeuze",
+    ]
+    assert all(
+        col in augmented_overlayed.columns for col in expected_cols
+    ), f"Niet alle kolommen {expected_cols} gevonden in augmented_overlayed bij construct_elmid_omringd_door_gdf"
 
-    assert (
-        "HabitatKeuze" in overlayed.columns
-    ), "HabitatKeuze niet gevonden in overlayed bij calc_mozaiek_percentages_from_overlay_gdf"
+    def expand_habkeuze_vegtypeinfo_columns(
+        row: pd.Series,
+    ) -> pd.DataFrame:
+        """
+        ### Ontvangt steeds een rij met
+            buffered_ElmID | full_line_length | ElmID | omringing_percentage | VegTypeInfo | HabitatKeuze
 
-    assert (
-        "buffered_ElmID" in overlayed.columns
-    ), "buffered_ElmID niet gevonden in overlayed bij calc_mozaiek_percentages_from_overlay_gdf"
+        ### En trekt uit ieder VegTypeInfo/HabitatKeuze-paar de info om te krijgen
+            buffered_ElmID | ElmID | habtype | kwaliteit | vegtypen | complexdeel_percentage | omringing_percentage
+        """
+        assert len(row.HabitatKeuze) == len(
+            row.VegTypeInfo
+        ), "HabitatKeuze en VegTypeInfo moeten even lang zijn"
 
-    # We maken voor ieder vlak een defaultdict met habitattypes keys naar percentage values
-    def row_to_habtype_percentage_dict(group: gpd.GeoDataFrame) -> Dict[str, float]:
-        # NOTE: voor nu doen we alsof we maar 1 habtype per vlak hebben
-
-        habtype_percentages = group["part_line_percentage"]
-        # Als er geen habitatkeuzes zijn, dan geven we HXXXX terug
-        # TODO: pak de grootste keuze als er meerdere zijn
-        #       Wat als de grootste nog None is en de kleinere wel een keuze heeft?
-        key_tuples = group.HabitatKeuze.apply(
-            lambda keuzes:
-            # Als len(keuzes) == 0, dan is er geen vegtype opgegeven, dus H0000
-            ("H0000", True, Kwaliteit.NVT)
-            if len(keuzes) == 0
-            else
-            # Als de keuze None is, dan is deze nog niet bepaald, dus HXXXX
-            ("HXXXX", True, Kwaliteit.NVT)
-            if keuzes[0] is None
-            else (
-                keuzes[0].habtype,
-                keuzes[0].zelfstandig,
-                keuzes[0].kwaliteit,
-            )
+        return pd.DataFrame(
+            {
+                "buffered_ElmID": row.buffered_ElmID,
+                "ElmID": row.ElmID,
+                "habtype": [
+                    keuze.habtype if keuze is not None else "HXXXX"
+                    for keuze in row.HabitatKeuze
+                ],
+                "kwaliteit": [
+                    keuze.kwaliteit if keuze is not None else Kwaliteit.NVT
+                    for keuze in row.HabitatKeuze
+                ],
+                "vegtypen": [info.VvN + info.SBB for info in row.VegTypeInfo],
+                "complexdeel_percentage": [info.percentage for info in row.VegTypeInfo],
+                "omringing_percentage": [row.omringing_percentage]
+                * len(row.HabitatKeuze),
+            }
         )
-        habtype_percentage_dict = defaultdict(int)
-        for key, percentage in zip(key_tuples, habtype_percentages):
-            habtype_percentage_dict[key] += percentage
-        return habtype_percentage_dict
 
-    result = overlayed.groupby("buffered_ElmID").apply(row_to_habtype_percentage_dict)
-
-    if len(result) == 0:
-        # Geen aan elkaar grenzende vlakken
-        return None
-
-    # Nu is de index de ElmID, maar we willen een expliciete kolom
-    result = result.reset_index()
-    result.columns = ["ElmID", "dict"]
-
-    return result
+    result = augmented_overlayed.apply(expand_habkeuze_vegtypeinfo_columns, axis=1)
+    return pd.concat(result.values).reset_index(drop=True)
 
 
 def is_mozaiek_type_present(
@@ -301,5 +564,3 @@ def is_mozaiek_type_present(
             for voorstel in voorstellen
         ]
     )
-
-    # ------------------------

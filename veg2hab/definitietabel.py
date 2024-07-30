@@ -45,12 +45,14 @@ class DefinitieTabel:
             .loc[self.df["mozaiekjson"].notnull()]
             .apply(MozaiekRegel.parse_raw)
         )
-        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken
+        # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken\
         # TODO: Om deze isinstance heenwerken voor modulariteit
         # TODO: Idealiter komt dit een een soort post_init (https://stackoverflow.com/questions/66571079/alter-field-after-instantiation-in-pydantic-basemodel-class)
         self.df["Mozaiekregel"].apply(
-            lambda regel: regel.determine_keys()
-            if isinstance(regel, StandaardMozaiekregel)
+            lambda regel: regel.determine_kwalificerende_vegtypen(
+                self.df[self.df.Habitattype == regel.kwalificerend_habtype]
+            )
+            if isinstance(regel, StandaardMozaiekregel) and regel.ook_mozaiekvegetaties
             else None
         )
 
@@ -64,7 +66,6 @@ class DefinitieTabel:
             path,
             engine="openpyxl",
             usecols=[
-                "DT regel",
                 "Habitattype",
                 "Kwaliteit",
                 "SBB",
@@ -77,7 +78,6 @@ class DefinitieTabel:
             dtype="string",
         )
 
-        df["DT regel"] = df["DT regel"].astype(int)
         return cls(df)
 
     def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
@@ -133,7 +133,6 @@ class DefinitieTabel:
                     vegtype_in_dt=vegtype_in_dt,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
-                    idx_in_dt=row["DT regel"],
                     mits=row["Criteria"],
                     mozaiek=row["Mozaiekregel"],
                     match_level=match_levels[idx],
@@ -184,10 +183,11 @@ def opschonen_definitietabel(
             "alleen in mozaïek": "mozaiek",
         }
     )
-    # Toevoegen index als kolom
-    dt["DT regel"] = dt.index + 2
 
     ### Opschonen
+    # Verwijderen whitespace in Habitattype
+    dt["Habitattype"] = dt["Habitattype"].str.strip()
+
     # Verwijderen rijen met missende data in VvN
     dt = dt.dropna(subset=["VvN"])
 
@@ -208,7 +208,7 @@ def opschonen_definitietabel(
     ), "Niet alle VvN codes zijn valid"
 
     # Reorder
-    dt = dt[["DT regel", "Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
+    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
 
     ### Mits json definities toevoegen
     with open(path_in_mitsjson, "r", encoding="utf-8") as file:

@@ -9,6 +9,8 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal, Union
 
+from veg2hab.enums import NumberType
+
 
 class BaseModel(_BaseModel):
     class Config:
@@ -150,13 +152,17 @@ class Veg2HabConfig(BaseSettings):
     class Config:
         env_prefix = "VEG2HAB_"
 
-    mozaiek_threshold: Union[int, float] = Field(
+    mozaiek_threshold: NumberType = Field(
         default=95.0,
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
-    mozaiek_als_rand_threshold: Union[int, float] = Field(
-        default=50.0,
+    mozaiek_als_rand_threshold: NumberType = Field(
+        default=25.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
+    )
+    mozaiek_minimum_bedekking: NumberType = Field(
+        default=90.0,
+        description="Minimum percentage dat geschikte habitattypen/vegetatietypen in een omringend vlak moet hebben voordat deze mee telt",
     )
 
     niet_geautomatiseerde_sbb: List[str] = Field(
@@ -207,7 +213,7 @@ class Veg2HabConfig(BaseSettings):
     )
 
     # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
-    minimum_oppervlak_exceptions: Dict[str, Union[int, float]] = Field(
+    minimum_oppervlak_exceptions: Dict[str, NumberType] = Field(
         default={
             "H6110": 10,
             "H7220": 10,
@@ -235,12 +241,12 @@ class Veg2HabConfig(BaseSettings):
         except json.JSONDecodeError:
             raise ValueError("Invalid JSON string for minimum_oppervlak_exceptions_raw")
 
-    minimum_oppervlak_default: Union[int, float] = Field(
+    minimum_oppervlak_default: NumberType = Field(
         default=100,
         description="Minimum oppervlak voor een habitattype",
     )
 
-    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> Union[int, float]:
+    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> NumberType:
         return self.minimum_oppervlak_exceptions.get(
             habtype, self.minimum_oppervlak_default
         )

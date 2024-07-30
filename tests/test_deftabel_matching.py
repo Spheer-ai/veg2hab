@@ -45,7 +45,6 @@ def test_perfect_match_VvN(dt):
             vegtype_in_dt=VvN.from_code("25aa3"),
             habtype="H1310_A",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=31,
             mits=OfCriteria(
                 sub_criteria=[
                     FGRCriterium(wanted_fgrtype=FGRType.NZ),
@@ -71,7 +70,6 @@ def test_non_existing_VvN(dt):
             vegtype_in_dt=None,
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
-            idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
@@ -88,7 +86,6 @@ def test_match_to_less_specific_VvN(dt):
             vegtype_in_dt=VvN.from_code("5ca2"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=353,
             mits=NietGeautomatiseerdCriterium(
                 toelichting="mits in beken of riviertjes"
             ),
@@ -108,7 +105,6 @@ def test_gemeenschap_perfect_match_VvN(dt):
             vegtype_in_dt=VvN.from_code("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
-            idx_in_dt=356,
             mits=NietGeautomatiseerdCriterium(
                 toelichting="mits in beken of riviertjes"
             ),
@@ -127,7 +123,6 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=276,
             mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
@@ -137,7 +132,6 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=404,
             mits=NietGeautomatiseerdCriterium(
                 toelichting="mits op oeverwallen van rivieren of riviertjes"
             ),
@@ -157,7 +151,6 @@ def test_perfect_and_less_specific_match_VvN(dt):
             vegtype_in_dt=VvN.from_code("36aa2a"),
             habtype="H2180_B",
             kwaliteit=Kwaliteit.MATIG,
-            idx_in_dt=169,
             mits=EnCriteria(
                 sub_criteria=[
                     FGRCriterium(wanted_fgrtype=FGRType.DU),
@@ -172,18 +165,16 @@ def test_perfect_and_less_specific_match_VvN(dt):
             vegtype_in_dt=VvN.from_code("36aa2"),
             habtype="H91D0",
             kwaliteit=Kwaliteit.MATIG,
-            idx_in_dt=640,
             mits=GeenCriterium(),
             mozaiek=StandaardMozaiekregel(
-                habtype="H91D0",
-                alleen_zelfstandig=True,
+                kwalificerend_habtype="H91D0",
+                ook_mozaiekvegetaties=False,
                 alleen_goede_kwaliteit=False,
                 ook_als_rand_langs=True,
             ),
             match_level=MatchLevel.ASSOCIATIE_VVN,
         ),
     ]
-    post[1].mozaiek.determine_keys()
     assert dt.find_habtypes(pre) == post
 
 
@@ -195,7 +186,6 @@ def test_perfect_match_SBB(dt):
             vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=340,
             mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
@@ -214,7 +204,6 @@ def test_matches_both_vvn_and_sbb(dt):
             vegtype_in_dt=VvN.from_code("5rg8"),
             habtype="H3260_A",
             kwaliteit=Kwaliteit.MATIG,
-            idx_in_dt=356,
             mits=NietGeautomatiseerdCriterium(
                 toelichting="mits in beken of riviertjes"
             ),
@@ -226,7 +215,6 @@ def test_matches_both_vvn_and_sbb(dt):
             vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H2330",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=276,
             mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
@@ -236,7 +224,6 @@ def test_matches_both_vvn_and_sbb(dt):
             vegtype_in_dt=VvN.from_code("14bb1a"),
             habtype="H6120",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=404,
             mits=NietGeautomatiseerdCriterium(
                 toelichting="mits op oeverwallen van rivieren of riviertjes"
             ),
@@ -248,7 +235,6 @@ def test_matches_both_vvn_and_sbb(dt):
             vegtype_in_dt=SBB.from_code("9b1"),
             habtype="H3160",
             kwaliteit=Kwaliteit.GOED,
-            idx_in_dt=340,
             mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
@@ -266,7 +252,6 @@ def test_niet_geautomatiseerde_codes(dt):
             vegtype_in_dt=None,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
-            idx_in_dt=None,
             mits=GeenCriterium(),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
