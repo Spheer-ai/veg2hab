@@ -42,8 +42,11 @@ def test_niet_geautomatiseerde_sbb():
         "400",
     ]
 
+
 def test_niet_geautomatiseerde_rvvn():
-    os.environ["VEG2HAB_NIET_GEAUTOMATISEERDE_RVVN"] = '["r100","r200","r300","r400","r500"]'
+    os.environ[
+        "VEG2HAB_NIET_GEAUTOMATISEERDE_RVVN"
+    ] = '["r100","r200","r300","r400","r500"]'
     assert CLIInterface.get_instance().get_config().niet_geautomatiseerde_rvvn == [
         "r100",
         "r200",

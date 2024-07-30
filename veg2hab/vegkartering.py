@@ -450,7 +450,10 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
         Kwaliteit.NVT: 2,
     }
     aggregate = dict(
-        sorted(aggregate.items(), key=(lambda item: (-item[1], item[0][0], kwal_dict[item[0][1]])))
+        sorted(
+            aggregate.items(),
+            key=(lambda item: (-item[1], item[0][0], kwal_dict[item[0][1]])),
+        )
     )
 
     # Maken van alle losse strings
@@ -705,9 +708,10 @@ class Kartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
-        assert (
-            welke_typologie in [WelkeTypologie.SBB, WelkeTypologie.rVvN]
-        ), "Voor digitale standaard karteringen wordt enkel SBB of rVvN ondersteund"
+        assert welke_typologie in [
+            WelkeTypologie.SBB,
+            WelkeTypologie.rVvN,
+        ], "Voor digitale standaard karteringen wordt enkel SBB of rVvN ondersteund"
 
         gdf = gpd.read_file(shape_path)
 
@@ -830,26 +834,30 @@ class Kartering:
         if welke_typologie == WelkeTypologie.VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0:
-                raise ValueError("VvN_col moet worden opgegeven als welke_typologie \'VvN\' is.")
+                raise ValueError(
+                    "VvN_col moet worden opgegeven als welke_typologie 'VvN' is."
+                )
         elif welke_typologie == WelkeTypologie.SBB:
             num_cols = len(SBB_col)
             if len(SBB_col) == 0:
-                raise ValueError("SBB_col moet worden opgegeven als welke_typologie \'SBB\' is.")
+                raise ValueError(
+                    "SBB_col moet worden opgegeven als welke_typologie 'SBB' is."
+                )
         elif welke_typologie == WelkeTypologie.SBB_en_VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0 or len(SBB_col) == 0:
                 raise ValueError(
-                    "Zowel VvN_col als SBB_col moeten worden opgegeven als welke_typologie \'SBB en VvN\' is."
+                    "Zowel VvN_col als SBB_col moeten worden opgegeven als welke_typologie 'SBB en VvN' is."
                 )
             if len(VvN_col) != len(SBB_col):
                 raise ValueError(
-                    "VvN_col en SBB_col moeten even lang zijn als welke_typologie \'SBB en VvN\' is."
+                    "VvN_col en SBB_col moeten even lang zijn als welke_typologie 'SBB en VvN' is."
                 )
         elif welke_typologie == WelkeTypologie.rVvN:
             num_cols = len(rVvN_col)
             if len(rVvN_col) == 0:
                 raise ValueError(
-                    "rVvN_col moet worden opgegeven als welke_typologie \'rVvN\' is."
+                    "rVvN_col moet worden opgegeven als welke_typologie 'rVvN' is."
                 )
 
         if vegtype_col_format == "single":
