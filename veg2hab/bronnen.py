@@ -10,7 +10,7 @@ import pandas as pd
 from typing_extensions import Self
 
 import veg2hab.constants
-from veg2hab.enums import FGRType
+from veg2hab.enums import FGRType, OBKWaarden
 
 # TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
 #       binnen een bronvlak liggen NaN krijgen. Beter zou zijn dat ze alles krijgen waar ze op liggen, en als
@@ -218,3 +218,20 @@ class Bodemkaart:
         """
         assert "geometry" in other_gdf.columns
         return sjoin_largest_overlap(other_gdf, self.gdf, "bodem")
+
+
+class OudeBossenkaart:
+
+    def __init__(self, path: Path, mask: Optional[gpd.GeoDataFrame] = None):
+        self.gdf = gpd.read_file(path, mask=mask, include_fields=["h9120", "h9190"])
+
+        # Validatie van de waarden gebeurt in het instantieren van OBKWaarden
+        self.gdf["obk"] = self.gdf.apply(lambda row: OBKWaarden(h9120=row.h9120, h9190=row.h9190), axis=1)
+        self.gdf = self.gdf.drop(columns=["h9120", "h9190"])
+
+    def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:
+        """
+        Returns oude bossenkaart codes voor de gegeven geometrie
+        """
+        assert "geometry" in other_gdf.columns
+        return sjoin_largest_overlap(other_gdf, self.gdf, "obk")

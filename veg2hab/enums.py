@@ -2,12 +2,17 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import List, NamedTuple, Tuple, Union
 
+from pydantic import BaseModel, Field
+
 
 class BodemTuple(NamedTuple):
     string: str
     codes: List[str]
     enkel_negatieven: bool
 
+class OBKWaarden(BaseModel):
+    h9120: int = Field(ge=0, le=2)
+    h9190: int = Field(ge=0, le=2)
 
 NumberType = Union[int, float]
 
