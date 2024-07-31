@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import ClassVar, Dict, List, Optional, Set, Tuple, Union, NamedTuple
+from typing import ClassVar, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
