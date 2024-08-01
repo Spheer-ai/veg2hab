@@ -9,7 +9,7 @@ import geopandas as gpd
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr
 
-from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
+from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 
 class BeperkendCriterium(BaseModel):
@@ -167,7 +167,7 @@ class FGRCriterium(BeperkendCriterium):
 class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     wanted_bodemtype: BodemType
-    actual_bodemcode: List[Optional[str]] = [None]
+    actual_bodemcode: Optional[List[str]] = None
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
@@ -248,12 +248,13 @@ class LBKCriterium(BeperkendCriterium):
         assert "lbk" in row, "lbk kolom niet aanwezig"
         assert row["lbk"] is not None, "lbk kolom is leeg"
 
-        self.actual_lbkcode = row["lbk"]
-
         if pd.isna(row["lbk"]):
+            self.actual_lbkcode = None
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
+
+        self.actual_lbkcode = row["lbk"]
 
         self.cached_evaluation = (
             MaybeBoolean.TRUE
@@ -280,7 +281,6 @@ class LBKCriterium(BeperkendCriterium):
             self.cached_evaluation is not MaybeBoolean.POSTPONE
         ), "Postpone is not a valid evaluation state for LBKCriterium"
         if self.cached_evaluation is None:
-            print("test")
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
@@ -319,6 +319,71 @@ class LBKCriterium(BeperkendCriterium):
 
     def get_format_string(self):
         return f"LBK is {self.wanted_lbktype}" + " ({})"
+
+
+class OudeBossenCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "OudeBossenCriterium"
+
+    # Aangezien we altijd MaybeBoolean.FALSE teruggeven tenzij we in een oude bossenkaart
+    # vlak liggen (dan geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug), hebben
+    # we geen target/wanted waarden nodig.
+    actual_OBK: Optional[OBKWaarden] = None
+
+    cached_evaluation: Optional[MaybeBoolean] = None
+
+    def check(self, row: gpd.GeoSeries) -> None:
+        """
+        Als de waarde van de obk kolom None is, dan is het vlak niet binnen een oude bossenkaartvlak,
+        dus kunnen we veilig MaybeBoolean.FALSE teruggeven.
+
+        Als de waarde van de obk kolom niet None is, dan is het vlak binnen een oude bossenkaartvlak,
+        en is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is, dus
+        geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
+        """
+        assert "obk" in row, "obk kolom niet aanwezig"
+
+        if pd.isna(row["obk"]):
+            self.actual_OBK = None
+            self.cached_evaluation = MaybeBoolean.FALSE
+            return
+
+        self.actual_OBK = row["obk"]
+
+        # Dit is volgensmij nooit het geval maar even checken kan geen kwaad
+        if self.actual_OBK.h9120 == 0 and self.actual_OBK.h9190 == 0:
+            self.cached_evaluation = MaybeBoolean.FALSE
+            return
+
+        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+
+    def __str__(self):
+        string = "Bos ouder dan 1850"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
+        return string
+
+    def get_opm(self) -> Set[str]:
+        if self.cached_evaluation is None:
+            logging.warning(
+                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+            )
+
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        framework = "Dit is {} oud bos, want {}."
+
+        return {
+            framework.format(
+                "mogelijk"
+                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                else "geen",
+                "niet binnen boskaartvlak"
+                if self.actual_OBK is None
+                else f"binnen boskaartvlak (H9120: {self.actual_OBK.h9120}, H9190: {self.actual_OBK.h9190})",
+            )
+        }
+
+    def get_format_string(self):
+        return "Bos ouder dan 1850 ({})"
 
 
 class NietCriterium(BeperkendCriterium):

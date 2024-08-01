@@ -221,12 +221,13 @@ class Bodemkaart:
 
 
 class OudeBossenkaart:
-
     def __init__(self, path: Path, mask: Optional[gpd.GeoDataFrame] = None):
         self.gdf = gpd.read_file(path, mask=mask, include_fields=["h9120", "h9190"])
 
         # Validatie van de waarden gebeurt in het instantieren van OBKWaarden
-        self.gdf["obk"] = self.gdf.apply(lambda row: OBKWaarden(h9120=row.h9120, h9190=row.h9190), axis=1)
+        self.gdf["obk"] = self.gdf.apply(
+            lambda row: OBKWaarden(h9120=row.h9120, h9190=row.h9190), axis=1
+        )
         self.gdf = self.gdf.drop(columns=["h9120", "h9190"])
 
     def for_geometry(self, other_gdf: gpd.GeoDataFrame) -> gpd.GeoSeries:

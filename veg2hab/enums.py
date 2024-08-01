@@ -10,9 +10,11 @@ class BodemTuple(NamedTuple):
     codes: List[str]
     enkel_negatieven: bool
 
+
 class OBKWaarden(BaseModel):
     h9120: int = Field(ge=0, le=2)
     h9190: int = Field(ge=0, le=2)
+
 
 NumberType = Union[int, float]
 

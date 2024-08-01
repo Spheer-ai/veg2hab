@@ -10,8 +10,9 @@ from veg2hab.criteria import (
     NietCriterium,
     NietGeautomatiseerdCriterium,
     OfCriteria,
+    OudeBossenCriterium,
 )
-from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
+from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 # For "tests" of criteria.get_opm, please see demo_criteria_opmerkingen.py
 
@@ -82,6 +83,25 @@ def test_BodemCriterium_enkel_negatieven():
     row = pd.Series({"bodem": ["Abcd"]})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
+
+
+def test_OudeBossenCriterium():
+    crit = OudeBossenCriterium()
+    row = pd.Series({"obk": pd.NA})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(h9120=0, h9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(h9120=1, h9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+    row = pd.Series({"obk": OBKWaarden(h9120=0, h9190=1)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+    row = pd.Series({"obk": OBKWaarden(h9120=2, h9190=2)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
 
 def test_EnCriteria():
