@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import ClassVar, Dict, List, Optional, Set, Tuple, Union
+from typing import ClassVar, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -11,7 +11,11 @@ from veg2hab.enums import Kwaliteit, MaybeBoolean, NumberType
 from veg2hab.io.common import Interface
 from veg2hab.vegetatietypen import SBB, VvN
 
-MozkPercTuple = namedtuple("MozkPercTuple", ["habtype", "kwaliteit", "percentage"])
+
+class MozkPercTuple(NamedTuple):
+    habtype: str
+    kwaliteit: Kwaliteit
+    percentage: NumberType
 
 
 class MozaiekRegel(BaseModel):

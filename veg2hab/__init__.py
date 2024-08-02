@@ -1,3 +1,3 @@
-__version__ = "0.3.1a0"
+__version__ = "0.3.1a1"
 
 from .main import installatie_instructies, run
