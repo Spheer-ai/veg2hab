@@ -222,7 +222,7 @@ def fill_in_percentages(
     return row
 
 
-def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
+def sorteer_vegtypeinfos_en_habkeuzes(row: gpd.GeoSeries) -> gpd.GeoSeries:
     """
     Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
     Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos ook op de juiste volgorde worden gezet
@@ -642,12 +642,15 @@ class Kartering:
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
-        # Alle VegTypeInfo sorteren op percentage van hoog naar laag
-        # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
-        #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
-        self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
-            lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
-        )
+        # Als HabitatKeuze wel bestaat dan hoeven we VegTypeInfos niet te sorteren;
+        # Deze zijn dan al op de juiste volgorde (namelijk die van de HabitatKeuzes)
+        if not "HabitatKeuze" in self.gdf.columns:
+            # Alle VegTypeInfo sorteren op percentage van hoog naar laag
+            # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
+            #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
+            self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
+                lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
+            )
 
         # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
         #       Misschien een dict met welke stappen gedaan zijn?
@@ -1158,6 +1161,9 @@ class Kartering:
             ]
         )
 
+        # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
+        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
+
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
         # TODO: zelfstandigheid/mozaiekvegetaties wordt nog niet goed afgehandeld. ATM
@@ -1272,7 +1278,10 @@ class Kartering:
             == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-    def _check_mozaiekregels(self, elmid_omringd_door: Union[pd.DataFrame, None]):
+        # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
+        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
+
+    def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
             return
 
@@ -1324,7 +1333,7 @@ class Kartering:
         return pd.Series(result)
 
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
-        editable_habtypes = self.as_final_format(sort_complexdelen=False)
+        editable_habtypes = self.as_final_format()
 
         # Aanpasbare kolommen taggen we met een EDIT_
         editable_columns = ["Habtype", "Kwal", "Opm"]
@@ -1440,7 +1449,7 @@ class Kartering:
         )
         return cls(gdf)
 
-    def as_final_format(self, sort_complexdelen=True) -> gpd.GeoDataFrame:
+    def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
@@ -1463,10 +1472,6 @@ class Kartering:
                 "_LokVrtNar",
             ]
         ]
-
-        if sort_complexdelen:
-            # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
-            base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
