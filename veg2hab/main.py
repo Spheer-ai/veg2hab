@@ -32,6 +32,7 @@ def installatie_instructies():
         )
     )
 
+
 def bronbestanden():
     print(
         dedent(

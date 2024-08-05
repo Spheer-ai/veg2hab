@@ -217,9 +217,17 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
             as_dict["lok_vegtypen_col"].multiValue = not is_multivalue_per_column
 
         if as_dict["welke_typologie"].altered:
-            as_dict["rvvn_col"].enabled = as_dict["welke_typologie"].valueAsText == "rVvN"
-            as_dict["sbb_col"].enabled = as_dict["welke_typologie"].valueAsText in {"SBB", "SBB en VvN"}
-            as_dict["vvn_col"].enabled = as_dict["welke_typologie"].valueAsText in {"VvN", "SBB en VvN"}
+            as_dict["rvvn_col"].enabled = (
+                as_dict["welke_typologie"].valueAsText == "rVvN"
+            )
+            as_dict["sbb_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+                "SBB",
+                "SBB en VvN",
+            }
+            as_dict["vvn_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+                "VvN",
+                "SBB en VvN",
+            }
 
 
 class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
