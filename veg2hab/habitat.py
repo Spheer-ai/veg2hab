@@ -10,8 +10,7 @@ from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
 from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
-from veg2hab.vegetatietypen import SBB as _SBB
-from veg2hab.vegetatietypen import VvN as _VvN
+from veg2hab.vegetatietypen import SBB, VvN
 
 
 class HabitatVoorstel(BaseModel):
@@ -23,8 +22,8 @@ class HabitatVoorstel(BaseModel):
         extra = "forbid"
         validate_assignment = True
 
-    onderbouwend_vegtype: Union[_SBB, _VvN, None]
-    vegtype_in_dt: Union[_SBB, _VvN, None]
+    onderbouwend_vegtype: Union[SBB, VvN, None]
+    vegtype_in_dt: Union[SBB, VvN, None]
     habtype: str
     kwaliteit: Kwaliteit
     mits: BeperkendCriterium
@@ -235,7 +234,7 @@ def try_to_determine_habkeuze(
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )
         if str(voorstel.onderbouwend_vegtype) in niet_geautomatiseerde_sbb:
-            assert isinstance(voorstel.onderbouwend_vegtype, _SBB)
+            assert isinstance(voorstel.onderbouwend_vegtype, SBB)
             assert isinstance(voorstel.mits, GeenCriterium)
             assert isinstance(voorstel.mozaiek, GeenMozaiekregel)
             return HabitatKeuze(

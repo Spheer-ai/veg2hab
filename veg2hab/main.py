@@ -73,6 +73,7 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             shape_path=filename,
             shape_elm_id_column=params.elmid_col,
             access_mdb_path=params.access_mdb_path,
+            welke_typologie=params.sbb_of_vvn,
             opmerkingen_column=params.opmerking_col,
             datum_column=params.datum_col,
         )
@@ -81,7 +82,7 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             shape_path=filename,
             ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
-            sbb_of_vvn=params.sbb_of_vvn,
+            welke_typologie=params.sbb_of_vvn,
             datum_col=params.datum_col,
             opmerking_col=params.opmerking_col,
             SBB_col=params.sbb_col,
