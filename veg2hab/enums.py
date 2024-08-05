@@ -26,6 +26,13 @@ class LBKTypeInfo:
             )
 
 
+class WelkeTypologie(Enum):
+    SBB = "SBB"
+    VvN = "VvN"
+    SBB_en_VvN = "SBB en VvN"
+    rVvN = "rVvN"
+
+
 class FuncSamenhangID(NamedTuple):
     ElmID: int
     indices: Tuple[int, ...]

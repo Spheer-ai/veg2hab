@@ -19,7 +19,7 @@ from veg2hab.criteria import (
     LBKCriterium,
     is_criteria_type_present,
 )
-from veg2hab.enums import KeuzeStatus, Kwaliteit
+from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
 from veg2hab.functionele_samenhang import apply_functionele_samenhang
 from veg2hab.habitat import (
     HabitatKeuze,
@@ -46,11 +46,15 @@ class VegTypeInfo(BaseModel):
     percentage: float
     SBB: List[vegetatietypen.SBB] = Field(default_factory=list)
     VvN: List[vegetatietypen.VvN] = Field(default_factory=list)
+    rVvN: List[vegetatietypen.rVvN] = Field(default_factory=list)
 
-    @validator("SBB")
-    def check_sbb_length(cls, v):
+    # Support voor meerdere rVvN is niet onmogelijk, maar volgensmij niet nodig,
+    # en aangezien er in van_rVvN_naar_SBB_en_VvN uit wordt gegaan van maar 1 rVvN,
+    # leek me dit valideren wel zo handig
+    @validator("rVvN")
+    def check_rvvn_length(cls, v):
         if len(v) > 1:
-            raise ValueError("Er kan niet meer dan 1 SBB type zijn")
+            raise ValueError("Er kan niet meer dan 1 rVvN type zijn")
         return v
 
     @classmethod
@@ -59,6 +63,7 @@ class VegTypeInfo(BaseModel):
         percentage: Union[None, str, Number],
         VvN_strings: List[Optional[str]] = [],
         SBB_strings: List[Optional[str]] = [],
+        rVvN_strings: List[Optional[str]] = [],
     ) -> Self:
         """
         Aanmaken vanuit string vegetatietypen
@@ -71,24 +76,27 @@ class VegTypeInfo(BaseModel):
         ), f"Percentage moet een getal zijn, nu is het {percentage} {type(percentage)}"
 
         assert (
-            len(VvN_strings + SBB_strings) > 0
+            len(VvN_strings + SBB_strings + rVvN_strings) > 0
         ), "Er moet minstens 1 vegetatietype zijn"
 
         vvn = [vegetatietypen.VvN.from_string(i) for i in VvN_strings]
         sbb = [vegetatietypen.SBB.from_string(i) for i in SBB_strings]
+        rvvn = [vegetatietypen.rVvN.from_string(i) for i in rVvN_strings]
 
         return VegTypeInfo(
             percentage=percentage,
             VvN=[v for v in vvn if v is not None],
             SBB=[s for s in sbb if s is not None],
+            rVvN=[r for r in rvvn if r is not None],
         )
 
     @classmethod
     def create_vegtypen_list_from_access_rows(
         cls,
         rows: pd.DataFrame,
+        welke_typologie: WelkeTypologie,
         perc_col: str,
-        SBB_col: str,
+        vegtype_col: str,
     ) -> List["VegTypeInfo"]:
         """
         Maakt van alle rijen met vegetatietypes van een vlak
@@ -101,13 +109,18 @@ class VegTypeInfo(BaseModel):
             if pd.isna(row[perc_col]) or row[perc_col] == 0:
                 continue
             # Als er geen vegtypen zijn, willen we ook geen VegTypeInfo,
-            if pd.isna(row[SBB_col]):
+            if pd.isna(row[vegtype_col]):
                 continue
             lst.append(
                 cls.from_str_vegtypes(
                     row[perc_col],
                     VvN_strings=[],
-                    SBB_strings=[row[SBB_col]] if SBB_col else [],
+                    SBB_strings=[row[vegtype_col]]
+                    if vegtype_col and welke_typologie == WelkeTypologie.SBB
+                    else [],
+                    rVvN_strings=[row[vegtype_col]]
+                    if vegtype_col and welke_typologie == WelkeTypologie.rVvN
+                    else [],
                 )
             )
         return lst
@@ -121,7 +134,10 @@ class VegTypeInfo(BaseModel):
         return [VegTypeInfo(**x) for x in json.loads(s)]
 
     def __str__(self):
-        return f"({self.percentage}%, SBB: {[str(x) for x in self.SBB]}, VvN: {[str(x) for x in self.VvN]})"
+        base = f"({self.percentage}%, SBB: {[str(x) for x in self.SBB]}, VvN: {[str(x) for x in self.VvN]}"
+        if len(self.rVvN) > 0:
+            return base + f", rVvN: {[str(x) for x in self.rVvN]})"
+        return base + ")"
 
     def __hash__(self):
         return hash((self.percentage, tuple(self.VvN), tuple(self.SBB)))
@@ -129,8 +145,9 @@ class VegTypeInfo(BaseModel):
 
 def ingest_vegtype(
     gdf: gpd.GeoDataFrame,
-    sbb_cols: List[str],
-    vvn_cols: List[str],
+    SBB_cols: List[str],
+    VvN_cols: List[str],
+    rVvN_cols: List[str],
     perc_cols: List[str],
 ) -> pd.Series:
     """
@@ -138,27 +155,29 @@ def ingest_vegtype(
     Vlakken zonder percentage
     """
     # Validatie
-    if len(sbb_cols) != 0 and len(sbb_cols) != len(perc_cols):
-        raise ValueError(
-            f"De lengte van sbb_cols ({len(sbb_cols)}) moet 0 zijn of gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
-        )
+    for cols in [SBB_cols, VvN_cols, rVvN_cols]:
+        if len(cols) != 0 and len(cols) != len(perc_cols):
+            raise ValueError(
+                f"Het aantal vegtype kolommen (nu {len(cols)}) moet 0 zijn of gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
+            )
 
-    if len(vvn_cols) != 0 and len(vvn_cols) != len(perc_cols):
-        raise ValueError(
-            f"De lengte van vvn_cols ({len(vvn_cols)}) moet 0 zijn of gelijk zijn aan de lengte van perc_col ({len(perc_cols)})"
-        )
-
-    assert len(sbb_cols) + len(vvn_cols) > 0, "Er moet een SBB of VvN kolom zijn"
+    assert (
+        len(SBB_cols) + len(VvN_cols) + len(rVvN_cols) > 0
+    ), "Er moet een SBB, VvN of rVvN kolom zijn"
 
     # Inlezen
-    if len(sbb_cols) == 0:
-        sbb_cols = [None] * len(perc_cols)
-    if len(vvn_cols) == 0:
-        vvn_cols = [None] * len(perc_cols)
+    if len(SBB_cols) == 0:
+        SBB_cols = [None] * len(perc_cols)
+    if len(VvN_cols) == 0:
+        VvN_cols = [None] * len(perc_cols)
+    if len(rVvN_cols) == 0:
+        rVvN_cols = [None] * len(perc_cols)
 
     def _row_to_vegtypeinfo_list(row: gpd.GeoSeries) -> List[VegTypeInfo]:
         vegtype_list = []
-        for sbb_col, vvn_col, perc_col in zip(sbb_cols, vvn_cols, perc_cols):
+        for sbb_col, vvn_col, rVvN_col, perc_col in zip(
+            SBB_cols, VvN_cols, rVvN_cols, perc_cols
+        ):
             # Als er geen percentage is, willen we ook geen VegTypeInfo,
             # dus slaan we deze over
             if pd.isnull(row[perc_col]) or row[perc_col] == 0:
@@ -166,8 +185,10 @@ def ingest_vegtype(
 
             # Als er geen vegtypen zijn, willen we ook geen VegTypeInfo,
             # dus slaan we deze over
-            if (pd.isnull(row[sbb_col]) if sbb_col else True) and (
-                pd.isnull(row[vvn_col]) if vvn_col else True
+            if (
+                (pd.isnull(row[sbb_col]) if sbb_col else True)
+                and (pd.isnull(row[vvn_col]) if vvn_col else True)
+                and (pd.isnull(row[rVvN_col]) if rVvN_col else True)
             ):
                 continue
 
@@ -175,11 +196,12 @@ def ingest_vegtype(
                 row[perc_col],
                 VvN_strings=[row[vvn_col]] if vvn_col else [],
                 SBB_strings=[row[sbb_col]] if sbb_col else [],
+                rVvN_strings=[row[rVvN_col]] if rVvN_col else [],
             )
 
             vegtype_list.append(vegtypeinfo)
         if len(vegtype_list) == 0:
-            return [VegTypeInfo(percentage=100, SBB=[], VvN=[])]
+            return [VegTypeInfo(percentage=100, SBB=[], VvN=[], rVvN=[])]
         return vegtype_list
 
     return gdf.apply(_row_to_vegtypeinfo_list, axis=1)
@@ -189,22 +211,24 @@ def fill_in_percentages(
     row: gpd.GeoSeries,
     vegtype_col_format: Literal["single", "multi"],
     perc_col: Union[str, List[str]],
-    sbb_col: Union[str, List[str], None] = None,
-    vvn_col: Union[str, List[str], None] = None,
+    SBB_col: Union[str, List[str], None] = None,
+    VvN_col: Union[str, List[str], None] = None,
+    rVvN_col: Union[str, List[str], None] = None,
 ) -> gpd.GeoSeries:
     """
     Vult percentages in voor een rij. Ieder vegetatietype krijgt een percentage van 100/n_vegtypen.
     """
     assert (
-        vvn_col is not None or sbb_col is not None
+        VvN_col is not None or SBB_col is not None or rVvN_col is not None
     ), "Er moet een SBB of VvN kolom zijn"
 
     assert vegtype_col_format == "multi"
 
     # Uitzoeken hoeveel vegtypen er zijn
-    vvn_present = row[vvn_col].notna().reset_index(drop=True) if vvn_col else False
-    sbb_present = row[sbb_col].notna().reset_index(drop=True) if sbb_col else False
-    vegtype_present = vvn_present | sbb_present
+    vvn_present = row[VvN_col].notna().reset_index(drop=True) if VvN_col else False
+    sbb_present = row[SBB_col].notna().reset_index(drop=True) if SBB_col else False
+    rvvn_present = row[rVvN_col].notna().reset_index(drop=True) if rVvN_col else False
+    vegtype_present = vvn_present | sbb_present | rvvn_present
     n_vegtypen = vegtype_present.sum()
 
     # Percentages berekenen
@@ -408,43 +432,40 @@ def build_aggregate_habtype_field(row: gpd.GeoSeries) -> str:
     vegtypeinfos = row["VegTypeInfo"]
 
     assert len(habitatkeuzes) > 0, "Er moet minstens 1 habitatkeuze zijn"
+    assert len(habitatkeuzes) == len(
+        vegtypeinfos
+    ), "Er moet voor iedere habitatkeuze een VegTypeInfo zijn"
 
     # Hierin krijgen we per (habtype, kwaliteit) tuple de som van de percentages
     aggregate = defaultdict(float)
 
-    # Als het vlak geen opgegeven habitattype heeft, heeft het geen vegtype infos,
-    # dus heeft het ook geen opgegeven percentage, dus moeten we die handmatig op 100 zetten
-    if habitatkeuzes[0].status == KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN:
-        assert (
-            len(habitatkeuzes) == 1
-        ), "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE mag er maar 1 habitatkeuze zijn"
-        assert vegtypeinfos == [
-            VegTypeInfo(percentage=100, SBB=[], VvN=[])
-        ], "Bij KeuzeStatus GEEN_OPGEGEVEN_VEGTYPE moet er een leeg 100% VegTypeInfo zijn"
-        aggregate[
-            (habitatkeuzes[0].habtype, habitatkeuzes[0].kwaliteit.as_letter())
-        ] = 100
-    else:
-        # In alle andere gevallen kunnen we gewoon de percentages bij de habitatkeuze
-        # horende VegTypeInfos gebuiken
-        for keuze, info in zip(habitatkeuzes, vegtypeinfos):
-            aggregate[(keuze.habtype, keuze.kwaliteit.as_letter())] += info.percentage
+    for keuze, info in zip(habitatkeuzes, vegtypeinfos):
+        aggregate[(keuze.habtype, keuze.kwaliteit)] += info.percentage
 
     # Sorteren op (percentage, habtype, kwaliteit) zodat de string
     # altijd hetzelfde is bij dezelfde habtype/kwaliteit/percentage permutaties
+    kwal_dict = {
+        Kwaliteit.GOED: 0,
+        Kwaliteit.MATIG: 1,
+        Kwaliteit.NVT: 2,
+    }
     aggregate = dict(
-        sorted(aggregate.items(), key=(lambda item: (-item[1], item[0][0], item[0][1])))
+        sorted(
+            aggregate.items(),
+            key=(lambda item: (-item[1], item[0][0], kwal_dict[item[0][1]])),
+        )
     )
 
     # Maken van alle losse strings
     aggregate_strings = []
     for key, value in aggregate.items():
-        aggregate_string = f"{float(value)}% {key[0]}"
+        aggregate_string = f"{float(value)}%"
         if key[1] in [
             Kwaliteit.GOED,
             Kwaliteit.MATIG,
         ]:
-            aggregate_string += f" ({key[1]})"
+            aggregate_string += f" ({key[1].value})"
+        aggregate_string += f" {key[0]}"
         aggregate_strings.append(aggregate_string)
 
     return ", ".join(aggregate_strings)
@@ -526,6 +547,7 @@ def _single_to_multi(
     gdf: gpd.GeoDataFrame,
     SBB_col: Optional[str] = None,
     VvN_col: Optional[str] = None,
+    rVvN_col: Optional[str] = None,
     split_char: Optional[str] = None,
     perc_col: Optional[str] = None,
 ) -> Tuple[gpd.GeoDataFrame, List[str], List[str], List[str]]:
@@ -534,7 +556,7 @@ def _single_to_multi(
     De nieuwe "multi" format kolommen heten SBB1/2/3/..., VvN1/2/3/... en perc1/2/3/...
     """
     # Uitvinden hoe veel kolommen er moeten komen
-    assert SBB_col or VvN_col, "Er moet een SBB of VvN kolom zijn"
+    assert SBB_col or VvN_col or rVvN_col, "Er moet een SBB of VvN of rVvN kolom zijn"
     if perc_col:
         n_cols_needed = (
             gdf[perc_col]
@@ -562,7 +584,16 @@ def _single_to_multi(
         if SBB_col and VvN_col:
             n_cols_needed = max(sbb_cols_needed, vvn_cols_needed)
 
-    for col in [SBB_col, VvN_col, perc_col]:
+        if rVvN_col:
+            rvvn_cols_needed = (
+                gdf[rVvN_col]
+                .str.split(split_char)
+                .apply(lambda x: 0 if x is None else len(x))
+                .max()
+            )
+            n_cols_needed = rvvn_cols_needed
+
+    for col in [SBB_col, VvN_col, rVvN_col, perc_col]:
         if col:
             new_columns = (
                 gdf[col]
@@ -592,6 +623,14 @@ def _single_to_multi(
     else:
         VvN_out = []
 
+    if rVvN_col:
+        rVvN_out = [f"{rVvN_col}{idx+1}" for idx in range(n_cols_needed)]
+        for col in rVvN_out:
+            if col not in gdf.columns:
+                gdf[col] = None
+    else:
+        rVvN_out = []
+
     if perc_col:
         perc_out = [f"{perc_col}{idx+1}" for idx in range(n_cols_needed)]
         for col in perc_out:
@@ -600,7 +639,7 @@ def _single_to_multi(
     else:
         perc_out = []
 
-    return gdf, SBB_out, VvN_out, perc_out
+    return gdf, SBB_out, VvN_out, rVvN_out, perc_out
 
 
 class Kartering:
@@ -661,6 +700,7 @@ class Kartering:
         shape_path: Path,
         shape_elm_id_column: str,
         access_mdb_path: Path,
+        welke_typologie: WelkeTypologie = WelkeTypologie.SBB,
         opmerkingen_column: Optional[str] = None,
         datum_column: Optional[str] = None,
     ) -> Self:
@@ -671,6 +711,11 @@ class Kartering:
         # .shp shp_elm_id_column -> ElmID in Element.csv voor intern_id -> Locatie in KarteringVegetatietype.csv voor Vegetatietype ->
         #      -> Code in Vegetatietype.csv voor SbbType -> Cata_ID in SsbType.csv voor Code (hernoemd naar Sbb)
         """
+        assert welke_typologie in [
+            WelkeTypologie.SBB,
+            WelkeTypologie.rVvN,
+        ], "Voor digitale standaard karteringen wordt enkel SBB of rVvN ondersteund"
+
         gdf = gpd.read_file(shape_path)
 
         gdf = fix_crs(gdf, shape_path)
@@ -699,9 +744,13 @@ class Kartering:
                 gdf = gdf.rename(columns={old_col: new_col})
 
         gdf["Area"] = gdf["geometry"].area
-        gdf["_LokVrtNar"] = "Lokale typologie is primair vertaald naar SBB"
+        gdf[
+            "_LokVrtNar"
+        ] = f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
 
-        element, veginfo_per_locatie = read_access_tables(access_mdb_path)
+        element, veginfo_per_locatie = read_access_tables(
+            access_mdb_path, welke_typologie
+        )
 
         # Intern ID toevoegen aan de gdf
         try:
@@ -724,7 +773,7 @@ class Kartering:
                 message += f"Er zitten {len(dubbele_elmid)} dubbelingen in Element.csv, bijvoorbeeld ElmID: {dubbele_elmid[:10]}. "
             raise ValueError(message) from e
 
-        # Joinen van de SBBs aan de gdf
+        # Joinen van de vegtypen aan de gdf
         gdf = gdf.merge(
             veginfo_per_locatie[["Locatie", "VegTypeInfo"]],
             left_on="intern_id",
@@ -758,12 +807,13 @@ class Kartering:
         shape_path: Path,
         *,
         vegtype_col_format: Literal["single", "multi"],
-        sbb_of_vvn: Literal["VvN", "SBB", "beide"],
+        welke_typologie: WelkeTypologie,
         ElmID_col: Optional[str] = None,
         datum_col: Optional[str] = None,
         opmerking_col: Optional[str] = None,
         SBB_col: List[str],
         VvN_col: List[str],
+        rVvN_col: List[str],
         split_char: Optional[str] = "+",
         perc_col: List[str] = [],
         lok_vegtypen_col: List[str] = [],
@@ -774,7 +824,7 @@ class Kartering:
         - shape_path: het pad naar de shapefile
         - ElmID_col: de kolomnaam van de ElementID in de Shapefile; uniek per vlak
         - vegtype_col_format: "single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn
-        - sbb_of_vvn: "VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.
+        - sbb_of_vvn: SBB, VvN, SBB_VvN of rVvN afhankelijk van welke vegetatietypen er uit de bron overgenomen moeten worden
         - datum_col: kolomnaam van de datum als deze er is
         - opmerking_col: kolomnaam van de opmerking als deze er is
         - VvN_col: kolomnaam van de VvN vegetatietypen als deze er is (bij single_col mag deze list maximaal lengte 1 hebben)
@@ -784,30 +834,34 @@ class Kartering:
         - lok_vegtypen_col: kolomnaam van de lokale vegetatietypen als deze er zijn (bij single_col mag deze list maximaal lengte 1 hebben)
         """
         # CONTROLEREN VAN DE INPUT
-        if sbb_of_vvn == "VvN":
+        if welke_typologie == WelkeTypologie.VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0:
                 raise ValueError(
-                    "VvN_col moet worden opgegeven als sbb_of_vvn == 'VvN'"
+                    "VvN_col moet worden opgegeven als welke_typologie 'VvN' is."
                 )
-        elif sbb_of_vvn == "SBB":
+        elif welke_typologie == WelkeTypologie.SBB:
             num_cols = len(SBB_col)
             if len(SBB_col) == 0:
                 raise ValueError(
-                    "SBB_col moet worden opgegeven als sbb_of_vvn == 'SBB'"
+                    "SBB_col moet worden opgegeven als welke_typologie 'SBB' is."
                 )
-        elif sbb_of_vvn == "beide":
+        elif welke_typologie == WelkeTypologie.SBB_en_VvN:
             num_cols = len(VvN_col)
             if len(VvN_col) == 0 or len(SBB_col) == 0:
                 raise ValueError(
-                    "Zowel VvN_col als SBB_col moeten worden opgegeven als sbb_of_vvn == 'beide'"
+                    "Zowel VvN_col als SBB_col moeten worden opgegeven als welke_typologie 'SBB en VvN' is."
                 )
             if len(VvN_col) != len(SBB_col):
                 raise ValueError(
-                    "VvN_col en SBB_col moeten even lang zijn als sbb_of_vvn == 'beide'"
+                    "VvN_col en SBB_col moeten even lang zijn als welke_typologie 'SBB en VvN' is."
                 )
-        else:
-            raise ValueError("sbb_of_vvn moet ['VvN', 'SBB' of 'beide'] zijn")
+        elif welke_typologie == WelkeTypologie.rVvN:
+            num_cols = len(rVvN_col)
+            if len(rVvN_col) == 0:
+                raise ValueError(
+                    "rVvN_col moet worden opgegeven als welke_typologie 'rVvN' is."
+                )
 
         if vegtype_col_format == "single":
             if num_cols != 1:
@@ -822,12 +876,12 @@ class Kartering:
 
         if len(perc_col) != num_cols and len(perc_col) != 0:
             raise ValueError(
-                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col"
+                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col/rVvN_col"
             )
 
         if len(lok_vegtypen_col) != num_cols and len(lok_vegtypen_col) != 0:
             raise ValueError(
-                "Aantal kolommen moet gelijk zijn tussen perc_col en SBB_col/VvN_col"
+                "Aantal kolommen moet gelijk zijn tussen perc_col en lok_vegtypen_col"
             )
 
         # VALIDEREN, OPSCHONEN EN AANVULLEN VAN DE SHAPEFILE
@@ -873,7 +927,7 @@ class Kartering:
         ]
 
         # Uitvinden welke vegtype kolommen er mee moeten
-        cols += SBB_col + VvN_col + perc_col
+        cols += SBB_col + VvN_col + rVvN_col + perc_col
         if not all(col in shapefile.columns for col in cols):
             raise ValueError(
                 f"Niet alle opgegeven kolommen ({cols}) gevonden in de shapefile kolommen ({shapefile.columns})"
@@ -899,10 +953,11 @@ class Kartering:
         gdf = fix_crs(gdf, shape_path)
 
         if vegtype_col_format == "single":
-            gdf, SBB_col, VvN_col, perc_col = _single_to_multi(
+            gdf, SBB_col, VvN_col, rVvN_col, perc_col = _single_to_multi(
                 gdf=gdf,
                 SBB_col=None if len(SBB_col) == 0 else SBB_col[0],
                 VvN_col=None if len(VvN_col) == 0 else VvN_col[0],
+                rVvN_col=None if len(rVvN_col) == 0 else rVvN_col[0],
                 split_char=split_char,
                 perc_col=None if len(perc_col) == 0 else perc_col[0],
             )
@@ -915,27 +970,45 @@ class Kartering:
         if len(VvN_col) > 0:
             gdf[VvN_col] = gdf[VvN_col].apply(vegetatietypen.VvN.opschonen_series)
 
+        if len(rVvN_col) > 0:
+            gdf[rVvN_col] = gdf[rVvN_col].apply(vegetatietypen.rVvN.opschonen_series)
+
         # Standardiseren van kolomnamen
         gdf["Area"] = gdf["geometry"].area
-        LokVrtNar_string = sbb_of_vvn if sbb_of_vvn != "beide" else "zowel SBB als VvN"
         gdf[
             "_LokVrtNar"
-        ] = f"Lokale typologie is primair vertaald naar {LokVrtNar_string}"
+        ] = f"Lokale typologie is primair vertaald naar {welke_typologie.value}."
+
+        # Aangezien we de rVvN gaan verliezen in apply_wll(), zetten we deze in _LokVrtNar zodat
+        # de gebruiker ze nog wel kan terugvinden
+        if welke_typologie == WelkeTypologie.rVvN:
+            gdf["_LokVrtNar"] = gdf[["_LokVrtNar"] + rVvN_col].apply(
+                lambda row: row._LokVrtNar
+                + " "
+                + ", ".join([row[col] for col in rVvN_col if row[col]]),
+                axis=1,
+            )
 
         # Percentages invullen als die er niet zijn
         if len(perc_col) == 0:
-            if vegtype_col_format == "multi":
-                perc_col = [
-                    f"perc_{n}"
-                    for n in range(
-                        max([len(col) for col in [SBB_col, VvN_col] if col is not None])
+            assert (
+                vegtype_col_format == "multi"
+            ), "vegtype_col_format should be (converted to) multi at this point"
+            perc_col = [
+                f"perc_{n}"
+                for n in range(
+                    max(
+                        [
+                            len(col)
+                            for col in [SBB_col, VvN_col, rVvN_col]
+                            if col is not None
+                        ]
                     )
-                ]
-            else:
-                perc_col = "perc"
+                )
+            ]
             gdf = gdf.apply(
                 lambda row: fill_in_percentages(
-                    row, vegtype_col_format, perc_col, SBB_col, VvN_col
+                    row, vegtype_col_format, perc_col, SBB_col, VvN_col, rVvN_col
                 ),
                 axis=1,
             )
@@ -948,6 +1021,7 @@ class Kartering:
             gdf,
             SBB_col,
             VvN_col,
+            rVvN_col,
             perc_col,
         )
 
@@ -960,6 +1034,17 @@ class Kartering:
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
+
+        # Als er rVvN aanwezig zijn
+        if (
+            self.gdf["VegTypeInfo"]
+            .apply(lambda infos: any(len(info.rVvN) > 0 for info in infos))
+            .any()
+        ):
+            self.gdf["VegTypeInfo"] = wwl.van_rVvN_naar_SBB_en_VvN(
+                self.gdf["VegTypeInfo"]
+            )
+            return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
         # NOTE: Als dit te langzaam blijkt is een steekproef wss ook voldoende
@@ -990,6 +1075,13 @@ class Kartering:
         return result
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
+        # rVvN karteringen moeten al omgezet zijn op dit punt
+        assert (
+            self.gdf["VegTypeInfo"]
+            .apply(lambda infos: all(len(info.rVvN) == 0 for info in infos))
+            .all()
+        ), "Er zijn nog rVvN vegetatietypen aanwezig"
+
         # unpack the vegtypeinfo
         vegtypes_df = self.gdf["VegTypeInfo"].apply(self._vegtypeinfo_to_multi_col)
         str_columns = {
