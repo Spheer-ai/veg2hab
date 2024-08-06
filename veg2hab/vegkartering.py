@@ -508,6 +508,64 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return gdf[new_columns]
 
 
+def _combineer_twee_geodataframes(lage_prio: gpd.GeoDataFrame, hoge_prio: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Geometrische-operaties-hulpfunctie voor combine_karteringen
+
+    Combineert twee geodataframes op basis van de geometrie; bij overlaps
+    wordt de geometrie van lage_prio bijgesneden tot de overlap met hoge_prio
+
+    De data van alle vlakken blijft onveranderd (zolang ze blijven bestaan)
+
+                +--------+
+    Lage_prio:  |   A    |
+                +--------+
+                    +-------+
+    Hoge_prio:      |   B   |
+                    +-------+
+                +---+-------+
+    Resultaat:  | A |   B   |
+                +---+-------+
+    """
+    # Snij de geometrie van lage_prio bij tot de overlap met hoge_prio
+    new_gdf = gpd.overlay(lage_prio, hoge_prio, how="difference")
+
+    # Voeg de geometrie van hoge_prio toe
+    new_gdf = new_gdf.append(hoge_prio)
+
+    # Exploden eventuele multipolygons naar polygons
+    new_gdf = new_gdf.reset_index(drop=True).explode(ignore_index=True)
+
+    return new_gdf
+
+
+def combineer_karteringen(karteringen: List["Kartering"]) -> gpd.GeoDataFrame:
+    assert len(karteringen) > 1, "Er moeten minstens 2 karteringen zijn om te combineren"
+    
+    for kartering in karteringen:
+        assert isinstance(kartering, Kartering), "Alle elementen in karteringen moeten Kartering objecten zijn"
+        # TODO: checken of het een editable vegtypen of een editable habtypen 
+        #       kartering is zou idealiter wel netter moeten
+        assert (
+            "Habtype1" not in kartering.gdf.columns
+        ), "combineer_karteringen moet als stap 2 uitgevoerd worden, dus voor de definitietabel"
+
+    result = karteringen[0].gdf
+    for kartering in karteringen[1:]:
+        result = _combineer_twee_geodataframes(
+            lage_prio=result,
+            hoge_prio=kartering.gdf,
+        )
+
+
+
+    # reset index en ElmID
+    result = result.reset_index(drop=True)
+    result["ElmID"] = range(len(result))
+
+    return result
+
+
 def fix_crs(
     gdf: gpd.GeoDataFrame, shape_path: Path = "onbekende locatie"
 ) -> gpd.GeoDataFrame:
