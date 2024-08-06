@@ -539,7 +539,7 @@ def _combineer_twee_geodataframes(
     # Exploden eventuele multipolygons naar polygons
     new_gdf = new_gdf.reset_index(drop=True).explode(ignore_index=True)
 
-    # Weglaten te kleine artefactvlakken
+    # Weglaten artefactvlakken/slivers
     threshold = (
         Interface.get_instance().get_config().combineer_karteringen_weglaten_threshold
     )
@@ -1218,7 +1218,7 @@ class Kartering:
         op de volgorde in de lijst over elkaar heen te leggen.
 
         Data binnen de vlakken blijft gelijk, buiten dat er een nieuwe ElmID
-        wordth gegenereerd en de oppervlakten (gdf.Area) opnieuw berekend worden
+        wordt gegenereerd en de oppervlakten (gdf.Area) opnieuw berekend worden
 
         Input:   [kart1, kart2, kart3]
                     +-------+

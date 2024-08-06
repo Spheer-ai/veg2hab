@@ -5,9 +5,12 @@ from veg2hab.vegkartering import Kartering, VegTypeInfo, _combineer_twee_geodata
 
 
 def _is_equal(gdf1: gpd.GeoDataFrame, gdf2: gpd.GeoDataFrame) -> bool:
+    # Zijn alle niet-geometry kolommen gelijk?
     if not gdf1.drop(columns="geometry").equals(gdf2.drop(columns="geometry")):
         return False
 
+    # Zijn alle geometrieën gelijk?
+    # We doen dit geometrisch ipv met equals want met equals is driehoek ABC niet gelijk aan driehoek ACB
     return gdf1.symmetric_difference(gdf2).is_empty.all()
 
 
@@ -213,13 +216,14 @@ def test_splittend():
 
 def _make_kartering(geometry: Polygon, data_nr: int) -> Kartering:
     """
-    Creates a dummy Kartering object with the given geometry and with data_nr as dummy data
+    Creeërt een dummy Kartering object met de gegeven geometrie en met data_nr als dummy data
+    We zetten Area op 0 zodat we later kunnen checken of deze correct herbepaalt is
     """
     return Kartering(
         gpd.GeoDataFrame(
             {
                 "ElmID": [data_nr],
-                "Area": [data_nr],
+                "Area": [0],
                 "Datum": [data_nr],
                 "Opm": [data_nr],
                 "VegTypeInfo": [

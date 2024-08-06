@@ -1,15 +1,12 @@
 import json
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
 from pathlib import Path
 from typing import ClassVar, Dict, List, Optional, Tuple
 
 import geopandas as gpd
 from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
-from typing_extensions import List, Literal, Union
-
-from veg2hab.enums import NumberType
+from typing_extensions import List, Literal
 
 
 class BaseModel(_BaseModel):
@@ -246,12 +243,12 @@ class Veg2HabConfig(BaseSettings):
         except json.JSONDecodeError:
             raise ValueError("Invalid JSON string for minimum_oppervlak_exceptions_raw")
 
-    minimum_oppervlak_default: NumberType = Field(
+    minimum_oppervlak_default: float = Field(
         default=100,
         description="Minimum oppervlak voor een habitattype",
     )
 
-    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> NumberType:
+    def get_minimum_oppervlak_for_habtype(self, habtype: str) -> float:
         return self.minimum_oppervlak_exceptions.get(
             habtype, self.minimum_oppervlak_default
         )
