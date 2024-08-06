@@ -152,15 +152,20 @@ class Veg2HabConfig(BaseSettings):
     class Config:
         env_prefix = "VEG2HAB_"
 
-    mozaiek_threshold: NumberType = Field(
+    combineer_karteringen_weglaten_threshold: float = Field(
+        default=0.0001,
+        description="Threshold in m^2 voor het weglaten van vlakken na het combineren van karteringen",
+    )
+
+    mozaiek_threshold: float = Field(
         default=95.0,
         description="Threshold voor het bepalen of een vlak in het mozaiek ligt",
     )
-    mozaiek_als_rand_threshold: NumberType = Field(
+    mozaiek_als_rand_threshold: float = Field(
         default=25.0,
         description="Threshold voor het bepalen of een vlak langs de rand van het mozaiek ligt",
     )
-    mozaiek_minimum_bedekking: NumberType = Field(
+    mozaiek_minimum_bedekking: float = Field(
         default=90.0,
         description="Minimum percentage dat geschikte habitattypen/vegetatietypen in een omringend vlak moet hebben voordat deze mee telt",
     )
@@ -203,7 +208,7 @@ class Veg2HabConfig(BaseSettings):
             )
 
     # (vanaf percentage (inclusief), buffer afstand)
-    functionele_samenhang_buffer_distances: List[Tuple[int, float]] = Field(
+    functionele_samenhang_buffer_distances: List[Tuple[float, float]] = Field(
         default=[
             (100, 10.01),
             (90, 5.01),
@@ -213,7 +218,7 @@ class Veg2HabConfig(BaseSettings):
     )
 
     # json dump omdat een dictionary niet via environment variables geupdate zou kunnen worden
-    minimum_oppervlak_exceptions: Dict[str, NumberType] = Field(
+    minimum_oppervlak_exceptions: Dict[str, float] = Field(
         default={
             "H6110": 10,
             "H7220": 10,
