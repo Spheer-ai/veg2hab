@@ -1256,11 +1256,11 @@ class Kartering:
                 hoge_prio=kartering.gdf,
             )
 
-        # reset index en ElmID
+        # Reset index en ElmID
         result = result.reset_index(drop=True)
         result["ElmID"] = range(len(result))
 
-        # areas might be different
+        # Oppervlakten kunnen veranderd zijn
         result["Area"] = result.geometry.area
 
         return Kartering(result)
