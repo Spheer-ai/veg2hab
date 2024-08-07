@@ -9,7 +9,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal, Union
 
-from veg2hab.enums import NumberType
+from veg2hab.enums import NumberType, WelkeTypologie
 
 
 class BaseModel(_BaseModel):
@@ -57,16 +57,20 @@ class ShapefileInputs(BaseModel):
     vegtype_col_format: Literal["single", "multi"] = Field(
         description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
     )
-    sbb_of_vvn: Literal["SBB", "VvN", "beide"] = Field(
-        description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    welke_typologie: WelkeTypologie = Field(
+        description='Voornaamste typologie van waaruit de vertalingen worden uitgevoerd. ("SBB", "VvN", "rVvN", "SBB en VvN")',
     )
     sbb_col: List[str] = Field(
         default_factory=list,
-        description="SBB kolom(men) (verplicht wanneer het voorname type 'SBB' of 'beide' is)",
+        description="SBB kolom(men) (verplicht wanneer het voorname type 'SBB' of 'SBB en VvN' is)",
     )
     vvn_col: List[str] = Field(
         default_factory=list,
-        description="VvN kolom(men) (verplicht wanneer het voorname type 'VvN' of 'beide' is)",
+        description="VvN kolom(men) (verplicht wanneer het voorname type 'VvN' of 'SBB en VvN' is)",
+    )
+    rvvn_col: List[str] = Field(
+        default_factory=list,
+        description="rVvN kolom(men) (verplicht wanneer het voorname type 'rVvN' is)",
     )
     perc_col: List[str] = Field(
         default_factory=list,

@@ -49,7 +49,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
 
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
-    - Open de 'Package Manager'.  
+    - Open de 'Package Manager'.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
@@ -122,13 +122,13 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 #### Sequentiële omzetstappen
 
-De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Python Toolbox `veg2hab.pyt`. De gehele omzetting verloopt via een aantal sequentiële stappen: 
+De omzetting van vegetatiekarteringen naar habitattypekaarten gebeurt via de Python Toolbox `veg2hab.pyt`. De gehele omzetting verloopt via een aantal sequentiële stappen:
 
 <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/toolbox_components.png" alt="new notebook" width="400"/>
 
 In iedere stap dient de gebruiker in ieder geval twee dingen aan te geven:
 - `Bestandslocatie van de kartering`: een vectorbestand (zoals een shapefile of geopackage). Dit is een bestandslocatie buiten ArcGIS Pro, óf een kaart die reeds ingeladen is in ArcGIS Pro.
-- `Output bestand`: De naam en locatie waar de output van de stap wordt opgeslagen. Als de gebruiker niets opgeeft, genereert veg2hab een unieke (maar weinig informatieve) naam. 
+- `Output bestand`: De naam en locatie waar de output van de stap wordt opgeslagen. Als de gebruiker niets opgeeft, genereert veg2hab een unieke (maar weinig informatieve) naam.
 
 Beschrijving van de omzetstappen en aanvullende inputvelden:
 - `1a_digitale_standaard`: laadt een vegetatiekartering in die de landelijke digitale standaard gebruikt. De volgende inputvelden worden gevraagd:
@@ -140,11 +140,11 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
   - `single / multi`: zit informatie over complexen in één kolom of in meerdere kolommen?
   - `VvN / SBB`: gebruikt de kartering SBB, VvN of beide als landelijke typologie?
   - `SBB- / VvN-kolommen`: uit welke kolom moet veg2hab de vegetatiecodes halen?
-  - `Percentage kolom (optioneel)`: in welke kolom(men) staat het percentage voor complexen? 
+  - `Percentage kolom (optioneel)`: in welke kolom(men) staat het percentage voor complexen?
   - `Lokale vegetatietypen kolom (optioneel)`: welke kolom(men) bevatten informatie over het lokale vegetatietype.
   - `Splits karakter`: Indien er complexinformatie in één enkele kolom staat, welke karakter moet veg2hab gebruiken om de complexdelen te splitsen?
 - `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. Hiervoor geeft de gebruiker een aantal vegetatiekarteringen aan, en een prioriteit, waarbij belangrijkere karteringen de karteringen eronder overschrijven.
-- `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen. 
+- `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen.
 - `4_mozaiekregels`: Controleert voor alle relevante vlakken de mozaiekregels.
 - `5_functionele_samenhang_en_min_opp`: Controleert de functionele samenhang tussen vlakken of complexe vlakdelen, en past vervolgens de vereisten voor minimum oppervlakte toe.
 
@@ -226,7 +226,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **_Mits_opm{i}**/**_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Wat hier staat hangt af van de status:
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`, `NIET_GEAUTOMATISEERD_CRITERIUM`, `WACHTEN_OP_MOZAIEK`: De beperkende criteria en mozaiekregels worden getoond van *alle* definitietabelregels die mogelijk op het vlak van toepassing zijn. Definitietabelregels waarvan veg2hab volledig heeft kunnen controleren dat ze *niet* van toepassing zijn, worden weggelaten.
 - `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Alle beperkende criteria en mozaiekregels worden getoond. Deze kloppen allemaal niet, anders zou het vlak een habitattype (of HXXXX) hebben gekregen.
-- `HABITATTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond. 
+- `HABITATTYPE_TOEGEKEND`, `MINIMUM_OPP_NIET_GEHAALD`: Alleen de beperkende criteria en mozaiekregel van de regel uit de definitietabel die tot het habitattype hebben geleid, worden getoond.
 - `VEGTYPEN_NIET_IN_DEFTABEL`, `GEEN_OPGEGEVEN_VEGTYPEN`, `NIET_GEAUTOMATISEERD_VEGTYPE`: Er zijn geen regels in de definitietabel gevonden voor de huidige vegetatietypen, dus er worden ook geen mitsen/mozaiekregels weergegeven.
 
 Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
@@ -245,10 +245,16 @@ Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van 
  - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
  - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
 
+
+De locatie van de bronbestanden op je eigen PC zijn het eenvoudigst te achterhalen door de volgende code uit te voeren binnen een notebook. Vanuit deze locatie kunnen deze worden ingeladen in ArcGIS om in te kunnen zien, hoe de verschillende keuzes zijn gemaakt. **LET OP:** het
+
+```python
+import veg2hab
+veg2hab.bronbestanden()
+```
+
+
 **Let op**: bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
-
-
-
 
 
 ## Handleiding voor ontwikkelaars

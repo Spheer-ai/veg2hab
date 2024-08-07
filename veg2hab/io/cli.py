@@ -40,6 +40,9 @@ def _decorate_click(func: Callable, param_schema: Dict):
         if field_info.get("format", "") == "path":
             writable = field_name == "output"
             param_type = click.Path(exists=False, writable=writable)
+        elif field_name == "welke_typologie":
+            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
+            param_type = click.Choice(param_schema["definitions"][ref_name]["enum"])
         elif "enum" in field_info:
             param_type = click.Choice(field_info["enum"])
         else:
