@@ -12,8 +12,8 @@ class BodemTuple(NamedTuple):
 
 
 class OBKWaarden(BaseModel):
-    h9120: int = Field(ge=0, le=2)
-    h9190: int = Field(ge=0, le=2)
+    H9120: int = Field(ge=0, le=2)
+    H9190: int = Field(ge=0, le=2)
 
 
 NumberType = Union[int, float]

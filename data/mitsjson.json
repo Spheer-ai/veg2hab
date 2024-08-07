@@ -1184,7 +1184,8 @@
                         "toelichting": "onderdeel van een minimaal honderdjarige opstand van zomereik"
                     },
                     {
-                        "type": "OudeBossenCriterium"
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9190"
                     }
                 ]
             },
@@ -1225,7 +1226,8 @@
                 "type": "OfCriteria",
                 "sub_criteria": [
                     {
-                        "type": "OudeBossenCriterium"
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9120"
                     },
                     {
                         "type": "NietGeautomatiseerd",
@@ -1321,7 +1323,8 @@
                 "type": "OfCriteria",
                 "sub_criteria": [
                     {
-                        "type": "OudeBossenCriterium"
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9120"
                     },
                     {
                         "type": "NietGeautomatiseerd",

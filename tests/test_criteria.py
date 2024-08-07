@@ -86,20 +86,34 @@ def test_BodemCriterium_enkel_negatieven():
 
 
 def test_OudeBossenCriterium():
-    crit = OudeBossenCriterium()
+    crit = OudeBossenCriterium(for_habtype="H9120")
     row = pd.Series({"obk": pd.NA})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
-    row = pd.Series({"obk": OBKWaarden(h9120=0, h9190=0)})
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=0)})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
-    row = pd.Series({"obk": OBKWaarden(h9120=1, h9190=0)})
+
+    # for_habtype = H9120
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-    row = pd.Series({"obk": OBKWaarden(h9120=0, h9190=1)})
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-    row = pd.Series({"obk": OBKWaarden(h9120=2, h9190=2)})
+
+    # for_habtype = H9190
+    crit = OudeBossenCriterium(for_habtype="H9190")
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 

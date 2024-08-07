@@ -226,7 +226,7 @@ class OudeBossenkaart:
 
         # Validatie van de waarden gebeurt in het instantieren van OBKWaarden
         self.gdf["obk"] = self.gdf.apply(
-            lambda row: OBKWaarden(h9120=row.h9120, h9190=row.h9190), axis=1
+            lambda row: OBKWaarden(H9120=row.h9120, H9190=row.h9190), axis=1
         )
         self.gdf = self.gdf.drop(columns=["h9120", "h9190"])
 

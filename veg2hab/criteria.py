@@ -8,6 +8,7 @@ from typing import ClassVar, List, Optional, Set, Union
 import geopandas as gpd
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr
+from typing_extensions import Literal
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
@@ -323,6 +324,7 @@ class LBKCriterium(BeperkendCriterium):
 
 class OudeBossenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "OudeBossenCriterium"
+    for_habtype: Literal["H9120", "H9190"]
 
     # Aangezien we altijd MaybeBoolean.FALSE teruggeven tenzij we in een oude bossenkaart
     # vlak liggen (dan geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug), hebben
@@ -341,6 +343,10 @@ class OudeBossenCriterium(BeperkendCriterium):
         geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
         """
         assert "obk" in row, "obk kolom niet aanwezig"
+        assert self.for_habtype in [
+            "H9120",
+            "H9190",
+        ], "for_habtype moet H9120 of H9190 zijn"
 
         if pd.isna(row["obk"]):
             self.actual_OBK = None
@@ -348,9 +354,9 @@ class OudeBossenCriterium(BeperkendCriterium):
             return
 
         self.actual_OBK = row["obk"]
+        value = self.actual_OBK.__getattribute__(self.for_habtype)
 
-        # Dit is volgensmij nooit het geval maar even checken kan geen kwaad
-        if self.actual_OBK.h9120 == 0 and self.actual_OBK.h9190 == 0:
+        if value == 0:
             self.cached_evaluation = MaybeBoolean.FALSE
             return
 
@@ -378,7 +384,7 @@ class OudeBossenCriterium(BeperkendCriterium):
                 else "geen",
                 "niet binnen boskaartvlak"
                 if self.actual_OBK is None
-                else f"binnen boskaartvlak (H9120: {self.actual_OBK.h9120}, H9190: {self.actual_OBK.h9190})",
+                else f"binnen boskaartvlak (H9120: {self.actual_OBK.H9120}, H9190: {self.actual_OBK.H9190})",
             )
         }
 
