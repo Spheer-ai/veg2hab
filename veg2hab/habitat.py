@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, validator
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
@@ -97,7 +97,7 @@ class HabitatKeuze(BaseModel):
     opmerking: str = ""
     mits_opmerking: str = ""
     mozaiek_opmerking: str = ""
-    debug_info: Optional[str] = ""
+    debug_info: str = ""
 
     @root_validator
     def valideer_habtype_keuzestatus(cls, values):
@@ -125,6 +125,22 @@ class HabitatKeuze(BaseModel):
             assert kwaliteit == Kwaliteit.NVT
 
         return values
+
+    @validator(
+        "opmerking",
+        "mits_opmerking",
+        "mozaiek_opmerking",
+        "debug_info",
+        pre=True,
+        always=True,
+    )
+    def vervang_none_door_lege_string(cls, v):
+        """
+        Omdat ArcGIS niet om kan gaan met lege strings worden deze fields weggeschreven als None
+        Bij het deserializen worden deze dus ook ingelezen als None
+        Dus we zetten ze hier weer om naar een lege string :)
+        """
+        return v if v is not None else ""
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
