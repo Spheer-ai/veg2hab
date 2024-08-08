@@ -113,10 +113,12 @@ class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     wanted_fgrtype: FGRType
     actual_fgrtype: Optional[FGRType] = None
+    overlap_percentage: float = 0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
+        assert "fgr_percentage" in row, "fgr_percentage kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
 
         if pd.isnull(row["fgr"]):
@@ -126,6 +128,7 @@ class FGRCriterium(BeperkendCriterium):
             return
 
         self.actual_fgrtype = row["fgr"]
+        self.overlap_percentage = row["fgr_percentage"]
         self.cached_evaluation = (
             MaybeBoolean.TRUE
             if row["fgr"] == self.wanted_fgrtype
@@ -149,7 +152,7 @@ class FGRCriterium(BeperkendCriterium):
             return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
 
         # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
-        framework = "FGR type is {}{}{}."
+        framework = "FGR type is {}{}{} ({})."
         return {
             framework.format(
                 "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
@@ -157,6 +160,7 @@ class FGRCriterium(BeperkendCriterium):
                 ", maar " + self.actual_fgrtype.value
                 if self.cached_evaluation == MaybeBoolean.FALSE
                 else "",
+                f"{self.overlap_percentage:.1f}%",
             )
         }
 
@@ -167,16 +171,19 @@ class FGRCriterium(BeperkendCriterium):
 class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     wanted_bodemtype: BodemType
-    actual_bodemcode: List[Optional[str]] = [None]
+    actual_bodemcode: Optional[List[str]] = None
+    overlap_percentage: float = 0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
+        assert "bodem_percentage" in row, "bodem_percentage kolom niet aanwezig"
         self.actual_bodemcode = (
             None
             if not isinstance(row["bodem"], list) and pd.isna(row["bodem"])
             else row["bodem"]
         )
+        self.overlap_percentage = row["bodem_percentage"]
         if self.actual_bodemcode is None:
             # Er is een NaN als het vlak niet binnen een bodemkaartvlak valt
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
@@ -223,6 +230,7 @@ class BodemCriterium(BeperkendCriterium):
             + str(self.wanted_bodemtype)
             + " want bodemcode "
             + ", ".join(self.actual_bodemcode)
+            + f" ({self.overlap_percentage:.1f}%)"
             + "."
         )
         return {
@@ -242,18 +250,21 @@ class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
     wanted_lbktype: LBKType
     actual_lbkcode: Optional[str] = None
+    overlap_percentage: float = 0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
+        assert "lbk_percentage" in row, "lbk_percentage kolom niet aanwezig"
         assert row["lbk"] is not None, "lbk kolom is leeg"
-
-        self.actual_lbkcode = row["lbk"]
 
         if pd.isna(row["lbk"]):
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
+
+        self.actual_lbkcode = row["lbk"]
+        self.overlap_percentage = row["lbk_percentage"]
 
         self.cached_evaluation = (
             MaybeBoolean.TRUE
@@ -294,6 +305,7 @@ class LBKCriterium(BeperkendCriterium):
             + str(self.wanted_lbktype)
             + " {}LBK code "
             + str(self.actual_lbkcode)
+            + f" ({self.overlap_percentage:.1f}%)"
             + "."
         )
         return {
