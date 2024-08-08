@@ -332,22 +332,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
-                f"_VvNdftbl{idx}": str(
-                    [
-                        str(voorstel.vegtype_in_dt),
-                        voorstel.habtype,
-                    ]
-                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
-                    else None
-                ),
-                f"_SBBdftbl{idx}": str(
-                    [
-                        str(voorstel.vegtype_in_dt),
-                        voorstel.habtype,
-                    ]
-                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
-                    else None
-                ),
+                f"_VvNdftbl{idx}": voorstel.get_VvNdftbl_str(),
+                f"_SBBdftbl{idx}": voorstel.get_SBBdftbl_str(),
             }
 
             return pd.Series(series_dict)
@@ -384,34 +370,10 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": "\n".join(
-                [
-                    (
-                        str(
-                            [
-                                str(voorstel.vegtype_in_dt),
-                                voorstel.habtype,
-                            ]
-                        )
-                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
-                        else "---"
-                    )
-                    for voorstel in voorstellen
-                ]
+                [voorstel.get_VvNdftbl_str() for voorstel in voorstellen]
             ),
             f"_SBBdftbl{idx}": "\n".join(
-                [
-                    (
-                        str(
-                            [
-                                str(voorstel.vegtype_in_dt),
-                                voorstel.habtype,
-                            ]
-                        )
-                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
-                        else "---"
-                    )
-                    for voorstel in voorstellen
-                ]
+                [voorstel.get_SBBdftbl_str() for voorstel in voorstellen]
             ),
         }
 
