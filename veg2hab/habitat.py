@@ -71,10 +71,7 @@ class HabitatVoorstel(BaseModel):
             match_level=MatchLevel.NO_MATCH,
         )
 
-    def get_VvNdftbl_str(self):
-        if isinstance(self.vegtype_in_dt, SBB):
-            return "---"
-
+    def _get_dftbl_str(self):
         veg_str = str(self.vegtype_in_dt)
         if self.vegtype_in_dt_naam != "":
             veg_str += f" ({self.vegtype_in_dt_naam})"
@@ -84,20 +81,18 @@ class HabitatVoorstel(BaseModel):
             hab_str += f" ({self.habtype_naam})"
 
         return f"[{veg_str}, {hab_str}]"
+
+    def get_VvNdftbl_str(self):
+        if isinstance(self.vegtype_in_dt, SBB):
+            return "---"
+
+        return self._get_dftbl_str()
 
     def get_SBBdftbl_str(self):
         if isinstance(self.vegtype_in_dt, VvN):
             return "---"
 
-        veg_str = str(self.vegtype_in_dt)
-        if self.vegtype_in_dt_naam != "":
-            veg_str += f" ({self.vegtype_in_dt_naam})"
-
-        hab_str = self.habtype
-        if self.habtype_naam != "":
-            hab_str += f" ({self.habtype_naam})"
-
-        return f"[{veg_str}, {hab_str}]"
+        return self._get_dftbl_str()
 
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
