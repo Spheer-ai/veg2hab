@@ -2,11 +2,27 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import List, NamedTuple, Tuple, Union
 
+from pydantic import BaseModel, Field
+
 
 class BodemTuple(NamedTuple):
     string: str
     codes: List[str]
     enkel_negatieven: bool
+
+
+class OBKWaarden(BaseModel):
+    """
+    # TODO: Deze definities even checken met Jakko
+
+    H9120 en H9190 waarden van de Oude Bossenkaart
+    0 = bos in dit vlak komt niet in aanmerking voor dit habitattype
+    1 = bos in dit vlak komt mogelijk in aanmerking voor dit habitattype
+    2 = bos in dit vlak komt in aanmerking voor dit habitattype
+    """
+
+    H9120: int = Field(ge=0, le=2)
+    H9190: int = Field(ge=0, le=2)
 
 
 NumberType = Union[int, float]

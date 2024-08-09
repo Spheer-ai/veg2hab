@@ -6,7 +6,7 @@ from typing import Union
 import geopandas as gpd
 
 from veg2hab import constants
-from veg2hab.bronnen import FGR, LBK, Bodemkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.common import (
     AccessDBInputs,
@@ -169,10 +169,15 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
 
     logging.info(f"LBK is ingelezen")
 
+    obk = OudeBossenkaart(Path(constants.OUDE_BOSSENKAART_PATH))
+
+    logging.info(f"Oude bossenkaart is ingelezen van {constants.OUDE_BOSSENKAART_PATH}")
+
     kartering.bepaal_mits_habitatkeuzes(
         fgr,
         bodemkaart,
         lbk,
+        obk,
     )
 
     logging.info(f"Mitsen zijn gecheckt")
