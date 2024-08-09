@@ -7,11 +7,11 @@ import pyodbc
 import pytest
 
 from veg2hab import constants
-from veg2hab.bronnen import FGR, LBK, Bodemkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart
 from veg2hab.constants import WWL_PATH
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.cli import CLIInterface
-from veg2hab.vegkartering import Kartering, VegTypeInfo, ingest_vegtype
+from veg2hab.vegkartering import Kartering
 from veg2hab.waswordtlijst import WasWordtLijst
 
 CLIInterface.get_instance()
@@ -57,10 +57,11 @@ def to_habtypekaart(kartering: Kartering) -> Kartering:
     lbk = LBK.from_file(
         path=Path(__file__).parent.joinpath("../data/bronbestanden/lbk.gpkg"), mask=mask
     )
+    obk = OudeBossenkaart(Path(constants.OUDE_BOSSENKAART_PATH))
 
     kartering.apply_deftabel(deftabel)
 
-    kartering.bepaal_mits_habitatkeuzes(fgr, bodemkaart, lbk)
+    kartering.bepaal_mits_habitatkeuzes(fgr, bodemkaart, lbk, obk)
     return kartering
 
 
