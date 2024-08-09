@@ -80,7 +80,7 @@ class HabitatVoorstel(BaseModel):
         if self.habtype_naam != "":
             hab_str += f" ({self.habtype_naam})"
 
-        return f"[{veg_str}, {hab_str}]"
+        return f"[{veg_str} -> {hab_str}]"
 
     def get_VvNdftbl_str(self):
         if isinstance(self.vegtype_in_dt, SBB):
