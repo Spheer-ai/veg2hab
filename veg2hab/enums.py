@@ -20,6 +20,7 @@ class OBKWaarden(BaseModel):
     1 = bos in dit vlak komt mogelijk in aanmerking voor dit habitattype
     2 = bos in dit vlak komt in aanmerking voor dit habitattype
     """
+
     H9120: int = Field(ge=0, le=2)
     H9190: int = Field(ge=0, le=2)
 
