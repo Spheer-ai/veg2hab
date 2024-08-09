@@ -12,11 +12,12 @@ from typing_extensions import Literal, Self
 
 from veg2hab import vegetatietypen
 from veg2hab.access_db import read_access_tables
-from veg2hab.bronnen import FGR, LBK, Bodemkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart
 from veg2hab.criteria import (
     BodemCriterium,
     FGRCriterium,
     LBKCriterium,
+    OudeBossenCriterium,
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
@@ -1191,7 +1192,9 @@ class Kartering:
         )
 
     # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
-    def check_mitsen(self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK) -> None:
+    def check_mitsen(
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
+    ) -> None:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
@@ -1212,6 +1215,9 @@ class Kartering:
         lbk_needed = self.gdf["HabitatVoorstel"].apply(
             is_criteria_type_present, args=(LBKCriterium,)
         )
+        obk_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(OudeBossenCriterium,)
+        )
 
         ### Verrijken met de benodigde informatie
         if fgr_needed.any():
@@ -1226,6 +1232,8 @@ class Kartering:
             mits_info_df = mits_info_df.join(
                 bodemkaart.for_geometry(mits_info_df.loc[bodem_needed])
             )
+        if obk_needed.any():
+            mits_info_df["obk"] = obk.for_geometry(mits_info_df.loc[obk_needed])
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
@@ -1237,7 +1245,7 @@ class Kartering:
                     voorstel.mits.check(mits_info_row)
 
     def bepaal_mits_habitatkeuzes(
-        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
     ) -> None:
         """
         Bepaalt voor complexdelen zonder mozaiekregels de habitatkeuzes
@@ -1249,7 +1257,7 @@ class Kartering:
         ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
         assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
 
-        self.check_mitsen(fgr, bodemkaart, lbk)
+        self.check_mitsen(fgr, bodemkaart, lbk, obk)
 
         self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
             lambda voorstellen: [

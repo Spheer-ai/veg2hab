@@ -8,8 +8,9 @@ from typing import ClassVar, List, Optional, Set, Union
 import geopandas as gpd
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr
+from typing_extensions import Literal
 
-from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
+from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 
 class BeperkendCriterium(BaseModel):
@@ -259,6 +260,7 @@ class LBKCriterium(BeperkendCriterium):
         assert row["lbk"] is not None, "lbk kolom is leeg"
 
         if pd.isna(row["lbk"]):
+            self.actual_lbkcode = None
             # Er is een NaN als het vlak niet mooi binnen een LBK vak valt
             self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
             return
@@ -291,7 +293,6 @@ class LBKCriterium(BeperkendCriterium):
             self.cached_evaluation is not MaybeBoolean.POSTPONE
         ), "Postpone is not a valid evaluation state for LBKCriterium"
         if self.cached_evaluation is None:
-            print("test")
             logging.warning(
                 "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
             )
@@ -331,6 +332,78 @@ class LBKCriterium(BeperkendCriterium):
 
     def get_format_string(self):
         return f"LBK is {self.wanted_lbktype}" + " ({})"
+
+
+class OudeBossenCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "OudeBossenCriterium"
+    for_habtype: Literal["H9120", "H9190"]
+
+    # Aangezien we altijd MaybeBoolean.FALSE teruggeven tenzij we in een oude bossenkaart
+    # vlak liggen (dan geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug), hebben
+    # we geen target/wanted waarden nodig.
+    actual_OBK: Optional[OBKWaarden] = None
+    overlap_percentage: float = 0
+    cached_evaluation: Optional[MaybeBoolean] = None
+
+    def check(self, row: gpd.GeoSeries) -> None:
+        """
+        Als de waarde van de obk kolom None is, dan is het vlak niet binnen een oude bossenkaartvlak,
+        dus kunnen we veilig MaybeBoolean.FALSE teruggeven.
+
+        Als de waarde van de obk kolom niet None is, dan is het vlak binnen een oude bossenkaartvlak,
+        en is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is, dus
+        geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
+        """
+        assert "obk" in row, "obk kolom niet aanwezig"
+        assert self.for_habtype in [
+            "H9120",
+            "H9190",
+        ], "for_habtype moet H9120 of H9190 zijn"
+
+        if pd.isna(row["obk"]):
+            self.actual_OBK = None
+            self.cached_evaluation = MaybeBoolean.FALSE
+            return
+
+        self.actual_OBK = row["obk"]
+        self.overlap_percentage = row["obk_percentage"]
+        value = self.actual_OBK.__getattribute__(self.for_habtype)
+
+        if value == 0:
+            self.cached_evaluation = MaybeBoolean.FALSE
+            return
+
+        self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
+
+    def __str__(self):
+        string = "Bos ouder dan 1850"
+        if self.cached_evaluation is not None:
+            string += f" ({self.cached_evaluation.as_letter()})"
+        return string
+
+    def get_opm(self) -> Set[str]:
+        if self.cached_evaluation is None:
+            logging.warning(
+                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+            )
+
+        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        framework = "Dit is {} oud bos, want {}{}."
+
+        return {
+            framework.format(
+                "mogelijk"
+                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                else "geen",
+                "niet binnen boskaartvlak"
+                if self.actual_OBK is None
+                else f"binnen boskaartvlak (H9120: {self.actual_OBK.H9120}, H9190: {self.actual_OBK.H9190})",
+                f" ({self.overlap_percentage:.1f}%)" if self.actual_OBK is not None else "",
+            )
+        }
+
+    def get_format_string(self):
+        return "Bos ouder dan 1850 ({})"
 
 
 class NietCriterium(BeperkendCriterium):

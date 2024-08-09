@@ -1177,8 +1177,17 @@
                 ]
             },
             {
-                "type": "NietGeautomatiseerd",
-                "toelichting": "mits onderdeel van een minimaal honderdjarige opstand van zomereik of op een bosgroeiplaats ouder dan 1850"
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "NietGeautomatiseerd",
+                        "toelichting": "onderdeel van een minimaal honderdjarige opstand van zomereik"
+                    },
+                    {
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9190"
+                    }
+                ]
             },
             {
                 "type": "NietCriterium",
@@ -1214,8 +1223,17 @@
                 ]
             },
             {
-                "type": "NietGeautomatiseerd",
-                "toelichting": "mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9120"
+                    },
+                    {
+                        "type": "NietGeautomatiseerd",
+                        "toelichting": "100 jarige bosopstand grenzend aan een bosgroeiplaats ouder dan 1850"
+                    }
+                ]
             },
             {
                 "type": "NietCriterium",
@@ -1299,7 +1317,20 @@
             },
             {
                 "type": "NietGeautomatiseerd",
-                "toelichting": "mits zonder hydromorfe kenmerken en mits op een bosgroeiplaats ouder dan 1850 of in een daaraan grenzende minimaal honderdjarige bosopstand"
+                "toelichting": "mits zonder hydromorfe kenmerken"
+            },
+            {
+                "type": "OfCriteria",
+                "sub_criteria": [
+                    {
+                        "type": "OudeBossenCriterium",
+                        "for_habtype": "H9120"
+                    },
+                    {
+                        "type": "NietGeautomatiseerd",
+                        "toelichting": "100 jarige bosopstand grenzend aan een bosgroeiplaats ouder dan 1850"
+                    }
+                ]
             },
             {
                 "type": "NietCriterium",

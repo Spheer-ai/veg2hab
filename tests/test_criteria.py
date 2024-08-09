@@ -10,8 +10,9 @@ from veg2hab.criteria import (
     NietCriterium,
     NietGeautomatiseerdCriterium,
     OfCriteria,
+    OudeBossenCriterium,
 )
-from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean
+from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 # For "tests" of criteria.get_opm, please see demo_criteria_opmerkingen.py
 
@@ -82,6 +83,39 @@ def test_BodemCriterium_enkel_negatieven():
     row = pd.Series({"bodem": ["Abcd"], "bodem_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
+
+
+def test_OudeBossenCriterium():
+    crit = OudeBossenCriterium(for_habtype="H9120")
+    row = pd.Series({"obk": pd.NA})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+
+    # for_habtype = H9120
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+
+    # for_habtype = H9190
+    crit = OudeBossenCriterium(for_habtype="H9190")
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.FALSE
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
+    crit.check(row)
+    assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
 
 def test_EnCriteria():
