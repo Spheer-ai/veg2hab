@@ -29,6 +29,8 @@ class HabitatVoorstel(BaseModel):
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
+    vegtype_in_dt_naam: str = ""
+    habtype_naam: str = ""
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -68,6 +70,29 @@ class HabitatVoorstel(BaseModel):
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.NO_MATCH,
         )
+
+    def _get_dftbl_str(self):
+        veg_str = str(self.vegtype_in_dt)
+        if self.vegtype_in_dt_naam != "":
+            veg_str += f" ({self.vegtype_in_dt_naam})"
+
+        hab_str = self.habtype
+        if self.habtype_naam != "":
+            hab_str += f" ({self.habtype_naam})"
+
+        return f"[{veg_str}, {hab_str}]"
+
+    def get_VvNdftbl_str(self):
+        if isinstance(self.vegtype_in_dt, SBB):
+            return "---"
+
+        return self._get_dftbl_str()
+
+    def get_SBBdftbl_str(self):
+        if isinstance(self.vegtype_in_dt, VvN):
+            return "---"
+
+        return self._get_dftbl_str()
 
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:

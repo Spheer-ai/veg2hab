@@ -57,6 +57,8 @@ def test_perfect_match_VvN(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Schorrekruid-associatie",
+            habtype_naam="Zilte pionierbegroeiingen (zeekraal)",
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -91,6 +93,8 @@ def test_match_to_less_specific_VvN(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Klimopwaterranonkel",
+            habtype_naam="Beken en rivieren met waterplanten (waterranonkels)",
         )
     ]
     # Should match with 5ca2
@@ -110,6 +114,8 @@ def test_gemeenschap_perfect_match_VvN(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.GEMEENSCHAP_VVN,
+            vegtype_in_dt_naam="Rompgemeenschap met Gewoon sterrekroos van de Orde van Haaksterrekroos en Grote waterranonkel",
+            habtype_naam="Beken en rivieren met waterplanten (waterranonkels)",
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -126,6 +132,8 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Schapegras en Tijm (subassociatie met Zandblauwtje)",
+            habtype_naam="Zandverstuivingen",
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN.from_code("14bb1a"),
@@ -137,6 +145,8 @@ def test_match_to_multiple_perfect_matches_VvN(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Schapegras en Tijm (subassociatie met Zandblauwtje)",
+            habtype_naam="Stroomdalgraslanden",
         ),
     ]
 
@@ -159,6 +169,8 @@ def test_perfect_and_less_specific_match_VvN(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Grauwe wilg (subassociatie met Hennegras)",
+            habtype_naam="Duinbossen (vochtig)",
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN.from_code("36aa2a"),
@@ -173,6 +185,8 @@ def test_perfect_and_less_specific_match_VvN(dt):
                 ook_als_rand_langs=True,
             ),
             match_level=MatchLevel.ASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Grauwe wilg",
+            habtype_naam="Hoogveenbossen",
         ),
     ]
     assert dt.find_habtypes(pre) == post
@@ -189,6 +203,8 @@ def test_perfect_match_SBB(dt):
             mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
+            vegtype_in_dt_naam="Associatie van Slangewortel",
+            habtype_naam="Zure vennen",
         )
     ]
     assert dt.find_habtypes(pre) == post
@@ -209,6 +225,8 @@ def test_matches_both_vvn_and_sbb(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.GEMEENSCHAP_VVN,
+            vegtype_in_dt_naam="Rompgemeenschap met Gewoon sterrekroos van de Orde van Haaksterrekroos en Grote waterranonkel",
+            habtype_naam="Beken en rivieren met waterplanten (waterranonkels)",
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN.from_code("14bb1a"),
@@ -218,6 +236,8 @@ def test_matches_both_vvn_and_sbb(dt):
             mits=LBKCriterium(wanted_lbktype=LBKType.ZANDVERSTUIVING),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Schapegras en Tijm (subassociatie met Zandblauwtje)",
+            habtype_naam="Zandverstuivingen",
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=VvN.from_code("14bb1a"),
@@ -229,6 +249,8 @@ def test_matches_both_vvn_and_sbb(dt):
             ),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.SUBASSOCIATIE_VVN,
+            vegtype_in_dt_naam="Associatie van Schapegras en Tijm (subassociatie met Zandblauwtje)",
+            habtype_naam="Stroomdalgraslanden",
         ),
         HabitatVoorstel(
             onderbouwend_vegtype=SBB.from_code("9b1"),
@@ -238,6 +260,8 @@ def test_matches_both_vvn_and_sbb(dt):
             mits=NietGeautomatiseerdCriterium(toelichting="mits in vennen"),
             mozaiek=GeenMozaiekregel(),
             match_level=MatchLevel.ASSOCIATIE_SBB,
+            vegtype_in_dt_naam="Associatie van Slangewortel",
+            habtype_naam="Zure vennen",
         ),
     ]
     post2 = dt.find_habtypes(pre)
