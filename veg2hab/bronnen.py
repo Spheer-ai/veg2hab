@@ -55,9 +55,13 @@ def get_datadir(app_author: str, app_name: str) -> Path:
 
 def sjoin_largest_overlap(
     kartering_gdf: gpd.GeoDataFrame, bron_gdf: gpd.GeoDataFrame, bron_col_name: str
-) -> gpd.GeoSeries:
+) -> gpd.GeoDataFrame:
     """
-    Voegt de kolommen van bron_gdf toe aan kartering_gdf op basis van de grootste overlap.
+    Zoekt voor elk karteringvlak de bronvlakken waar het het meeste mee overlapt.
+
+    Geeft een geodataframe terug met daarin voor ieder vlak in kartering_gdf
+    de info uit bron_gdf waar het het meeste mee overlapt (in kolom bron_col_name)
+    en het percentage van het karteringvlak dat overlapt met het bronvlak.
     """
     assert (
         bron_col_name in bron_gdf.columns

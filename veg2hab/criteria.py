@@ -114,7 +114,7 @@ class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     wanted_fgrtype: FGRType
     actual_fgrtype: Optional[FGRType] = None
-    overlap_percentage: float = 0
+    overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
@@ -173,7 +173,7 @@ class BodemCriterium(BeperkendCriterium):
     type: ClassVar[str] = "BodemCriterium"
     wanted_bodemtype: BodemType
     actual_bodemcode: Optional[List[str]] = None
-    overlap_percentage: float = 0
+    overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
@@ -251,7 +251,7 @@ class LBKCriterium(BeperkendCriterium):
     type: ClassVar[str] = "LBKCriterium"
     wanted_lbktype: LBKType
     actual_lbkcode: Optional[str] = None
-    overlap_percentage: float = 0
+    overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
@@ -342,7 +342,7 @@ class OudeBossenCriterium(BeperkendCriterium):
     # vlak liggen (dan geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug), hebben
     # we geen target/wanted waarden nodig.
     actual_OBK: Optional[OBKWaarden] = None
-    overlap_percentage: float = 0
+    overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: gpd.GeoSeries) -> None:
@@ -355,6 +355,7 @@ class OudeBossenCriterium(BeperkendCriterium):
         geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
         """
         assert "obk" in row, "obk kolom niet aanwezig"
+        assert "obk_percentage" in row, "obk_percentage kolom niet aanwezig"
         assert self.for_habtype in [
             "H9120",
             "H9190",
@@ -398,7 +399,9 @@ class OudeBossenCriterium(BeperkendCriterium):
                 "niet binnen boskaartvlak"
                 if self.actual_OBK is None
                 else f"binnen boskaartvlak (H9120: {self.actual_OBK.H9120}, H9190: {self.actual_OBK.H9190})",
-                f" ({self.overlap_percentage:.1f}%)" if self.actual_OBK is not None else "",
+                f" ({self.overlap_percentage:.1f}%)"
+                if self.actual_OBK is not None
+                else "",
             )
         }
 

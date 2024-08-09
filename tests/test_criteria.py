@@ -87,33 +87,33 @@ def test_BodemCriterium_enkel_negatieven():
 
 def test_OudeBossenCriterium():
     crit = OudeBossenCriterium(for_habtype="H9120")
-    row = pd.Series({"obk": pd.NA})
+    row = pd.Series({"obk": pd.NA, "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
-    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=0)})
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=0), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
 
     # for_habtype = H9120
-    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
-    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     # for_habtype = H9190
     crit = OudeBossenCriterium(for_habtype="H9190")
-    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0)})
+    row = pd.Series({"obk": OBKWaarden(H9120=1, H9190=0), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.FALSE
-    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1)})
+    row = pd.Series({"obk": OBKWaarden(H9120=0, H9190=1), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2)})
+    row = pd.Series({"obk": OBKWaarden(H9120=2, H9190=2), "obk_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
