@@ -67,9 +67,11 @@ class DefinitieTabel:
             engine="openpyxl",
             usecols=[
                 "Habitattype",
+                "Habitattype_naam",
                 "Kwaliteit",
                 "SBB",
                 "VvN",
+                "Vegtype_naam",
                 "mits",
                 "mozaiek",
                 "mitsjson",
@@ -136,6 +138,8 @@ class DefinitieTabel:
                     mits=row["Criteria"],
                     mozaiek=row["Mozaiekregel"],
                     match_level=match_levels[idx],
+                    vegtype_in_dt_naam=row["Vegtype_naam"],
+                    habtype_naam=row["Habitattype_naam"],
                 )
             )
 
@@ -167,8 +171,10 @@ def opschonen_definitietabel(
         engine="xlrd",
         usecols=[
             "Code habitat (sub)type",
+            "naam habitat(sub)type",
             "Goed / Matig",
             "Code vegetatietype",
+            "Nederlandse naam vegetatietype",
             "beperkende criteria",
             "alleen in mozaïek",
         ],
@@ -177,8 +183,10 @@ def opschonen_definitietabel(
     dt = dt.rename(
         columns={
             "Code habitat (sub)type": "Habitattype",
+            "naam habitat(sub)type": "Habitattype_naam",
             "Goed / Matig": "Kwaliteit",
-            "Code vegetatietype": "VvN",
+            "Code vegetatietype": "Vegtype",
+            "Nederlandse naam vegetatietype": "Vegtype_naam",
             "beperkende criteria": "mits",
             "alleen in mozaïek": "mozaiek",
         }
@@ -188,13 +196,18 @@ def opschonen_definitietabel(
     # Verwijderen whitespace in Habitattype
     dt["Habitattype"] = dt["Habitattype"].str.strip()
 
-    # Verwijderen rijen met missende data in VvN
-    dt = dt.dropna(subset=["VvN"])
+    # Verwijderen leading/trailing whitespace in Habitattype_naam en Vegtype_naam
+    dt["Habitattype_naam"] = dt["Habitattype_naam"].str.strip()
+    dt["Vegtype_naam"] = dt["Vegtype_naam"].str.strip()
+
+    # Verwijderen rijen met missende data in Vegtype
+    dt = dt.dropna(subset=["Vegtype"])
 
     # Verplaatsen SBB naar eigen kolom
-    SBB_mask = dt["VvN"].str.contains("SBB")
-    dt.loc[SBB_mask, "SBB"] = dt.loc[SBB_mask, "VvN"]
-    dt.loc[SBB_mask, "VvN"] = pd.NA
+    SBB_mask = dt["Vegtype"].str.contains("SBB")
+    dt.loc[SBB_mask, "SBB"] = dt.loc[SBB_mask, "Vegtype"]
+    dt.loc[SBB_mask, "Vegtype"] = pd.NA
+    dt = dt.rename(columns={"Vegtype": "VvN"})
 
     dt["SBB"] = SBB.opschonen_series(dt["SBB"])
     dt["VvN"] = VvN.opschonen_series(dt["VvN"])
@@ -208,7 +221,18 @@ def opschonen_definitietabel(
     ), "Niet alle VvN codes zijn valid"
 
     # Reorder
-    dt = dt[["Habitattype", "Kwaliteit", "SBB", "VvN", "mits", "mozaiek"]]
+    dt = dt[
+        [
+            "Habitattype",
+            "Habitattype_naam",
+            "Kwaliteit",
+            "SBB",
+            "VvN",
+            "Vegtype_naam",
+            "mits",
+            "mozaiek",
+        ]
+    ]
 
     ### Mits json definities toevoegen
     with open(path_in_mitsjson, "r", encoding="utf-8") as file:
