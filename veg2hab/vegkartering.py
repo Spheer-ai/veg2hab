@@ -29,6 +29,7 @@ from veg2hab.habitat import (
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
 )
+from veg2hab.io.common import Interface
 from veg2hab.mozaiek import (
     construct_elmid_omringd_door_gdf,
     make_buffered_boundary_overlay_gdf,
@@ -469,6 +470,45 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"_Uitleg{i}",
         ]
     return gdf[new_columns]
+
+
+def _combineer_twee_geodataframes(
+    lage_prio: gpd.GeoDataFrame, hoge_prio: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """
+    Geometrische-operaties-hulpfunctie voor combine_karteringen
+
+    Combineert twee geodataframes op basis van de geometrie; bij overlaps
+    wordt de geometrie van lage_prio bijgesneden tot de overlap met hoge_prio
+
+    De data van alle vlakken blijft onveranderd (zolang ze blijven bestaan)
+
+                +-------+
+    Lage_prio:  |   A   |
+                +-------+
+                    +-------+
+    Hoge_prio:      |   B   |
+                    +-------+
+                +---+-------+
+    Resultaat:  | A |   B   |
+                +---+-------+
+    """
+    # Snij de geometrie van lage_prio bij tot de overlap met hoge_prio
+    new_gdf = gpd.overlay(lage_prio, hoge_prio, how="difference")
+
+    # Voeg de geometrie van hoge_prio toe
+    new_gdf = new_gdf.append(hoge_prio)
+
+    # Exploden eventuele multipolygons naar polygons
+    new_gdf = new_gdf.reset_index(drop=True).explode(ignore_index=True)
+
+    # Weglaten artefactvlakken/slivers
+    threshold = (
+        Interface.get_instance().get_config().combineer_karteringen_weglaten_threshold
+    )
+    new_gdf = new_gdf[new_gdf.area > threshold]
+
+    return new_gdf
 
 
 def fix_crs(
@@ -1136,6 +1176,60 @@ class Kartering:
             ]
         )
         return cls(gdf)
+
+    @staticmethod
+    def combineer_karteringen(karteringen: List[Self]) -> Self:
+        """
+        Accepteert een lijst met karteringen. Deze worden gecombineerd door ze
+        op de volgorde in de lijst over elkaar heen te leggen.
+
+        Data binnen de vlakken blijft gelijk, buiten dat er een nieuwe ElmID
+        wordt gegenereerd en de oppervlakten (gdf.Area) opnieuw berekend worden
+
+        Input:   [kart1, kart2, kart3]
+                    +-------+
+        kart1:      |   A   |
+                    +-------+
+                        +-------+
+        kart2:          |   B   |
+                        +-------+
+                            +-------+
+        kart3:              |   C   |
+                            +-------+
+
+                    +---+---+-------+
+        Output:     | A | B |   C   |
+                    +---+---+-------+
+        """
+        assert (
+            len(karteringen) > 1
+        ), "Er moeten minstens 2 karteringen zijn om te combineren"
+
+        for kartering in karteringen:
+            assert isinstance(
+                kartering, Kartering
+            ), "Alle elementen in karteringen moeten Karteringen zijn"
+            assert all(
+                col in kartering.gdf.columns for col in kartering.VEGTYPE_COLS
+            ) and not all(
+                col in kartering.gdf.columns for col in kartering.HABTYPE_COLS
+            ), "combineer_karteringen moet als stap 2 uitgevoerd worden"
+
+        result = karteringen[0].gdf
+        for kartering in karteringen[1:]:
+            result = _combineer_twee_geodataframes(
+                lage_prio=result,
+                hoge_prio=kartering.gdf,
+            )
+
+        # Reset index en ElmID
+        result = result.reset_index(drop=True)
+        result["ElmID"] = range(len(result))
+
+        # Oppervlakten kunnen veranderd zijn
+        result["Area"] = result.geometry.area
+
+        return Kartering(result)
 
     def apply_deftabel(self, dt: "DefinitieTabel") -> None:
         """

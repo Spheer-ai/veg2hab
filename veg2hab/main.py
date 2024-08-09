@@ -109,6 +109,8 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
 
 
 def run_2_stack_vegkartering(params: StackVegKarteringInputs):
+    # TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
+
     gpkg_files = []
 
     for single_shapefile in params.shapefile:
@@ -120,18 +122,20 @@ def run_2_stack_vegkartering(params: StackVegKarteringInputs):
                 f"Tijdelijke versie van {single_shapefile} is opgeslagen in {newfilename}"
             )
 
-    logging.error(
-        "Stapelen is nog niet geimplementeerd, voor nu wordt de eerste geselecteerd"
-    )
+    karteringen = []
 
-    gdf = gpd.read_file(gpkg_files[0])
-    kartering = Kartering.from_editable_vegtypes(gdf)
+    for gpkg in gpkg_files:
+        karteringen.append(Kartering.from_editable_vegtypes(gpd.read_file(gpkg)))
 
-    logging.info("Kartering is succesvol ingelezen")
+    logging.info("Karteringen zijn succesvol ingelezen")
 
-    # TODO implement this!!
+    # Lijst reversen zodat de 'bovenste' kartering aan het einde komt
+    gdf_vegkart = Kartering.combineer_karteringen(
+        karteringen.reverse()
+    ).to_editable_vegtypes()
 
-    gdf_vegkart = kartering.to_editable_vegtypes()
+    logging.info("Karteringen zijn succesvol gestacked")
+
     Interface.get_instance().output_shapefile(params.output, gdf_vegkart)
 
 
