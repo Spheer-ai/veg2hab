@@ -30,6 +30,9 @@ class AccessDBInputs(BaseModel):
     access_mdb_path: Path = Field(
         description="Bestandslocatie van de .mdb file van de digitale standaard",
     )
+    welke_typologie: Literal[WelkeTypologie.SBB, WelkeTypologie.rVvN] = Field(
+        description='De typologie van de vegetatiekartering. ("SBB", "rVvN")',
+    )
     datum_col: Optional[str] = Field(
         default=None,
         description="Datum kolom (optioneel), deze wordt onveranderd aan de output meegegeven",
@@ -42,6 +45,11 @@ class AccessDBInputs(BaseModel):
         default=None,
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
+
+    @validator("welke_typologie", pre=True)
+    def parse_vegetatiekundig_identiek_json(cls, value):
+        if isinstance(value, str):
+            return WelkeTypologie(value)
 
 
 class ShapefileInputs(BaseModel):
