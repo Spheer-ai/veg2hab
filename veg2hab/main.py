@@ -6,7 +6,7 @@ from typing import Union
 import geopandas as gpd
 
 from veg2hab import constants
-from veg2hab.bronnen import FGR, LBK, Bodemkaart, get_datadir, OudeBossenkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart, get_datadir
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.common import (
     AccessDBInputs,

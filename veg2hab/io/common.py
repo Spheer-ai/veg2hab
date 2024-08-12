@@ -6,8 +6,9 @@ from typing import ClassVar, Dict, List, Optional, Tuple
 import geopandas as gpd
 from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
-from veg2hab.enums import WelkeTypologie
 from typing_extensions import List, Literal
+
+from veg2hab.enums import WelkeTypologie
 
 
 class BaseModel(_BaseModel):
