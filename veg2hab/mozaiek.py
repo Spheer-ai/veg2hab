@@ -486,7 +486,7 @@ def make_buffered_boundary_overlay_gdf(
 
 def construct_elmid_omringd_door_gdf(
     augmented_overlayed: pd.DataFrame,
-) -> pd.DataFrame:
+) -> Optional[pd.DataFrame]:
     """
     ### Ontvangt een gdf met
         buffered_ElmID | full_line_length | ElmID | omringing_percentage | VegTypeInfo | HabitatKeuze
@@ -548,6 +548,10 @@ def construct_elmid_omringd_door_gdf(
         )
 
     result = augmented_overlayed.apply(expand_habkeuze_vegtypeinfo_columns, axis=1)
+
+    if len(result) == 0:
+        return None
+
     return pd.concat(result.values).reset_index(drop=True)
 
 

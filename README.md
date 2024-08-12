@@ -244,6 +244,7 @@ Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van 
  - [Fysisch-Geografische Regio kaart (afgekort tot FGR)](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
  - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
  - [Bodemkaart van Nederland](https://www.atlasleefomgeving.nl/bodemkaart-van-nl-150000) (versie 2021): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bodemtypen.
+ - [Oude Bossenkaart](./data/bronbestanden/Oudebossen.gpkg): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bosgroeiplaatsen ouder dan 1850.
 
 
 De locatie van de bronbestanden op je eigen PC zijn het eenvoudigst te achterhalen door de volgende code uit te voeren binnen een notebook. Vanuit deze locatie kunnen deze worden ingeladen in ArcGIS om in te kunnen zien, hoe de verschillende keuzes zijn gemaakt. **LET OP:** het

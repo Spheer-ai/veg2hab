@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, validator
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
@@ -29,6 +29,8 @@ class HabitatVoorstel(BaseModel):
     mits: BeperkendCriterium
     mozaiek: MozaiekRegel
     match_level: MatchLevel
+    vegtype_in_dt_naam: str = ""
+    habtype_naam: str = ""
 
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
@@ -69,6 +71,29 @@ class HabitatVoorstel(BaseModel):
             match_level=MatchLevel.NO_MATCH,
         )
 
+    def _get_dftbl_str(self):
+        veg_str = str(self.vegtype_in_dt)
+        if self.vegtype_in_dt_naam != "":
+            veg_str += f" ({self.vegtype_in_dt_naam})"
+
+        hab_str = self.habtype
+        if self.habtype_naam != "":
+            hab_str += f" ({self.habtype_naam})"
+
+        return f"[{veg_str} -> {hab_str}]"
+
+    def get_VvNdftbl_str(self):
+        if isinstance(self.vegtype_in_dt, SBB):
+            return "---"
+
+        return self._get_dftbl_str()
+
+    def get_SBBdftbl_str(self):
+        if isinstance(self.vegtype_in_dt, VvN):
+            return "---"
+
+        return self._get_dftbl_str()
+
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
         # TODO dit is niet zo netjes, met de json.loads en json.dumps
@@ -97,7 +122,7 @@ class HabitatKeuze(BaseModel):
     opmerking: str = ""
     mits_opmerking: str = ""
     mozaiek_opmerking: str = ""
-    debug_info: Optional[str] = ""
+    debug_info: str = ""
 
     @root_validator
     def valideer_habtype_keuzestatus(cls, values):
@@ -125,6 +150,22 @@ class HabitatKeuze(BaseModel):
             assert kwaliteit == Kwaliteit.NVT
 
         return values
+
+    @validator(
+        "opmerking",
+        "mits_opmerking",
+        "mozaiek_opmerking",
+        "debug_info",
+        pre=True,
+        always=True,
+    )
+    def vervang_none_door_lege_string(cls, v):
+        """
+        Omdat ArcGIS niet om kan gaan met lege strings worden deze fields weggeschreven als None
+        Bij het deserializen worden deze dus ook ingelezen als None
+        Dus we zetten ze hier weer om naar een lege string :)
+        """
+        return v if v is not None else ""
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(

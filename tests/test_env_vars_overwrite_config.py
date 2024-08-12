@@ -4,6 +4,23 @@ import os
 from veg2hab.io.cli import CLIInterface
 
 
+def test_combineer_karteringen_weglaten_threshold():
+    os.environ["VEG2HAB_COMBINEER_KARTERINGEN_WEGLATEN_THRESHOLD"] = "0.0001"
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .combineer_karteringen_weglaten_threshold
+        == 0.0001
+    )
+    os.environ["VEG2HAB_COMBINEER_KARTERINGEN_WEGLATEN_THRESHOLD"] = "2"
+    assert (
+        CLIInterface.get_instance()
+        .get_config()
+        .combineer_karteringen_weglaten_threshold
+        == 2
+    )
+
+
 def test_mozaiek_threshold():
     os.environ["VEG2HAB_MOZAIEK_THRESHOLD"] = "99.0"
     assert CLIInterface.get_instance().get_config().mozaiek_threshold == 99.0

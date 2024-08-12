@@ -12,11 +12,12 @@ from typing_extensions import Literal, Self
 
 from veg2hab import vegetatietypen
 from veg2hab.access_db import read_access_tables
-from veg2hab.bronnen import FGR, LBK, Bodemkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart
 from veg2hab.criteria import (
     BodemCriterium,
     FGRCriterium,
     LBKCriterium,
+    OudeBossenCriterium,
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
@@ -28,6 +29,7 @@ from veg2hab.habitat import (
     rank_habitatkeuzes,
     try_to_determine_habkeuze,
 )
+from veg2hab.io.common import Interface
 from veg2hab.mozaiek import (
     construct_elmid_omringd_door_gdf,
     make_buffered_boundary_overlay_gdf,
@@ -246,7 +248,7 @@ def fill_in_percentages(
     return row
 
 
-def sorteer_vegtypeinfos_habvoorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
+def sorteer_vegtypeinfos_en_habkeuzes(row: gpd.GeoSeries) -> gpd.GeoSeries:
     """
     Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
     Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos ook op de juiste volgorde worden gezet
@@ -332,22 +334,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
-                f"_VvNdftbl{idx}": str(
-                    [
-                        str(voorstel.vegtype_in_dt),
-                        voorstel.habtype,
-                    ]
-                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
-                    else None
-                ),
-                f"_SBBdftbl{idx}": str(
-                    [
-                        str(voorstel.vegtype_in_dt),
-                        voorstel.habtype,
-                    ]
-                    if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
-                    else None
-                ),
+                f"_VvNdftbl{idx}": voorstel.get_VvNdftbl_str(),
+                f"_SBBdftbl{idx}": voorstel.get_SBBdftbl_str(),
             }
 
             return pd.Series(series_dict)
@@ -375,43 +363,19 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_Mits_info{idx}": keuze.mits_opmerking,
             f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
             f"_MozkPerc{idx}": "\n".join(
-                [voorstel.mozaiek.get_mozk_perc_str() for voorstel in voorstellen]
+                voorstel.mozaiek.get_mozk_perc_str() for voorstel in voorstellen
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
-            f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
-            f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
+            f"VvN{idx}": ", ".join(str(code) for code in vegtypeinfo.VvN),
+            f"SBB{idx}": ", ".join(str(code) for code in vegtypeinfo.SBB),
             # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": "\n".join(
-                [
-                    (
-                        str(
-                            [
-                                str(voorstel.vegtype_in_dt),
-                                voorstel.habtype,
-                            ]
-                        )
-                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.VvN)
-                        else "---"
-                    )
-                    for voorstel in voorstellen
-                ]
+                voorstel.get_VvNdftbl_str() for voorstel in voorstellen
             ),
             f"_SBBdftbl{idx}": "\n".join(
-                [
-                    (
-                        str(
-                            [
-                                str(voorstel.vegtype_in_dt),
-                                voorstel.habtype,
-                            ]
-                        )
-                        if isinstance(voorstel.vegtype_in_dt, vegetatietypen.SBB)
-                        else "---"
-                    )
-                    for voorstel in voorstellen
-                ]
+                voorstel.get_SBBdftbl_str() for voorstel in voorstellen
             ),
         }
 
@@ -506,6 +470,45 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             f"_Uitleg{i}",
         ]
     return gdf[new_columns]
+
+
+def _combineer_twee_geodataframes(
+    lage_prio: gpd.GeoDataFrame, hoge_prio: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """
+    Geometrische-operaties-hulpfunctie voor combine_karteringen
+
+    Combineert twee geodataframes op basis van de geometrie; bij overlaps
+    wordt de geometrie van lage_prio bijgesneden tot de overlap met hoge_prio
+
+    De data van alle vlakken blijft onveranderd (zolang ze blijven bestaan)
+
+                +-------+
+    Lage_prio:  |   A   |
+                +-------+
+                    +-------+
+    Hoge_prio:      |   B   |
+                    +-------+
+                +---+-------+
+    Resultaat:  | A |   B   |
+                +---+-------+
+    """
+    # Snij de geometrie van lage_prio bij tot de overlap met hoge_prio
+    new_gdf = gpd.overlay(lage_prio, hoge_prio, how="difference")
+
+    # Voeg de geometrie van hoge_prio toe
+    new_gdf = new_gdf.append(hoge_prio)
+
+    # Exploden eventuele multipolygons naar polygons
+    new_gdf = new_gdf.reset_index(drop=True).explode(ignore_index=True)
+
+    # Weglaten artefactvlakken/slivers
+    threshold = (
+        Interface.get_instance().get_config().combineer_karteringen_weglaten_threshold
+    )
+    new_gdf = new_gdf[new_gdf.area > threshold]
+
+    return new_gdf
 
 
 def fix_crs(
@@ -681,12 +684,15 @@ class Kartering:
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
-        # Alle VegTypeInfo sorteren op percentage van hoog naar laag
-        # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
-        #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
-        self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
-            lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
-        )
+        # Als HabitatKeuze wel bestaat dan hoeven we VegTypeInfos niet te sorteren;
+        # Deze zijn dan al op de juiste volgorde (namelijk die van de HabitatKeuzes)
+        if not "HabitatKeuze" in self.gdf.columns:
+            # Alle VegTypeInfo sorteren op percentage van hoog naar laag
+            # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
+            #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
+            self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
+                lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
+            )
 
         # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
         #       Misschien een dict met welke stappen gedaan zijn?
@@ -1171,6 +1177,60 @@ class Kartering:
         )
         return cls(gdf)
 
+    @staticmethod
+    def combineer_karteringen(karteringen: List[Self]) -> Self:
+        """
+        Accepteert een lijst met karteringen. Deze worden gecombineerd door ze
+        op de volgorde in de lijst over elkaar heen te leggen.
+
+        Data binnen de vlakken blijft gelijk, buiten dat er een nieuwe ElmID
+        wordt gegenereerd en de oppervlakten (gdf.Area) opnieuw berekend worden
+
+        Input:   [kart1, kart2, kart3]
+                    +-------+
+        kart1:      |   A   |
+                    +-------+
+                        +-------+
+        kart2:          |   B   |
+                        +-------+
+                            +-------+
+        kart3:              |   C   |
+                            +-------+
+
+                    +---+---+-------+
+        Output:     | A | B |   C   |
+                    +---+---+-------+
+        """
+        assert (
+            len(karteringen) > 1
+        ), "Er moeten minstens 2 karteringen zijn om te combineren"
+
+        for kartering in karteringen:
+            assert isinstance(
+                kartering, Kartering
+            ), "Alle elementen in karteringen moeten Karteringen zijn"
+            assert all(
+                col in kartering.gdf.columns for col in kartering.VEGTYPE_COLS
+            ) and not all(
+                col in kartering.gdf.columns for col in kartering.HABTYPE_COLS
+            ), "combineer_karteringen moet als stap 2 uitgevoerd worden"
+
+        result = karteringen[0].gdf
+        for kartering in karteringen[1:]:
+            result = _combineer_twee_geodataframes(
+                lage_prio=result,
+                hoge_prio=kartering.gdf,
+            )
+
+        # Reset index en ElmID
+        result = result.reset_index(drop=True)
+        result["ElmID"] = range(len(result))
+
+        # Oppervlakten kunnen veranderd zijn
+        result["Area"] = result.geometry.area
+
+        return Kartering(result)
+
     def apply_deftabel(self, dt: "DefinitieTabel") -> None:
         """
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
@@ -1188,7 +1248,9 @@ class Kartering:
         )
 
     # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
-    def check_mitsen(self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK) -> None:
+    def check_mitsen(
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
+    ) -> None:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
@@ -1209,6 +1271,9 @@ class Kartering:
         lbk_needed = self.gdf["HabitatVoorstel"].apply(
             is_criteria_type_present, args=(LBKCriterium,)
         )
+        obk_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(OudeBossenCriterium,)
+        )
 
         ### Verrijken met de benodigde informatie
         if fgr_needed.any():
@@ -1219,6 +1284,8 @@ class Kartering:
             mits_info_df["bodem"] = bodemkaart.for_geometry(
                 mits_info_df.loc[bodem_needed]
             )
+        if obk_needed.any():
+            mits_info_df["obk"] = obk.for_geometry(mits_info_df.loc[obk_needed])
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
@@ -1230,7 +1297,7 @@ class Kartering:
                     voorstel.mits.check(mits_info_row)
 
     def bepaal_mits_habitatkeuzes(
-        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK
+        self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
     ) -> None:
         """
         Bepaalt voor complexdelen zonder mozaiekregels de habitatkeuzes
@@ -1242,13 +1309,16 @@ class Kartering:
         ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
         assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
 
-        self.check_mitsen(fgr, bodemkaart, lbk)
+        self.check_mitsen(fgr, bodemkaart, lbk, obk)
 
         self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
             lambda voorstellen: [
                 try_to_determine_habkeuze(voorstel) for voorstel in voorstellen
             ]
         )
+
+        # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
+        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
 
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
@@ -1364,7 +1434,10 @@ class Kartering:
             == 0
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
-    def _check_mozaiekregels(self, elmid_omringd_door: Union[pd.DataFrame, None]):
+        # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
+        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
+
+    def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
             return
 
@@ -1416,7 +1489,7 @@ class Kartering:
         return pd.Series(result)
 
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
-        editable_habtypes = self.as_final_format(sort_complexdelen=False)
+        editable_habtypes = self.as_final_format()
 
         # Aanpasbare kolommen taggen we met een EDIT_
         editable_columns = ["Habtype", "Kwal", "Opm"]
@@ -1532,7 +1605,7 @@ class Kartering:
         )
         return cls(gdf)
 
-    def as_final_format(self, sort_complexdelen=True) -> gpd.GeoDataFrame:
+    def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
@@ -1555,10 +1628,6 @@ class Kartering:
                 "_LokVrtNar",
             ]
         ]
-
-        if sort_complexdelen:
-            # Sorteer de keuzes eerst op niet-H0000-zijn, dan op percentage, dan op kwaliteit
-            base = base.apply(sorteer_vegtypeinfos_habvoorstellen, axis=1)
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
