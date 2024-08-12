@@ -8,6 +8,8 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal
 
+from veg2hab.enums import WelkeTypologie
+
 
 class BaseModel(_BaseModel):
     class Config:
@@ -26,6 +28,11 @@ class AccessDBInputs(BaseModel):
     )
     access_mdb_path: Path = Field(
         description="Bestandslocatie van de .mdb file van de digitale standaard",
+    )
+    # Even zelf hier neergezet, maar mark zorgt dat dit er echt komt, ook in de arcgis UI
+    # Dan moet het welke_typologie heten
+    sbb_of_vvn: WelkeTypologie = Field(
+        description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
     )
     datum_col: Optional[str] = Field(
         default=None,

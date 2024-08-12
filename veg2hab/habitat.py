@@ -201,14 +201,15 @@ class HabitatKeuze(BaseModel):
 
 
 def rank_habitatkeuzes(
-    keuze_en_vegtypeinfo: Tuple[HabitatKeuze, "VegTypeInfo"]
+    keuze_vegtypeinfo_en_voorstellen: Tuple[HabitatKeuze, "VegTypeInfo", List[HabitatVoorstel]]
 ) -> tuple:
     """
-    Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos voor in de outputtabel
+    Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos + habitatvoorstellen
     We zetten eerst alle H0000 achteraan, daarna sorteren we op percentage, daarna op kwaliteit
-    Tuple waar op gesort wordt: [uiteindelijk habtype=="H0000", 100-percentage, kwaliteit==Kwaliteit.MATIG]
+    Tuple waar op gesort wordt: [keuze.habtype == "H0000", 100 - percentage, keuze.kwaliteit == Kwaliteit.MATIG]
     """
-    keuze, vegtypeinfo = keuze_en_vegtypeinfo
+    # Voorstellen laten we in _ want die zijn niet nodig voor het bepalen van de volgorde
+    keuze, vegtypeinfo, _ = keuze_vegtypeinfo_en_voorstellen
 
     habtype_is_H0000 = keuze.habtype == "H0000"
     percentage = vegtypeinfo.percentage

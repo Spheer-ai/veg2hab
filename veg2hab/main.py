@@ -57,7 +57,7 @@ def run(
     elif isinstance(params, ApplyFunctioneleSamenhangInputs):
         return run_5_functionele_samenhang_en_min_opp(params)
     else:
-        raise TypeError("INvalid input parameter")
+        raise TypeError("Invalid input parameter")
 
 
 def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
