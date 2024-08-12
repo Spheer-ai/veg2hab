@@ -247,7 +247,7 @@ Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van 
  - [Oude Bossenkaart](./data/bronbestanden/Oudebossen.gpkg): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot bosgroeiplaatsen ouder dan 1850.
 
 
-De locatie van de bronbestanden op je eigen PC zijn het eenvoudigst te achterhalen door de volgende code uit te voeren binnen een notebook. Vanuit deze locatie kunnen deze worden ingeladen in ArcGIS om in te kunnen zien, hoe de verschillende keuzes zijn gemaakt. **LET OP:** het
+De locatie van de bronbestanden op je eigen PC zijn het eenvoudigst te achterhalen door de volgende code uit te voeren binnen een notebook. Vanuit deze locatie kunnen deze worden ingeladen in ArcGIS om in te kunnen zien, hoe de verschillende keuzes zijn gemaakt. **LET OP:** de LBK en Bodemkaart worden gedownload, de eerste keer dat deze nodig zijn (in stap 3). Als deze stap nog niet is gedraaid zijn deze te vinden op je eigen PC. De laatste versie van de bronbestanden zijn ook altijd te vinden in github [hier](https://github.com/Spheer-ai/veg2hab/tree/master/veg2hab/package_data) en [hier](https://github.com/Spheer-ai/veg2hab/tree/master/data/bronbestanden).
 
 ```python
 import veg2hab
