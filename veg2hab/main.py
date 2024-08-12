@@ -43,7 +43,7 @@ def bronbestanden():
     - WasWordtLijst: {constants.WWL_PATH}
     - Definitietabel: {constants.DEFTABEL_PATH}
     - FGR: {constants.FGR_PATH}
-    - Oude bossenkaart: constants.OUDE_BOSSENKAART_PATH (TODO)
+    - Oude bossenkaart: {constants.OUDE_BOSSENKAART_PATH}
     - Bodemkaart: {get_datadir("veg2hab", "data") / "lbk.gpkg"}
     - LBK: {get_datadir("veg2hab", "data") / "bodemkaart.gpkg"}
     """
