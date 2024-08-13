@@ -117,7 +117,7 @@ def test_changes_in_vegtype(steps):
     assert done.iloc[0].VvN2 == "1aa1a"
 
 
-# @pytest.mark.slow
+@pytest.mark.slow
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)

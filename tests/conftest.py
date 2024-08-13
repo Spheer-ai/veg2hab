@@ -1,5 +1,3 @@
-import contextlib
-import os
 import time
 
 import pytest
@@ -9,6 +7,7 @@ from veg2hab.io.cli import CLIInterface
 TIMED = "timed"
 SLOW = "slow"
 SLOW_OPTION = f"--run_{SLOW}"
+
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Configure the CLI Interface"""
