@@ -32,7 +32,14 @@ jobs:
       run: |
         pip install poetry==1.5.1
         poetry install
-
+    
+    # install mdb-export if running on linux
+    - name: Install mdbtools
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get install mdbtools
+    
     - name: Lint
       run: |
         poetry run black --check veg2hab
