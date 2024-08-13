@@ -19,7 +19,7 @@ def steps() -> tuple:
         shapefile="data/notebook_data/Rottige_Meenthe_Brandemeer_2013/vlakken.shp",
         elmid_col="ElmID",
         access_mdb_path="data/notebook_data/Rottige_Meenthe_Brandemeer_2013/864_RottigeMeenthe2013.mdb",
-        sbb_of_vvn=WelkeTypologie.SBB,
+        welke_typologie="SBB",
         output="data/notebook_data/tool_by_tool/1.gpkg",
     )
 
@@ -117,7 +117,7 @@ def test_changes_in_vegtype(steps):
     assert done.iloc[0].VvN2 == "1aa1a"
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
