@@ -20,26 +20,24 @@ def steps() -> tuple:
         elmid_col="ElmID",
         access_mdb_path="data/notebook_data/Rottige_Meenthe_Brandemeer_2013/864_RottigeMeenthe2013.mdb",
         sbb_of_vvn=WelkeTypologie.SBB,
-        output="data/notebook_data/tool_by_tool/1.gpkg"
+        output="data/notebook_data/tool_by_tool/1.gpkg",
     )
 
     step_3 = ApplyDefTabelInputs(
-        shapefile=str(step_1.output),
-        output="data/notebook_data/tool_by_tool/3.gpkg"
+        shapefile=str(step_1.output), output="data/notebook_data/tool_by_tool/3.gpkg"
     )
 
     step_4 = ApplyMozaiekInputs(
-        shapefile=str(step_3.output),
-        output="data/notebook_data/tool_by_tool/4.gpkg"
+        shapefile=str(step_3.output), output="data/notebook_data/tool_by_tool/4.gpkg"
     )
 
     step_5 = ApplyFunctioneleSamenhangInputs(
-        shapefile=str(step_4.output),
-        output="data/notebook_data/tool_by_tool/5.gpkg"
+        shapefile=str(step_4.output), output="data/notebook_data/tool_by_tool/5.gpkg"
     )
 
     return step_1, step_3, step_4, step_5
-    
+
+
 @pytest.mark.timed
 @pytest.mark.slow
 def test_full_standaard_run(steps):
@@ -100,6 +98,7 @@ def test_full_standaard_run(steps):
     assert gdf.Habtype4.value_counts().equals(expected_4)
     assert gdf.Habtype5.value_counts().equals(expected_5)
 
+
 @pytest.mark.slow
 def test_changes_in_vegtype(steps):
     step_1, step_3, step_4, step_5 = steps
@@ -116,6 +115,7 @@ def test_changes_in_vegtype(steps):
     done = gpd.read_file(step_5.output)
     assert done.iloc[0].SBB2 == "1a1a"
     assert done.iloc[0].VvN2 == "1aa1a"
+
 
 @pytest.mark.slow
 def test_changes_in_habtype(steps):

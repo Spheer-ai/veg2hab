@@ -8,19 +8,25 @@ TIMED = "timed"
 SLOW = "slow"
 SLOW_OPTION = f"--run_{SLOW}"
 
+
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Configure the CLI Interface"""
     CLIInterface.get_instance()
 
+
 def pytest_configure(config):
-    config.addinivalue_line("markers", f"{TIMED}: mark test as slow to run, only run with --slow")
+    config.addinivalue_line(
+        "markers", f"{TIMED}: mark test as slow to run, only run with --slow"
+    )
     config.addinivalue_line("markers", f"{SLOW}: mark test to show its execution time")
+
 
 def pytest_addoption(parser):
     # Toevoegen "--slow" optie
     parser.addoption(
         SLOW_OPTION, action="store_true", default=False, help="Run slow tests"
     )
+
 
 def pytest_collection_modifyitems(config, items):
     # Als --slow niet is gegeven, skip tests met "slow" marker
@@ -29,6 +35,7 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if SLOW in item.keywords:
                 item.add_marker(skip_slow)
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
@@ -40,6 +47,8 @@ def pytest_runtest_call(item):
         minutes = int(duration // 60)
         seconds = duration % 60
         if minutes > 0:
-            print(f"\nTest {item.name} took {minutes} minutes and {seconds:.4f} seconds")
+            print(
+                f"\nTest {item.name} took {minutes} minutes and {seconds:.4f} seconds"
+            )
         else:
             print(f"\nTest {item.name} took {seconds:.4f} seconds")

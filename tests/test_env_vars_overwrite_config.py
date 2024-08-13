@@ -5,8 +5,14 @@ from veg2hab.io.cli import CLIInterface
 
 
 def test_combineer_karteringen_weglaten_threshold():
-    initial_value = CLIInterface.get_instance().get_config().combineer_karteringen_weglaten_threshold
-    os.environ["VEG2HAB_COMBINEER_KARTERINGEN_WEGLATEN_THRESHOLD"] = str(initial_value + 1)
+    initial_value = (
+        CLIInterface.get_instance()
+        .get_config()
+        .combineer_karteringen_weglaten_threshold
+    )
+    os.environ["VEG2HAB_COMBINEER_KARTERINGEN_WEGLATEN_THRESHOLD"] = str(
+        initial_value + 1
+    )
     assert (
         CLIInterface.get_instance()
         .get_config()
@@ -25,7 +31,9 @@ def test_combineer_karteringen_weglaten_threshold():
 def test_mozaiek_threshold():
     initial_value = CLIInterface.get_instance().get_config().mozaiek_threshold
     os.environ["VEG2HAB_MOZAIEK_THRESHOLD"] = str(initial_value + 1)
-    assert CLIInterface.get_instance().get_config().mozaiek_threshold == initial_value + 1
+    assert (
+        CLIInterface.get_instance().get_config().mozaiek_threshold == initial_value + 1
+    )
     os.environ["VEG2HAB_MOZAIEK_THRESHOLD"] = str(initial_value)
     assert CLIInterface.get_instance().get_config().mozaiek_threshold == initial_value
 
@@ -33,17 +41,29 @@ def test_mozaiek_threshold():
 def test_mozaiek_als_rand_langs_threshold():
     initial_value = CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold
     os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = str(initial_value + 1)
-    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == initial_value + 1
+    assert (
+        CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold
+        == initial_value + 1
+    )
     os.environ["VEG2HAB_MOZAIEK_ALS_RAND_THRESHOLD"] = str(initial_value)
-    assert CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold == initial_value
+    assert (
+        CLIInterface.get_instance().get_config().mozaiek_als_rand_threshold
+        == initial_value
+    )
 
 
 def test_mozaiek_minimum_bedekking():
     initial_value = CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking
     os.environ["VEG2HAB_MOZAIEK_MINIMUM_BEDEKKING"] = str(initial_value + 1)
-    assert CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking == initial_value + 1
+    assert (
+        CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking
+        == initial_value + 1
+    )
     os.environ["VEG2HAB_MOZAIEK_MINIMUM_BEDEKKING"] = str(initial_value)
-    assert CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking == initial_value
+    assert (
+        CLIInterface.get_instance().get_config().mozaiek_minimum_bedekking
+        == initial_value
+    )
 
 
 def test_niet_geautomatiseerde_sbb():
@@ -90,7 +110,9 @@ def test_niet_geautomatiseerde_rvvn():
 
 def test_minimum_oppervlak():
     initial_default = CLIInterface.get_instance().get_config().minimum_oppervlak_default
-    initial_exceptions = CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions
+    initial_exceptions = (
+        CLIInterface.get_instance().get_config().minimum_oppervlak_exceptions
+    )
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "100"
     os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
         {
@@ -164,8 +186,14 @@ def test_minimum_oppervlak():
 
 
 def test_functionele_samenhang():
-    initial_buffer_distances = CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
-    initial_vegetatiekundig_identiek = CLIInterface.get_instance().get_config().functionele_samenhang_vegetatiekundig_identiek
+    initial_buffer_distances = (
+        CLIInterface.get_instance().get_config().functionele_samenhang_buffer_distances
+    )
+    initial_vegetatiekundig_identiek = (
+        CLIInterface.get_instance()
+        .get_config()
+        .functionele_samenhang_vegetatiekundig_identiek
+    )
     os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
         [
             [100, 10.01],
@@ -226,5 +254,9 @@ def test_functionele_samenhang():
             "H4030": "H4030/H2130",
         }
     )
-    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(initial_buffer_distances)
-    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(initial_vegetatiekundig_identiek)
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+        initial_buffer_distances
+    )
+    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK"] = json.dumps(
+        initial_vegetatiekundig_identiek
+    )

@@ -201,7 +201,9 @@ class HabitatKeuze(BaseModel):
 
 
 def rank_habitatkeuzes(
-    keuze_vegtypeinfo_en_voorstellen: Tuple[HabitatKeuze, "VegTypeInfo", List[HabitatVoorstel]]
+    keuze_vegtypeinfo_en_voorstellen: Tuple[
+        HabitatKeuze, "VegTypeInfo", List[HabitatVoorstel]
+    ]
 ) -> tuple:
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos + habitatvoorstellen

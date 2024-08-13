@@ -248,7 +248,9 @@ def fill_in_percentages(
     return row
 
 
-def sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen(row: gpd.GeoSeries) -> gpd.GeoSeries:
+def sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen(
+    row: gpd.GeoSeries,
+) -> gpd.GeoSeries:
     """
     Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
     Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos/HabitatVoorstellen ook op de juiste volgorde worden gezet
@@ -265,15 +267,23 @@ def sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen(row: gpd.GeoSeries) -> gpd.
         # Er zijn geen vegtypeinfos, dus er is maar 1 habitatkeuze (H0000)
         return row
 
-    keuze_vegtypeinfo_en_voorstellen = list(zip(row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"]))
+    keuze_vegtypeinfo_en_voorstellen = list(
+        zip(row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"])
+    )
     # Sorteer op basis van de habitatkeuze (idx 0)
-    sorted_keuze_vegtypeinfo_en_voorstellen = sorted(keuze_vegtypeinfo_en_voorstellen, key=rank_habitatkeuzes)
+    sorted_keuze_vegtypeinfo_en_voorstellen = sorted(
+        keuze_vegtypeinfo_en_voorstellen, key=rank_habitatkeuzes
+    )
 
-    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = zip(*sorted_keuze_vegtypeinfo_en_voorstellen)
+    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = zip(
+        *sorted_keuze_vegtypeinfo_en_voorstellen
+    )
     # Tuples uit zip omzetten naar lists
-    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = list(row["HabitatKeuze"]), list(
-        row["VegTypeInfo"]
-    ), list(row["HabitatVoorstel"])
+    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = (
+        list(row["HabitatKeuze"]),
+        list(row["VegTypeInfo"]),
+        list(row["HabitatVoorstel"]),
+    )
     return row
 
 
@@ -1320,7 +1330,9 @@ class Kartering:
         )
 
         # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
-        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1)
+        self.gdf = self.gdf.apply(
+            sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
+        )
 
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
@@ -1437,7 +1449,9 @@ class Kartering:
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
         # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
-        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1)
+        self.gdf = self.gdf.apply(
+            sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
+        )
 
     def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
