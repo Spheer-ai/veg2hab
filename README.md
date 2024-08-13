@@ -197,6 +197,12 @@ veg2hab 1a_digitale_standaard --help
 
 De stappen komen exact overeen met de stappen welke ook vanuit ArcGIS kunnen worden gedraaid. Zie de [Omzetstappen](./docs/OMZETSTAPPEN.md) om hier meer over te lezen.
 
+Optionele argumenten welke meerdere waardes kunnen meekrijgen, zoals de `sbb_col` bij omzetstap `1b_vector_bestand` kunnen als volgt worden meegegeven:
+
+```sh
+--sbb_col kolom1 --sbb_col kolom2
+```
+
 #### Voorbeeld voor het draaien van stap1 - 5 in volgorde
 
 Dit voorbeeld draait stap 1-5 o.b.v. de digitale standaard. Stap 2 wordt overgeslagen omdat we geen kaarten samenvoegen, deze stap is optioneel.
