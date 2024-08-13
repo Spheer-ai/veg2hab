@@ -29,10 +29,8 @@ class AccessDBInputs(BaseModel):
     access_mdb_path: Path = Field(
         description="Bestandslocatie van de .mdb file van de digitale standaard",
     )
-    # Even zelf hier neergezet, maar mark zorgt dat dit er echt komt, ook in de arcgis UI
-    # Dan moet het welke_typologie heten
-    sbb_of_vvn: WelkeTypologie = Field(
-        description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    welke_typologie: Literal[WelkeTypologie.SBB, WelkeTypologie.rVvN] = Field(
+        description='De typologie van de vegetatiekartering. ("SBB", "rVvN")',
     )
     datum_col: Optional[str] = Field(
         default=None,
@@ -46,6 +44,11 @@ class AccessDBInputs(BaseModel):
         default=None,
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
+
+    @validator("welke_typologie", pre=True)
+    def parse_vegetatiekundig_identiek_json(cls, value):
+        if isinstance(value, str):
+            return WelkeTypologie(value)
 
 
 class ShapefileInputs(BaseModel):
@@ -61,16 +64,20 @@ class ShapefileInputs(BaseModel):
     vegtype_col_format: Literal["single", "multi"] = Field(
         description='"single" als complexen in 1 kolom zitten of "multi" als er meerdere kolommen zijn',
     )
-    sbb_of_vvn: Literal["SBB", "VvN", "beide"] = Field(
-        description='"VvN" als VvN de voorname vertaling is vanuit het lokale type, "SBB" voor SBB en "beide" als beide er zijn.'
+    welke_typologie: WelkeTypologie = Field(
+        description='Voornaamste typologie van waaruit de vertalingen worden uitgevoerd. ("SBB", "VvN", "rVvN", "SBB en VvN")',
     )
     sbb_col: List[str] = Field(
         default_factory=list,
-        description="SBB kolom(men) (verplicht wanneer het voorname type 'SBB' of 'beide' is)",
+        description="SBB kolom(men) (verplicht wanneer het voorname type 'SBB' of 'SBB en VvN' is)",
     )
     vvn_col: List[str] = Field(
         default_factory=list,
-        description="VvN kolom(men) (verplicht wanneer het voorname type 'VvN' of 'beide' is)",
+        description="VvN kolom(men) (verplicht wanneer het voorname type 'VvN' of 'SBB en VvN' is)",
+    )
+    rvvn_col: List[str] = Field(
+        default_factory=list,
+        description="rVvN kolom(men) (verplicht wanneer het voorname type 'rVvN' is)",
     )
     perc_col: List[str] = Field(
         default_factory=list,

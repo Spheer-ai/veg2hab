@@ -13,8 +13,8 @@ def test_to_parameter_list():
 
     param_list = ArcGISShapefileInputs.to_parameter_list()
 
-    assert len(param_list) == 12
+    assert len(param_list) == 13
 
     param_list = ArcGISAccessDBInputs.to_parameter_list()
 
-    assert len(param_list) == 6
+    assert len(param_list) == 7
