@@ -1070,7 +1070,7 @@ class Kartering:
 
     @staticmethod
     def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
-        result = pd.Series()
+        result = pd.Series(dtype="object")
         for idx, info in enumerate(vegtypeinfos, 1):
             result[f"EDIT_SBB{idx}"] = ",".join(
                 str(sbb) for sbb in info.SBB

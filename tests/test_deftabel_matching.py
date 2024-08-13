@@ -267,7 +267,6 @@ def test_matches_both_vvn_and_sbb(dt):
     post2 = dt.find_habtypes(pre)
     assert dt.find_habtypes(pre) == post
 
-
 def test_niet_geautomatiseerde_codes(dt):
     pre = VegTypeInfo.from_str_vegtypes(100, SBB_strings=["100"])
     post = [

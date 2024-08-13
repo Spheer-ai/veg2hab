@@ -1,5 +1,6 @@
 import geopandas as gpd
 import pandas as pd
+import pytest
 from pytest import fixture
 
 from veg2hab.enums import WelkeTypologie
@@ -8,7 +9,6 @@ from veg2hab.io.common import (
     ApplyDefTabelInputs,
     ApplyFunctioneleSamenhangInputs,
     ApplyMozaiekInputs,
-    StackVegKarteringInputs,
 )
 from veg2hab.main import run
 
@@ -40,8 +40,9 @@ def steps() -> tuple:
 
     return step_1, step_3, step_4, step_5
     
-
-def test_standaard_run(steps):
+@pytest.mark.timed
+@pytest.mark.slow
+def test_full_standaard_run(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
     run(step_3)
@@ -99,6 +100,7 @@ def test_standaard_run(steps):
     assert gdf.Habtype4.value_counts().equals(expected_4)
     assert gdf.Habtype5.value_counts().equals(expected_5)
 
+@pytest.mark.slow
 def test_changes_in_vegtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
@@ -115,6 +117,7 @@ def test_changes_in_vegtype(steps):
     assert done.iloc[0].SBB2 == "1a1a"
     assert done.iloc[0].VvN2 == "1aa1a"
 
+@pytest.mark.slow
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
