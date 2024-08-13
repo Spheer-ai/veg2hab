@@ -154,6 +154,10 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
         if "enum" in field_info.keys():
             param.filter.type = "ValueList"
             param.filter.list = field_info["enum"]
+        elif field_name == "welke_typologie":
+            param.filter.type = "ValueList"
+            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
+            param.filter.list = param_schema["definitions"][ref_name]["enum"]
 
         outputs.append(param)
 
@@ -189,7 +193,7 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         as_dict = {p.name: p.valueAsText for p in parameters}
-        for col in ["sbb_col", "vvn_col", "perc_col", "lok_vegtypen_col"]:
+        for col in ["sbb_col", "vvn_col", "rvvn_col", "perc_col", "lok_vegtypen_col"]:
             if as_dict.get(col) is None:
                 as_dict[col] = []
             else:
@@ -212,9 +216,18 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
             as_dict["perc_col"].multiValue = not is_multivalue_per_column
             as_dict["lok_vegtypen_col"].multiValue = not is_multivalue_per_column
 
-        if as_dict["sbb_of_vvn"].altered:
-            as_dict["sbb_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "VvN"
-            as_dict["vvn_col"].enabled = as_dict["sbb_of_vvn"].valueAsText != "SBB"
+        if as_dict["welke_typologie"].altered:
+            as_dict["rvvn_col"].enabled = (
+                as_dict["welke_typologie"].valueAsText == "rVvN"
+            )
+            as_dict["sbb_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+                "SBB",
+                "SBB en VvN",
+            }
+            as_dict["vvn_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+                "VvN",
+                "SBB en VvN",
+            }
 
 
 class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):

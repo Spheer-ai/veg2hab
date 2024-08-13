@@ -6,7 +6,7 @@ from typing import Union
 import geopandas as gpd
 
 from veg2hab import constants
-from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart
+from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart, get_datadir
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.io.common import (
     AccessDBInputs,
@@ -29,6 +29,24 @@ def installatie_instructies():
     Ga naar "add Python toolbox" in ArcGIS Pro en selecteer het bestand op de volgende locatie:
         {constants.TOOLBOX_PYT_PATH}
 """
+        )
+    )
+
+
+def bronbestanden():
+    print(
+        dedent(
+            f"""
+    Om veg2hab te kunnen draaien, worden de volgende bestanden gebruikt.
+    De eerste vier zijn altijd aanwezig en de laatste twee worden van github gedownload,
+    wanneer veg2hab voor het eerst gedraaid wordt. Mogelijk zijn deze dus nog niet beschikbaar.
+    - WasWordtLijst: {constants.WWL_PATH}
+    - Definitietabel: {constants.DEFTABEL_PATH}
+    - FGR: {constants.FGR_PATH}
+    - Oude bossenkaart: {constants.OUDE_BOSSENKAART_PATH}
+    - Bodemkaart: {get_datadir("veg2hab", "data") / "lbk.gpkg"}
+    - LBK: {get_datadir("veg2hab", "data") / "bodemkaart.gpkg"}
+    """
         )
     )
 
@@ -73,7 +91,7 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             shape_path=filename,
             shape_elm_id_column=params.elmid_col,
             access_mdb_path=params.access_mdb_path,
-            welke_typologie=params.sbb_of_vvn,
+            welke_typologie=params.welke_typologie,
             opmerkingen_column=params.opmerking_col,
             datum_column=params.datum_col,
         )
@@ -82,11 +100,12 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
             shape_path=filename,
             ElmID_col=params.elmid_col,
             vegtype_col_format=params.vegtype_col_format,
-            welke_typologie=params.sbb_of_vvn,
+            welke_typologie=params.welke_typologie,
             datum_col=params.datum_col,
             opmerking_col=params.opmerking_col,
             SBB_col=params.sbb_col,
             VvN_col=params.vvn_col,
+            rVvN_col=params.rvvn_col,
             split_char=params.split_char,
             perc_col=params.perc_col,
             lok_vegtypen_col=params.lok_vegtypen_col,
