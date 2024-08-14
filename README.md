@@ -14,6 +14,9 @@
       - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
       - [Handmatige correctie van de omzetting](#handmatige-correctie-van-de-omzetting)
     - [Gebruik via de Command Line Interface (CLI)](#gebruik-via-de-command-line-interface-cli)
+      - [Installatie](#installatie)
+      - [Gebruik](#gebruik)
+      - [Voorbeeld voor het draaien van stap1 - 5 in volgorde](#voorbeeld-voor-het-draaien-van-stap1---5-in-volgorde)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
     - [Algemene kolommen voor het hele vlak](#algemene-kolommen-voor-het-hele-vlak)
     - [Kolommen per deel van het complex](#kolommen-per-deel-van-het-complex)
@@ -191,7 +194,7 @@ Om te kunnen zien welke parameters allemaal worden verwacht door een stap:
 
 ```sh
 veg2hab {{stap}} --help
-# bijvoorbeeld voor stap 1a draaig:
+# bijvoorbeeld voor stap 1a, draai:
 veg2hab 1a_digitale_standaard --help
 ```
 
