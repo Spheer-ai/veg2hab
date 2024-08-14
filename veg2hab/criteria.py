@@ -110,6 +110,8 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
         return set()
 
 
+# NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
+
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     wanted_fgrtype: FGRType
@@ -337,10 +339,6 @@ class LBKCriterium(BeperkendCriterium):
 class OudeBossenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "OudeBossenCriterium"
     for_habtype: Literal["H9120", "H9190"]
-
-    # Aangezien we altijd MaybeBoolean.FALSE teruggeven tenzij we in een oude bossenkaart
-    # vlak liggen (dan geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug), hebben
-    # we geen target/wanted waarden nodig.
     actual_OBK: Optional[OBKWaarden] = None
     overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
@@ -350,9 +348,11 @@ class OudeBossenCriterium(BeperkendCriterium):
         Als de waarde van de obk kolom None is, dan is het vlak niet binnen een oude bossenkaartvlak,
         dus kunnen we veilig MaybeBoolean.FALSE teruggeven.
 
-        Als de waarde van de obk kolom niet None is, dan is het vlak binnen een oude bossenkaartvlak,
-        en is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is, dus
-        geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
+        Als de waarde van de obk kolom niet None is, dan is het vlak binnen een oude bossenkaartvlak.
+        In dit geval kijken we naar de waarde van de obk kolom voor het for_habtype habitattype (H9120 of H9190).
+        Is dit 0, dan is het vlak niet binnen een kwalificerend oud bos, dus geven we MaybeBoolean.FALSE terug.
+        Is dit 1 of 2, dan is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is, 
+        dus geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
         """
         assert "obk" in row, "obk kolom niet aanwezig"
         assert "obk_percentage" in row, "obk_percentage kolom niet aanwezig"

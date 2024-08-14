@@ -1219,7 +1219,7 @@ class Kartering:
             is_criteria_type_present, args=(OudeBossenCriterium,)
         )
 
-        ### Verrijken met de benodigde informatie
+        ### Verrijken met de benodigde informatie (joins zijn op index)
         if fgr_needed.any():
             mits_info_df = mits_info_df.join(
                 fgr.for_geometry(mits_info_df.loc[fgr_needed])
