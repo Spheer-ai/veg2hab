@@ -14,6 +14,9 @@
       - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
       - [Handmatige correctie van de omzetting](#handmatige-correctie-van-de-omzetting)
     - [Gebruik via de Command Line Interface (CLI)](#gebruik-via-de-command-line-interface-cli)
+      - [Installatie](#installatie)
+      - [Gebruik](#gebruik)
+      - [Voorbeeld voor het draaien van stap1 - 5 in volgorde](#voorbeeld-voor-het-draaien-van-stap1---5-in-volgorde)
   - [Interpretatie van de output-habitattypekartering](#interpretatie-van-de-output-habitattypekartering)
     - [Algemene kolommen voor het hele vlak](#algemene-kolommen-voor-het-hele-vlak)
     - [Kolommen per deel van het complex](#kolommen-per-deel-van-het-complex)
@@ -169,8 +172,53 @@ Voorbeelden:
 
 ### Gebruik via de Command Line Interface (CLI)
 
-TO DO
+Veg2hab is ook beschikbaar als CLI (command line interface) tool. Dit kan handig zijn voor het automatiseren, maar het vergt enige kennis van terminals.
 
+#### Installatie
+
+Voor installatie kan veg2hab geinstalleerd worden vanuit PYPI (https://pypi.org/project/veg2hab/). De beste manier om dit te doen is via `pipx`, maar uiteraard kan het ook gewoon via `pip` geinstalleerd worden.
+
+```sh
+pipx install veg2hab
+```
+
+#### Gebruik
+
+Om te zien welke stappen gedraaid kunnen worden, zie:
+
+```sh
+veg2hab --help
+```
+
+Om te kunnen zien welke parameters allemaal worden verwacht door een stap:
+
+```sh
+veg2hab {{stap}} --help
+# bijvoorbeeld voor stap 1a, draai:
+veg2hab 1a_digitale_standaard --help
+```
+
+De stappen komen exact overeen met de stappen welke ook vanuit ArcGIS kunnen worden gedraaid. Zie de [Omzetstappen](./docs/OMZETSTAPPEN.md) om hier meer over te lezen.
+
+Optionele argumenten welke meerdere waardes kunnen meekrijgen, zoals de `sbb_col` bij omzetstap `1b_vector_bestand` kunnen als volgt worden meegegeven:
+
+```sh
+--sbb_col kolom1 --sbb_col kolom2
+```
+
+#### Voorbeeld voor het draaien van stap1 - 5 in volgorde
+
+Dit voorbeeld draait stap 1-5 o.b.v. de digitale standaard. Stap 2 wordt overgeslagen omdat we geen kaarten samenvoegen, deze stap is optioneel.
+
+```sh
+veg2hab 1a_digitale_standaard data/notebook_data/Rottige_Meenthe_Brandemeer_2013/vlakken.shp ElmID data/notebook_data/Rottige_Meenthe_Brandemeer_2013/864_RottigeMeenthe2013.mdb --output output_stap1.gpkg
+
+veg2hab 3_definitietabel_en_mitsen output_stap1.gpkg --output output_stap3.gpkg
+
+veg2hab 4_mozaiekregels output_stap3.gpkg --output output_stap4.gpkg
+
+veg2hab 5_functionele_samenhang_en_min_opp output_stap4.gpkg --output output_stap5.gpkg
+```
 
 ## Interpretatie van de output-habitattypekartering
 
