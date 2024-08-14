@@ -225,8 +225,25 @@ def _remove_habtypen_due_to_minimum_oppervlak(
         keuzes = gdf.loc[gdf.ElmID == ElmID, "HabitatKeuze"].iloc[0]
         for index in indices:
             keuze_to_be_edited = keuzes[index]
+            assert not keuze_to_be_edited.habtype in [
+                "H0000",
+                "HXXXX",
+            ], "H0000 en HXXXX vlakken zouden uitgesloten moeten zijn van functionele samenhang"
+            assert keuze_to_be_edited.kwaliteit in [
+                Kwaliteit.GOED,
+                Kwaliteit.MATIG,
+            ], "Functionele Samenhangvlak kwaliteit moet GOED of MATIG zijn"
+
             keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-            keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein.{' ' + keuze_to_be_edited.opmerking if keuze_to_be_edited.opmerking is not None else ''}"
+            keuze_to_be_edited.opmerking = (
+                "Was {} {}, maar oppervlak was te klein.{}".format(
+                    keuze_to_be_edited.habtype,
+                    "(" + keuze_to_be_edited.kwaliteit.as_letter() + ")",
+                    f" {keuze_to_be_edited.opmerking}"
+                    if keuze_to_be_edited.opmerking is not None
+                    else "",
+                )
+            )
             keuze_to_be_edited.habtype = "H0000"
             keuze_to_be_edited.kwaliteit = Kwaliteit.NVT
 
