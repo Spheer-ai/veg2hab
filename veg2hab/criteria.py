@@ -112,6 +112,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
 
 # NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
 
+
 class FGRCriterium(BeperkendCriterium):
     type: ClassVar[str] = "FGRCriterium"
     wanted_fgrtype: FGRType
@@ -351,7 +352,7 @@ class OudeBossenCriterium(BeperkendCriterium):
         Als de waarde van de obk kolom niet None is, dan is het vlak binnen een oude bossenkaartvlak.
         In dit geval kijken we naar de waarde van de obk kolom voor het for_habtype habitattype (H9120 of H9190).
         Is dit 0, dan is het vlak niet binnen een kwalificerend oud bos, dus geven we MaybeBoolean.FALSE terug.
-        Is dit 1 of 2, dan is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is, 
+        Is dit 1 of 2, dan is het aan de gebruiker om te bepalen of het daadwerkelijk binnen een oud bos is,
         dus geven we MaybeBoolean.CANNOT_BE_AUTOMATED terug.
         """
         assert "obk" in row, "obk kolom niet aanwezig"
