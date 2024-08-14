@@ -54,7 +54,7 @@ jobs:
     - name: Test with pytest windows
       if: startsWith(matrix.os, 'windows')
       run: |
-        poetry run pytest -v tests --run_slow - "not test_editable_vegtypen"
+        poetry run pytest -v tests --run_slow -k "not test_editable_vegtypen"
 
     # TODO dit zou nog een keer netjes zijn
     # - name: Pyright
