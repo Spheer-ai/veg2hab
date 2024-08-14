@@ -67,6 +67,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
     - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
+    - Mocht hierdoor de error `ModuleNotFoundError: No module named 'veg2hab'` verschijnen, ook al verscheen het uitvoeren van `!pip install --upgrade veg2hab` **geen** error, vervang dan `!pip install --upgrade veg2hab` door op de eerste regel `import pip` en op de volgende regel `pip.main(['install', '--upgrade', 'veg2hab'])`. Voer dit uit en probeer daarna `import veg2hab` opnieuw. 
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
