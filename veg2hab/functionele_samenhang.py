@@ -3,7 +3,7 @@ from typing import List, Set, Tuple
 import geopandas as gpd
 import pandas as pd
 
-from veg2hab.enums import FuncSamenhangID, KeuzeStatus
+from veg2hab.enums import FuncSamenhangID, KeuzeStatus, Kwaliteit
 from veg2hab.io.common import Interface
 
 
@@ -226,8 +226,9 @@ def _remove_habtypen_due_to_minimum_oppervlak(
         for index in indices:
             keuze_to_be_edited = keuzes[index]
             keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-            keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein. {keuze_to_be_edited.opmerking}"
+            keuze_to_be_edited.opmerking = f"Was {keuze_to_be_edited.habtype}, maar oppervlak was te klein.{' ' + keuze_to_be_edited.opmerking if keuze_to_be_edited.opmerking is not None else ''}"
             keuze_to_be_edited.habtype = "H0000"
+            keuze_to_be_edited.kwaliteit = Kwaliteit.NVT
 
     return gdf
 
