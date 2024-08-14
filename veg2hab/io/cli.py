@@ -62,6 +62,7 @@ def _decorate_click(func: Callable, param_schema: Dict):
                 help=field_info.get("description"),
                 type=param_type,
                 required=is_required,
+                multiple=field_info.get("type") == "array",
             )(func)
 
     return func
