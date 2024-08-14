@@ -1275,14 +1275,18 @@ class Kartering:
             is_criteria_type_present, args=(OudeBossenCriterium,)
         )
 
-        ### Verrijken met de benodigde informatie
+        ### Verrijken met de benodigde informatie (joins zijn op index)
         if fgr_needed.any():
-            mits_info_df["fgr"] = fgr.for_geometry(mits_info_df.loc[fgr_needed])
+            mits_info_df = mits_info_df.join(
+                fgr.for_geometry(mits_info_df.loc[fgr_needed])
+            )
         if lbk_needed.any():
-            mits_info_df["lbk"] = lbk.for_geometry(mits_info_df.loc[lbk_needed])
+            mits_info_df = mits_info_df.join(
+                lbk.for_geometry(mits_info_df.loc[lbk_needed])
+            )
         if bodem_needed.any():
-            mits_info_df["bodem"] = bodemkaart.for_geometry(
-                mits_info_df.loc[bodem_needed]
+            mits_info_df = mits_info_df.join(
+                bodemkaart.for_geometry(mits_info_df.loc[bodem_needed])
             )
         if obk_needed.any():
             mits_info_df["obk"] = obk.for_geometry(mits_info_df.loc[obk_needed])
