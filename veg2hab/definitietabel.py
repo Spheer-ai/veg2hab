@@ -3,18 +3,15 @@ import json
 import logging
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Union
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium
+from veg2hab.criteria import BeperkendCriterium, OverrideCriterium
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import (  # DummyMozaiekregel,; GeenMozaiekregel,
-    MozaiekRegel,
-    StandaardMozaiekregel,
-)
+from veg2hab.mozaiek import MozaiekRegel, StandaardMozaiekregel
 from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegkartering import VegTypeInfo
 
@@ -25,6 +22,10 @@ class DefinitieTabel:
     def __init__(self, df: pd.DataFrame):
         # Inladen
         self.df = df
+
+        # Een field voor override dict omdat deze anders mee wordt
+        # genomen in de lru_cache van _find_habtypes_for_code
+        self.override_dict = {}
 
         self.df.Kwaliteit = self.df.Kwaliteit.apply(Kwaliteit.from_letter)
         self.df.SBB = self.df.SBB.apply(SBB.from_string)
@@ -82,7 +83,27 @@ class DefinitieTabel:
 
         return cls(df)
 
-    def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
+    def set_override_dict(self, override_dict: Dict[str, OverrideCriterium]) -> None:
+        """
+        Set de override_dict voor de definitietabel
+        Voor de zekerheid wordt ook de cache gecleared
+
+        Dit is een aparte method/field omdat de override_dict dan niet in de cache van _find_habtypes_for_code komt
+        """
+        assert isinstance(override_dict, dict), "override_dict moet een dict zijn"
+        assert all(
+            isinstance(key, str) for key in override_dict.keys()
+        ), "Keys van override_dict moeten strings zijn"
+        assert all(
+            isinstance(value, OverrideCriterium) for value in override_dict.values()
+        ), "Values van override_dict moeten OverrideCriteriums zijn"
+        self.override_dict = override_dict
+        self._find_habtypes_for_code.cache_clear()
+
+    def find_habtypes(
+        self,
+        info: VegTypeInfo,
+    ) -> List[HabitatVoorstel]:
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo
         """
@@ -107,7 +128,8 @@ class DefinitieTabel:
 
     @lru_cache(maxsize=256)
     def _find_habtypes_for_code(
-        self, code: Union[SBB, VvN, None]
+        self,
+        code: Union[SBB, VvN, None],
     ) -> List[HabitatVoorstel]:
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven code
@@ -129,13 +151,18 @@ class DefinitieTabel:
             vegtype_in_dt = row["SBB"] if isinstance(row["SBB"], SBB) else row["VvN"]
             assert isinstance(vegtype_in_dt, (SBB, VvN))
 
+            if row.mits in self.override_dict.keys():
+                mits = self.override_dict[row.mits]
+            else:
+                mits = row.Criteria
+
             voorstellen.append(
                 HabitatVoorstel(
                     onderbouwend_vegtype=code,
                     vegtype_in_dt=vegtype_in_dt,
                     habtype=row["Habitattype"],
                     kwaliteit=row["Kwaliteit"],
-                    mits=row["Criteria"],
+                    mits=mits,
                     mozaiek=row["Mozaiekregel"],
                     match_level=match_levels[idx],
                     vegtype_in_dt_naam=row["Vegtype_naam"],

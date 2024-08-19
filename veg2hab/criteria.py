@@ -7,7 +7,7 @@ from typing import ClassVar, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel
 from typing_extensions import Literal
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
@@ -23,6 +23,7 @@ class BeperkendCriterium(BaseModel):
 
     class Config:
         validate_assignment = True
+        arbitrary_types_allowed = True # Nodig voor de override_geometry van OverrideCriterium
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
@@ -57,7 +58,7 @@ class BeperkendCriterium(BaseModel):
         data = self.dict(*args, **kwargs)
         return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
-    def check(self, row: gpd.GeoSeries):
+    def check(self, row: pd.Series):
         raise NotImplementedError()
 
     def is_criteria_type_present(self, type):
@@ -85,7 +86,7 @@ class GeenCriterium(BeperkendCriterium):
     type: ClassVar[str] = "GeenCriterium"
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         self.cached_evaluation = MaybeBoolean.TRUE
 
     def __str__(self):
@@ -100,7 +101,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
     toelichting: str
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         self.cached_evaluation = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
@@ -108,6 +109,55 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
 
     def get_opm(self) -> Set[str]:
         return set()
+
+
+class OverrideCriterium(BeperkendCriterium):
+    type: ClassVar[str] = "OverrideCriteria"
+    mits: str
+    truth_value: MaybeBoolean
+    override_geometry: Optional[
+        gpd.GeoSeries
+    ] = None  # we supporten ook meerdere shapes
+    truth_value_outside: Optional[MaybeBoolean] = None
+    cached_evaluation: Optional[MaybeBoolean] = None
+
+    # Check of de override_geometry en truth_value_outside er beide zijn of beide niet zijn
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if (self.override_geometry is None) != (self.truth_value_outside is None):
+            raise ValueError(
+                "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
+            )
+
+    def check(self, row: pd.Series) -> None:
+        assert "geometry" in row, "geometry kolom niet aanwezig"
+
+        if self.override_geometry is None:
+            self.cached_evaluation = self.truth_value
+            return
+
+        if row.geometry.intersects(self.override_geometry).any():
+            self.cached_evaluation = self.truth_value
+            return
+
+        self.cached_evaluation = ~self.truth_value
+
+    def __str__(self):
+        string = "Handmatig overschreven{}: {}"
+        return string.format(
+            f" (met {self.cached_evaluation.as_letter()})"
+            if self.cached_evaluation is not None
+            else "",
+            self.mits,
+        )
+
+    def get_opm(self) -> Set[str]:
+        return set()
+    
+    def json(self, *args, **kwargs):
+        """Same here"""
+        data = self.dict(*args, **kwargs)
+        return json.dumps(data)
 
 
 # NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
@@ -120,7 +170,7 @@ class FGRCriterium(BeperkendCriterium):
     overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         assert "fgr" in row, "fgr kolom niet aanwezig"
         assert "fgr_percentage" in row, "fgr_percentage kolom niet aanwezig"
         assert row["fgr"] is not None, "fgr kolom is leeg"
@@ -179,7 +229,7 @@ class BodemCriterium(BeperkendCriterium):
     overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         assert "bodem" in row, "bodem kolom niet aanwezig"
         assert "bodem_percentage" in row, "bodem_percentage kolom niet aanwezig"
         self.actual_bodemcode = (
@@ -257,7 +307,7 @@ class LBKCriterium(BeperkendCriterium):
     overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         assert "lbk" in row, "lbk kolom niet aanwezig"
         assert "lbk_percentage" in row, "lbk_percentage kolom niet aanwezig"
         assert row["lbk"] is not None, "lbk kolom is leeg"
@@ -344,7 +394,7 @@ class OudeBossenCriterium(BeperkendCriterium):
     overlap_percentage: float = 0.0
     cached_evaluation: Optional[MaybeBoolean] = None
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         """
         Als de waarde van de obk kolom None is, dan is het vlak niet binnen een oude bossenkaartvlak,
         dus kunnen we veilig MaybeBoolean.FALSE teruggeven.
@@ -414,7 +464,7 @@ class NietCriterium(BeperkendCriterium):
     type: ClassVar[str] = "NietCriterium"
     sub_criterium: BeperkendCriterium
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         self.sub_criterium.check(row)
 
     def is_criteria_type_present(self, type) -> bool:
@@ -444,7 +494,7 @@ class OfCriteria(BeperkendCriterium):
     type: ClassVar[str] = "OfCriteria"
     sub_criteria: List[BeperkendCriterium]
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         for crit in self.sub_criteria:
             crit.check(row)
 
@@ -475,7 +525,7 @@ class EnCriteria(BeperkendCriterium):
     type: ClassVar[str] = "EnCriteria"
     sub_criteria: List[BeperkendCriterium]
 
-    def check(self, row: gpd.GeoSeries) -> None:
+    def check(self, row: pd.Series) -> None:
         for crit in self.sub_criteria:
             crit.check(row)
 
