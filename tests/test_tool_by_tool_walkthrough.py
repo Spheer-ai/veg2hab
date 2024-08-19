@@ -1,5 +1,6 @@
 import geopandas as gpd
 import pandas as pd
+import pyodbc
 import pytest
 from pytest import fixture
 
@@ -42,7 +43,12 @@ def steps() -> tuple:
 @pytest.mark.slow
 def test_full_standaard_run(steps):
     step_1, step_3, step_4, step_5 = steps
-    run(step_1)
+    try:
+        run(step_1)
+    except (RuntimeError, pyodbc.InterfaceError):
+        pytest.skip(
+            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
+        )
     run(step_3)
     run(step_4)
     run(step_5)
@@ -102,7 +108,12 @@ def test_full_standaard_run(steps):
 @pytest.mark.slow
 def test_changes_in_vegtype(steps):
     step_1, step_3, step_4, step_5 = steps
-    run(step_1)
+    try:
+        run(step_1)
+    except (RuntimeError, pyodbc.InterfaceError):
+        pytest.skip(
+            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
+        )
     gdf = gpd.read_file(step_1.output)
     # We hebben enkel een paar regels nodig
     gdf = gdf.head(10)
@@ -120,7 +131,12 @@ def test_changes_in_vegtype(steps):
 @pytest.mark.slow
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
-    run(step_1)
+    try:
+        run(step_1)
+    except (RuntimeError, pyodbc.InterfaceError):
+        pytest.skip(
+            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
+        )
     gdf = gpd.read_file(step_1.output)
     # We hebben enkel een paar regels nodig
     gdf = gdf.head(10)

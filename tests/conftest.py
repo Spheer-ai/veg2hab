@@ -6,7 +6,7 @@ from veg2hab.io.cli import CLIInterface
 
 TIMED = "timed"
 SLOW = "slow"
-SLOW_OPTION = f"--run_{SLOW}"
+SLOW_OPTION = f"--run-{SLOW}"
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
@@ -15,6 +15,7 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 
 def pytest_configure(config):
+    # Expliciet definieren van markers
     config.addinivalue_line(
         "markers", f"{TIMED}: mark test as slow to run, only run with --slow"
     )
@@ -22,14 +23,14 @@ def pytest_configure(config):
 
 
 def pytest_addoption(parser):
-    # Toevoegen "--slow" optie
+    # Toevoegen SLOW_OPTION
     parser.addoption(
         SLOW_OPTION, action="store_true", default=False, help="Run slow tests"
     )
 
 
 def pytest_collection_modifyitems(config, items):
-    # Als --slow niet is gegeven, skip tests met "slow" marker
+    # Als SLOW_OPTION niet is gegeven, skip tests met SLOW marker
     if not config.getoption(SLOW_OPTION):
         skip_slow = pytest.mark.skip(reason=f"Need {SLOW_OPTION} option to run")
         for item in items:

@@ -46,15 +46,9 @@ jobs:
         poetry run black --check veg2hab
         poetry run isort --check veg2hab
 
-    - name: Test with pytest ubuntu
-      if: startsWith(matrix.os, 'ubuntu')
+    - name: Test with pytest
       run: |
-        poetry run pytest -v tests --run_slow
-
-    - name: Test with pytest windows
-      if: startsWith(matrix.os, 'windows')
-      run: |
-        poetry run pytest -v tests --run_slow -k "not test_editable_vegtypen and not test_tool_by_tool_walkthrough"
+        poetry run pytest -v tests --run-slow
 
     # TODO dit zou nog een keer netjes zijn
     # - name: Pyright
