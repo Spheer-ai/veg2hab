@@ -1,3 +1,5 @@
+import os
+
 import geopandas as gpd
 import pandas as pd
 import pyodbc
@@ -13,6 +15,7 @@ from veg2hab.io.common import (
 )
 from veg2hab.main import run
 
+IS_WINDOWS = os.name == "nt"
 
 @fixture
 def steps() -> tuple:
@@ -41,14 +44,10 @@ def steps() -> tuple:
 
 @pytest.mark.timed
 @pytest.mark.slow
+@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
 def test_full_standaard_run(steps):
     step_1, step_3, step_4, step_5 = steps
-    try:
-        run(step_1)
-    except (RuntimeError, pyodbc.InterfaceError):
-        pytest.skip(
-            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
-        )
+    run(step_1)
     run(step_3)
     run(step_4)
     run(step_5)
@@ -106,14 +105,10 @@ def test_full_standaard_run(steps):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
 def test_changes_in_vegtype(steps):
     step_1, step_3, step_4, step_5 = steps
-    try:
-        run(step_1)
-    except (RuntimeError, pyodbc.InterfaceError):
-        pytest.skip(
-            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
-        )
+    run(step_1)
     gdf = gpd.read_file(step_1.output)
     # We hebben enkel een paar regels nodig
     gdf = gdf.head(10)
@@ -129,14 +124,10 @@ def test_changes_in_vegtype(steps):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
-    try:
-        run(step_1)
-    except (RuntimeError, pyodbc.InterfaceError):
-        pytest.skip(
-            "Could not load kartering, probably because 'mdb-export / microsoft access driver' is not installed"
-        )
+    run(step_1)
     gdf = gpd.read_file(step_1.output)
     # We hebben enkel een paar regels nodig
     gdf = gdf.head(10)
