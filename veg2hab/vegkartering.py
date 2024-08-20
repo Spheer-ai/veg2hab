@@ -1165,7 +1165,7 @@ class Kartering:
         changes = gdf["_VegTypeInfo"] != altered_vegtypes
         if changes.any():
             logging.warning(
-                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen op indices: {gdf['ElmID'][changes].to_list()}"
+                f"Er zijn handmatige wijzigingen in de vegetatietypen. Deze worden overgenomen. Veranderde vlakken: ElmID={gdf['ElmID'][changes].to_list()}"
             )
 
         gdf["VegTypeInfo"] = altered_vegtypes
@@ -1289,7 +1289,9 @@ class Kartering:
                 bodemkaart.for_geometry(mits_info_df.loc[bodem_needed])
             )
         if obk_needed.any():
-            mits_info_df["obk"] = obk.for_geometry(mits_info_df.loc[obk_needed])
+            mits_info_df = mits_info_df.join(
+                obk.for_geometry(mits_info_df.loc[obk_needed])
+            )
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():
@@ -1586,7 +1588,7 @@ class Kartering:
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
                 ):
                     logging.warning(
-                        f"Er zijn handmatige wijzigingen in de habitattypes. Deze worden overgenomen. In regel: ElmID={gdf['ElmID'].iloc[row_idx]}"
+                        f"Er zijn handmatige wijzigingen in de habitattypes. Deze worden overgenomen. In vlak: ElmID={gdf['ElmID'].iloc[row_idx]}"
                     )
                     old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
                     old_keuze.habtype = new_habtype
