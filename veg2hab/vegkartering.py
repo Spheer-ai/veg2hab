@@ -18,6 +18,7 @@ from veg2hab.criteria import (
     FGRCriterium,
     LBKCriterium,
     OudeBossenCriterium,
+    OverrideCriterium,
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
@@ -1286,6 +1287,9 @@ class Kartering:
         obk_needed = self.gdf["HabitatVoorstel"].apply(
             is_criteria_type_present, args=(OudeBossenCriterium,)
         )
+        geometry_needed = self.gdf["HabitatVoorstel"].apply(
+            is_criteria_type_present, args=(OverrideCriterium,)
+        )
 
         ### Verrijken met de benodigde informatie (joins zijn op index)
         if fgr_needed.any():
@@ -1302,6 +1306,7 @@ class Kartering:
             )
         if obk_needed.any():
             mits_info_df["obk"] = obk.for_geometry(mits_info_df.loc[obk_needed])
+        # mits_info_df heeft al een geometry, dus die hoeft niet toegevoegd (voor OverrideCriterium)
 
         ### Mitsen checken
         for idx, row in self.gdf.iterrows():

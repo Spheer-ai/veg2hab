@@ -7,7 +7,8 @@ from typing import ClassVar, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+from shapely import wkt
 from typing_extensions import Literal
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
@@ -23,7 +24,6 @@ class BeperkendCriterium(BaseModel):
 
     class Config:
         validate_assignment = True
-        arbitrary_types_allowed = True # Nodig voor de override_geometry van OverrideCriterium
 
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
@@ -65,6 +65,7 @@ class BeperkendCriterium(BaseModel):
         return isinstance(self, type)
 
     def get_opm(self) -> Set[str]:
+        # NOTE: Als dit niet meer in de opmerkingen kolom komt, moet dit dan nog opm heten?
         raise NotImplementedError()
 
     @property
@@ -115,11 +116,29 @@ class OverrideCriterium(BeperkendCriterium):
     type: ClassVar[str] = "OverrideCriteria"
     mits: str
     truth_value: MaybeBoolean
-    override_geometry: Optional[
-        gpd.GeoSeries
-    ] = None  # we supporten ook meerdere shapes
+    override_geometry: Optional[List[str]] = None
     truth_value_outside: Optional[MaybeBoolean] = None
     cached_evaluation: Optional[MaybeBoolean] = None
+
+    # We serializen de override_geometry naar een list van strings
+    # zodat we later zonder problemen OverrideCriterium kunnen serializen
+    @validator("override_geometry", pre=True)
+    def check_override_geometry(cls, v):
+        if v is None:
+            return v
+
+        if isinstance(v, List):
+            for i in v:
+                assert isinstance(
+                    i, str
+                ), "override_geometry moet een list van strings (of GeoSeries) zijn"
+            return v
+
+        assert isinstance(
+            v, gpd.GeoSeries
+        ), "override_geometry moet een GeoSeries (of List[str]) zijn"
+
+        return OverrideCriterium.serialize_override_geometry(v)
 
     # Check of de override_geometry en truth_value_outside er beide zijn of beide niet zijn
     def __init__(self, *args, **kwargs):
@@ -129,6 +148,13 @@ class OverrideCriterium(BeperkendCriterium):
                 "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
             )
 
+    @staticmethod
+    def serialize_override_geometry(override_geometry):
+        return [geom.wkt for geom in override_geometry]
+
+    def get_deserialized_override_geometry(self):
+        return gpd.GeoSeries([wkt.loads(geom) for geom in self.override_geometry])
+
     def check(self, row: pd.Series) -> None:
         assert "geometry" in row, "geometry kolom niet aanwezig"
 
@@ -136,7 +162,7 @@ class OverrideCriterium(BeperkendCriterium):
             self.cached_evaluation = self.truth_value
             return
 
-        if row.geometry.intersects(self.override_geometry).any():
+        if row.geometry.intersects(self.get_deserialized_override_geometry()).any():
             self.cached_evaluation = self.truth_value
             return
 
@@ -153,11 +179,6 @@ class OverrideCriterium(BeperkendCriterium):
 
     def get_opm(self) -> Set[str]:
         return set()
-    
-    def json(self, *args, **kwargs):
-        """Same here"""
-        data = self.dict(*args, **kwargs)
-        return json.dumps(data)
 
 
 # NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
