@@ -248,10 +248,14 @@ def fill_in_percentages(
     return row
 
 
-def sorteer_vegtypeinfos_en_habkeuzes(row: gpd.GeoSeries) -> gpd.GeoSeries:
+def sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen(
+    row: gpd.GeoSeries,
+) -> gpd.GeoSeries:
     """
     Habitatkeuzes horen op een vaste volgorde: Eerst alle niet-H0000, dan op percentage, dan op kwaliteit
-    Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos ook op de juiste volgorde worden gezet
+    Deze method ordent de Habitatkeuzes en zorgt ervoor dat de bij elke keuze horende VegTypeInfos/HabitatVoorstellen ook op de juiste volgorde worden gezet
+
+    Voorbeeldje (zonder Voorstellen voor het gemak):
     Voor:
         HabitatKeuze: [HK1(H0000, 15%), HK2(H1234, 80%), HK3(H0000, 5%)]
         VegTypeInfo: [VT1(15%, SBB1), VT2(80%, SBB2), VT3(5%, SBB3)]
@@ -263,14 +267,22 @@ def sorteer_vegtypeinfos_en_habkeuzes(row: gpd.GeoSeries) -> gpd.GeoSeries:
         # Er zijn geen vegtypeinfos, dus er is maar 1 habitatkeuze (H0000)
         return row
 
-    keuze_en_vegtypeinfo = list(zip(row["HabitatKeuze"], row["VegTypeInfo"]))
+    keuze_vegtypeinfo_en_voorstellen = list(
+        zip(row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"])
+    )
     # Sorteer op basis van de habitatkeuze (idx 0)
-    sorted_keuze_en_vegtypeinfo = sorted(keuze_en_vegtypeinfo, key=rank_habitatkeuzes)
+    sorted_keuze_vegtypeinfo_en_voorstellen = sorted(
+        keuze_vegtypeinfo_en_voorstellen, key=rank_habitatkeuzes
+    )
 
-    row["HabitatKeuze"], row["VegTypeInfo"] = zip(*sorted_keuze_en_vegtypeinfo)
+    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = zip(
+        *sorted_keuze_vegtypeinfo_en_voorstellen
+    )
     # Tuples uit zip omzetten naar lists
-    row["HabitatKeuze"], row["VegTypeInfo"] = list(row["HabitatKeuze"]), list(
-        row["VegTypeInfo"]
+    row["HabitatKeuze"], row["VegTypeInfo"], row["HabitatVoorstel"] = (
+        list(row["HabitatKeuze"]),
+        list(row["VegTypeInfo"]),
+        list(row["HabitatVoorstel"]),
     )
     return row
 
@@ -1068,7 +1080,7 @@ class Kartering:
 
     @staticmethod
     def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
-        result = pd.Series()
+        result = pd.Series(dtype="object")
         for idx, info in enumerate(vegtypeinfos, 1):
             result[f"EDIT_SBB{idx}"] = ",".join(
                 str(sbb) for sbb in info.SBB
@@ -1324,7 +1336,9 @@ class Kartering:
         )
 
         # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
-        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
+        self.gdf = self.gdf.apply(
+            sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
+        )
 
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
@@ -1441,7 +1455,9 @@ class Kartering:
         ), "Er zijn nog habitatkeuzes die niet behandeld zijn en nog None zijn na bepaal_habitatkeuzes"
 
         # Vegtypeinfos en Habkeuzes sorteren op correcte outputvolgorde
-        self.gdf = self.gdf.apply(sorteer_vegtypeinfos_en_habkeuzes, axis=1)
+        self.gdf = self.gdf.apply(
+            sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
+        )
 
     def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
