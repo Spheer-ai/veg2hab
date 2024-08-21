@@ -20,7 +20,7 @@ def override_geometry():
 @pytest.fixture
 def split_override_geometry():
     """
-    These polygons are small 0.6 by 0.6 squares inside karting_geometry polygons 1 and 2
+    These polygons are small 0.6 by 0.6 squares inside karting_geometry polygons 0 and 1
     """
     return gpd.GeoSeries(
         [

@@ -100,10 +100,7 @@ class DefinitieTabel:
         self.override_dict = override_dict
         self._find_habtypes_for_code.cache_clear()
 
-    def find_habtypes(
-        self,
-        info: VegTypeInfo,
-    ) -> List[HabitatVoorstel]:
+    def find_habtypes(self, info: VegTypeInfo) -> List[HabitatVoorstel]:
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven vegtypeinfo
         """
@@ -128,8 +125,7 @@ class DefinitieTabel:
 
     @lru_cache(maxsize=256)
     def _find_habtypes_for_code(
-        self,
-        code: Union[SBB, VvN, None],
+        self, code: Union[SBB, VvN, None]
     ) -> List[HabitatVoorstel]:
         """
         Maakt een lijst met habitattype voorstellen voor een gegeven code

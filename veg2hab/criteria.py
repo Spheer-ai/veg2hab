@@ -114,7 +114,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
 
 class OverrideCriterium(BeperkendCriterium):
     type: ClassVar[str] = "OverrideCriteria"
-    mits: str
+    mits: str  # Wordt niet gebruikt voor matching, maar enkel voor __str__
     truth_value: MaybeBoolean
     override_geometry: Optional[List[str]] = None
     truth_value_outside: Optional[MaybeBoolean] = None

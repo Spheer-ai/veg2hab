@@ -183,10 +183,12 @@ def test_mits_override(steps):
 
     # Override case
 
-    # "mits in vochtige duinvalleien" is normaal MaybeBoolean.CANNOT_BE_AUTOMATED
-    # Dus dit wordt normaal HXXXX, maar nu dus H2190_D voor vlak iloc[4]
-    # Dezelfde mits wordt ook gevonden bij vlak iloc[8], dus daar wordt
-    # het H0000 ipv HXXXX, want truth_value_outside is MaybeBoolean.FALSE
+    # "mits in vochtige duinvalleien" wordt normaal MaybeBoolean.CANNOT_BE_AUTOMATED
+    # Dus dit wordt normaal HXXXX, maar nu gebruiken we een geometry OverrideCriterium
+    # met als override_geometry die van vlak iloc[4], dus ipv HXXXX krijgen we H2190_D voor vlak iloc[4]
+    #
+    # Dezelfde mits wordt ook gevonden bij vlak iloc[8] (buiten de override_geometry dus),
+    # dus daar wordt het H0000 ipv HXXXX, want truth_value_outside is MaybeBoolean.FALSE
     crit = OverrideCriterium(
         mits="mits in vochtige duinvalleien",
         truth_value=MaybeBoolean.TRUE,
