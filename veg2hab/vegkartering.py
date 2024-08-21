@@ -18,7 +18,6 @@ from veg2hab.criteria import (
     FGRCriterium,
     LBKCriterium,
     OudeBossenCriterium,
-    OverrideCriterium,
     is_criteria_type_present,
 )
 from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
