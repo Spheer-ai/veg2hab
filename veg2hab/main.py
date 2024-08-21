@@ -149,9 +149,9 @@ def run_2_stack_vegkartering(params: StackVegKarteringInputs):
     logging.info("Karteringen zijn succesvol ingelezen")
 
     # Lijst reversen zodat de 'bovenste' kartering aan het einde komt
-    gdf_vegkart = Kartering.combineer_karteringen(
-        karteringen.reverse()
-    ).to_editable_vegtypes()
+    karteringen.reverse()
+
+    gdf_vegkart = Kartering.combineer_karteringen(karteringen).to_editable_vegtypes()
 
     logging.info("Karteringen zijn succesvol gestacked")
 
