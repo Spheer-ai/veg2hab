@@ -17,6 +17,7 @@ from veg2hab.main import run
 
 IS_WINDOWS = os.name == "nt"
 
+
 @fixture
 def steps() -> tuple:
     step_1 = AccessDBInputs(
@@ -44,7 +45,9 @@ def steps() -> tuple:
 
 @pytest.mark.timed
 @pytest.mark.slow
-@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
+@pytest.mark.skipif(
+    IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver"
+)
 def test_full_standaard_run(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
@@ -105,7 +108,9 @@ def test_full_standaard_run(steps):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
+@pytest.mark.skipif(
+    IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver"
+)
 def test_changes_in_vegtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
@@ -124,7 +129,9 @@ def test_changes_in_vegtype(steps):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver")
+@pytest.mark.skipif(
+    IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver"
+)
 def test_changes_in_habtype(steps):
     step_1, step_3, step_4, step_5 = steps
     run(step_1)
