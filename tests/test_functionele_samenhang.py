@@ -4,6 +4,7 @@ import os
 import geopandas as gpd
 import pytest
 from shapely.geometry import Polygon
+from testutils import set_env
 
 from veg2hab.enums import KeuzeStatus, Kwaliteit
 from veg2hab.functionele_samenhang import (
@@ -16,19 +17,18 @@ from veg2hab.habitat import HabitatKeuze
 from veg2hab.vegkartering import VegTypeInfo
 
 """
+The test_gdf is a GeoDataFrame with the following structure and percentages (60 means 60%/40%):
+
        20m                10m
       <--->               <->
 +---+       +---+---+---+     +---+
 |100|       |100|60 |90 |     |90 |
 +---+       +---+---+---+     +---+
 
-"""
+Environment variables as they were when this test was written:
 
-
-@pytest.fixture
-def test_gdf():
-    # Deze heb ik hier hard gecode omdat anders de test_env_vars_overwrite_config mijn min_area en min_area_default overschrijft
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS"] = json.dumps(
+env_vars = {
+    "VEG2HAB_MINIMUM_OPPERVLAK_EXCEPTIONS": json.dumps(
         {
             "H6110": 10,
             "H7220": 10,
@@ -46,15 +46,21 @@ def test_gdf():
             "H91E0_C": 1000,
             "H91F0": 1000,
         }
-    )
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "100"
-    os.environ["VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES"] = json.dumps(
+    ),
+    "VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT": "100",
+    "VEG2HAB_FUNCTIONELE_SAMENHANG_BUFFER_DISTANCES": json.dumps(
         [
             (100, 10.01),
             (90, 5.01),
             (50, 0.01),
         ]
-    )
+    ),
+}
+"""
+
+
+@pytest.fixture
+def test_gdf():
     return gpd.GeoDataFrame(
         {
             "ElmID": [1, 2, 3, 4, 5],
@@ -252,28 +258,28 @@ def test_functionele_samenhang_fully_one_big_cluster(test_gdf):
     assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
 
     # increase minimum size a bit
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "1000"
-    test_gdf = apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[1][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[2][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[2][1].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[3][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT="1000"):
+        test_gdf = apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[1][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[2][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[2][1].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[3][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
 
     # increase minimum size massively
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = "10000"
-    test_gdf = apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[1][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[2][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[2][1].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[3][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT="10000"):
+        test_gdf = apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[1][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[2][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[2][1].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[3][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[3][1].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[4][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[4][1].habtype == "H0000"
 
 
 def test_combining_of_same_habtype_in_one_shape(test_gdf):
@@ -296,10 +302,10 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
             ),
         ]
     ]
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
-    apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
-    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H1234"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 0.9)):
+        apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
+        assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H1234"
 
     # Nu dat ze samen net te weinig zijn
     test_gdf.HabitatKeuze = [
@@ -318,10 +324,10 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
             ),
         ]
     ]
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
-    apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 1.1)):
+        apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
 
 
 def test_vegetatiekundig_identiek(test_gdf):
@@ -344,18 +350,18 @@ def test_vegetatiekundig_identiek(test_gdf):
             ),
         ]
     ]
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 0.9)
-    os.environ[
-        "VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"
-    ] = json.dumps(
-        {
-            "H2130": "H2130/H4030",
-            "H4030": "H2130/H4030",
-        }
-    )
-    apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H2130"
-    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H4030"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 0.9)):
+        os.environ[
+            "VEG2HAB_FUNCTIONELE_SAMENHANG_VEGETATIEKUNDIG_IDENTIEK_RAW"
+        ] = json.dumps(
+            {
+                "H2130": "H2130/H4030",
+                "H4030": "H2130/H4030",
+            }
+        )
+        apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H2130"
+        assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H4030"
 
     # Nu met net niet genoeg oppervlakte
     test_gdf.HabitatKeuze = [
@@ -374,7 +380,7 @@ def test_vegetatiekundig_identiek(test_gdf):
             ),
         ]
     ]
-    os.environ["VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT"] = str(test_gdf.area.iloc[0] * 1.1)
-    apply_functionele_samenhang(test_gdf)
-    assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
-    assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
+    with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 1.1)):
+        apply_functionele_samenhang(test_gdf)
+        assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
+        assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
