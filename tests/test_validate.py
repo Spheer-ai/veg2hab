@@ -1,11 +1,17 @@
+import math
+
 import geopandas as gpd
 import pandas as pd
-from pytest import fixture
+from pytest import fixture, raises
 from shapely.geometry import Polygon
 
 from veg2hab.validation import (
+    bereken_F1_per_habtype,
+    bereken_gemiddelde_F1,
     bereken_percentage_confusion_matrix,
     bereken_percentage_correct,
+    bereken_totaal_from_dict_col,
+    bereken_totaal_succesvol_omgezet,
     bereken_volledige_conf_matrix,
     parse_habitat_percentages,
     spatial_join,
@@ -54,6 +60,20 @@ def gdf_single_square_2():
             "Perc2": [20],
         },
         geometry=[Polygon([(10, 10), (30, 10), (30, 30), (10, 30)])],
+    )
+
+
+@fixture
+def gdf_pred_only_spatial_joined():
+    return gpd.GeoDataFrame(
+        data={
+            "pred_hab_perc": [
+                {"H123": 100},
+                {"H123": 70, "HXXXX": 30},
+                {"H0000": 50, "HXXXX": 50},
+            ],
+            "geometry": [Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])] * 3,
+        }
     )
 
 
@@ -146,6 +166,28 @@ def test_with_duplicate_habtypes(gdf):
         how_to_handle_missing_percentages="split_equally",
     )
     assert results.loc[0, "hab_perc"] == {"H123": 50, "H234": 50}
+
+
+def test_with_add_kwaliteit(gdf):
+    # expect value error since there are no kwaliteit columns
+    with raises(ValueError):
+        parse_habitat_percentages(gdf, add_kwaliteit=True)
+
+    gdf["Kwal1"] = ["G", "M", "X", None]
+    gdf["Kwal2"] = ["G", "X", "M", None]
+    gdf["Kwal3"] = [None, None, "G", "M"]
+    results = parse_habitat_percentages(gdf, add_kwaliteit=True).kwal_perc
+
+    expected = pd.Series(
+        [
+            {"Goed": 100},
+            {"Matig": 20, "Nvt": 80},
+            {"Nvt": 40, "Matig": 40, "Goed": 20},
+            {"Matig": 100},
+        ],
+    )
+
+    assert results.equals(expected)
 
 
 def test_spatial_join(gdf_single_square_1, gdf_single_square_2):
@@ -247,3 +289,47 @@ def test_full_conf_matrix(gdf_single_square_1, gdf_single_square_2):
         index=["H123", "H234"],
     )
     assert result.equals(expected)
+
+
+def test_bereken_totaal_succesvol_omgezet(gdf_pred_only_spatial_joined):
+    assert (
+        bereken_totaal_succesvol_omgezet(gdf_pred_only_spatial_joined, "percentage")
+        == 2.2
+    )
+    assert math.isclose(
+        bereken_totaal_succesvol_omgezet(gdf_pred_only_spatial_joined, "area"),
+        0.022,
+        rel_tol=1e-9,
+    )
+
+
+def test_bereken_totaal_percentage_from_dict(gdf_pred_only_spatial_joined):
+    assert bereken_totaal_from_dict_col(
+        gdf_pred_only_spatial_joined, "pred_hab_perc", "percentage"
+    ) == {"H123": 1.7, "HXXXX": 0.8, "H0000": 0.5}
+    assert bereken_totaal_from_dict_col(
+        gdf_pred_only_spatial_joined, "pred_hab_perc", "area"
+    ) == {"H123": 0.0170, "HXXXX": 0.0080, "H0000": 0.0050}
+
+
+def test_F1():
+    df = pd.DataFrame(
+        data={
+            "H0000": [3, 1, 1, 0],
+            "H6430A": [0, 3, 0, 0],
+            "H7140A": [0, 0, 3, 0],
+            "HXXXX": [4, 1, 1, 0],
+        },
+        index=["H0000", "H6430A", "H7140A", "HXXXX"],
+    )
+
+    expected = {"H0000": 0.5, "H6430A": 0.75, "H7140A": 0.75}
+    result = bereken_F1_per_habtype(df)
+
+    assert expected.keys() == result.keys()
+    for key in expected:
+        assert math.isclose(expected[key], result[key], rel_tol=1e-9)
+
+    expected_macro = sum(expected.values()) / 3
+    result_macro = bereken_gemiddelde_F1(df)
+    assert math.isclose(expected_macro, result_macro, rel_tol=1e-9)
