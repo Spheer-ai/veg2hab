@@ -8,6 +8,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal
 
+from veg2hab.criteria import OverrideCriterium
 from veg2hab.enums import WelkeTypologie
 
 
@@ -128,6 +129,17 @@ class ApplyDefTabelInputs(BaseModel):
     output: Optional[Path] = Field(
         default=None,
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
+    )
+    # @Mark
+
+    # Deze is tijdelijk zodat ik in test_tool_by_tool_walkthrough.py kan testen of
+    # mits overriding goed werkt
+
+    # Vervang dit maar met wat je handig vind, als je nog functionaliteit van mij mist
+    # laat je het me maar weten :)
+    override_dict: Optional[Dict[str, OverrideCriterium]] = Field(
+        default={},
+        description="Dictionary met de mitsen en de OverrideCriteria door welke ze moeten worden vervangen",
     )
 
 

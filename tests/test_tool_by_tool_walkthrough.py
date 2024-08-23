@@ -2,11 +2,11 @@ import os
 
 import geopandas as gpd
 import pandas as pd
-import pyodbc
 import pytest
 from pytest import fixture
 
-from veg2hab.enums import WelkeTypologie
+from veg2hab.criteria import OverrideCriterium
+from veg2hab.enums import MaybeBoolean
 from veg2hab.io.common import (
     AccessDBInputs,
     ApplyDefTabelInputs,
@@ -155,3 +155,59 @@ def test_changes_in_habtype(steps):
     assert done.iloc[0].Kwal2 == "M"
     assert done.iloc[1].Habtype1 == "H4321"
     assert done.iloc[1].Kwal1 == "G"
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    IS_WINDOWS, reason="Skip on windows because of (absence of) microsoft access driver"
+)
+def test_mits_override(steps):
+    step_1, step_3, step_4, step_5 = steps
+
+    run(step_1)
+    gdf = gpd.read_file(step_1.output)
+    # We hebben enkel een paar regels nodig
+    gdf = gdf.head(10)
+    gdf.to_file(step_1.output, driver="GPKG", layer="main")
+
+    # Normal case
+    run(step_3)
+    run(step_4)
+    run(step_5)
+
+    gdf = gpd.read_file(step_5.output)
+
+    assert gdf.Habtype1.iloc[4] == "HXXXX"
+    assert gdf.Habtype1.iloc[8] == "HXXXX"
+
+    # Override case
+
+    # "mits in vochtige duinvalleien" wordt normaal MaybeBoolean.CANNOT_BE_AUTOMATED
+    # Dus dit wordt normaal HXXXX, maar nu gebruiken we een geometry OverrideCriterium
+    # met als override_geometry die van vlak iloc[4], dus ipv HXXXX krijgen we H2190_D voor vlak iloc[4]
+    #
+    # Dezelfde mits wordt ook gevonden bij vlak iloc[8] (buiten de override_geometry dus),
+    # dus daar wordt het H0000 ipv HXXXX, want truth_value_outside is MaybeBoolean.FALSE
+    crit = OverrideCriterium(
+        mits="mits in vochtige duinvalleien",
+        truth_value=MaybeBoolean.TRUE,
+        override_geometry=gdf.geometry.iloc[[4]],
+        truth_value_outside=MaybeBoolean.FALSE,
+    )
+
+    override_dict = {"mits in vochtige duinvalleien": crit}
+
+    step_3 = ApplyDefTabelInputs(
+        shapefile=str(step_1.output),
+        output="data/tool_by_tool/3.gpkg",
+        override_dict=override_dict,
+    )
+
+    run(step_3)
+    run(step_4)
+    run(step_5)
+
+    gdf = gpd.read_file(step_5.output)
+
+    assert gdf.Habtype1.iloc[4] == "H2190_D"
+    assert gdf.Habtype1.iloc[8] == "H0000"

@@ -75,7 +75,7 @@ def run(
     elif isinstance(params, ApplyFunctioneleSamenhangInputs):
         return run_5_functionele_samenhang_en_min_opp(params)
     else:
-        raise TypeError("Invalid input parameter")
+        raise TypeError("INvalid input parameter")
 
 
 def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
@@ -171,6 +171,9 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
     logging.info("Kartering is succesvol ingelezen")
 
     deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
+    # @Mark
+    # Hier evt vertaling van hoe je override dict doorgeeft naar een Dict[str, OverrideCriterium]
+    deftabel.set_override_dict(params.override_dict)
 
     logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
 

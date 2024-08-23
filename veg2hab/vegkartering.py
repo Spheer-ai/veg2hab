@@ -1286,6 +1286,7 @@ class Kartering:
         obk_needed = self.gdf["HabitatVoorstel"].apply(
             is_criteria_type_present, args=(OudeBossenCriterium,)
         )
+        # mits_info_df heeft al een geometry, dus die hoeft niet toegevoegd (voor OverrideCriterium)
 
         ### Verrijken met de benodigde informatie (joins zijn op index)
         if fgr_needed.any():
