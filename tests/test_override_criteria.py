@@ -52,7 +52,6 @@ def definitietabel():
 def test_override_criteria_instantiation(override_geometry):
     # non-geometry OverrideCriterium
     crit = OverrideCriterium(mits="mitsemits", truth_value=MaybeBoolean.TRUE)
-    assert isinstance(crit, OverrideCriterium)
 
     # geometry OverrideCriterium
     crit = OverrideCriterium(
@@ -61,7 +60,6 @@ def test_override_criteria_instantiation(override_geometry):
         override_geometry=override_geometry,
         truth_value_outside=MaybeBoolean.FALSE,
     )
-    assert isinstance(crit, OverrideCriterium)
 
     # geometry OverrideCriterium without truth_value_outside
     with pytest.raises(ValueError):
