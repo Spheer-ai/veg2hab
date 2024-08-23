@@ -691,6 +691,14 @@ class Kartering:
         state = gdf._state.iloc[0]
 
         if state in [KarteringState.PRE_WWL, KarteringState.POST_WWL]:
+            expected_cols = [
+                self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
+            ]
+            if not all([col in gdf.columns for col in expected_cols]):
+                raise ValueError(
+                    f"Kolommen van kartering in state {state} kloppen niet"
+                )
+
             self.gdf = gdf[
                 self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
             ].copy()
@@ -701,6 +709,15 @@ class Kartering:
             )
 
         elif state in [KarteringState.MITS_HABKEUZES, KarteringState.MOZAIEK_HABKEUZES]:
+            expected_cols = [
+                self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
+            ]
+
+            if not all([col in gdf.columns for col in expected_cols]):
+                raise ValueError(
+                    f"Kolommen van kartering in state {state} kloppen niet"
+                )
+
             self.gdf = gdf[
                 self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
             ].copy()
