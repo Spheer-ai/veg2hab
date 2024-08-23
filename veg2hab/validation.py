@@ -471,38 +471,6 @@ def bereken_totaal_from_dict_col(
     return answer_dict
 
 
-# def _bereken_precision_recall_per_habtype(df: pd.DataFrame, method: Literal["percentage", "area"] = "area") -> Dict[str, Dict[str, Number]]:
-#     """
-#     Hulpfunctie voor bereken_F1_per_habtype en bereken_macro_F1
-#     Berekend de precision en recall per habitat type en geeft dit in een dict terug.
-
-#     input format (confusion matrix van bereken_volledige_conf_matrix):
-#     true_hab   H0000  H6430A  H7140A  HXXXX
-#     pred_hab
-#     H0000        3.0     1.0     1.0    0.0
-#     H6430A       0.0     3.0     0.0    0.0
-#     H7140A       0.0     0.0     3.0    0.0
-#     HXXXX        4.0     1.0     1.0    0.0
-
-#     output format:
-#     {"H1234": {"precision": 0.5, "recall": 0.5}, "H2345": {"precision": 0.5, "recall": 0.5}}
-#     """
-#     answer_dict = {}
-
-#     for habtype in df.index:
-#         true_pos = df.loc[habtype, habtype]
-#         false_pos = df.loc[habtype].sum() - true_pos
-#         false_neg = df[habtype].sum() - true_pos
-#         if true_pos == 0:
-#             answer_dict[habtype] = {"precision": 0, "recall": 0}
-#         else:
-#             precision = true_pos / (true_pos + false_pos)
-#             recall = true_pos / (true_pos + false_neg)
-#             answer_dict[habtype] = {"precision": precision, "recall": recall}
-
-#     return answer_dict
-
-
 def bereken_F1_per_habtype(
     df: pd.DataFrame, method: Literal["percentage", "area"] = "area"
 ) -> Dict[str, Number]:
@@ -541,51 +509,11 @@ def bereken_F1_per_habtype(
     return answer_dict
 
 
-# def bereken_macro_F1(df: pd.DataFrame, method: Literal["percentage", "area"] = "area"):
-#     """
-#     Berekend de macro F1 metric en geeft dit terug.
-
-#     input format (confusion matrix van bereken_volledige_conf_matrix):
-#     true_hab   H0000  H6430A  H7140A  HXXXX
-#     pred_hab
-#     H0000        3.0     1.0     1.0    0.0
-#     H6430A       0.0     3.0     0.0    0.0
-#     H7140A       0.0     0.0     3.0    0.0
-#     HXXXX        4.0     1.0     1.0    0.0
-#     """
-#     precision_recall = _bereken_precision_recall_per_habtype(df, method)
-
-#     precisions = [precision_recall[habtype]["precision"] for habtype in precision_recall]
-#     recalls = [precision_recall[habtype]["recall"] for habtype in precision_recall]
-
-#     macro_precision = sum(precisions) / len(precisions)
-#     macro_recall = sum(recalls) / len(recalls)
-
-#     if macro_precision + macro_recall == 0:
-#         return 0
-#     else:
-#         return 2 * (macro_precision * macro_recall) / (macro_precision + macro_recall)
-
-
 def bereken_gemiddelde_F1(
     df: pd.DataFrame, method: Literal["percentage", "area"] = "area"
-):
+) -> float:
     """
-    Berekend de macro F1 metric en geeft dit terug.
-
-    input format (confusion matrix van bereken_volledige_conf_matrix):
-    true_hab   H0000  H6430A  H7140A  HXXXX
-    pred_hab
-    H0000        3.0     1.0     1.0    0.0
-    H6430A       0.0     3.0     0.0    0.0
-    H7140A       0.0     0.0     3.0    0.0
-    HXXXX        4.0     1.0     1.0    0.0
+    Berekend de het gemmidelde van de F1 metric per habitat type en geeft dit terug.
     """
     F1s = bereken_F1_per_habtype(df, method)
     return sum(F1s.values()) / len(F1s)
-
-
-def bereken_percentage_matig_goed(
-    gdf: gpd.GeoDataFrame, method: Literal["percentage", "area"] = "area"
-):
-    pass
