@@ -701,14 +701,18 @@ class Kartering:
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
-    def has_state(self, *states: KarteringState) -> bool:
+    def check_state(self, *states: KarteringState):
         """
-        Returend of de kartering (een van de) de gegeven state(s) heeft
+        Checkt of de kartering (een van de) de gegeven state(s) heeft
+        Zo niet, dan raisen we een ValueError
         """
         assert (
             len(self.gdf._state.unique()) == 1
         ), "Alle vlakken moeten dezelfde state hebben"
-        return self.gdf._state.iloc[0] in states
+        if not self.gdf._state.iloc[0] in states:
+            raise ValueError(
+                f"Kartering moet in een van de volgende states zijn: {states}"
+            )
 
     def set_state(self, state: KarteringState) -> None:
         """
@@ -1059,9 +1063,7 @@ class Kartering:
         """
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
-        assert self.has_state(
-            KarteringState.PRE_WWL
-        ), "Kartering moet in PRE_WWL state zijn"
+        self.check_state(KarteringState.PRE_WWL)
 
         # Als er rVvN aanwezig zijn
         if (
@@ -1105,9 +1107,7 @@ class Kartering:
         return result
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
-        assert self.has_state(
-            KarteringState.POST_WWL
-        ), "Kartering moet in POST_WWL state zijn"
+        self.check_state(KarteringState.POST_WWL)
 
         # rVvN karteringen moeten al omgezet zijn op dit punt
         assert (
@@ -1212,9 +1212,7 @@ class Kartering:
         gdf["_state"] = gdf["_state"].apply(KarteringState)
 
         kartering = cls(gdf)
-        assert kartering.has_state(
-            KarteringState.POST_WWL
-        ), "Kartering moet in POST_WWL state zijn"
+        kartering.check_state(KarteringState.POST_WWL)
 
         return kartering
 
@@ -1250,9 +1248,7 @@ class Kartering:
             assert isinstance(
                 kartering, Kartering
             ), "Alle elementen in karteringen moeten Karteringen zijn"
-            assert kartering.has_state(
-                KarteringState.POST_WWL
-            ), "Alle karteringen moeten in POST_WWL state zijn"
+            kartering.check_state(KarteringState.POST_WWL)
 
         result = karteringen[0].gdf
         for kartering in karteringen[1:]:
@@ -1274,9 +1270,7 @@ class Kartering:
         """
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
-        assert self.has_state(
-            KarteringState.POST_WWL
-        ), "Kartering moet in POST_WWL state zijn"
+        self.check_state(KarteringState.POST_WWL)
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
@@ -1293,9 +1287,7 @@ class Kartering:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
-        assert self.has_state(
-            KarteringState.POST_DEFTABEL
-        ), "Kartering moet in POST_DEFTABEL state zijn"
+        self.check_state(KarteringState.POST_DEFTABEL)
 
         # Deze dataframe wordt verrijkt met de info nodig om mitsen te checken.
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
@@ -1346,9 +1338,7 @@ class Kartering:
         Bepaalt voor complexdelen zonder mozaiekregels de habitatkeuzes
         HabitatKeuzes waar ook mozaiekregels mee gemoeid zijn worden uitgesteld tot in bepaal_mozaiek_habitatkeuzes
         """
-        assert self.has_state(
-            KarteringState.POST_DEFTABEL
-        ), "Kartering moet in POST_DEFTABEL state zijn"
+        self.check_state(KarteringState.POST_DEFTABEL)
 
         assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
         assert isinstance(
@@ -1378,9 +1368,7 @@ class Kartering:
 
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
-        assert self.has_state(
-            KarteringState.MITS_HABKEUZES
-        ), "Kartering moet in MITS_HABKEUZES state zijn"
+        self.check_state(KarteringState.MITS_HABKEUZES)
 
         # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
         self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
@@ -1522,9 +1510,7 @@ class Kartering:
         """
         Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
         """
-        assert self.has_state(
-            KarteringState.MOZAIEK_HABKEUZES
-        ), "Kartering moet in MOZAIEK_HABKEUZES state zijn"
+        self.check_state(KarteringState.MOZAIEK_HABKEUZES)
 
         self.gdf = apply_functionele_samenhang(self.gdf)
 
@@ -1544,11 +1530,11 @@ class Kartering:
         return pd.Series(result)
 
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
-        assert self.has_state(
+        self.check_state(
             KarteringState.MITS_HABKEUZES,
             KarteringState.MOZAIEK_HABKEUZES,
             KarteringState.FUNC_SAMENHANG,
-        ), "Kartering moet in MITS_HABKEUZES, MOZAIEK_HABKEUZES of FUNC_SAMENHANG state zijn"
+        )
 
         editable_habtypes = self.as_final_format()
 
@@ -1669,11 +1655,11 @@ class Kartering:
         gdf["_state"] = gdf["_state"].apply(KarteringState)
 
         kartering = cls(gdf)
-        assert kartering.has_state(
+        kartering.check_state(
             KarteringState.MITS_HABKEUZES,
             KarteringState.MOZAIEK_HABKEUZES,
             KarteringState.FUNC_SAMENHANG,
-        ), "Kartering moet in MITS_HABKEUZES, MOZAIEK_HABKEUZES of FUNC_SAMENHANG state zijn"
+        )
 
         return kartering
 
@@ -1682,11 +1668,11 @@ class Kartering:
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
         """
-        assert self.has_state(
+        self.check_state(
             KarteringState.MITS_HABKEUZES,
             KarteringState.MOZAIEK_HABKEUZES,
             KarteringState.FUNC_SAMENHANG,
-        ), "Kartering moet in MITS_HABKEUZES, MOZAIEK_HABKEUZES of FUNC_SAMENHANG state zijn"
+        )
 
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[
