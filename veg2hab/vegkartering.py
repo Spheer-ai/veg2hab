@@ -343,7 +343,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
                 f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
                 f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
-                # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
                 f"_VvNdftbl{idx}": voorstel.get_VvNdftbl_str(),
@@ -380,7 +379,6 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
             f"VvN{idx}": ", ".join(str(code) for code in vegtypeinfo.VvN),
             f"SBB{idx}": ", ".join(str(code) for code in vegtypeinfo.SBB),
-            # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": "\n".join(
@@ -683,7 +681,6 @@ class Kartering:
     ]
 
     def __init__(self, gdf: gpd.GeoDataFrame):
-        # TODO clean this up!
         try:
             self.gdf = gdf[
                 self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
@@ -705,9 +702,6 @@ class Kartering:
             self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
                 lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
             )
-
-        # NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum?
-        #       Misschien een dict met welke stappen gedaan zijn?
 
     @classmethod
     def from_access_db(
@@ -1062,7 +1056,6 @@ class Kartering:
             return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
-        # NOTE: Als dit te langzaam blijkt is een steekproef wss ook voldoende
         # NOTE NOTE: Als we zowel SBB en VvN uit de kartering hebben, willen we
         #            dan nog wwl doen voor de SBB zonder al meegegeven VvN?
         VvN_already_present = self.gdf["VegTypeInfo"].apply(
@@ -1248,10 +1241,6 @@ class Kartering:
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
         assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
-        # NOTE: Hier iets wat vast stelt dat er tenminste 1 VegTypeInfo met een VvN is, zo niet geef warning? (want dan is wwl wss niet gedaan)
-        #       - klinkt wel logisch maar het is ook mogelijk dat geen van de SBB een VvN in de wwl hebben
-        #         dus dan is een warning geveb en niet de deftabel toepassen ook niet handig
-        # @ reviewer, goeie andere opties?
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
@@ -1259,7 +1248,6 @@ class Kartering:
             else [[HabitatVoorstel.H0000_no_vegtype_present()]]
         )
 
-    # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
     def check_mitsen(
         self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
     ) -> None:
@@ -1343,11 +1331,6 @@ class Kartering:
 
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
-        # TODO: zelfstandigheid/mozaiekvegetaties wordt nog niet goed afgehandeld. ATM
-                worden mozaiekvegetaties geinterpreteerd als vegetaties die aan hun mozaiekregel
-                hebben voldaan (te herkennen aan "onzelfstandige" habtypen, HabitatKeuze.zelfstandig == False),
-                terwijl dit moet worden dat het grenst aan een vegtype met een mozaiekregel voor hetzelfde habtype
-
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
         assert (
@@ -1475,8 +1458,7 @@ class Kartering:
                 # we niet weer de mozaiekregels te checken
                 # TODO: Nu check ik hier heel handmatig of de keuze gemaakt is, en dat moet op dezelfde manier als in
                 #       calc_nr_of_unresolved_habitatkeuzes_per_row() gedaan worden :/
-                #       Na de demo moet dit even netten, een extra kolommetje in de gdf ofzo
-                #       Voor nu zijn er belangrijker dingen te doen :)
+                #       Dit kan netter, of dezelfde functie gebruiken of een extra kolommetje ofzo
                 if (
                     row.HabitatKeuze[idx] is not None
                     and row.HabitatKeuze[idx].status != KeuzeStatus.WACHTEN_OP_MOZAIEK

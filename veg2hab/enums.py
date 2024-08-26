@@ -117,8 +117,6 @@ class MaybeBoolean(Enum):
 
 class Kwaliteit(Enum):
     NVT = "Nvt"  # bijvoorbeeld in het geval van H0000 en HXXXX
-    # NOTE: Ik heb dit weggehaald want ik ben NVT en ONBEKEND door mekaar wezen halen, en eigenlijk past NVT ook wel bij HXXXX
-    # ONBEKEND = "Onbekend"  # bijvoorbeeld in het geval van HXXXX
     GOED = "Goed"
     MATIG = "Matig"
 
@@ -247,8 +245,6 @@ class BodemType(Enum):
     MODERPODZOLGRONDEN = "Moderpodzolgronden"
     OUDE_KLEIGRONDEN = "Oude kleigronden"
     LEEMGRONDEN = "Leemgronden"
-
-    # TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifieke te forceren?
 
     _tuple_dict = {
         "LEEMARME_HUMUSPODZOLGRONDEN": BodemTuple(

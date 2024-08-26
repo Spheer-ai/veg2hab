@@ -126,7 +126,3 @@ def test_equivalency_habkart_without_habitatkeuze(kartering):
 
         # we need to reorder the columns to compare.
         assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
-
-
-# TODO: Needs test that tests changing something in between step 1/3/4 will carry forward until end of step 5
-#       The tool_by_tool_walkthrough notebook shows it working in practice though

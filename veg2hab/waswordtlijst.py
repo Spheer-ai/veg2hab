@@ -26,8 +26,6 @@ class WasWordtLijst:
         self.df["rVvN"] = self.df["rVvN"].apply(rVvN.from_string)
 
         # Replace pd.NA with None
-        # NOTE: kunnen we ook alle rows met een NA gewoon verwijderen? Als we of geen VvN of
-        #       geen SBB hebben dan kunnen we het toch niet gebruiken voor het omzetten
         self.df = self.df.where(self.df.notnull(), None)
 
     @classmethod

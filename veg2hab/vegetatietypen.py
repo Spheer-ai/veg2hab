@@ -46,7 +46,6 @@ class SBB(BaseModel):
     @classmethod
     def from_code(cls, code: str) -> Self:
         assert isinstance(code, str), "Code is not a string"
-        # TODO: dit zou heel mooi naar een config kunnen later
         niet_geautomatiseerde_sbb = (
             Interface.get_instance().get_config().niet_geautomatiseerde_sbb
         )

@@ -19,8 +19,6 @@ class MozkPercTuple(NamedTuple):
 
 
 class MozaiekRegel(BaseModel):
-    # NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
-
     type: ClassVar[Optional[str]] = None
     _subtypes_: ClassVar[dict] = dict()
     mozaiek_threshold: NumberType = Field(
@@ -52,7 +50,7 @@ class MozaiekRegel(BaseModel):
             return super().__new__(cls._subtypes_[t])
         return super().__new__(
             cls
-        )  # NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
+        )  # NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
 
     def dict(self, *args, **kwargs):
         """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
@@ -433,10 +431,6 @@ def make_buffered_boundary_overlay_gdf(
     Deze lijnen worden vervolgens over de originele gdf gelegd en opgeknipt per vlak waar ze over heen liggen.
     Elke sectie opgeknipte lijn krijgt mee hoeveel procent van de totale lijn het is.
     Deze "overlay gdf" wordt vervolgens teruggegeven.
-
-    Hierna kan de HabitatKeuze kolom gejoind worden met de overlay gdf op ElmID.
-    De gdf kan hierna gebruikt worden in calc_mozaiek_percentages_from_overlay_gdf
-    om te berekenen hoeveel procent van elk habitattype een vlak omringd.
     """
     if buffer < 0:
         raise ValueError(f"Buffer moet positief zijn, maar is {buffer}")
@@ -465,7 +459,6 @@ def make_buffered_boundary_overlay_gdf(
     )
     assert buffered_boundary.crs == gdf.crs
 
-    # NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay_gdf gebruikt
     buffered_boundary["buffered_ElmID"] = gdf["ElmID"]
     buffered_boundary["full_line_length"] = buffered_boundary.length
 
