@@ -3,8 +3,9 @@ This can and should be removed once everything is resolved
 
 X = verwijderd/al gedaan/niet meer nodig
 ! = moet gebeuren
+V = gebeurd
 ? = weet ik niet
-- = kan lekker blijven staan
+- = laten staan
 
 
 `test_arcgis_parameters.py`
@@ -39,8 +40,8 @@ X NOTE: is dit een logische manier om score te geven? Match to self
 ? TODO fix circular imports
 - voor Mark / is het niet stiekem gewoon goed zo?
 
-! TODO validate="one_to_one"? (x2)
-- ben ik wel voor
+V TODO validate="one_to_one"? (x2)
+- ben ik wel voor - gedaan (many to one)
 
 `bronnen.py`
 X TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakken die niet volledig
@@ -69,8 +70,8 @@ X TODO: Idealiter komt dit een een soort post_init (https://stackoverflow.com/qu
 - Ik zie niet zo goed hoe dit in een post init kan, want je hebt data uit de deftabel nodig
 
 `enums.py`
-! TODO: Deze definities even checken met Jakko
-- doen
+X TODO: Deze definities even checken met Jakko
+- doen - gedaan en gereviseerd
 
 X NOTE: Ik heb dit weggehaald want ik ben NVT en ONBEKEND door mekaar wezen halen, en eigenlijk past NVT ook wel bij HXXXX
 - enkel NVT is dikke prima
@@ -100,7 +101,7 @@ X TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
 X NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
 - geen- en nietgeimplementeerde-regels zijn wel nodig
 
-! NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
+? NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
 - mark vragen, dan weg
 
 ? NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
@@ -114,8 +115,8 @@ X NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay
 ! TODO: If there are duplicates it now splits H1/H1/H2 into 50/50 we might want to split this into 66%,33%
 - Ben er wel voor dit te veranderen
 
-! TODO valideren dat alle habtypes anders zijn.
-- easy enough to add
+X TODO valideren dat alle habtypes anders zijn. (in ret_values denk ik)
+- Het zijn keys in een dict, ze zijn altijd uniek
 
 ? TODO add some validation here!!
 - Ik snap niet zo goed wat de voorgestelde validaties valideren
@@ -140,8 +141,8 @@ X NOTE: evt iets van self.stage = lokaal/sbb/vvn ofzo? Enum? Misschien een dict 
 X NOTE: Als dit te langzaam blijkt is een steekproef wss ook voldoende
 - wwl matching duurt nooit echt lang dus is dikke prima zo
 
-? NOTE NOTE: Als we zowel SBB en VvN uit de kartering hebben, willen we dan nog wwl doen voor de SBB zonder al meegegeven VvN?
-- even dubbel checken met jakko
+X NOTE NOTE: Als we zowel SBB en VvN uit de kartering hebben, willen we dan nog wwl doen voor de SBB zonder al meegegeven VvN?
+- even dubbel checken met jakko - kan weg
 
 X NOTE: Hier iets wat vast stelt dat er tenminste 1 VegTypeInfo met een VvN is, zo niet geef warning? (want dan is wwl wss niet gedaan)
 - afgevangen met state checking

@@ -13,12 +13,9 @@ class BodemTuple(NamedTuple):
 
 class OBKWaarden(BaseModel):
     """
-    # TODO: Deze definities even checken met Jakko
-
     H9120 en H9190 waarden van de Oude Bossenkaart
     0 = bos in dit vlak komt niet in aanmerking voor dit habitattype
-    1 = bos in dit vlak komt mogelijk in aanmerking voor dit habitattype
-    2 = bos in dit vlak komt in aanmerking voor dit habitattype
+    1/2 = bos in dit vlak komt mogelijk in aanmerking voor dit habitattype
     """
 
     H9120: int = Field(ge=0, le=2)

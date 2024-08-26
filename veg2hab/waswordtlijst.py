@@ -30,7 +30,6 @@ class WasWordtLijst:
 
     @classmethod
     def from_excel(cls, path: Path) -> "WasWordtLijst":
-        # NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
         df = pd.read_excel(
             path, engine="openpyxl", usecols=["VvN", "SBB", "rVvN"], dtype="string"
         )
