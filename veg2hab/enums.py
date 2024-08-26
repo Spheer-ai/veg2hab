@@ -42,6 +42,26 @@ class LBKTypeInfo:
             )
 
 
+class KarteringState(Enum):
+    # Na from_access of from_shapefile
+    PRE_WWL = "PRE_WWL"
+
+    # Na toepassen waswordtlijst (na stap 1a/1b en na stap 2)
+    POST_WWL = "POST_WWL"
+
+    # Na het maken van HabitatVoorstellen met de definitietabel
+    POST_DEFTABEL = "POST_DEFTABEL"
+
+    # Na het maken van habkeuzes obv enkel mitsen (na stap 3)
+    MITS_HABKEUZES = "MITS_HABKEUZES"
+
+    # Na het maken van habkeuzes ook op basis can mozaiek (na stap 4)
+    MOZAIEK_HABKEUZES = "MOZAIEK_HABKEUZES"
+
+    # Na het checken van de minimum oppervlakte van habitattypen (na stap 5)
+    FUNC_SAMENHANG = "FUNC_SAMENHANG"
+
+
 class WelkeTypologie(Enum):
     SBB = "SBB"
     VvN = "VvN"
