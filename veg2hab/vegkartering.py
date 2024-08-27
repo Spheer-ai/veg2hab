@@ -1089,6 +1089,7 @@ class Kartering:
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
         self.check_state(KarteringState.PRE_WWL)
+        self.set_state(KarteringState.POST_WWL)
 
         # Als er rVvN aanwezig zijn
         if (
@@ -1099,7 +1100,6 @@ class Kartering:
             self.gdf["VegTypeInfo"] = wwl.van_rVvN_naar_SBB_en_VvN(
                 self.gdf["VegTypeInfo"]
             )
-            self.set_state(KarteringState.POST_WWL)
             return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
@@ -1113,14 +1113,11 @@ class Kartering:
             logging.warning(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )
-            self.set_state(KarteringState.POST_WWL)
             return
 
         self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
             wwl.toevoegen_VvN_aan_List_VegTypeInfo
         )
-
-        self.set_state(KarteringState.POST_WWL)
 
     @staticmethod
     def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
@@ -1298,14 +1295,13 @@ class Kartering:
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
         self.check_state(KarteringState.POST_WWL)
+        self.set_state(KarteringState.POST_DEFTABEL)
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
             if len(infos) > 0
             else [[HabitatVoorstel.H0000_no_vegtype_present()]]
         )
-
-        self.set_state(KarteringState.POST_DEFTABEL)
 
     # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
     def _check_mitsen(
@@ -1369,6 +1365,7 @@ class Kartering:
         HabitatKeuzes waar ook mozaiekregels mee gemoeid zijn worden uitgesteld tot in bepaal_mozaiek_habitatkeuzes
         """
         self.check_state(KarteringState.POST_DEFTABEL)
+        self.set_state(KarteringState.MITS_HABKEUZES)
 
         assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
         assert isinstance(
@@ -1389,8 +1386,6 @@ class Kartering:
             sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
         )
 
-        self.set_state(KarteringState.MITS_HABKEUZES)
-
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
         # TODO: zelfstandigheid/mozaiekvegetaties wordt nog niet goed afgehandeld. ATM
@@ -1401,6 +1396,7 @@ class Kartering:
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
         self.check_state(KarteringState.MITS_HABKEUZES)
+        self.set_state(KarteringState.MOZAIEK_HABKEUZES)
 
         # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
         self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
@@ -1508,8 +1504,6 @@ class Kartering:
             sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
         )
 
-        self.set_state(KarteringState.MOZAIEK_HABKEUZES)
-
     def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
             return
@@ -1545,10 +1539,9 @@ class Kartering:
         Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
         """
         self.check_state(KarteringState.MOZAIEK_HABKEUZES)
+        self.set_state(KarteringState.FUNC_SAMENHANG)
 
         self.gdf = apply_functionele_samenhang(self.gdf)
-
-        self.set_state(KarteringState.FUNC_SAMENHANG)
 
     @staticmethod
     def _habkeuzes_to_multi_col(keuzes: List[HabitatKeuze]) -> pd.Series:
