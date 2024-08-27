@@ -1310,7 +1310,7 @@ class Kartering:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
-        self.check_state(KarteringState.POST_DEFTABEL)
+        self.check_state(KarteringState.MITS_HABKEUZES)
 
         # Deze dataframe wordt verrijkt met de info nodig om mitsen te checken.
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
