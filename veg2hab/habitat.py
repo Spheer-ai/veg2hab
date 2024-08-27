@@ -402,20 +402,6 @@ def try_to_determine_habkeuze(
         # Als er een CANNOT_BE_AUTOMATED is...
         if MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values:
             # ...dan kunnen we voor de huidige voorstellen geen keuze maken
-
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             return HabitatKeuze(
                 status=KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
                 habtype="HXXXX",
@@ -441,21 +427,8 @@ def try_to_determine_habkeuze(
         if MaybeBoolean.POSTPONE in truth_values:
             # ...dan komt dat door een mozaiekregel waar nog te weinig info over omliggende vlakken voor is
 
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             # Deze keuze komt volgende iteratieronde terug
-            # Als de huidige iteratie de laatste is (bv omdat er geen voortang is gemaakt), dan komt deze keuze in de output terecht.
+            # Als de huidige iteratie de laatste is (bv omdat er geen voortgang is gemaakt), dan komt deze keuze in de output terecht.
             return HabitatKeuze(
                 status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
                 habtype="HXXXX",

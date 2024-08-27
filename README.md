@@ -273,9 +273,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **f_VvNdftbl{i}**/**f_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype het vlak mogelijk vertaalt. Een waarde `---` in `f_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
-**f_Mits_opm{i}**/**f_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn.
-
-Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
+**f_Mits_opm{i}**/**f_Mozk_opm{i}**: Hier staat informatie over de mitsen/mozaiekregels die in definitietabelregels gevonden zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken, omdat deze nog te veel HXXXX hebben om een mozaiekregeloordeel te kunnen vellen.
 
 **f_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
 
