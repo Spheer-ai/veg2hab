@@ -1099,6 +1099,7 @@ class Kartering:
             self.gdf["VegTypeInfo"] = wwl.van_rVvN_naar_SBB_en_VvN(
                 self.gdf["VegTypeInfo"]
             )
+            self.set_state(KarteringState.POST_WWL)
             return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
@@ -1112,6 +1113,7 @@ class Kartering:
             logging.warning(
                 "Er zijn al VvN aanwezig in de kartering. De was-wordt lijst wordt niet toegepast."
             )
+            self.set_state(KarteringState.POST_WWL)
             return
 
         self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
