@@ -13,9 +13,9 @@ V = gebeurd
 - voor Mark - veranderd
 
 `test_editable_vegtypen.py`
-? NOTE: Ideally this is a temporary test until the opmerkingen discrepancy (see xfail reason above) is fixed later on,
+V NOTE: Ideally this is a temporary test until the opmerkingen discrepancy (see xfail reason above) is fixed later on,
       then the original test (test_equivalency_habkart) should pass and this is no longer needed
-- nog bekijken
+- nog bekijken - opmerkingen/infos zijn veranderd
 
 X TODO: Needs test that tests changing something in between step 1/3/4 will carry forward until end of step 5
       The tool_by_tool_walkthrough notebook shows it working in practice though
@@ -173,9 +173,9 @@ X NOTE: Dus we nemen de "Opmerking vertaling" kolom niet mee? Even checken nog.
 - Doen we niet
 
 `arcgis.py`
-? TODO use shapefile_id as output
+X TODO use shapefile_id as output
 - Gebeurt nu toch? Checken met mark
 
-? TODO: ik heb het idee dat dit niks doet, maar moet nog even checken.
+- TODO: ik heb het idee dat dit niks doet, maar moet nog even checken.
 - Voor mark
 
