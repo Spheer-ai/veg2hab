@@ -1,3 +1,4 @@
+import pickle
 from typing import List, Set, Tuple
 
 import geopandas as gpd
@@ -300,10 +301,8 @@ def apply_functionele_samenhang(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     # Extracten van ElmID + complex-deel-index, percentage en habitattype
     extracted = _extract_elmid_perc_habtype(gdf)
 
-    # NOTE: Ik wil eigenlijk niet dat deze functie in place is, maar ik kan geen goeie (deep)copy maken
-    #       Wat er nu staat is vooral voor de vorm, de originele gdf wordt via de HabitatKeuzes alsnog aangepast
-    #       pickle.loads(pickle.dumps(gdf)) zou mogelijk een optie zijn?
-    edited_gdf = gdf.copy(deep=True)
+    # Niet heel netjes maar nu is de originele gdf 100% zeker niet aangepast
+    edited_gdf = pickle.loads(pickle.dumps(gdf))
     all_present_habtypen = extracted["habtype"].unique()
     for habtype in all_present_habtypen:
         if habtype in ["H0000", "HXXXX"]:

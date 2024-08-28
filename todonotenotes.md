@@ -86,11 +86,12 @@ X TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifi
 - Leuk idee maar niet nodig, mitsen weten niet voor welk habtype ze zijn, dus dat moet dan ook geregeld worden
 
 `functionele_samenhang.py`
-? NOTE: Ik wil eigenlijk niet dat deze functie in place is, maar ik kan geen goeie (deep)copy maken
+V NOTE: Ik wil eigenlijk niet dat deze functie in place is, maar ik kan geen goeie (deep)copy maken
       Wat er nu staat is vooral voor de vorm, de originele gdf wordt via de HabitatKeuzes alsnog aangepast
       pickle.loads(pickle.dumps(gdf)) zou mogelijk een optie zijn?
 - even met Mark checken, maar zoals het nu is is niet echt erg denk ik
 - Ik probeer wel pickle dingen
+- Pickle dingen gedaan
 
 `habitat.py`
 X TODO dit is niet zo netjes, met de json.loads en json.dumps

@@ -9,9 +9,10 @@ def remove_and_reset_Interface():
     original_instance = Interface._instance
     Interface._instance = None
 
-    yield 
+    yield
 
     Interface._instance = original_instance
+
 
 def test_abstract_base_class():
     with pytest.raises(TypeError):
@@ -21,6 +22,7 @@ def test_abstract_base_class():
 def test_first_time_get_instance(remove_and_reset_Interface):
     with pytest.raises(TypeError):
         i = Interface.get_instance()
+
 
 def test_singleton(remove_and_reset_Interface):
     i1 = ArcGISInterface.get_instance()

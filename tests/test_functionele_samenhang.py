@@ -323,7 +323,7 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
         ]
     ]
     with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 0.9)):
-        apply_functionele_samenhang(test_gdf)
+        test_gdf = apply_functionele_samenhang(test_gdf)
         assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H1234"
         assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H1234"
 
@@ -349,7 +349,7 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
         ]
     ]
     with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 1.1)):
-        apply_functionele_samenhang(test_gdf)
+        test_gdf = apply_functionele_samenhang(test_gdf)
         assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
         assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
 
@@ -387,7 +387,7 @@ def test_vegetatiekundig_identiek(test_gdf):
                 "H4030": "H2130/H4030",
             }
         )
-        apply_functionele_samenhang(test_gdf)
+        test_gdf = apply_functionele_samenhang(test_gdf)
         assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H2130"
         assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H4030"
 
@@ -413,6 +413,6 @@ def test_vegetatiekundig_identiek(test_gdf):
         ]
     ]
     with set_env(VEG2HAB_MINIMUM_OPPERVLAK_DEFAULT=str(test_gdf.area.iloc[0] * 1.1)):
-        apply_functionele_samenhang(test_gdf)
+        test_gdf = apply_functionele_samenhang(test_gdf)
         assert test_gdf["HabitatKeuze"].iloc[0][0].habtype == "H0000"
         assert test_gdf["HabitatKeuze"].iloc[0][1].habtype == "H0000"
