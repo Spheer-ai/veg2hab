@@ -20,7 +20,7 @@ from veg2hab.criteria import (
     OudeBossenCriterium,
     is_criteria_type_present,
 )
-from veg2hab.enums import KeuzeStatus, Kwaliteit, WelkeTypologie
+from veg2hab.enums import KarteringState, KeuzeStatus, Kwaliteit, WelkeTypologie
 from veg2hab.functionele_samenhang import apply_functionele_samenhang
 from veg2hab.habitat import (
     HabitatKeuze,
@@ -439,6 +439,7 @@ def finalize_final_format(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "_Samnvttng",
         "_LokVegTyp",
         "_LokVrtNar",
+        "_state",
     ]
     n_habtype_blocks = len([i for i in gdf.columns if "Habtype" in i])
     for i in range(1, n_habtype_blocks + 1):
@@ -646,6 +647,7 @@ class Kartering:
         # dit zijn de laatste paar kolommen voor de dataframe
         "_LokVegTyp",
         "_LokVrtNar",
+        "_state",
         "geometry",
     ]
     VEGTYPE_COLS: ClassVar[List[str]] = [
@@ -660,27 +662,65 @@ class Kartering:
     ]
 
     def __init__(self, gdf: gpd.GeoDataFrame):
-        try:
-            self.gdf = gdf[
-                self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
-            ].copy()
-        except KeyError:
+        assert (
+            len(gdf._state.unique()) == 1
+        ), "Alle vlakken moeten dezelfde state hebben"
+        state = gdf._state.iloc[0]
+
+        if state in [KarteringState.PRE_WWL, KarteringState.POST_WWL]:
+            expected_cols = self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
+            if not all([col in gdf.columns for col in expected_cols]):
+                raise ValueError(
+                    f"Kolommen van kartering in state {state} kloppen niet"
+                )
+
             self.gdf = gdf[
                 self.PREFIX_COLS + self.VEGTYPE_COLS + self.POSTFIX_COLS
             ].copy()
 
-        if not self.gdf["ElmID"].is_unique:
-            raise ValueError("ElmID is niet uniek")
-
-        # Als HabitatKeuze wel bestaat dan hoeven we VegTypeInfos niet te sorteren;
-        # Deze zijn dan al op de juiste volgorde (namelijk die van de HabitatKeuzes)
-        if not "HabitatKeuze" in self.gdf.columns:
             # Alle VegTypeInfo sorteren op percentage van hoog naar laag
-            # (Dit voornamelijk omdat dan als bij de mozaiekregels v0.1 we overal de eerste habitatkeuze
-            #  als enige habitatkeuze nemen, we altijd de habitatkeuze met het hoogste percentage nemen)
             self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
                 lambda x: sorted(x, key=lambda y: y.percentage, reverse=True)
             )
+
+        elif state in [KarteringState.MITS_HABKEUZES, KarteringState.MOZAIEK_HABKEUZES]:
+            expected_cols = self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
+
+            if not all([col in gdf.columns for col in expected_cols]):
+                raise ValueError(
+                    f"Kolommen van kartering in state {state} kloppen niet"
+                )
+
+            self.gdf = gdf[
+                self.PREFIX_COLS + self.HABTYPE_COLS + self.POSTFIX_COLS
+            ].copy()
+
+        else:
+            raise ValueError(
+                f"Instantieren kartering met state {state} is niet ondersteund"
+            )
+
+        if not self.gdf["ElmID"].is_unique:
+            raise ValueError("ElmID is niet uniek")
+
+    def check_state(self, *states: KarteringState):
+        """
+        Checkt of de kartering (een van de) de gegeven state(s) heeft
+        Zo niet, dan raisen we een ValueError
+        """
+        assert (
+            len(self.gdf._state.unique()) == 1
+        ), "Alle vlakken moeten dezelfde state hebben"
+        if not self.gdf._state.iloc[0] in states:
+            raise ValueError(
+                f"Kartering moet in een van de volgende states zijn: {states}"
+            )
+
+    def set_state(self, state: KarteringState) -> None:
+        """
+        Zet de state van de kartering
+        """
+        self.gdf["_state"] = state
 
     @classmethod
     def from_access_db(
@@ -786,6 +826,8 @@ class Kartering:
                 f"De eerste paar ElmID van de verwijderde vlakken zijn: {gdf[gdf.VegTypeInfo.isnull()].ElmID.head().to_list()}"
             )
             gdf = gdf.dropna(subset=["VegTypeInfo"])
+
+        gdf["_state"] = KarteringState.PRE_WWL
 
         return cls(gdf)
 
@@ -1013,6 +1055,8 @@ class Kartering:
             perc_col,
         )
 
+        gdf["_state"] = KarteringState.PRE_WWL
+
         return cls(gdf)
 
     def apply_wwl(
@@ -1021,7 +1065,8 @@ class Kartering:
         """
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
-        assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
+        self.check_state(KarteringState.PRE_WWL)
+        self.set_state(KarteringState.POST_WWL)
 
         # Als er rVvN aanwezig zijn
         if (
@@ -1062,6 +1107,8 @@ class Kartering:
         return result
 
     def to_editable_vegtypes(self) -> gpd.GeoDataFrame:
+        self.check_state(KarteringState.POST_WWL)
+
         # rVvN karteringen moeten al omgezet zijn op dit punt
         assert (
             self.gdf["VegTypeInfo"]
@@ -1091,6 +1138,8 @@ class Kartering:
         gdf["_VegTypeInfo"] = (
             gdf["_VegTypeInfo"].apply(VegTypeInfo.serialize_list).astype("string")
         )
+
+        gdf["_state"] = gdf["_state"].apply(lambda x: x.value)
 
         column_order = [
             *self.PREFIX_COLS,
@@ -1159,7 +1208,13 @@ class Kartering:
                 *gdf.columns[gdf.columns.str.startswith(("SBB", "VvN", "perc"))],
             ]
         )
-        return cls(gdf)
+
+        gdf["_state"] = gdf["_state"].apply(KarteringState)
+
+        kartering = cls(gdf)
+        kartering.check_state(KarteringState.POST_WWL)
+
+        return kartering
 
     @staticmethod
     def combineer_karteringen(karteringen: List[Self]) -> Self:
@@ -1193,11 +1248,7 @@ class Kartering:
             assert isinstance(
                 kartering, Kartering
             ), "Alle elementen in karteringen moeten Karteringen zijn"
-            assert all(
-                col in kartering.gdf.columns for col in kartering.VEGTYPE_COLS
-            ) and not all(
-                col in kartering.gdf.columns for col in kartering.HABTYPE_COLS
-            ), "combineer_karteringen moet als stap 2 uitgevoerd worden"
+            kartering.check_state(KarteringState.POST_WWL)
 
         result = karteringen[0].gdf
         for kartering in karteringen[1:]:
@@ -1219,7 +1270,8 @@ class Kartering:
         """
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
-        assert "VegTypeInfo" in self.gdf.columns, "Er is geen kolom met VegTypeInfo"
+        self.check_state(KarteringState.POST_WWL)
+        self.set_state(KarteringState.POST_DEFTABEL)
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
@@ -1227,15 +1279,13 @@ class Kartering:
             else [[HabitatVoorstel.H0000_no_vegtype_present()]]
         )
 
-    def check_mitsen(
+    def _check_mitsen(
         self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
     ) -> None:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
-        assert (
-            "HabitatVoorstel" in self.gdf.columns
-        ), "Er is geen kolom met HabitatVoorstel"
+        self.check_state(KarteringState.MITS_HABKEUZES)
 
         # Deze dataframe wordt verrijkt met de info nodig om mitsen te checken.
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
@@ -1289,13 +1339,16 @@ class Kartering:
         Bepaalt voor complexdelen zonder mozaiekregels de habitatkeuzes
         HabitatKeuzes waar ook mozaiekregels mee gemoeid zijn worden uitgesteld tot in bepaal_mozaiek_habitatkeuzes
         """
+        self.check_state(KarteringState.POST_DEFTABEL)
+        self.set_state(KarteringState.MITS_HABKEUZES)
+
         assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
         assert isinstance(
             bodemkaart, Bodemkaart
         ), f"bodemkaart moet een Bodemkaart object zijn, geen {type(bodemkaart)}"
         assert isinstance(lbk, LBK), f"lbk moet een LBK object zijn, geen {type(lbk)}"
 
-        self.check_mitsen(fgr, bodemkaart, lbk, obk)
+        self._check_mitsen(fgr, bodemkaart, lbk, obk)
 
         self.gdf["HabitatKeuze"] = self.gdf["HabitatVoorstel"].apply(
             lambda voorstellen: [
@@ -1312,9 +1365,8 @@ class Kartering:
         """
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
-        assert (
-            "HabitatKeuze" in self.gdf.columns
-        ), "Er is geen kolom met HabitatKeuze (draai eerst tool 3)"
+        self.check_state(KarteringState.MITS_HABKEUZES)
+        self.set_state(KarteringState.MOZAIEK_HABKEUZES)
 
         # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
         self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
@@ -1455,7 +1507,8 @@ class Kartering:
         """
         Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
         """
-        assert "HabitatKeuze" in self.gdf.columns, "Er is geen kolom met HabitatKeuze"
+        self.check_state(KarteringState.MOZAIEK_HABKEUZES)
+        self.set_state(KarteringState.FUNC_SAMENHANG)
 
         self.gdf = apply_functionele_samenhang(self.gdf)
 
@@ -1473,6 +1526,12 @@ class Kartering:
         return pd.Series(result)
 
     def to_editable_habtypes(self) -> gpd.GeoDataFrame:
+        self.check_state(
+            KarteringState.MITS_HABKEUZES,
+            KarteringState.MOZAIEK_HABKEUZES,
+            KarteringState.FUNC_SAMENHANG,
+        )
+
         editable_habtypes = self.as_final_format()
 
         # Aanpasbare kolommen taggen we met een EDIT_
@@ -1578,21 +1637,34 @@ class Kartering:
                 "_HabitatKeuze": "HabitatKeuze",
                 "LokVrtNar": "_LokVrtNar",
                 "LokVegTyp": "_LokVegTyp",
+                "state": "_state",
             }
         )
         gdf = gdf.drop(
             columns=gdf.columns[gdf.columns.str.startswith(("Habtype", "Kwal"))]
         )
-        return cls(gdf)
+
+        gdf["_state"] = gdf["_state"].apply(KarteringState)
+
+        kartering = cls(gdf)
+        kartering.check_state(
+            KarteringState.MITS_HABKEUZES,
+            KarteringState.MOZAIEK_HABKEUZES,
+            KarteringState.FUNC_SAMENHANG,
+        )
+
+        return kartering
 
     def as_final_format(self) -> gpd.GeoDataFrame:
         """
         Output de kartering conform het format voor habitattypekarteringen zoals beschreven
         in het Gegevens Leverings Protocol (Bijlage 3a)
         """
-        assert (
-            "HabitatKeuze" in self.gdf.columns
-        ), "Er is geen kolom met definitieve habitatvoorstellen"
+        self.check_state(
+            KarteringState.MITS_HABKEUZES,
+            KarteringState.MOZAIEK_HABKEUZES,
+            KarteringState.FUNC_SAMENHANG,
+        )
 
         # Base dataframe conform Gegevens Leverings Protocol maken
         base = self.gdf[
@@ -1606,11 +1678,13 @@ class Kartering:
                 "HabitatKeuze",
                 "_LokVegTyp",
                 "_LokVrtNar",
+                "_state",
             ]
         ]
 
         final = pd.concat([base, base.apply(self.row_to_final_format, axis=1)], axis=1)
         final["_Samnvttng"] = final.apply(build_aggregate_habtype_field, axis=1)
+        final["_state"] = final["_state"].apply(lambda x: x.value)
         final = finalize_final_format(final)
 
         # arcgis kan geen kolommen beginnend met een _ laten zien, dus zetten we er even wat voor

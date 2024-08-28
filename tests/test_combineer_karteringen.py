@@ -1,6 +1,7 @@
 import geopandas as gpd
 from shapely.geometry import Polygon
 
+from veg2hab.enums import KarteringState
 from veg2hab.vegkartering import Kartering, VegTypeInfo, _combineer_twee_geodataframes
 
 
@@ -233,6 +234,7 @@ def _make_kartering(geometry: Polygon, data_nr: int) -> Kartering:
                 ],
                 "_LokVegTyp": [data_nr],
                 "_LokVrtNar": [data_nr],
+                "_state": [KarteringState.POST_WWL],
                 "geometry": [geometry],
             }
         )
@@ -274,7 +276,7 @@ def test_combineer_karteringen():
     )
 
     result = Kartering.combineer_karteringen([kart1, kart2, kart3]).gdf.drop(
-        columns=["ElmID", "Opm", "VegTypeInfo", "_LokVegTyp", "_LokVrtNar"]
+        columns=["ElmID", "Opm", "VegTypeInfo", "_LokVegTyp", "_LokVrtNar", "_state"]
     )
 
     assert _is_equal(result, expected)
