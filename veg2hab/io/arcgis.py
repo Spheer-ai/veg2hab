@@ -209,7 +209,7 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
             )
             as_dict["split_char"].enabled = is_multivalue_per_column
 
-            # NOTE: doet nu niks, maar als ze dit fixen/implementeren zou t mooier zijn
+            # NOTE: doet nu niks, maar als ze dit fixen/implementeren zou de interface mooier moeten zijn
             as_dict["sbb_col"].multiValue = not is_multivalue_per_column
             as_dict["vvn_col"].multiValue = not is_multivalue_per_column
             as_dict["perc_col"].multiValue = not is_multivalue_per_column

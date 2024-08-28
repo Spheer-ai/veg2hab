@@ -1508,15 +1508,14 @@ class Kartering:
         return editable_habtypes
 
     @staticmethod
-    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str, str]]:
+    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str]]:
         result = []
         for idx in range(1, 100):  # arbitrary number
             habtype = row.get(f"Habtype{idx}", None)
             habkeuze = row.get(f"Kwal{idx}", None)
-            info = row.get(f"_V2H_bronnen_info{idx}", None)
             if habtype is None and habkeuze is None:
                 break
-            result.append((habtype, habkeuze, info))
+            result.append((habtype, habkeuze))
         else:
             raise ValueError("Er zijn te veel kolommen met Habtype/Kwal")
 
@@ -1560,7 +1559,7 @@ class Kartering:
                     "Het aantal complexdelen is veranderd door de gebruiker. Wij kunnen niet garanderen dat de output correct is."
                 )
             for new_keuze, old_keuze in zip(new_keuzes, old_keuzes):
-                new_habtype, new_kwaliteit, new_info = new_keuze
+                new_habtype, new_kwaliteit = new_keuze
                 if (
                     new_habtype != old_keuze.habtype
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
