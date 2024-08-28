@@ -9,8 +9,8 @@ V = gebeurd
 
 
 `test_arcgis_parameters.py`
-? TODO dit kan netter. Moeten even kijken hoe dit makkelijker kan.
-- voor Mark
+- TODO dit kan netter. Moeten even kijken hoe dit makkelijker kan.
+- voor Mark - veranderd
 
 `test_editable_vegtypen.py`
 ? NOTE: Ideally this is a temporary test until the opmerkingen discrepancy (see xfail reason above) is fixed later on,
@@ -26,9 +26,11 @@ X TODO: Needs test that tests changing something in between step 1/3/4 will carr
 if the different tests would run in different
 processes, or something.
 - voor Mark
+- voor beide ticket maken voor mij
 
 ? NOTE: temporary fix
 - voor Mark
+- voor beide ticket maken voor mij
 
 `test_vegetatietypen.py`
 X NOTE: is dit een logische manier om score te geven? Match to self
@@ -39,6 +41,7 @@ X NOTE: is dit een logische manier om score te geven? Match to self
 `access_db.py`
 ? TODO fix circular imports
 - voor Mark / is het niet stiekem gewoon goed zo?
+- vegtypeinfo in vegetatietypen/eigen file
 
 V TODO validate="one_to_one"? (x2)
 - ben ik wel voor - gedaan (many to one)
@@ -53,17 +56,17 @@ X TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakk
 - nu doen we biggest overlap
 
 `criteria.py`
-! NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
+X NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
 - vragen waarom dit zo is, kan daarna weg
 
 ! NOTE: Als dit niet meer in de opmerkingen kolom komt, moet dit dan nog opm heten?
 - opmerkingen terminologie overhaulen
 
-? NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
+X NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
 - prio laag, wat mij betreft kannie weg
 
 `definitietabel.py`
-? TODO: Om deze isinstance heenwerken voor modulariteit
+X TODO: Om deze isinstance heenwerken voor modulariteit
 - Is nog van toen ik ooit relaties tussen files in kaart bracht - heeft dit waarde?
 
 X TODO: Idealiter komt dit een een soort post_init (https://stackoverflow.com/questions/66571079/alter-field-after-instantiation-in-pydantic-basemodel-class)
@@ -84,14 +87,15 @@ X TODO: Misschien een "enkel_bij_habtype" veld in te tuple om de 2 H9190 specifi
       Wat er nu staat is vooral voor de vorm, de originele gdf wordt via de HabitatKeuzes alsnog aangepast
       pickle.loads(pickle.dumps(gdf)) zou mogelijk een optie zijn?
 - even met Mark checken, maar zoals het nu is is niet echt erg denk ik
+- Ik probeer wel pickle dingen
 
 `habitat.py`
-? TODO dit is niet zo netjes, met de json.loads en json.dumps
+X TODO dit is niet zo netjes, met de json.loads en json.dumps
 maar v.dict() werkte volgens mij niet lekker met enums. (2x)
 - Dit hebben we stiekem gewoon geaccepteerd toch?
 
 `main.py`
-? TODO: ik ben niet zo blij met dit lijstje isinstance.
+X TODO: ik ben niet zo blij met dit lijstje isinstance.
 - Kan wel weg toch? Of miss een dict ofzo?
 
 X TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
@@ -101,7 +105,7 @@ X TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
 X NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 type mozaiekregel werken
 - geen- en nietgeimplementeerde-regels zijn wel nodig
 
-? NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
+X NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
 - mark vragen, dan weg
 
 ? NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
@@ -118,8 +122,9 @@ X NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay
 X TODO valideren dat alle habtypes anders zijn. (in ret_values denk ik)
 - Het zijn keys in een dict, ze zijn altijd uniek
 
-? TODO add some validation here!!
+! TODO add some validation here!!
 - Ik snap niet zo goed wat de voorgestelde validaties valideren
+- doen (max 15 min)
 
 `vegetatietypen.py`
 X TODO: dit zou heel mooi naar een config kunnen later
@@ -127,7 +132,7 @@ X TODO: dit zou heel mooi naar een config kunnen later
 
 `vegkartering.py`
 ? TODO: Naam van de kartering, voegen we later toe (x2)
-- Willen we dit?
+- Willen we dit? Vragen aan jakko
 
 X TODO: Doen we voor nu nog even niet
 - LokVegTyp is al geregeld elders

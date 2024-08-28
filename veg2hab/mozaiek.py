@@ -48,9 +48,7 @@ class MozaiekRegel(BaseModel):
         if cls == MozaiekRegel:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
-        return super().__new__(
-            cls
-        )  # NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
+        return super().__new__(cls)
 
     def dict(self, *args, **kwargs):
         """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
@@ -395,6 +393,8 @@ class StandaardMozaiekregel(MozaiekRegel):
                 ]
             )
             + "."
+            if len(self.mozk_perc_tuples) > 0
+            else ""
         )
 
     def _tegengekomen_kwal_vegtypen_to_str(self) -> str:

@@ -65,7 +65,6 @@ class ArcGISInterface(Interface):
     def output_shapefile(
         self, shapefile_id: Optional[Path], gdf: gpd.GeoDataFrame
     ) -> None:
-        # TODO use shapefile_id as output
         import arcpy
 
         if shapefile_id is None:
@@ -210,7 +209,7 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
             )
             as_dict["split_char"].enabled = is_multivalue_per_column
 
-            # TODO: ik heb het idee dat dit niks doet, maar moet nog even checken.
+            # NOTE: doet nu niks, maar als ze dit fixen/implementeren zou t mooier zijn
             as_dict["sbb_col"].multiValue = not is_multivalue_per_column
             as_dict["vvn_col"].multiValue = not is_multivalue_per_column
             as_dict["perc_col"].multiValue = not is_multivalue_per_column

@@ -51,7 +51,6 @@ def bronbestanden():
     )
 
 
-# TODO: ik ben niet zo blij met dit lijstje isinstance.
 def run(
     params: Union[
         AccessDBInputs,

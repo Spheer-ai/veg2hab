@@ -40,9 +40,7 @@ class BeperkendCriterium(BaseModel):
         if cls == BeperkendCriterium:
             t = kwargs.pop("type")
             return super().__new__(cls._subtypes_[t])
-        return super().__new__(
-            cls
-        )  # NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
+        return super().__new__(cls)
 
     def dict(self, *args, **kwargs):
         """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
@@ -63,8 +61,7 @@ class BeperkendCriterium(BaseModel):
     def is_criteria_type_present(self, type):
         return isinstance(self, type)
 
-    def get_opm(self) -> Set[str]:
-        # NOTE: Als dit niet meer in de opmerkingen kolom komt, moet dit dan nog opm heten?
+    def get_info(self) -> Set[str]:
         raise NotImplementedError()
 
     @property
@@ -92,7 +89,7 @@ class GeenCriterium(BeperkendCriterium):
     def __str__(self):
         return "Geen mits (altijd waar)"
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         return set()
 
 
@@ -107,7 +104,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
     def __str__(self):
         return f"(Niet geautomatiseerd: {self.toelichting})"
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         return set()
 
 
@@ -176,11 +173,8 @@ class OverrideCriterium(BeperkendCriterium):
             self.mits,
         )
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         return set()
-
-
-# NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
 
 
 class FGRCriterium(BeperkendCriterium):
@@ -215,17 +209,17 @@ class FGRCriterium(BeperkendCriterium):
             string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         if self.cached_evaluation is None:
             logging.warning(
-                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+                "Er wordt om info-strings gevraagd voordat de mits is gecheckt."
             )
             return set()
 
         if pd.isna(self.actual_fgrtype):
             return {"Dit vlak ligt niet mooi binnen één FGR-vlak."}
 
-        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        # This string construction is a bit confusing, look at demo_criteria_infos.ipynb to see it in action
         framework = "FGR type is {}{}{} ({})."
         return {
             framework.format(
@@ -287,10 +281,10 @@ class BodemCriterium(BeperkendCriterium):
             string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         if self.cached_evaluation is None:
             logging.warning(
-                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+                "Er wordt om info-strings gevraagd voordat de mits is gecheckt."
             )
 
         if not isinstance(self.actual_bodemcode, list) and pd.isna(
@@ -298,7 +292,7 @@ class BodemCriterium(BeperkendCriterium):
         ):
             return {"Dit vlak ligt niet binnen een bodemkaartvlak."}
 
-        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        # This string construction is a bit confusing, look at demo_criteria_infos.ipynb to see it in action
         framework = (
             "Dit is {}{}"
             + str(self.wanted_bodemtype)
@@ -361,19 +355,19 @@ class LBKCriterium(BeperkendCriterium):
             string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         assert (
             self.cached_evaluation is not MaybeBoolean.POSTPONE
         ), "Postpone is not a valid evaluation state for LBKCriterium"
         if self.cached_evaluation is None:
             logging.warning(
-                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+                "Er wordt om info-strings gevraagd voordat de mits is gecheckt."
             )
 
         if pd.isna(self.actual_lbkcode):
             return {"Dit vlak ligt niet mooi binnen één LBK-vak"}
 
-        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        # This string construction is a bit confusing, look at demo_criteria_infos.ipynb to see it in action
         framework = (
             "Dit is {}{}{}"
             + str(self.wanted_lbktype)
@@ -453,13 +447,13 @@ class OudeBossenCriterium(BeperkendCriterium):
             string += f" ({self.cached_evaluation.as_letter()})"
         return string
 
-    def get_opm(self) -> Set[str]:
+    def get_info(self) -> Set[str]:
         if self.cached_evaluation is None:
             logging.warning(
-                "Er wordt om opmerking-strings gevraagd voordat de mits is gecheckt."
+                "Er wordt om info-strings gevraagd voordat de mits is gecheckt."
             )
 
-        # This string construction is a bit confusing, look at demo_criteria_opmerkingen.ipynb to see it in action
+        # This string construction is a bit confusing, look at demo_criteria_infos.ipynb to see it in action
         framework = "Dit is {} oud bos, want {}{}."
 
         return {
@@ -506,8 +500,8 @@ class NietCriterium(BeperkendCriterium):
             )
         return f"niet ({self.sub_criterium})"
 
-    def get_opm(self) -> Set[str]:
-        return self.sub_criterium.get_opm()
+    def get_info(self) -> Set[str]:
+        return self.sub_criterium.get_info()
 
 
 class OfCriteria(BeperkendCriterium):
@@ -537,8 +531,8 @@ class OfCriteria(BeperkendCriterium):
         of_crits = " of ".join(str(crit) for crit in self.sub_criteria)
         return f"({of_crits})"
 
-    def get_opm(self) -> Set[str]:
-        return set.union(*[crit.get_opm() for crit in self.sub_criteria])
+    def get_info(self) -> Set[str]:
+        return set.union(*[crit.get_info() for crit in self.sub_criteria])
 
 
 class EnCriteria(BeperkendCriterium):
@@ -567,8 +561,8 @@ class EnCriteria(BeperkendCriterium):
         en_crits = " en ".join(str(crit) for crit in self.sub_criteria)
         return f"({en_crits})"
 
-    def get_opm(self) -> Set[str]:
-        return set.union(*[crit.get_opm() for crit in self.sub_criteria])
+    def get_info(self) -> Set[str]:
+        return set.union(*[crit.get_info() for crit in self.sub_criteria])
 
 
 def is_criteria_type_present(
