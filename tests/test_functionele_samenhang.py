@@ -14,7 +14,7 @@ from veg2hab.functionele_samenhang import (
     apply_functionele_samenhang,
 )
 from veg2hab.habitat import HabitatKeuze, HabitatVoorstel
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 """
 The test_gdf is a GeoDataFrame with the following structure and percentages (60 means 60%/40%):

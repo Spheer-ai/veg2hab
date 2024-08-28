@@ -16,7 +16,7 @@ from veg2hab.mozaiek import (
     make_buffered_boundary_overlay_gdf,
 )
 from veg2hab.vegetatietypen import VvN
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 CLIInterface.get_instance()
 

@@ -22,15 +22,17 @@ X TODO: Needs test that tests changing something in between step 1/3/4 will carr
 - Zit in test_tool_by_tool_walkthrough.py
 
 `test_io_interface.py`
-? TODO: order of tests matter here. It would be nice
+V TODO: order of tests matter here. It would be nice
 if the different tests would run in different
 processes, or something.
 - voor Mark
 - voor beide ticket maken voor mij
+- gefixt met context-manager-like fixure
 
-? NOTE: temporary fix
+V NOTE: temporary fix
 - voor Mark
 - voor beide ticket maken voor mij
+- gefixt met context-manager-like fixure
 
 `test_vegetatietypen.py`
 X NOTE: is dit een logische manier om score te geven? Match to self
@@ -39,7 +41,7 @@ X NOTE: is dit een logische manier om score te geven? Match to self
 - Lijkt uberhaubt niet meer te kloppen, dus weggehaald
 
 `access_db.py`
-? TODO fix circular imports
+V TODO fix circular imports
 - voor Mark / is het niet stiekem gewoon goed zo?
 - vegtypeinfo in vegetatietypen/eigen file
 
@@ -59,8 +61,9 @@ X TODO: Op het moment doen we bij sjoin predicate "within", zodat karteringvlakk
 X NOTE: wanneer is het niet een beperkendcriterium? TODO Mark vragen
 - vragen waarom dit zo is, kan daarna weg
 
-! NOTE: Als dit niet meer in de opmerkingen kolom komt, moet dit dan nog opm heten?
+V NOTE: Als dit niet meer in de opmerkingen kolom komt, moet dit dan nog opm heten?
 - opmerkingen terminologie overhaulen
+- gedaan, is nu info
 
 X NOTE: Mogelijk een GeoCriteria baseclass maken FGR/LBK/Bodem/OBK criteria?
 - prio laag, wat mij betreft kannie weg
