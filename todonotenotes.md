@@ -108,7 +108,7 @@ X NOTE: Mogelijk kunnen we in de toekomst van deze structuur af en met maar 1 ty
 X NOTE: wanneer is het niet een MozaiekRegel? TODO Mark vragen
 - mark vragen, dan weg
 
-? NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
+- NOTE: Enkele van de volgende checks kunnen mogelijk geoptimaliseerd worden
       door ze te vervangen voor set operaties (set.issubset/set.intersection etc)
 - Kan weg denk ik? We zijn tevreden genoeg volgensmij over de snelheid
 
