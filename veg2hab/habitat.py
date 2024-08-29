@@ -80,7 +80,7 @@ class HabitatVoorstel(BaseModel):
         if self.habtype_naam != "":
             hab_str += f" ({self.habtype_naam})"
 
-        return f"[{veg_str} -> {hab_str}]"
+        return f"{veg_str} -> {hab_str}"
 
     def get_VvNdftbl_str(self):
         if isinstance(self.vegtype_in_dt, SBB):
@@ -324,8 +324,18 @@ def try_to_determine_habkeuze(
                     kwaliteit=voorstel.kwaliteit,
                     habitatvoorstellen=[voorstel],
                     opmerking="",
-                    mits_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]",
-                    mozaiek_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]",
+                    mits_opmerking="\n".join(
+                        [
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
+                        ]
+                    ),
+                    mozaiek_opmerking="\n".join(
+                        [
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
+                        ]
+                    ),
                     debug_info="",
                 )
 
@@ -346,18 +356,18 @@ def try_to_determine_habkeuze(
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype=true_voorstellen[0].habtype,
                         kwaliteit=true_voorstellen[0].kwaliteit,
-                        habitatvoorstellen=true_voorstellen,
+                        habitatvoorstellen=all_voorstellen,
                         opmerking=f"",
                         mits_opmerking="\n".join(
                             [
-                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                                for voorstel in true_voorstellen
+                                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                                for nr, voorstel in enumerate(all_voorstellen)
                             ]
                         ),
                         mozaiek_opmerking="\n".join(
                             [
-                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                                for voorstel in true_voorstellen
+                                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                                for nr, voorstel in enumerate(all_voorstellen)
                             ]
                         ),
                         debug_info="",
@@ -366,18 +376,18 @@ def try_to_determine_habkeuze(
                     status=KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
                     habtype="HXXXX",
                     kwaliteit=Kwaliteit.NVT,
-                    habitatvoorstellen=true_voorstellen,
+                    habitatvoorstellen=all_voorstellen,
                     opmerking="",
                     mits_opmerking="\n".join(
                         [
-                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                            for voorstel in true_voorstellen
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
                         ]
                     ),
                     mozaiek_opmerking="\n".join(
                         [
-                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                            for voorstel in true_voorstellen
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
                         ]
                     ),
                     debug_info="",
@@ -392,36 +402,22 @@ def try_to_determine_habkeuze(
         # Als er een CANNOT_BE_AUTOMATED is...
         if MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values:
             # ...dan kunnen we voor de huidige voorstellen geen keuze maken
-
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             return HabitatKeuze(
                 status=KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                habitatvoorstellen=return_voorstellen,
+                habitatvoorstellen=all_voorstellen,
                 opmerking="",
                 mits_opmerking="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
                 mozaiek_opmerking="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
                 debug_info="",
@@ -431,37 +427,24 @@ def try_to_determine_habkeuze(
         if MaybeBoolean.POSTPONE in truth_values:
             # ...dan komt dat door een mozaiekregel waar nog te weinig info over omliggende vlakken voor is
 
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             # Deze keuze komt volgende iteratieronde terug
-            # Als de huidige iteratie de laatste is (bv omdat er geen voortang is gemaakt), dan komt deze keuze in de output terecht.
+            # Als de huidige iteratie de laatste is (bv omdat er geen voortgang is gemaakt), dan komt deze keuze in de output terecht.
             return HabitatKeuze(
                 status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                habitatvoorstellen=return_voorstellen,
+                habitatvoorstellen=all_voorstellen,
                 opmerking="",
                 mits_opmerking="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
                 mozaiek_opmerking="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
                 debug_info="",
@@ -476,14 +459,14 @@ def try_to_determine_habkeuze(
         opmerking="",
         mits_opmerking="\n".join(
             [
-                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                for voorstel in all_voorstellen
+                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                for nr, voorstel in enumerate(all_voorstellen)
             ]
         ),
         mozaiek_opmerking="\n".join(
             [
-                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                for voorstel in all_voorstellen
+                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                for nr, voorstel in enumerate(all_voorstellen)
             ]
         ),
         debug_info="",

@@ -375,7 +375,8 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_Mits_info{idx}": keuze.mits_opmerking,
             f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
             f"_MozkPerc{idx}": "\n".join(
-                voorstel.mozaiek.get_mozk_perc_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.mozaiek.get_mozk_perc_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
             f"VvN{idx}": ", ".join(str(code) for code in vegtypeinfo.VvN),
@@ -384,10 +385,12 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": "\n".join(
-                voorstel.get_VvNdftbl_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.get_VvNdftbl_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
             f"_SBBdftbl{idx}": "\n".join(
-                voorstel.get_SBBdftbl_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.get_SBBdftbl_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
         }
 
