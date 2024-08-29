@@ -310,9 +310,6 @@ def bereken_percentage_confusion_matrix(
     habs_pred = habs_pred.copy()
     habs_true = habs_true.copy()
 
-    og_habs_pred = habs_pred.copy()
-    og_habs_true = habs_true.copy()
-
     outputs = []
     for pred_hab, pred_percentage in habs_pred.items():
         if pred_hab in habs_true:
