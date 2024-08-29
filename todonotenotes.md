@@ -120,23 +120,26 @@ X NOTE: Deze buffered_ prefix wordt ook in calc_mozaiek_percentages_from_overlay
 - is nog van toen mozaiekregelchecks anders werkten
 
 `validation.py`
-! TODO: If there are duplicates it now splits H1/H1/H2 into 50/50 we might want to split this into 66%,33%
+X TODO: If there are duplicates it now splits H1/H1/H2 into 50/50 we might want to split this into 66%,33%
 - Ben er wel voor dit te veranderen
+- Gaan we niet doen ze zijn ook wel tevreden zo
 
 X TODO valideren dat alle habtypes anders zijn. (in ret_values denk ik)
 - Het zijn keys in een dict, ze zijn altijd uniek
 
-! TODO add some validation here!!
+- TODO add some validation here!!
 - Ik snap niet zo goed wat de voorgestelde validaties valideren
 - doen (max 15 min)
+- In sommige gevallen blijft pred_percentages op een waarde staan (bij 100% correcte preds bv), dus ik was al snel flink over mn 15 min heen tegen de tijd dat ik daar achter was. Heb er nog een todotje laten staan
 
 `vegetatietypen.py`
 X TODO: dit zou heel mooi naar een config kunnen later
 - niet-geautomaitseerde codes zijn nu al in de config
 
 `vegkartering.py`
-? TODO: Naam van de kartering, voegen we later toe (x2)
+X TODO: Naam van de kartering, voegen we later toe (x2)
 - Willen we dit? Vragen aan jakko
+- Kan weg
 
 X TODO: Doen we voor nu nog even niet
 - LokVegTyp is al geregeld elders
