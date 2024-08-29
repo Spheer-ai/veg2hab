@@ -208,7 +208,6 @@ def hab_as_final_format(
                 f"_Mits_info{idx}": keuze.mits_info,
                 f"_Mozk_info{idx}": keuze.mozaiek_info,
                 f"_MozkPerc{idx}": voorstel.mozaiek.get_mozk_perc_str(),
-                # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
                 f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
                 f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
                 f"_Status{idx}": str(keuze.status),
@@ -244,7 +243,6 @@ def hab_as_final_format(
             f"_MozkPerc{idx}": "\n".join(
                 voorstel.mozaiek.get_mozk_perc_str() for voorstel in voorstellen
             ),
-            # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
             f"VvN{idx}": ", ".join(str(code) for code in vegtypeinfo.VvN),
             f"SBB{idx}": ", ".join(str(code) for code in vegtypeinfo.SBB),
             f"_Status{idx}": str(keuze.status),
