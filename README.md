@@ -13,6 +13,7 @@
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
       - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
       - [Handmatige correctie van de omzetting](#handmatige-correctie-van-de-omzetting)
+      - [Exporteren van habitattypekaart](#exporteren-van-habitattypekaart)
     - [Gebruik via de Command Line Interface (CLI)](#gebruik-via-de-command-line-interface-cli)
       - [Installatie](#installatie)
       - [Gebruik](#gebruik)
@@ -168,6 +169,16 @@ Het opdelen van de omzetting in sequentiële stappen zorgt ervoor dat de gebruik
 Voorbeelden:
 - De vegetatiekartering hanteert een vertaling van SBB naar VvN die afwijkt van de waswordt lijst. In dit geval kan de gebruiker na het inladen van de kartering in stap `1` handmatig VvN codes in veld **VvN{i}** aanpassen. In de vervolgstappen gebruikt veg2hab de handmatige VvN-codes om op te zoeken in de definitie.
 - veg2hab kan in stap `3` niet alle beperkende criteria succesvol controleren, waardoor veel vlakken op Hxxxx blijven staan. Dit zorgt ervoor dat ook veel vlakken met een mozaiekregel niet goed gecontroleerd kunnen worden in stap `4`. De gebruiker kan handmatig vlakken omzetten van Hxxxx naar H0000 of een habitattype, en pas daarna verder gaan met stap `4`.
+
+#### Exporteren van habitattypekaart
+
+Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypekaart vanuit ArcGIS Pro worden geëxporteerd als File GeoDataBase (.gdb), het format dat vereist is voor de NDVH. Hiervoor biedt ArcGIS de volgende functionaliteit:
+- Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools. 
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_tools.png" alt="open geoprocessing pane" width="400"/>
+- Zoek naar de tool 'Feature Class to Geodatabase'.
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_geoprocessingpane.png" alt="feature class to geodatabase functie" width="400"/>
+- Selecteer de kaartlaag die je wilt exporteren, en bepaal een locatie waar de File Geodatabase opgeslagen dient te worden. Druk op 'Run'.
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_to_gdb.png" alt="selecteer te exporteren kaartlaag" width="400"/>
 
 
 ### Gebruik via de Command Line Interface (CLI)
