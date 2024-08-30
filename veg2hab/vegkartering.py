@@ -92,7 +92,6 @@ class VegTypeInfo(BaseModel):
             rVvN=[r for r in rvvn if r is not None],
         )
 
-
     @classmethod
     def create_vegtypen_list_from_access_rows(
         cls,
