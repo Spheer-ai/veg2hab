@@ -4,6 +4,7 @@ from textwrap import dedent
 from typing import Union
 
 import geopandas as gpd
+import pandas as pd
 
 from veg2hab import constants
 from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart, get_datadir
@@ -173,7 +174,9 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
     deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
     # @Mark
     # Hier evt vertaling van hoe je override dict doorgeeft naar een Dict[str, OverrideCriterium]
-    deftabel.set_override_dict(params.override_dict)
+    # arcGIS geeft hier None als er geen override dict is meegegeven
+    if not pd.isna(params.override_dict):
+        deftabel.set_override_dict(params.override_dict)
 
     logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
 

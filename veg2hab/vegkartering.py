@@ -92,6 +92,7 @@ class VegTypeInfo(BaseModel):
             rVvN=[r for r in rvvn if r is not None],
         )
 
+
     @classmethod
     def create_vegtypen_list_from_access_rows(
         cls,
@@ -1195,7 +1196,7 @@ class Kartering:
             vvn = row.get(f"EDIT_VvN{idx}", "")
             vvn = "" if pd.isnull(vvn) else str(vvn)
             perc = row.get(f"EDIT_perc{idx}", None)
-            if sbb == "" and vvn == "":
+            if sbb == "" and vvn == "" and perc is None:
                 break
             result.append(
                 VegTypeInfo.from_str_vegtypes(
