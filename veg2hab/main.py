@@ -6,6 +6,7 @@ from typing import Union
 import geopandas as gpd
 import pandas as pd
 
+import veg2hab
 from veg2hab import constants
 from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart, get_datadir
 from veg2hab.definitietabel import DefinitieTabel
@@ -80,6 +81,8 @@ def run(
 
 
 def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
@@ -129,6 +132,8 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
 
 
 def run_2_stack_vegkartering(params: StackVegKarteringInputs):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     # TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
 
     gpkg_files = []
@@ -160,6 +165,8 @@ def run_2_stack_vegkartering(params: StackVegKarteringInputs):
 
 
 def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
@@ -216,6 +223,8 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
 
 
 def run_4_mozaiekregels(params: ApplyMozaiekInputs):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
@@ -236,6 +245,8 @@ def run_4_mozaiekregels(params: ApplyMozaiekInputs):
 
 
 def run_5_functionele_samenhang_en_min_opp(params: ApplyFunctioneleSamenhangInputs):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
