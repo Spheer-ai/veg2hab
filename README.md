@@ -33,7 +33,7 @@
 - Als functionaliteit binnen andere (python) software;
 - Vanuit ArcGIS Pro.
 
-veg2hab wordt gedistribueerd via PyPI, waar alle toekomstige versies aan toe worden gevoegd.
+veg2hab wordt gedistribueerd via [PyPI](https://pypi.org/project/veg2hab/), waar alle toekomstige versies aan toe worden gevoegd.
 
 ### Disclaimer
 
