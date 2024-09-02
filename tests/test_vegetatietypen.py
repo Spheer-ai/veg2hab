@@ -193,10 +193,6 @@ def test_match_sbb_rompgemeenschap():
     sbb3 = SBB.from_code("42")
     sbb4 = SBB.from_code("42a1e-b")
 
-    # NOTE: is dit een logische manier om score te geven? Match to self
-    #       geeft 5 zodat de ranking met minder specifieke ssb niet de
-    #       voorkeur krijgt.
-
     sbb.match_up_to(sbb2) == MatchLevel.NO_MATCH, "Does not match to other RG"
     sbb.match_up_to(sbb3) == MatchLevel.NO_MATCH, "Does not match to not RG"
     sbb.match_up_to(sbb) == MatchLevel.GEMEENSCHAP_SBB, "Matches to itself"

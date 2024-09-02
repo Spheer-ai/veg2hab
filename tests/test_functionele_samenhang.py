@@ -13,7 +13,7 @@ from veg2hab.functionele_samenhang import (
     _extract_elmid_perc_habtype,
     apply_functionele_samenhang,
 )
-from veg2hab.habitat import HabitatKeuze
+from veg2hab.habitat import HabitatKeuze, HabitatVoorstel
 from veg2hab.vegkartering import VegTypeInfo
 
 """
@@ -86,7 +86,9 @@ def test_gdf():
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1234",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     )
                 ],
                 [
@@ -94,7 +96,9 @@ def test_gdf():
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1234",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     )
                 ],
                 [
@@ -102,13 +106,17 @@ def test_gdf():
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1234",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                     HabitatKeuze(
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H4321",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                 ],
                 [
@@ -116,13 +124,17 @@ def test_gdf():
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1234",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                     HabitatKeuze(
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H4321",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                 ],
                 [
@@ -130,13 +142,17 @@ def test_gdf():
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H1234",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                     HabitatKeuze(
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype="H4321",
                         kwaliteit=Kwaliteit.GOED,
-                        habitatvoorstellen=[],
+                        habitatvoorstellen=[
+                            HabitatVoorstel.H0000_no_vegtype_present()
+                        ],  # dummy
                     ),
                 ],
             ],
@@ -292,13 +308,17 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H1234",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
             HabitatKeuze(
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H1234",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
         ]
     ]
@@ -314,13 +334,17 @@ def test_combining_of_same_habtype_in_one_shape(test_gdf):
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H1234",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
             HabitatKeuze(
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H1234",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
         ]
     ]
@@ -340,13 +364,17 @@ def test_vegetatiekundig_identiek(test_gdf):
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H2130",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
             HabitatKeuze(
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H4030",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
         ]
     ]
@@ -370,13 +398,17 @@ def test_vegetatiekundig_identiek(test_gdf):
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H2130",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
             HabitatKeuze(
                 status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                 habtype="H4030",
                 kwaliteit=Kwaliteit.GOED,
-                habitatvoorstellen=[],
+                habitatvoorstellen=[
+                    HabitatVoorstel.H0000_no_vegtype_present()
+                ],  # dummy
             ),
         ]
     ]

@@ -78,7 +78,6 @@ def _convert_row_to_habtype_dict(
             habs, how_to_handle_missing_percentages=how_to_handle_missing_percentages
         )
 
-    # TODO valideren dat alle habtypes anders zijn.
     if len(ret_values) == 0:
         logging.warning(f"No non-null habitat types found, returning 100% of H0000")
         return {"H0000": 100}

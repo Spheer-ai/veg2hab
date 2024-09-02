@@ -51,7 +51,6 @@ def bronbestanden():
     )
 
 
-# TODO: ik ben niet zo blij met dit lijstje isinstance.
 def run(
     params: Union[
         AccessDBInputs,
@@ -128,8 +127,6 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
 
 
 def run_2_stack_vegkartering(params: StackVegKarteringInputs):
-    # TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
-
     gpkg_files = []
 
     for single_shapefile in params.shapefile:

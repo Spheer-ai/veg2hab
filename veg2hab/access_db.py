@@ -173,18 +173,18 @@ def read_access_tables(
 
     # SBB code toevoegen aan KarteringVegetatietype
     kart_veg = kart_veg.merge(
-        # TODO validate="one_to_one"?
         vegetatietype,
         left_on="Vegetatietype",
         right_on="Code",
         how="left",
+        validate="many_to_one",
     )
     kart_veg = kart_veg.merge(
-        # TODO: validate="one_to_one"?
         vegtype,
         left_on="SbbType",
         right_on="Cata_ID",
         how="left",
+        validate="many_to_one",
     )
 
     # Opschonen vegtypen
