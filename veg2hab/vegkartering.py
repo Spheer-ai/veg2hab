@@ -1171,7 +1171,8 @@ class Kartering:
             vvn = row.get(f"EDIT_VvN{idx}", "")
             vvn = "" if pd.isnull(vvn) else str(vvn)
             perc = row.get(f"EDIT_perc{idx}", None)
-            if sbb == "" and vvn == "":
+            # if all are empty, we're done for this row
+            if sbb == "" and vvn == "" and pd.isna(perc):
                 break
             result.append(
                 VegTypeInfo.from_str_vegtypes(
