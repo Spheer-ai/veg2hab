@@ -729,7 +729,7 @@ class Kartering:
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
-        # ArcGIS maakt van elke smaak int een Big Integer, wat het vervolgens niet op kan slaan in een GeoDataBase. 
+        # ArcGIS maakt van elke smaak int een Big Integer, wat het vervolgens niet op kan slaan in een GeoDataBase.
         # Dus we maken van ElmID een float64 (net als dat Area en andere getallen dat zijn).
         self.gdf.ElmID = self.gdf.ElmID.astype("float64")
 
