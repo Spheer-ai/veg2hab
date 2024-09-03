@@ -24,16 +24,12 @@ Voor geautomatiseerde omzetting in veg2hab speelden de volgende problemen op:
 - In de meeste vegetatiekarteringen wordt de lokale typologie vertaald naar een SBB-code (de digitale standaard werkt ook primair met SBB). De definitietabel linkt echter primair VvN-codes aan habitattypen (SBB-codes worden hierin slechts genoemd als ze niet vertalen naar een VvN-code, of in sommige gevallen worden ze beide genoemd). Sommige SBB-codes vertalen naar meerdere VvN-codes, en zonder menselijke intuitie is niet te bepalen welke vertaling voor een vlak relevant is. 
 
 Veg2hab zet typologieën als volgt in elkaar om:
-- Karteringen die de rVvN typologie hanteren, worden omgezet naar SBB;
-- Bij het inladen van een kartering met digitale standaard (stap `1a_digitale_standaard`), geeft de gebruiker aan of de digitale standaard rVvN of SBB gebruikt:
-  1. In het geval van SBB, wordt aan iedere SBB-code een lijst met alle bijhorende VvN-codes uit de was-wordt-lijst toegevoegd.
-  2. In het geval van rVvN, wordt deze eerst omgezet naar SBB, waarna aan iedere SBB-code een lijst met alle bijhorende VvN-codes uit de was-wordt-lijst wordt toegevoegd.
-- Bij het inladen van een kartering zonder digitale standaard (stap `1b_vector_bestand`) kan de gebruiker aangeven of de kartering SBB, VvN of beide bevat:
-  1. In het geval van SBB, wordt aan iedere SBB-code een lijst met alle bijhorende VvN-codes uit de was-wordt-lijst toegevoegd.
-  2. In het geval van beide, wordt SBB niet automatisch vertaald naar VvN maar wordt de VvN-code uit de kartering gebruikt.
-  3. In het geval van VvN, worden door veg2hab helemaal geen SBB-codes gebruikt.
+- Voor karteringen die de rVvN typologie hanteren, wordt iedere rVvN code omgezet naar SBB en/of VvN; als een rVvN code vertaalt naar zowel één of meerdere SBB- als VvN-codes, worden deze allemaal gebruikt. 
+- Voor karteringen die SBB hanteren, wordt aan iedere SBB-code een lijst met alle bijhorende VvN-codes uit de was-wordt-lijst toegevoegd.
+- Voor karteringen die zowel SBB als VvN codes bevatten (alleen van toepassing voor stap `1b_vector_bestand`), wordt SBB niet automatisch vertaald naar VvN maar wordt de VvN-code uit de kartering gebruikt.
+- Voor karteringen die VvN hanteren (alleen van toepassing voor stap `1b_vector_bestand`), wordt door veg2hab helemaal geen SBB-codes gebruikt.
 
-Na consultatie met meerdere ecologen is de aanname gemaakt dat VvN-codes die voor een vlak niet relevant zijn, in stap 3 bij het controleren van de beperkende criteria vanzelf diskwalificeren.
+In consultatie met meerdere ecologen is de verwachting dat VvN-codes die voor een vlak niet relevant zijn, in stap 3 bij het controleren van de beperkende criteria vanzelf diskwalificeren.
 
 
 ## Stap 2: Samenvoegen van vegetatiekarteringen
@@ -43,7 +39,6 @@ Stap 2 laat de gebruiker meerdere karteringen samenvoegen tot één, om deze doo
 - Alle vegetatiekarteringen die gebruikt worden in stap 2, moeten eerst met stap 1 worden ingeladen. Dit zorgt ervoor dat de karteringen hetzelfde format hanteren, en met elkaar gecombineerd kunnen worden.
 - De gebruiker geeft bij het samenvoegen een volgorde van prioriteit aan. Deze prioriteit bepaalt welke kartering gebruikt wordt wanneer er sprake is van overlap tussen karteringen.
 - Vlakken die door bijsnijden zijn veranderd in multipolygonen, worden omgezet naar meerdere polygonen.
-
 
 
 ## Stap 3: Opzoeken van mogelijke habitattypen, en het controleren van beperkende criteria
@@ -105,7 +100,6 @@ De LBK wordt gebruikt om de volgende termen in beperkende criteria te controlere
 - *Onder invloed van beek of rivier*; Dit mitsdeel wordt als TRUE beschouwd als het vlak in een van de volgende LBK-typen ligt, en als CANNOT_BE_AUTOMATED als dat niet zo is:
   - HzBB, HzBN, HzBV, HzBW, HzBL, HzBD, HlDB, HlDD
 
-
 **Fysisch Geografische Regiokaart (FGR)** -
 De FGR kaart wordt gebruikt om alle beperkende criteria te controleren die:
 - expliciet verwijzen naar een FGR-gebiedstype, zoals `mits in FGR Duinen`;
@@ -126,9 +120,9 @@ Een aantal beperkende criteria is niet of slechts deels te automatiseren. Hiervo
 - Het controleren van een criterium vereist expertkennis, bijvoorbeeld `mits een acrotelm aanwezig is of een vergelijkbaar hoogveenvormend proces`.
 - Een criterium kan wel automatisch gefalsificeerd, maar niet gevalideerd worden, of vice versa. Zie oude-bossen-criteria hierboven.
 
-Alle criteria die niet automatisch gecontroleerd kunnen worden, worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`. De gebruiker dient deze criteria zelf na te lopen en een keuze te maken. Om dit te vergemakkelijken, geeft veg2hab de optie om bij het uitvoeren van stap 3 beperkende criteria te selecteren en aan te geven:
+Criteria die niet automatisch gecontroleerd kunnen worden, worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`. De gebruiker dient deze criteria zelf na te lopen en een keuze te maken. Om dit te vergemakkelijken, geeft veg2hab de optie om bij het uitvoeren van stap 3 beperkende criteria te selecteren en aan te geven:
 - dat een criterium voor een kartering *altijd* waar of niet-waar is.
-- dat een criterium voor een deel van de een gebied waar is, en niet-waar op de overige plekken, of andersom. Hiervoor dient de gebruiker zelf een kaart aan te leveren. Van deze kaart gebruikt veg2hab uitsluitend de geopolygonen, waarvan wordt uitgegaan dat ze de gebieden representeren waar het criterium geldt / niet-geldt.
+- dat een criterium voor een deel van de een gebied waar is, en niet-waar op de overige plekken, of andersom. Hiervoor dient de gebruiker zelf een kaart aan te leveren. Van deze kaart gebruikt veg2hab uitsluitend de geopolygonen, waarvan wordt uitgegaan dat ze de gebieden representeren waar het criterium geldt / niet-geldt. Zie voor meer uitleg de [README](../README.md#beperkende-criteria-handmatig-instellen)
 
 Tip: de gebruiker kan eerst stap 3 uitvoeren zonder handmatig criteria aan te geven. In de output kan de gebruiker vervolgens zien welke criteria niet automatisch gecontroleerd konden worden. Voor deze criteria kan de gebruiker vervolgens kaarten intekenen, en stap 3 nogmaals draaien.
 
