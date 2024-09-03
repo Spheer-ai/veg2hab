@@ -9,6 +9,7 @@
     - [Installatie .mdb drivers op Windows](#installatie-mdb-drivers-op-windows)
     - [Installatie veg2hab op linux](#installatie-veg2hab-op-linux)
     - [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer)
+    - [Installatie instructies voor gebruikers (onder IT beheer)](#installatie-instructies-voor-gebruikers-onder-it-beheer)
   - [Gebruikershandleiding](#gebruikershandleiding)
     - [Gebruik in ArcGIS Pro](#gebruik-in-arcgis-pro)
       - [Sequentiële omzetstappen](#sequentiële-omzetstappen)
@@ -109,7 +110,9 @@ Voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
 ### Installatie instructies voor IT beheer
 
-In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. Hierbij is het van belang dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
+In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. Hierbij moeten stap 1 tot en met 4 doorlopen worden door IT-beheer.
+
+Hierbij is het van belang dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
 
 **Voor het eenmalig aanmaken van een nieuwe conda omgeving:**
 - repo.anaconda.com
@@ -119,7 +122,27 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 - files.pythonhosted.org
 - pypi.org
 
+Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er some problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft, dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was de volgende: ‘notebook not found at the requested URL’.
 
+### Installatie instructies voor gebruikers (onder IT beheer)
+
+Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
+
+ 1. Open ArcGIS Pro.
+ 2. Activeer de juiste conda omgeving **voordat** je een project opent.
+    -  Open de 'Package Manager'.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
+    - Kijk of de veg2hab environment in de lijst met environments staat, zonee, klik dan op de knop "add existing environment" rechts bovenin.
+    - De locatie van de environment om in te laden, wordt door IT-beheer ingesteld, vraag IT-beheer, wanneer je deze niet kunt vinden.
+    - Als de conda environment niet al geactiveerd is (te zien door het groene vinkje), activeer deze dan door op "Activate" te klikken
+    - Je kunt nu een ArcGIS project openen.
+ 3. Voeg de veg2hab-toolbox toe aan je huidige project. Dit is 1 keer per project nodig.
+    - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
+    - Activeer veg2hab in het notebook met het commando `import veg2hab`.
+    - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
+    - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
+        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 ## Gebruikershandleiding
 
