@@ -217,7 +217,7 @@ def _remove_habtypen_due_to_minimum_oppervlak(
     Past HabitatKeuzes aan op basis van de (ElmID, complex-deel-index) tuples die in to_be_edited zitten
 
     De status van de HabitatKeuze wordt aangepast naar KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-    De opmerking wordt aangepast naar "Was {oud_habtype}, maar oppervlak was te klein. {oude_opmerking}"
+    HabitatKeuze.info wordt aangepast naar "Was {oud_habtype}, maar oppervlak was te klein. {oude_info}"
     Het habitattype wordt aangepast naar "H0000"
     """
     for func_samenhang_id in to_be_edited:
@@ -235,12 +235,12 @@ def _remove_habtypen_due_to_minimum_oppervlak(
             ], "Functionele Samenhangvlak kwaliteit moet GOED of MATIG zijn"
 
             keuze_to_be_edited.status = KeuzeStatus.MINIMUM_OPP_NIET_GEHAALD
-            keuze_to_be_edited.opmerking = (
+            keuze_to_be_edited.info = (
                 "Was {} {}, maar oppervlak was te klein.{}".format(
                     keuze_to_be_edited.habtype,
                     "(" + keuze_to_be_edited.kwaliteit.as_letter() + ")",
-                    f" {keuze_to_be_edited.opmerking}"
-                    if keuze_to_be_edited.opmerking is not None
+                    f" {keuze_to_be_edited.info}"
+                    if keuze_to_be_edited.info is not None
                     else "",
                 )
             )

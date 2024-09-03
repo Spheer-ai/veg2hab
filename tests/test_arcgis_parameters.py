@@ -5,7 +5,7 @@ from veg2hab.io.arcgis import ArcGISAccessDBInputs, ArcGISShapefileInputs
 
 
 def test_to_parameter_list():
-    # TODO dit kan netter. Moeten even kijken hoe dit makkelijker kan.
+    # NOTE: test is onvoldoende, maar we vangen het af met handmatige tests in ArcGIS
     arcpy_mock = MagicMock()
     sys.modules["arcpy"] = arcpy_mock
 

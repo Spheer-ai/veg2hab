@@ -4,7 +4,9 @@ from textwrap import dedent
 from typing import Union
 
 import geopandas as gpd
+import pandas as pd
 
+import veg2hab
 from veg2hab import constants
 from veg2hab.bronnen import FGR, LBK, Bodemkaart, OudeBossenkaart, get_datadir
 from veg2hab.definitietabel import DefinitieTabel
@@ -51,7 +53,6 @@ def bronbestanden():
     )
 
 
-# TODO: ik ben niet zo blij met dit lijstje isinstance.
 def run(
     params: Union[
         AccessDBInputs,
@@ -62,6 +63,7 @@ def run(
         ApplyFunctioneleSamenhangInputs,
     ]
 ):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
     logging.info(f"Starting veg2hab met input parameters: {params.json()}")
 
     if isinstance(params, (AccessDBInputs, ShapefileInputs)):
@@ -79,6 +81,8 @@ def run(
 
 
 def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
+    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
+
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
@@ -128,8 +132,6 @@ def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
 
 
 def run_2_stack_vegkartering(params: StackVegKarteringInputs):
-    # TODO: Dit testen in ArcGIS, maar zou moeten werken (haha famous last words)
-
     gpkg_files = []
 
     for single_shapefile in params.shapefile:
@@ -173,7 +175,9 @@ def run_3_definitietabel_en_mitsen(params: ApplyDefTabelInputs):
     deftabel = DefinitieTabel.from_excel(Path(constants.DEFTABEL_PATH))
     # @Mark
     # Hier evt vertaling van hoe je override dict doorgeeft naar een Dict[str, OverrideCriterium]
-    deftabel.set_override_dict(params.override_dict)
+    # arcGIS geeft hier None als er geen override dict is meegegeven
+    if not pd.isna(params.override_dict):
+        deftabel.set_override_dict(params.override_dict)
 
     logging.info(f"Definitietabel is ingelezen van {constants.DEFTABEL_PATH}")
 

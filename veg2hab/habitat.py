@@ -80,7 +80,7 @@ class HabitatVoorstel(BaseModel):
         if self.habtype_naam != "":
             hab_str += f" ({self.habtype_naam})"
 
-        return f"[{veg_str} -> {hab_str}]"
+        return f"{veg_str} -> {hab_str}"
 
     def get_VvNdftbl_str(self):
         if isinstance(self.vegtype_in_dt, SBB):
@@ -96,8 +96,6 @@ class HabitatVoorstel(BaseModel):
 
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
-        # TODO dit is niet zo netjes, met de json.loads en json.dumps
-        # maar v.dict() werkte volgens mij niet lekker met enums.
         return json.dumps(
             [[json.loads(v.json()) for v in sublist] for sublist in voorstellen]
         )
@@ -119,10 +117,9 @@ class HabitatKeuze(BaseModel):
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
     habitatvoorstellen: List[HabitatVoorstel]  # used as a refence
-    opmerking: str = ""
-    mits_opmerking: str = ""
-    mozaiek_opmerking: str = ""
-    debug_info: str = ""
+    info: str = ""
+    mits_info: str = ""
+    mozaiek_info: str = ""
 
     @root_validator
     def valideer_habtype_keuzestatus(cls, values):
@@ -152,10 +149,9 @@ class HabitatKeuze(BaseModel):
         return values
 
     @validator(
-        "opmerking",
-        "mits_opmerking",
-        "mozaiek_opmerking",
-        "debug_info",
+        "info",
+        "mits_info",
+        "mozaiek_info",
         pre=True,
         always=True,
     )
@@ -165,7 +161,11 @@ class HabitatKeuze(BaseModel):
         Bij het deserializen worden deze dus ook ingelezen als None
         Dus we zetten ze hier weer om naar een lege string :)
         """
-        return v if v is not None else ""
+        return v if pd.notna(v) else ""
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.update_info()
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
@@ -175,11 +175,10 @@ class HabitatKeuze(BaseModel):
             status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
             habtype="HXXXX",
             kwaliteit=Kwaliteit.NVT,
-            opmerking="",
+            info="",
             habitatvoorstellen=habitatvoorstellen,
-            mits_opmerking="",
-            mozaiek_opmerking="",
-            debug_info="",
+            mits_info="",
+            mozaiek_info="",
         )
 
     @property
@@ -191,13 +190,30 @@ class HabitatKeuze(BaseModel):
 
     @staticmethod
     def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
-        # TODO dit is niet zo netjes, met de json.loads en json.dumps
-        # maar v.dict, doet een werkte volgens mij niet lekker met enums.
         return json.dumps([json.loads(v.json()) for v in keuzes])
 
     @staticmethod
     def deserialize_list(serialized: str) -> List["HabitatKeuze"]:
         return [HabitatKeuze(**v) for v in json.loads(serialized)]
+
+    def update_info(self):
+        """
+        Verzamelt de infos van alle habitatvoorstellen en voegt deze toe aan de info van de habitatkeuze
+        """
+        assert len(self.habitatvoorstellen) > 0, "Er zijn geen habitatvoorstellen"
+
+        if pd.isnull(self.info):
+            self.info = ""
+
+        all_infos = set.union(
+            *[voorstel.mits.get_info() for voorstel in self.habitatvoorstellen]
+        )
+
+        # Dubbelingen voorkomen
+        filtered_infos = [info for info in all_infos if info not in self.info]
+        filtered_infos.append(self.info)
+
+        self.info = ("\n".join(filtered_infos)).strip()
 
 
 def rank_habitatkeuzes(
@@ -253,10 +269,9 @@ def try_to_determine_habkeuze(
                 habtype="H0000",
                 kwaliteit=all_voorstellen[0].kwaliteit,
                 habitatvoorstellen=all_voorstellen,
-                opmerking="",
-                mits_opmerking="",
-                mozaiek_opmerking="",
-                debug_info="",
+                info="",
+                mits_info="",
+                mozaiek_info="",
             )
         # ...of zijn er geen vegetatietypen opgegeven voor dit vlak
         assert all_voorstellen[0].onderbouwend_vegtype is None
@@ -265,10 +280,9 @@ def try_to_determine_habkeuze(
             habtype="H0000",
             kwaliteit=all_voorstellen[0].kwaliteit,
             habitatvoorstellen=all_voorstellen,
-            opmerking="",
-            mits_opmerking="",
-            mozaiek_opmerking="",
-            debug_info="",
+            info="",
+            mits_info="",
+            mozaiek_info="",
         )
 
     # Als er maar 1 habitatvoorstel is en dat is HXXXX, kan dat zijn omdat het vegetatietype niet geautomatiseerd is
@@ -286,10 +300,9 @@ def try_to_determine_habkeuze(
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
                 habitatvoorstellen=all_voorstellen,
-                opmerking="",
-                mits_opmerking="",
-                mozaiek_opmerking="",
-                debug_info="",
+                info="",
+                mits_info="",
+                mozaiek_info="",
             )
 
     sublisted_voorstellen = _sublist_per_match_level(all_voorstellen)
@@ -323,10 +336,19 @@ def try_to_determine_habkeuze(
                     habtype=voorstel.habtype,
                     kwaliteit=voorstel.kwaliteit,
                     habitatvoorstellen=[voorstel],
-                    opmerking="",
-                    mits_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]",
-                    mozaiek_opmerking=f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]",
-                    debug_info="",
+                    info="",
+                    mits_info="\n".join(
+                        [
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
+                        ]
+                    ),
+                    mozaiek_info="\n".join(
+                        [
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
+                        ]
+                    ),
                 )
 
             # ...of zijn er meerdere kloppende mitsen; Alle info van de kloppende mitsen meegeven
@@ -346,41 +368,39 @@ def try_to_determine_habkeuze(
                         status=KeuzeStatus.HABITATTYPE_TOEGEKEND,
                         habtype=true_voorstellen[0].habtype,
                         kwaliteit=true_voorstellen[0].kwaliteit,
-                        habitatvoorstellen=true_voorstellen,
-                        opmerking=f"",
-                        mits_opmerking="\n".join(
+                        habitatvoorstellen=all_voorstellen,
+                        info=f"",
+                        mits_info="\n".join(
                             [
-                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                                for voorstel in true_voorstellen
+                                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                                for nr, voorstel in enumerate(all_voorstellen)
                             ]
                         ),
-                        mozaiek_opmerking="\n".join(
+                        mozaiek_info="\n".join(
                             [
-                                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                                for voorstel in true_voorstellen
+                                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                                for nr, voorstel in enumerate(all_voorstellen)
                             ]
                         ),
-                        debug_info="",
                     )
                 return HabitatKeuze(
                     status=KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
                     habtype="HXXXX",
                     kwaliteit=Kwaliteit.NVT,
-                    habitatvoorstellen=true_voorstellen,
-                    opmerking="",
-                    mits_opmerking="\n".join(
+                    habitatvoorstellen=all_voorstellen,
+                    info="",
+                    mits_info="\n".join(
                         [
-                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                            for voorstel in true_voorstellen
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
                         ]
                     ),
-                    mozaiek_opmerking="\n".join(
+                    mozaiek_info="\n".join(
                         [
-                            f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                            for voorstel in true_voorstellen
+                            f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                            for nr, voorstel in enumerate(all_voorstellen)
                         ]
                     ),
-                    debug_info="",
                 )
 
             # ...of zijn er geen kloppende mitsen op het huidige match_level
@@ -392,79 +412,50 @@ def try_to_determine_habkeuze(
         # Als er een CANNOT_BE_AUTOMATED is...
         if MaybeBoolean.CANNOT_BE_AUTOMATED in truth_values:
             # ...dan kunnen we voor de huidige voorstellen geen keuze maken
-
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             return HabitatKeuze(
                 status=KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                habitatvoorstellen=return_voorstellen,
-                opmerking="",
-                mits_opmerking="\n".join(
+                habitatvoorstellen=all_voorstellen,
+                info="",
+                mits_info="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
-                mozaiek_opmerking="\n".join(
+                mozaiek_info="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
-                debug_info="",
             )
 
         # Als er een POSTPONE is...
         if MaybeBoolean.POSTPONE in truth_values:
             # ...dan komt dat door een mozaiekregel waar nog te weinig info over omliggende vlakken voor is
 
-            # We weten wel dat habitatvoorstellen met een specifieker matchniveau dan die van
-            # de current_voorstellen allemaal FALSE waren, dus die hoeven we niet terug te geven
-            # We filteren ook mits&mozaiek eruit die FALSE zijn; die hangen nm toch niet van een NietGeautomatiseerdCriterium af.
-            return_voorstellen = [
-                voorstel
-                for voorstel in all_voorstellen
-                if voorstel.match_level <= current_voorstellen[0].match_level
-                and (
-                    voorstel.mits.evaluation & voorstel.mozaiek.evaluation
-                    != MaybeBoolean.FALSE
-                )
-            ]
-
             # Deze keuze komt volgende iteratieronde terug
-            # Als de huidige iteratie de laatste is (bv omdat er geen voortang is gemaakt), dan komt deze keuze in de output terecht.
+            # Als de huidige iteratie de laatste is (bv omdat er geen voortgang is gemaakt), dan komt deze keuze in de output terecht.
             return HabitatKeuze(
                 status=KeuzeStatus.WACHTEN_OP_MOZAIEK,
                 habtype="HXXXX",
                 kwaliteit=Kwaliteit.NVT,
-                habitatvoorstellen=return_voorstellen,
-                opmerking="",
-                mits_opmerking="\n".join(
+                habitatvoorstellen=all_voorstellen,
+                info="",
+                mits_info="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
-                mozaiek_opmerking="\n".join(
+                mozaiek_info="\n".join(
                     [
-                        f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                        for voorstel in return_voorstellen
+                        f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                        for nr, voorstel in enumerate(all_voorstellen)
                     ]
                 ),
-                debug_info="",
             )
 
     # Er zijn geen kloppende mitsen gevonden;
@@ -473,20 +464,19 @@ def try_to_determine_habkeuze(
         habtype="H0000",
         kwaliteit=Kwaliteit.NVT,
         habitatvoorstellen=all_voorstellen,
-        opmerking="",
-        mits_opmerking="\n".join(
+        info="",
+        mits_info="\n".join(
             [
-                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}]"
-                for voorstel in all_voorstellen
+                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mits}, {voorstel.mits.evaluation}"
+                for nr, voorstel in enumerate(all_voorstellen)
             ]
         ),
-        mozaiek_opmerking="\n".join(
+        mozaiek_info="\n".join(
             [
-                f"[{voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}]"
-                for voorstel in all_voorstellen
+                f"{nr + 1}. {voorstel.vegtype_in_dt}, {voorstel.habtype}, {voorstel.mozaiek}, {voorstel.mozaiek.evaluation}"
+                for nr, voorstel in enumerate(all_voorstellen)
             ]
         ),
-        debug_info="",
     )
 
 

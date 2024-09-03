@@ -287,28 +287,9 @@ def sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen(
     return row
 
 
-def format_opmerkingen(
-    voorstellen: Union[HabitatVoorstel, List[HabitatVoorstel]], keuze_opm: Optional[str]
-) -> str:
-    """
-    Uit ieder habitatvoorstel.mits.get_opm() komt een Set(str)
-    Bij meerdere voorstellen zijn er meerdere mitsen, dus List[Set[str]]
-    Deze moeten onderling nog uniek gemaakt worden en daarna gejoined worden tot één string
-    """
-    if not isinstance(voorstellen, list):
-        voorstellen = [voorstellen]
-
-    if pd.isnull(keuze_opm):
-        keuze_opm = ""
-
-    opmerkingen = set.union(*[voorstel.mits.get_opm() for voorstel in voorstellen])
-    if keuze_opm != "":
-        opmerkingen = [opm for opm in opmerkingen if opm not in keuze_opm]
-        opmerkingen.append(keuze_opm)
-    return "\n".join(opmerkingen)
-
-
-def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
+def hab_as_final_format(
+    print_info: Tuple[HabitatKeuze, VegTypeInfo], idx: int, opp: float
+) -> pd.Series:
     """
     Herformatteert een habitatkeuze en bijbehorende vegtypeinfo naar de kolommen zoals in het Gegevens Leverings Protocol
     """
@@ -334,16 +315,13 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
                 f"Perc{idx}": vegtypeinfo.percentage,
                 f"Opp{idx}": opp * (vegtypeinfo.percentage / 100),
                 f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                f"_V2H_bronnen_info{idx}": format_opmerkingen(
-                    voorstel, keuze.opmerking
-                ),
-                f"_Mits_info{idx}": keuze.mits_opmerking,
-                f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
+                f"_V2H_bronnen_info{idx}": keuze.info,
+                f"_Mits_info{idx}": keuze.mits_info,
+                f"_Mozk_info{idx}": keuze.mozaiek_info,
                 f"_MozkPerc{idx}": voorstel.mozaiek.get_mozk_perc_str(),
                 # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
                 f"VvN{idx}": ", ".join([str(code) for code in vegtypeinfo.VvN]),
                 f"SBB{idx}": ", ".join([str(code) for code in vegtypeinfo.SBB]),
-                # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
                 f"_Status{idx}": str(keuze.status),
                 f"_Uitleg{idx}": keuze.status.toelichting,
                 f"_VvNdftbl{idx}": voorstel.get_VvNdftbl_str(),
@@ -371,23 +349,25 @@ def hab_as_final_format(print_info: tuple, idx: int, opp: float) -> pd.Series:
             f"Perc{idx}": str(vegtypeinfo.percentage),
             f"Opp{idx}": str(opp * (vegtypeinfo.percentage / 100)),
             f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-            f"_V2H_bronnen_info{idx}": format_opmerkingen(voorstellen, keuze.opmerking),
-            f"_Mits_info{idx}": keuze.mits_opmerking,
-            f"_Mozk_info{idx}": keuze.mozaiek_opmerking,
+            f"_V2H_bronnen_info{idx}": keuze.info,
+            f"_Mits_info{idx}": keuze.mits_info,
+            f"_Mozk_info{idx}": keuze.mozaiek_info,
             f"_MozkPerc{idx}": "\n".join(
-                voorstel.mozaiek.get_mozk_perc_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.mozaiek.get_mozk_perc_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
             # f"Bron{idx}" TODO: Naam van de kartering, voegen we later toe
             f"VvN{idx}": ", ".join(str(code) for code in vegtypeinfo.VvN),
             f"SBB{idx}": ", ".join(str(code) for code in vegtypeinfo.SBB),
-            # f"VEGlok{idx}" TODO: Doen we voor nu nog even niet
             f"_Status{idx}": str(keuze.status),
             f"_Uitleg{idx}": keuze.status.toelichting,
             f"_VvNdftbl{idx}": "\n".join(
-                voorstel.get_VvNdftbl_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.get_VvNdftbl_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
             f"_SBBdftbl{idx}": "\n".join(
-                voorstel.get_SBBdftbl_str() for voorstel in voorstellen
+                f"{nr + 1}. " + voorstel.get_SBBdftbl_str()
+                for nr, voorstel in enumerate(voorstellen)
             ),
         }
 
@@ -1089,6 +1069,7 @@ class Kartering:
         Past de was-wordt lijst toe op de kartering om VvN toe te voegen aan SBB-only karteringen
         """
         self.check_state(KarteringState.PRE_WWL)
+        self.set_state(KarteringState.POST_WWL)
 
         # Als er rVvN aanwezig zijn
         if (
@@ -1102,7 +1083,6 @@ class Kartering:
             return
 
         # Check dat er niet al VvN aanwezig zijn in de VegTypeInfo's
-        # NOTE: Als dit te langzaam blijkt is een steekproef wss ook voldoende
         # NOTE NOTE: Als we zowel SBB en VvN uit de kartering hebben, willen we
         #            dan nog wwl doen voor de SBB zonder al meegegeven VvN?
         VvN_already_present = self.gdf["VegTypeInfo"].apply(
@@ -1117,8 +1097,6 @@ class Kartering:
         self.gdf["VegTypeInfo"] = self.gdf["VegTypeInfo"].apply(
             wwl.toevoegen_VvN_aan_List_VegTypeInfo
         )
-
-        self.set_state(KarteringState.POST_WWL)
 
     @staticmethod
     def _vegtypeinfo_to_multi_col(vegtypeinfos: List[VegTypeInfo]) -> pd.Series:
@@ -1193,7 +1171,8 @@ class Kartering:
             vvn = row.get(f"EDIT_VvN{idx}", "")
             vvn = "" if pd.isnull(vvn) else str(vvn)
             perc = row.get(f"EDIT_perc{idx}", None)
-            if sbb == "" and vvn == "":
+            # if all are empty, we're done for this row
+            if sbb == "" and vvn == "" and pd.isna(perc):
                 break
             result.append(
                 VegTypeInfo.from_str_vegtypes(
@@ -1296,6 +1275,7 @@ class Kartering:
         Past de definitietabel toe op de kartering om habitatvoorstellen toe te voegen
         """
         self.check_state(KarteringState.POST_WWL)
+        self.set_state(KarteringState.POST_DEFTABEL)
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
             lambda infos: [dt.find_habtypes(info) for info in infos]
@@ -1303,16 +1283,13 @@ class Kartering:
             else [[HabitatVoorstel.H0000_no_vegtype_present()]]
         )
 
-        self.set_state(KarteringState.POST_DEFTABEL)
-
-    # NOTE: Moeten fgr/bodemkaart/lbk optional zijn?
     def _check_mitsen(
         self, fgr: FGR, bodemkaart: Bodemkaart, lbk: LBK, obk: OudeBossenkaart
     ) -> None:
         """
         Checkt of de mitsen in de habitatvoorstellen van de kartering wordt voldaan.
         """
-        self.check_state(KarteringState.POST_DEFTABEL)
+        self.check_state(KarteringState.MITS_HABKEUZES)
 
         # Deze dataframe wordt verrijkt met de info nodig om mitsen te checken.
         mits_info_df = gpd.GeoDataFrame(self.gdf.geometry)
@@ -1367,6 +1344,7 @@ class Kartering:
         HabitatKeuzes waar ook mozaiekregels mee gemoeid zijn worden uitgesteld tot in bepaal_mozaiek_habitatkeuzes
         """
         self.check_state(KarteringState.POST_DEFTABEL)
+        self.set_state(KarteringState.MITS_HABKEUZES)
 
         assert isinstance(fgr, FGR), f"fgr moet een FGR object zijn, geen {type(fgr)}"
         assert isinstance(
@@ -1387,18 +1365,12 @@ class Kartering:
             sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
         )
 
-        self.set_state(KarteringState.MITS_HABKEUZES)
-
     def bepaal_mozaiek_habitatkeuzes(self, max_iter: int = 20) -> None:
         """
-        # TODO: zelfstandigheid/mozaiekvegetaties wordt nog niet goed afgehandeld. ATM
-                worden mozaiekvegetaties geinterpreteerd als vegetaties die aan hun mozaiekregel
-                hebben voldaan (te herkennen aan "onzelfstandige" habtypen, HabitatKeuze.zelfstandig == False),
-                terwijl dit moet worden dat het grenst aan een vegtype met een mozaiekregel voor hetzelfde habtype
-
         Reviseert de habitatkeuzes op basis van mozaiekregels.
         """
         self.check_state(KarteringState.MITS_HABKEUZES)
+        self.set_state(KarteringState.MOZAIEK_HABKEUZES)
 
         # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
         self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
@@ -1506,8 +1478,6 @@ class Kartering:
             sorteer_vegtypeinfos_en_habkeuzes_en_voorstellen, axis=1
         )
 
-        self.set_state(KarteringState.MOZAIEK_HABKEUZES)
-
     def _check_mozaiekregels(self, elmid_omringd_door: Optional[pd.DataFrame]) -> None:
         if elmid_omringd_door is None:
             return
@@ -1523,8 +1493,7 @@ class Kartering:
                 # we niet weer de mozaiekregels te checken
                 # TODO: Nu check ik hier heel handmatig of de keuze gemaakt is, en dat moet op dezelfde manier als in
                 #       calc_nr_of_unresolved_habitatkeuzes_per_row() gedaan worden :/
-                #       Na de demo moet dit even netten, een extra kolommetje in de gdf ofzo
-                #       Voor nu zijn er belangrijker dingen te doen :)
+                #       Dit kan netter, of dezelfde functie gebruiken of een extra kolommetje ofzo
                 if (
                     row.HabitatKeuze[idx] is not None
                     and row.HabitatKeuze[idx].status != KeuzeStatus.WACHTEN_OP_MOZAIEK
@@ -1543,10 +1512,9 @@ class Kartering:
         Past de habitatkeuzes aan volgens de regels van minimumoppervlak en functionele samenhang
         """
         self.check_state(KarteringState.MOZAIEK_HABKEUZES)
+        self.set_state(KarteringState.FUNC_SAMENHANG)
 
         self.gdf = apply_functionele_samenhang(self.gdf)
-
-        self.set_state(KarteringState.FUNC_SAMENHANG)
 
     @staticmethod
     def _habkeuzes_to_multi_col(keuzes: List[HabitatKeuze]) -> pd.Series:
@@ -1556,7 +1524,7 @@ class Kartering:
                 {
                     f"Habtype{idx}": keuze.habtype,
                     f"Kwal{idx}": keuze.kwaliteit.as_letter(),
-                    f"_V2H_bronnen_info{idx}": keuze.opmerking,
+                    f"_V2H_bronnen_info{idx}": keuze.info,
                 }
             )
         return pd.Series(result)
@@ -1603,15 +1571,14 @@ class Kartering:
         return editable_habtypes
 
     @staticmethod
-    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str, str]]:
+    def _multi_col_to_habkeuze(row: pd.Series) -> List[Tuple[str, str]]:
         result = []
         for idx in range(1, 100):  # arbitrary number
             habtype = row.get(f"Habtype{idx}", None)
             habkeuze = row.get(f"Kwal{idx}", None)
-            opm = row.get(f"_V2H_bronnen_info{idx}", None)
             if habtype is None and habkeuze is None:
                 break
-            result.append((habtype, habkeuze, opm))
+            result.append((habtype, habkeuze))
         else:
             raise ValueError("Er zijn te veel kolommen met Habtype/Kwal")
 
@@ -1621,7 +1588,7 @@ class Kartering:
     def from_editable_habtypes(cls, gdf: gpd.GeoDataFrame) -> Self:
         # arcgis kan geen kolommen beginnend met een _ laten zien, dus de ervoor gezette f kan weer weg
         fix_arcgis_underscore = {
-            col: col[len("f_") :] for col in gdf.columns if col.startswith("f_")
+            col: col[len("f") :] for col in gdf.columns if col.startswith("f_")
         }
         gdf = gdf.rename(columns=fix_arcgis_underscore)
 
@@ -1655,7 +1622,7 @@ class Kartering:
                     "Het aantal complexdelen is veranderd door de gebruiker. Wij kunnen niet garanderen dat de output correct is."
                 )
             for new_keuze, old_keuze in zip(new_keuzes, old_keuzes):
-                new_habtype, new_kwaliteit, new_opm = new_keuze
+                new_habtype, new_kwaliteit = new_keuze
                 if (
                     new_habtype != old_keuze.habtype
                     or new_kwaliteit != old_keuze.kwaliteit.as_letter()
@@ -1666,9 +1633,6 @@ class Kartering:
                     old_keuze.status = KeuzeStatus.HANDMATIG_TOEGEKEND
                     old_keuze.habtype = new_habtype
                     old_keuze.kwaliteit = Kwaliteit.from_letter(new_kwaliteit)
-
-                # opmerking wordt altijd overgenomen.
-                old_keuze.opmerking = new_opm
 
         gdf = gdf.rename(
             columns={

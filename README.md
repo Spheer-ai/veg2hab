@@ -259,14 +259,17 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **ElmID**: Een uniek ID voor ieder vlak. De waardes worden overgenomen uit de bronkartering, tenzij deze niet voor ieder vlak uniek zijn; in dat geval wordt een warning gegeven en is er een nieuw uniek ID voor ieder vlak aangemaakt.
 
-**_Samnvttng**: Verkorte weergave met toegekende habitattypen en hun percentages in het complex. Dit is een combinatie van alle kolommen `Habtype{i}` en `Perc{i}`.
+**f_Samnvttng**: Verkorte weergave met toegekende habitattypen en hun percentages in het complex. Dit is een combinatie van alle kolommen `Habtype{i}` en `Perc{i}`.
 
-**_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
+**f_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
 
-**_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN, SBB+VvN of rVvN). 
+**f_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN, SBB+VvN of rVvN). 
 - Indien SBB, zijn de bijbehorende VvN-typen door veg2hab uit de waswordtlijst gehaald. 
 - Indien rVvN, zijn de vegcodes met de waswordtlijst omgezet naar SBB en/of VvN.
 - Indien VvN of SBB+VvN, is vertaling met de waswordtlijst overgeslagen.
+
+**f_state**: De huidige status van de kartering. Deze veranderd afhankelijk van de uitgevoerde tool (1a/1b/2 = `POST_WWL`, 3 = `MITS_HABKEUZES`, 4 = `MOZAIEK_HABKEUZES`, 5 = `FUNC_SAMENHANG`). Deze is voornamelijk voor intern gebruik.
+
 
 ### Kolommen per deel van het complex
 **Habtype{i}**: Habitattype dat door veg2hab is toegekend aan dit complex-deel. HXXXX betekent dat er nog geen eenduidig habitattype kan worden toegekend. Hiervoor is nog een vervolgstap in veg2hab of handmatige correctie nodig.
@@ -281,13 +284,14 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen (inlcusief Nederlandse naam) die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype (inclusief Nederlandse naam) het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa. 
 
-**_Mits_info{i}**/**_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
 
-**_V2H_bronnen_info{i}**: Informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
+**f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
 
-**_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
+**f_V2H_bronnen_info{i}**: Informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
 
-**_Status{i}**/**_Uitleg{i}**: Beslissings-status en uitleg van veg2hab voor dit complex-deel. Mogelijke statussen en hun uitleg zijn:
+**f_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
+
+**f_Status{i}**/**f_Uitleg{i}**: Beslissings-status en uitleg van veg2hab voor dit complex-deel. Mogelijke statussen en hun uitleg zijn:
 - `HABITATTYPE_TOEGEKEND`: veg2hab heeft één habitattype gevonden waaraan dit vlak voldoet.
 - `VOLDOET_AAN_MEERDERE_HABTYPEN`: veg2hab heeft meerdere habitattypen gevonden waaraan dit vlak voldoet. De gebruiker moet hierin een keuze maken.
 - `VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN`: Het vlak voldoet niet aan de beperkende criteria en/of mozaiekregels voor de habitattypen die mogelijk van toepassing zijn. veg2hab kent aan dit vlak H0000 toe.

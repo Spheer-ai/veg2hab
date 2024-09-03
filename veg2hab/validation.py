@@ -8,6 +8,8 @@ import geopandas as gpd
 import pandas as pd
 from typing_extensions import Literal
 
+from veg2hab.enums import Kwaliteit
+
 MIN_AREA_THRESHOLD = 1
 
 
@@ -17,7 +19,7 @@ def _remove_duplicated_but_keep_order(lst: List[str]) -> List[str]:
 
 
 def _calc_percentages_if_missing(
-    habtypes: List[str],
+    keys: List[str],
     how_to_handle_missing_percentages: Literal["split_equally", "select_first"],
 ) -> Dict[str, Number]:
     """
@@ -29,24 +31,24 @@ def _calc_percentages_if_missing(
         >>> _calc_percentages_if_missing(["H123", "H234", "H345"], "select_first")
         {"H123": 100}
     """
-    if len(habtypes) == 0:
+    if len(keys) == 0:
         return dict()
 
     # TODO: If there are duplicates it now splits H1/H1/H2 into 50/50
     # we might want to split this into 66%,33%
     if how_to_handle_missing_percentages == "split_equally":
-        habtypes = _remove_duplicated_but_keep_order(habtypes)
-        return {hab: 100 / len(habtypes) for hab in habtypes}
+        keys = _remove_duplicated_but_keep_order(keys)
+        return {key: 100 / len(keys) for key in keys}
 
     if how_to_handle_missing_percentages == "select_first":
-        return {habtypes[0]: 100}
+        return {keys[0]: 100}
 
     raise ValueError(
         "how_to_handle_missing_percentages must be one of 'split_equally', 'select_first'"
     )
 
 
-def _convert_row_to_dict(
+def _convert_row_to_habtype_dict(
     row: pd.Series,
     habtype_colnames: List[str],
     percentage_colnames: Optional[List[str]],
@@ -76,10 +78,38 @@ def _convert_row_to_dict(
             habs, how_to_handle_missing_percentages=how_to_handle_missing_percentages
         )
 
-    # TODO valideren dat alle habtypes anders zijn.
     if len(ret_values) == 0:
         logging.warning(f"No non-null habitat types found, returning 100% of H0000")
         return {"H0000": 100}
+
+    if abs(sum(ret_values.values()) - 100) > 0.1:
+        logging.warning(
+            f"Percentages do not add up to 100% for row: {row.name}, result: {ret_values}"
+        )
+
+    return ret_values
+
+
+def _convert_row_to_kwaliteit_dict(
+    row: pd.Series, kwal_colnames: List[str], perc_colnames: List[str]
+) -> Dict[str, Number]:
+    """
+    Schrijft de toegekende kwaliteiten van een rij van een dataframe naar een dictionary
+
+    Voorbeeld:
+        >>> ser = gpd.GeoSeries(data = {"Kwal1": "G", "Kwal2": "M", "Kwal3": "X", perc1": 60, "perc2": 20, "perc3": 0})
+        >>> _convert_row_to_kwaliteit_dict(ser)
+        {"Goed": 60, "Matig": 20, "Nvt": 0}
+    """
+
+    ret_values = defaultdict(lambda: 0)
+    for kwal, perc in zip(row[kwal_colnames], row[perc_colnames]):
+        if pd.notnull(kwal):
+            ret_values[Kwaliteit.from_letter(kwal).value] += perc
+
+    if len(ret_values) == 0:
+        logging.warning(f"No non-null kwaliteiten found, returning 100% of Nvt")
+        return {Kwaliteit.NVT.value: 100}
 
     if abs(sum(ret_values.values()) - 100) > 0.1:
         logging.warning(
@@ -107,13 +137,9 @@ def parse_habitat_percentages(
     how_to_handle_missing_percentages: Literal[
         None, "split_equally", "select_first"
     ] = None,
+    add_kwaliteit: bool = False,
 ) -> gpd.GeoDataFrame:
     """
-    Args:
-        gdf: A GeoDataFrame containing habitat types and their percentages
-        habtype_cols: The name that the column should start with e.g. Habtype to match Habtype1, Habtype2, Habtype3
-        percentage_cols: The name that percentage column should start
-        how_to_handle_missing_percentages: How to handle missing percentages. If None, the function will raise an error if there are missing percentages. If "split_equally", the function will split the remaining percentage equally among the missing percentages.
     Args:
         gdf: Een geodataframe met kolommen voor de habitat types en hun percentages
         habtype_cols: De string waarmee de habitattypekolommen moeten beginnen, bijvoorbeeld Habtype voor Habtype1, Habtype2, Habtype3
@@ -122,6 +148,8 @@ def parse_habitat_percentages(
                                            Bij None zal de functie een foutmelding geven als er ontbrekende percentages zijn.
                                            Bij "split_equally" zal de ieder habitattype een gelijk percentage krijgen (100/n_habtypes).
                                            Bij "select_first" zal enkel het eerste habitattype gebruikt worden; deze krijgt dan ook 100%.
+        add_kwaliteit: Voeg naast een kolom met percentages van habitattypen ook een kolom met percentages kwaliteit toe.
+                       Dit is bedoeld voor veg2hab habitatkarteringen met Kwal1/Kwal2/... en Perc1/Perc2/... kolommen.
     """
     if (percentage_cols_regex is not None) == (
         how_to_handle_missing_percentages is not None
@@ -135,6 +163,7 @@ def parse_habitat_percentages(
         raise ValueError(
             f"Expected nonzero of habitat and percentage columns, but found {len(habtype_cols)} hab columns"
         )
+
     if percentage_cols_regex is not None:
         percentage_cols = [
             c for c in gdf.columns if re.fullmatch(percentage_cols_regex, c)
@@ -150,10 +179,10 @@ def parse_habitat_percentages(
 
     gdf = clean_up_habtypen(gdf, habtype_cols)
 
-    return gpd.GeoDataFrame(
+    return_gdf = gpd.GeoDataFrame(
         data={
             "hab_perc": gdf.apply(
-                lambda row: _convert_row_to_dict(
+                lambda row: _convert_row_to_habtype_dict(
                     row,
                     habtype_cols,
                     percentage_cols,
@@ -164,6 +193,29 @@ def parse_habitat_percentages(
         },
         geometry=gdf.geometry,
     )
+
+    if add_kwaliteit:
+        if add_kwaliteit:
+            kwaliteit_cols = [c for c in gdf.columns if re.fullmatch("Kwal\d+", c)]
+            if len(kwaliteit_cols) == 0:
+                raise ValueError("No kwaliteit columns found (Kwal1, Kwal2, ...)")
+
+            percentage_cols = [
+                c for c in gdf.columns if re.fullmatch(percentage_cols_regex, c)
+            ]
+            if len(kwaliteit_cols) != len(percentage_cols):
+                raise ValueError(
+                    "The number of kwaliteit and percentage columns must be equal"
+                )
+
+            return_gdf["kwal_perc"] = gdf.apply(
+                lambda row: _convert_row_to_kwaliteit_dict(
+                    row, kwaliteit_cols, percentage_cols
+                ),
+                axis=1,
+            )
+
+    return return_gdf
 
 
 def spatial_join(
@@ -176,6 +228,10 @@ def spatial_join(
     Als how "intersection" is, dan komt alleen het overlappende deel in de output
     Als how "include_uncharted" is, dan komt ook het niet-overlappende deel in de output - ongekarteerde gebieden krijgen dan voor 100% habitattype "ONGEKARTEERD"
     """
+    # Kwaliteit is niet meer nodig, dus kan weg
+    if "kwal_perc" in gdf_pred.columns:
+        gdf_pred = gdf_pred.drop(columns=["kwal_perc"])
+
     assert (
         gdf_pred.columns.tolist()
         == gdf_true.columns.tolist()
@@ -337,3 +393,126 @@ def bereken_volledige_conf_matrix(
         confusion_matrix /= 10_000  # return outputs in ha
 
     return confusion_matrix
+
+
+def bereken_totaal_succesvol_omgezet(
+    gdf: gpd.GeoDataFrame, method: Literal["percentage", "area"] = "area"
+):
+    """
+    gdf input:
+                 pred_hab_perc                               geometry        en andere kolommen
+                 {'H123': 100}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+     {'H123': 70, 'HXXXX': 30}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+    {'H0000': 50, 'HXXXX': 50}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+
+    De method telt alle oppervlakten (of percentages) op die volledig zijn geclassificeerd (dus niet HXXXX zijn).
+
+    output (percentage):
+    2.2
+    """
+    assert all(
+        colname in gdf.columns for colname in ["pred_hab_perc", "geometry"]
+    ), "Input gdf does not have the correct columns"
+
+    def _func(row, method):
+        total = 0
+
+        for habtype, percentage in row["pred_hab_perc"].items():
+            if habtype != "HXXXX":
+                if method == "area":
+                    total += (
+                        row.geometry.area * (percentage / 100)
+                    ) / 10_000  # convert to ha
+                if method == "percentage":
+                    total += percentage / 100
+
+        return total
+
+    return gdf.apply(_func, axis=1, method=method).sum()
+
+
+def bereken_totaal_from_dict_col(
+    gdf: gpd.GeoDataFrame, dict_col: str, method: Literal["percentage", "area"] = "area"
+):
+    """
+    gdf input:
+                      dict_col                               geometry        en andere kolommen
+                    {'A': 100}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+            {'A': 70, 'B': 30}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+            {'C': 50, 'B': 50}  POLYGON ((0 0,  10 0,  10 10,  0 10))
+
+    Deze method maakt een samenvattende Dict[str, Number] van de meegegeven dict_col.
+    Hierin staan alle gevonden keys in de kolom met de som van de percentages/oppervlakten die daarbij horen.
+
+    output (percentage):
+    {"A": 1.7, "B": 0.8, "C": 0.5}
+    """
+    assert (
+        dict_col in gdf.columns
+    ), f"Input gdf does not have the expected column {dict_col}"
+    if method == "area":
+        assert "geometry" in gdf.columns, "Input gdf does not have a geometry column"
+
+    answer_dict = {}
+
+    for _, row in gdf.iterrows():
+        for habtype, percentage in row[dict_col].items():
+            if habtype not in answer_dict:
+                answer_dict[habtype] = 0
+
+            if method == "area":
+                answer_dict[habtype] += (
+                    row.geometry.area * (percentage / 100)
+                ) / 10_000  # convert to ha
+            if method == "percentage":
+                answer_dict[habtype] += percentage / 100
+
+    return answer_dict
+
+
+def bereken_F1_per_habtype(
+    df: pd.DataFrame, method: Literal["percentage", "area"] = "area"
+) -> Dict[str, Number]:
+    """
+    Berekend de F1 metric per habitat type en geeft dit in een dict terug.
+
+    input format (confusion matrix van bereken_volledige_conf_matrix):
+    true_hab   H0000  H6430A  H7140A  HXXXX
+    pred_hab
+    H0000        3.0     1.0     1.0    0.0
+    H6430A       0.0     3.0     0.0    0.0
+    H7140A       0.0     0.0     3.0    0.0
+    HXXXX        4.0     1.0     1.0    0.0
+
+    output format:
+    {"H1234": 0.5, "H2345": 0.5}
+    """
+
+    answer_dict = {}
+
+    for habtype in df.index:
+        # HXXXX is nooit correct, dus F1 is altijd 0
+        if habtype == "HXXXX":
+            continue
+        true_pos = df.loc[habtype, habtype]
+        false_pos = df.loc[habtype].sum() - true_pos
+        false_neg = df[habtype].sum() - true_pos
+
+        if true_pos == 0:
+            answer_dict[habtype] = 0
+        else:
+            precision = true_pos / (true_pos + false_pos)
+            recall = true_pos / (true_pos + false_neg)
+            answer_dict[habtype] = 2 * (precision * recall) / (precision + recall)
+
+    return answer_dict
+
+
+def bereken_gemiddelde_F1(
+    df: pd.DataFrame, method: Literal["percentage", "area"] = "area"
+) -> float:
+    """
+    Berekend de het gemmidelde van de F1 metric per habitat type en geeft dit terug.
+    """
+    F1s = bereken_F1_per_habtype(df, method)
+    return sum(F1s.values()) / len(F1s)

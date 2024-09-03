@@ -14,7 +14,7 @@ from veg2hab.criteria import (
 )
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
-# For "tests" of criteria.get_opm, please see demo_criteria_opmerkingen.py
+# For "tests" of criteria.get_opm, please see demo_criteria_infos.py
 
 
 def test_GeenCriterium():
