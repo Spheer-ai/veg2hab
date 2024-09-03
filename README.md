@@ -150,7 +150,7 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
   - `Lokale vegetatietypen kolom (optioneel)`: welke kolom(men) bevatten informatie over het lokale vegetatietype.
   - `Splits karakter`: Indien er complexinformatie in één enkele kolom staat, welke karakter moet veg2hab gebruiken om de complexdelen te splitsen?
 - `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. 
-  - `Vegetatiekarteringen`: Twee of meer  vegetatiekarteringen; eerst geselecteerde karteringen overschrijven bij overlap later geselecteerde karteringen.
+  - `Vegetatiekarteringen`: Twee of meer vegetatiekarteringen; eerst geselecteerde karteringen overschrijven bij overlap later geselecteerde karteringen.
   - Deze karteringen *moeten* output van stap 1 zijn.
 - `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen.
   - Input *moet* output van stap 1 of 2 zijn.
@@ -161,7 +161,7 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
 
 **Let op:**
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
-- Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast.
+- Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast. Overige velden kunnen door de gebruiker veranderd worden, maar dit heeft geen effect op veg2hab.
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN.
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 - Wanneer veg2hab bezig is met een omzetting, dient de gebruiker het Map-venster in ArcGIS geopend te houden. Andere vensters openen kan resulteren in een fout van veg2hab, met de foutcode `ERROR - 'NoneType' object has no attribute 'addLayer'`.
@@ -283,7 +283,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **_Mits_info{i}**/**_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
 
-**_V2H_bronnen_info{i}**: informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
+**_V2H_bronnen_info{i}**: Informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
 
 **_MozkPerc{i}**: Als dit complex-deel een mozaiekregel heeft, zijn hier de omringingspercentages van aangenzende habitattypen weergegeven. De getoonde percentages zijn diegene die gebruikt zijn om de mozaiekregel te beoordelen. Aangezien het mogelijk is dat een mozaiekregel beoordeeld kan worden voordat alle omliggende vlakken al een habitattype hebben gekregen (bijvoorbeeld als er al 50% van een verkeerd habitattype omheen ligt), kloppen deze soms niet met wat uiteindelijk om het vlak ligt (er kan meer HXXXX staan dan in de output kartering zo is).
 
@@ -320,7 +320,7 @@ Vanuit deze locatie kunnen bronkaarten door de gebruiker worden ingeladen in Arc
 
 
 **Let op:** 
-- De LBK en Bodemkaart worden gedownload wanneer stap 3 voor het eerst gebruikt wordt. Als deze stap nog niet is gedraaid zijn deze kaarten nog niet te vinden op je eigen PC.
+- De LBK en Bodemkaart worden gedownload wanneer stap 3 voor het eerst gebruikt wordt; dit kan een aantal minuten duren. Als deze stap nog niet is gedraaid zijn deze kaarten nog niet te vinden op je eigen PC.
 - Bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
 
 
