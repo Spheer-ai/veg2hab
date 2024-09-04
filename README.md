@@ -74,7 +74,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
-    - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig bij worden uitgevoerd bij het aanmaken van een nieuw project. 
+    - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project. 
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
