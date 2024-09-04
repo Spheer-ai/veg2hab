@@ -67,13 +67,14 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
  4. Download en installeer veg2hab:
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!pip install --upgrade veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren.
+    - Download veg2hab met het commando `!pip install veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!pip install --upgrade veg2hab`.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+    - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig bij worden uitgevoerd bij het aanmaken van een nieuw project. 
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
@@ -124,6 +125,8 @@ Hierbij is het van belang dat de IP adressen van de volgende websites niet door 
 
 Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er some problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft, dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was de volgende: ‘notebook not found at the requested URL’.
 
+Verder heeft de gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
+
 ### Installatie instructies voor gebruikers (onder IT beheer)
 
 Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
@@ -142,7 +145,7 @@ Gebruik van veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hog
     - Activeer veg2hab in het notebook met het commando `import veg2hab`.
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
-        <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+    - <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 ## Gebruikershandleiding
 
