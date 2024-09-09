@@ -191,7 +191,7 @@ class ApplyDefTabelInputs(BaseModel):
     )
     override_dict: List[OverrideCriteriumIO] = Field(
         default_factory=list,
-        description="Dictionary met de mitsen en de OverrideCriteria door welke ze moeten worden vervangen",
+        description="Lijst met de mitsen en de OverrideCriteria door welke ze moeten worden vervangen",
     )
 
     def as_override_dict(self) -> Dict[str, OverrideCriterium]:

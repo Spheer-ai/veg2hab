@@ -10,6 +10,7 @@ from typing import List, Optional
 import geopandas as gpd
 from typing_extensions import Self, override
 
+from .. import enums
 from .common import (
     AccessDBInputs,
     ApplyDefTabelInputs,
@@ -114,12 +115,63 @@ class ArcGISInterface(Interface):
         )
 
 
+def _override_mits_params() -> List["arcpy.Parameter"]:
+    import arcpy
+
+    return_value = []
+    for idx in range(1, 3):
+        param1 = arcpy.Parameter(
+            name=f"override_{idx}_mits",
+            displayName=f"Mits naam {idx} (zie definitietabel)",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input",
+        )
+        param1.filter.type = "ValueList"
+        param1.filter.list = enums.STR_MITSEN
+
+        param2 = arcpy.Parameter(
+            name=f"override_{idx}_truth_value",
+            displayName=f"Nieuwe mits {idx} uitkomst",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input",
+        )
+        param2.filter.type = "ValueList"
+        param2.filter.list = ["WAAR", "ONWAAR", "ONDUIDELIJK"]
+
+        param3 = arcpy.Parameter(
+            name=f"override_{idx}_geometry",
+            displayName=f"Geometrie {idx}, waarbinnen deze mits geldt",
+            datatype="GPFeatureLayer",
+            parameterType="Optional",
+            direction="Input",
+        )
+
+        param4 = arcpy.Parameter(
+            name=f"override_{idx}_truth_value_outside",
+            displayName=f"Mits uitkomst buiten geometrie {idx}",
+            datatype="GPString",
+            parameterType="Optional",
+            direction="Input",
+        )
+        param4.filter.type = "ValueList"
+        param4.filter.list = ["WAAR", "ONWAAR", "ONDUIDELIJK"]
+
+        return_value.extend([param1, param2, param3, param4])
+    return return_value
+
+
 def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
     import arcpy
 
     outputs = []
     for field_name, field_info in param_schema["properties"].items():
-        if field_name == "shapefile":
+        if field_name == "override_dict":
+            param_group = _override_mits_params()
+            outputs.extend(param_group)
+            continue
+        elif field_name == "shapefile":
             datatype = "GPFeatureLayer"
         elif field_name.endswith("_col"):
             datatype = "Field"
