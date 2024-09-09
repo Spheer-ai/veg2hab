@@ -174,11 +174,11 @@ class OverrideCriteriumIO(BaseModel):
         return mapping[value]
 
     @staticmethod
-    def _read_overrride_geometry(value: Optional[str]) -> Optional[gpd.GeoDataFrame]:
+    def _read_overrride_geometry(value: Optional[str]) -> Optional[gpd.GeoSeries]:
         if value is None:
             return None
         p = Interface.get_instance().shape_id_to_filename(value)
-        return gpd.read_file(p)
+        return gpd.read_file(p).geometry
 
     def to_override_criterium(self) -> OverrideCriterium:
         if (self.override_geometry is None) != (self.truth_value_outside is None):
