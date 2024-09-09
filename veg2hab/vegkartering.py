@@ -706,6 +706,10 @@ class Kartering:
         if not self.gdf["ElmID"].is_unique:
             raise ValueError("ElmID is niet uniek")
 
+        # ArcGIS maakt van elke smaak int een Big Integer, wat het vervolgens niet op kan slaan in een GeoDataBase.
+        # Dus we maken van ElmID een float64 (net als dat Area en andere getallen dat zijn).
+        self.gdf.ElmID = self.gdf.ElmID.astype("float64")
+
     def check_state(self, *states: KarteringState):
         """
         Checkt of de kartering (een van de) de gegeven state(s) heeft
