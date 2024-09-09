@@ -123,13 +123,27 @@ class StackVegKarteringInputs(BaseModel):
 class OverrideCriteriumIO(BaseModel):
     mits: str
     truth_value: Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]
-    override_geometry: Union[Literal["None", ""], Path]
-    truth_value_outside: Literal["WAAR", "ONWAAR", "ONDUIDELIJK", "None", ""] = "None"
+    override_geometry: Optional[str] = None
+    truth_value_outside: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]] = None
 
     @validator("mits")
     def validate_mits(cls, value):
         if value not in enums.STR_MITSEN:
-            raise ValueError(f"mits must be one of {enums.STR_MITSEN}")
+            raise ValueError(
+                f"Invalide mits: mits moet exact overeenkomen met een mits uit de deftabel"
+            )
+        return value
+
+    @validator("override_geometry")
+    def validate_override_geometry(cls, value):
+        if value == "" or value == "None":
+            return None
+        return value
+
+    @validator("truth_value_outside", pre=True)
+    def validate_truth_value_outside(cls, value):
+        if value == "" or value == "None":
+            return None
         return value
 
     @staticmethod
@@ -148,26 +162,34 @@ class OverrideCriteriumIO(BaseModel):
 
     @staticmethod
     def _str_to_maybeboolean(
-        value: Literal["WAAR", "ONWAAR", "ONDUIDELIJK", "None", ""]
+        value: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]]
     ) -> Optional[MaybeBoolean]:
+        if value is None:
+            return None
         mapping = {
             "WAAR": MaybeBoolean.TRUE,
             "ONWAAR": MaybeBoolean.FALSE,
             "ONDUIDELIJK": MaybeBoolean.CANNOT_BE_AUTOMATED,
-            "None": None,
-            "": None,
         }
         return mapping[value]
 
     @staticmethod
-    def _read_overrride_geometry(
-        value: Union[Literal["None", ""], Path]
-    ) -> Optional[gpd.GeoDataFrame]:
-        if isinstance(value, Path):
-            return gpd.read_file(value)
-        return None
+    def _read_overrride_geometry(value: Optional[str]) -> Optional[gpd.GeoDataFrame]:
+        if value is None:
+            return None
+        p = Interface.get_instance().shape_id_to_filename(value)
+        return gpd.read_file(p)
 
     def to_override_criterium(self) -> OverrideCriterium:
+        if (self.override_geometry is None) != (self.truth_value_outside is None):
+            raise ValueError(
+                "Zowel 'Geometrie' als 'Mits uitkomst buiten geometrie' moeten beide gezet zijn of beide niet"
+            )
+        if self.truth_value == self.truth_value_outside:
+            raise ValueError(
+                "Mits uitkomst binnen geometrie en buiten geometrie kunnen niet gelijk zijn. Laat geometrie leeg wanneer dit niet nodig is."
+            )
+
         return OverrideCriterium(
             mits=self.mits,
             truth_value=self._str_to_maybeboolean(self.truth_value),

@@ -17,9 +17,12 @@ from .common import (
     ApplyFunctioneleSamenhangInputs,
     ApplyMozaiekInputs,
     Interface,
+    OverrideCriteriumIO,
     ShapefileInputs,
     StackVegKarteringInputs,
 )
+
+MAX_N_OVERRIDE = 6  # NOTE: we this results in max 5 overrides, since we start at 1
 
 
 class ArcGISInterface(Interface):
@@ -118,17 +121,21 @@ class ArcGISInterface(Interface):
 def _override_mits_params() -> List["arcpy.Parameter"]:
     import arcpy
 
+    enable = True
     return_value = []
-    for idx in range(1, 3):
+    for idx in range(1, MAX_N_OVERRIDE):
         param1 = arcpy.Parameter(
             name=f"override_{idx}_mits",
-            displayName=f"Mits naam {idx} (zie definitietabel)",
+            displayName=f"Mits naam {idx} (zie definitietabel) (optioneel)",
             datatype="GPString",
             parameterType="Optional",
             direction="Input",
         )
         param1.filter.type = "ValueList"
         param1.filter.list = enums.STR_MITSEN
+        param1.enabled = enable
+        # just enable the first mits for the first one.
+        enable = False
 
         param2 = arcpy.Parameter(
             name=f"override_{idx}_truth_value",
@@ -139,24 +146,27 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
         )
         param2.filter.type = "ValueList"
         param2.filter.list = ["WAAR", "ONWAAR", "ONDUIDELIJK"]
+        param2.enabled = enable
 
         param3 = arcpy.Parameter(
             name=f"override_{idx}_geometry",
-            displayName=f"Geometrie {idx}, waarbinnen deze mits geldt",
+            displayName=f"Geometrie waarbinnen deze mits {idx} geldt (optioneel), als niet gegeven, geldt dit voor de hele kartering",
             datatype="GPFeatureLayer",
             parameterType="Optional",
             direction="Input",
         )
+        param3.enabled = enable
 
         param4 = arcpy.Parameter(
             name=f"override_{idx}_truth_value_outside",
-            displayName=f"Mits uitkomst buiten geometrie {idx}",
+            displayName=f"Mits uitkomst buiten geometrie {idx}, alleen van toepassing als geometrie gegeven is",
             datatype="GPString",
             parameterType="Optional",
             direction="Input",
         )
         param4.filter.type = "ValueList"
         param4.filter.list = ["WAAR", "ONWAAR", "ONDUIDELIJK"]
+        param4.enabled = enable
 
         return_value.extend([param1, param2, param3, param4])
     return return_value
@@ -223,8 +233,8 @@ class ArcGISMixin:
 
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
-        as_dict = {p.name: p.valueAsText for p in parameters}
-        return cls(**as_dict)
+        params_dict = {p.name: p.valueAsText for p in parameters}
+        return cls(**params_dict)
 
     @classmethod
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
@@ -242,39 +252,43 @@ class ArcGISAccessDBInputs(AccessDBInputs, ArcGISMixin):
 class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
-        as_dict = {p.name: p.valueAsText for p in parameters}
+        params_dict = {p.name: p.valueAsText for p in parameters}
         for col in ["sbb_col", "vvn_col", "rvvn_col", "perc_col", "lok_vegtypen_col"]:
-            if as_dict.get(col) is None:
-                as_dict[col] = []
+            if params_dict.get(col) is None:
+                params_dict[col] = []
             else:
-                as_dict[col] = as_dict[col].split(";")
+                params_dict[col] = params_dict[col].split(";")
 
-        return cls(**as_dict)
+        return cls(**params_dict)
 
     @classmethod
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
-        as_dict = {p.name: p for p in parameters}
-        if as_dict["vegtype_col_format"].altered:
+        params_dict = {p.name: p for p in parameters}
+        if params_dict["vegtype_col_format"].altered:
             is_multivalue_per_column = (
-                as_dict["vegtype_col_format"].valueAsText == "single"
+                params_dict["vegtype_col_format"].valueAsText == "single"
             )
-            as_dict["split_char"].enabled = is_multivalue_per_column
+            params_dict["split_char"].enabled = is_multivalue_per_column
 
             # NOTE: doet nu niks, maar als ze dit fixen/implementeren zou de interface mooier moeten zijn
-            as_dict["sbb_col"].multiValue = not is_multivalue_per_column
-            as_dict["vvn_col"].multiValue = not is_multivalue_per_column
-            as_dict["perc_col"].multiValue = not is_multivalue_per_column
-            as_dict["lok_vegtypen_col"].multiValue = not is_multivalue_per_column
+            params_dict["sbb_col"].multiValue = not is_multivalue_per_column
+            params_dict["vvn_col"].multiValue = not is_multivalue_per_column
+            params_dict["perc_col"].multiValue = not is_multivalue_per_column
+            params_dict["lok_vegtypen_col"].multiValue = not is_multivalue_per_column
 
-        if as_dict["welke_typologie"].altered:
-            as_dict["rvvn_col"].enabled = (
-                as_dict["welke_typologie"].valueAsText == "rVvN"
+        if params_dict["welke_typologie"].altered:
+            params_dict["rvvn_col"].enabled = (
+                params_dict["welke_typologie"].valueAsText == "rVvN"
             )
-            as_dict["sbb_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+            params_dict["sbb_col"].enabled = params_dict[
+                "welke_typologie"
+            ].valueAsText in {
                 "SBB",
                 "SBB en VvN",
             }
-            as_dict["vvn_col"].enabled = as_dict["welke_typologie"].valueAsText in {
+            params_dict["vvn_col"].enabled = params_dict[
+                "welke_typologie"
+            ].valueAsText in {
                 "VvN",
                 "SBB en VvN",
             }
@@ -283,18 +297,61 @@ class ArcGISShapefileInputs(ShapefileInputs, ArcGISMixin):
 class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
-        as_dict = {p.name: p.valueAsText for p in parameters}
+        params_dict = {p.name: p.valueAsText for p in parameters}
         col = "shapefile"
-        if as_dict.get(col) is None:
-            as_dict[col] = []
+        if params_dict.get(col) is None:
+            params_dict[col] = []
         else:
-            as_dict[col] = as_dict[col].split(";")
+            params_dict[col] = params_dict[col].split(";")
 
-        return cls(**as_dict)
+        return cls(**params_dict)
 
 
 class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
-    pass
+    @classmethod
+    def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
+        params_dict = {p.name: p.valueAsText for p in parameters}
+
+        override_dict = []
+        for i in range(1, MAX_N_OVERRIDE):
+            if params_dict.get(f"override_{i}_mits") is not None:
+                override_dict.append(
+                    OverrideCriteriumIO(
+                        mits=params_dict[f"override_{i}_mits"],
+                        truth_value=params_dict[f"override_{i}_truth_value"],
+                        override_geometry=params_dict[f"override_{i}_geometry"],
+                        truth_value_outside=params_dict[
+                            f"override_{i}_truth_value_outside"
+                        ],
+                    )
+                )
+
+        filtered_dict = {
+            k: v for k, v in params_dict.items() if not k.startswith("override_")
+        }
+        filtered_dict["override_dict"] = override_dict
+
+        return cls(**filtered_dict)
+
+    @classmethod
+    def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:
+        params_dict = {p.name: p for p in parameters}
+
+        for idx in range(1, MAX_N_OVERRIDE):
+            # turn on the next check
+
+            is_override_set = (
+                params_dict[f"override_{idx}_mits"].valueAsText is not None
+            )
+            print("hello world")
+            print(is_override_set)
+
+            if idx != (MAX_N_OVERRIDE - 1):
+                params_dict[f"override_{idx + 1}_truth_value"].enabled = is_override_set
+
+            params_dict[f"override_{idx}_truth_value"].enabled = is_override_set
+            params_dict[f"override_{idx}_geometry"].enabled = is_override_set
+            params_dict[f"override_{idx}_truth_value_outside"].enabled = is_override_set
 
 
 class ArcGISApplyMozaiekInputs(ApplyMozaiekInputs, ArcGISMixin):
