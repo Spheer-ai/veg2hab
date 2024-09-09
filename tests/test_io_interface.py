@@ -4,31 +4,30 @@ from veg2hab.io.arcgis import ArcGISInterface
 from veg2hab.io.common import Interface
 
 
+@pytest.fixture
+def remove_and_reset_Interface():
+    original_instance = Interface._instance
+    Interface._instance = None
+
+    yield
+
+    Interface._instance = original_instance
+
+
 def test_abstract_base_class():
     with pytest.raises(TypeError):
         i = Interface()
 
 
-# TODO: order of tests matter here. It would be nice
-# if the different tests would run in different
-# processes, or something.
-
-
-# NOTE: temporary fix
-@pytest.mark.xfail(
-    reason="This test only works if it is executed before an Interface is instantiated anywhere"
-)
-def test_first_time_get_instance():
+def test_first_time_get_instance(remove_and_reset_Interface):
     with pytest.raises(TypeError):
         i = Interface.get_instance()
 
 
-def test_singleton():
+def test_singleton(remove_and_reset_Interface):
     i1 = ArcGISInterface.get_instance()
     i2 = ArcGISInterface.get_instance()
     assert i1 is i2
 
-    # after constructing the ArcGIS interface it
-    # can be accessed through the Interface class
     i3 = Interface.get_instance()
     assert i1 is i3

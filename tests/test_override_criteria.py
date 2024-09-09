@@ -9,7 +9,7 @@ from veg2hab import constants
 from veg2hab.criteria import FGRCriterium, OfCriteria, OverrideCriterium
 from veg2hab.definitietabel import DefinitieTabel
 from veg2hab.enums import FGRType, MaybeBoolean
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 
 @pytest.fixture

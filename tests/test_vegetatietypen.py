@@ -1,7 +1,7 @@
 import pytest
 
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 
 def test_vvn_from_str():

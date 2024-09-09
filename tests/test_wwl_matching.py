@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 from veg2hab.waswordtlijst import WasWordtLijst, opschonen_waswordtlijst
 
 
