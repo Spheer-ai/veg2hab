@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import geopandas as gpd
-from pydantic import validator
 from typing_extensions import Self, override
 
 from .common import (
