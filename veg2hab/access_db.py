@@ -11,6 +11,10 @@ from typing import Any, Dict, Tuple, Union
 import pandas as pd
 import pyodbc
 
+from veg2hab.enums import WelkeTypologie
+from veg2hab.vegetatietypen import SBB, rVvN
+from veg2hab.vegtypeinfo import VegTypeInfo
+
 
 class TableNames(enum.Enum):
     ELEMENT = "Element"
@@ -118,10 +122,6 @@ def read_access_tables(
     acces_mdb: Path, welke_typologie: "WelkeTypologie"
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Read the tables from the access database and return them as pandas dataframes"""
-    # TODO fix circular imports
-    from veg2hab.enums import WelkeTypologie
-    from veg2hab.vegetatietypen import SBB, rVvN
-    from veg2hab.vegkartering import VegTypeInfo
 
     if not acces_mdb.is_file() and not acces_mdb.suffix == ".mdb":
         raise ValueError("Geen geldige access database, verwacht een .mdb bestand.")

@@ -343,12 +343,7 @@ def bereken_percentage_confusion_matrix(
             if pred_percentage == 0:
                 break
 
-    # TODO add some validation here!!
-    # willen we hier nog valideren met percentages?
-    #     if percentage > 1e-10:
-    #         logging.warning("Non matching percentages in conf matrix, too much pred %?")
-    # if true_percentage > 1e-10:
-    #     logging.warning("Non matching percentages in conf matrix, too much true %?")
+    # TODO: Some extra validation here would be nice, with warnings if pred/true percentages do not match
 
     return pd.DataFrame(outputs, columns=["pred_hab", "true_hab", "percentage"])
 

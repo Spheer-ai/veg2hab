@@ -16,7 +16,7 @@ from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.cli import CLIInterface
 from veg2hab.mozaiek import GeenMozaiekregel, StandaardMozaiekregel
 from veg2hab.vegetatietypen import SBB, MatchLevel, VvN
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 CLIInterface.get_instance()
 

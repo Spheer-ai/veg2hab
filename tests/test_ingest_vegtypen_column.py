@@ -4,7 +4,8 @@ import geopandas as gpd
 import pandas as pd
 import pytest
 
-from veg2hab.vegkartering import VegTypeInfo, ingest_vegtype
+from veg2hab.vegkartering import ingest_vegtype
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 
 @pytest.fixture

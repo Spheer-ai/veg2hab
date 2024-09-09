@@ -361,7 +361,7 @@ class Veg2HabConfig(BaseSettings):
 class Interface(metaclass=ABCMeta):
     """Singleton class that defines the interface for the different UI systems."""
 
-    __instance = None
+    _instance = None
 
     # make the constructor private
     def __new__(cls):
@@ -371,9 +371,9 @@ class Interface(metaclass=ABCMeta):
 
     @classmethod
     def get_instance(cls):
-        if Interface.__instance is None:
-            Interface.__instance = object.__new__(cls)
-        return Interface.__instance
+        if Interface._instance is None:
+            Interface._instance = object.__new__(cls)
+        return Interface._instance
 
     def shape_id_to_filename(self, shapefile_id: str) -> Path:
         """Convert the shapefile id to a (temporary) file and returns the filename"""

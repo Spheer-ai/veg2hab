@@ -5,7 +5,7 @@ from typing import List, Tuple
 import pandas as pd
 
 from veg2hab.vegetatietypen import SBB, VvN, rVvN
-from veg2hab.vegkartering import VegTypeInfo
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 
 class WasWordtLijst:

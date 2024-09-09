@@ -2,7 +2,8 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 
 from veg2hab.enums import KarteringState
-from veg2hab.vegkartering import Kartering, VegTypeInfo, _combineer_twee_geodataframes
+from veg2hab.vegkartering import Kartering, _combineer_twee_geodataframes
+from veg2hab.vegtypeinfo import VegTypeInfo
 
 
 def _is_equal(gdf1: gpd.GeoDataFrame, gdf2: gpd.GeoDataFrame) -> bool:
