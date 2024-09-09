@@ -6,7 +6,7 @@ from typing import ClassVar, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, root_validator, validator
+from pydantic import BaseModel, validator
 from shapely import wkt
 from typing_extensions import Literal
 
@@ -136,18 +136,6 @@ class OverrideCriterium(BeperkendCriterium):
 
         return OverrideCriterium.serialize_override_geometry(v)
 
-    @root_validator
-    def check_override_geometry_and_truth_value_outside(cls, values):
-        override_geometry = values.get("override_geometry")
-        truth_value_outside = values.get("truth_value_outside")
-
-        if (override_geometry is None) != (truth_value_outside is None):
-            raise ValueError(
-                "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
-            )
-
-        return values
-
     @staticmethod
     def serialize_override_geometry(override_geometry):
         return [geom.wkt for geom in override_geometry]
@@ -157,6 +145,9 @@ class OverrideCriterium(BeperkendCriterium):
 
     def check(self, row: pd.Series) -> None:
         assert "geometry" in row, "geometry kolom niet aanwezig"
+        assert (self.override_geometry is None) == (
+            self.truth_value_outside is None
+        ), "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
 
         if self.override_geometry is None:
             self.cached_evaluation = self.truth_value

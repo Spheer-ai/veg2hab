@@ -194,9 +194,7 @@ class OverrideCriteriumIO(BaseModel):
             mits=self.mits,
             truth_value=self._str_to_maybeboolean(self.truth_value),
             override_geometry=self._read_overrride_geometry(self.override_geometry),
-            truth_value_outside=self._str_to_maybeboolean(self.truth_value_outside)
-            if self.truth_value_outside is self.truth_value_outside
-            else None,
+            truth_value_outside=self._str_to_maybeboolean(self.truth_value_outside),
         )
 
 

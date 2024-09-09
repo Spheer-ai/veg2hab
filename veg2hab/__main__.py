@@ -114,18 +114,5 @@ def _5_functionele_samenhang(**kwargs):
 
 if __name__ == "__main__":
     # Dit zorgt ervoor dat veg2hab als volgt aangeroepen kan worden:
-    # python -m veg2hab <command>
+    # # python -m veg2hab <command>
     veg2hab()
-
-    # # Debugging:
-    # CLIInterface.get_instance()
-    # _3_definitie_tabel_en_mitsen(
-    #     [
-    #         "testing/veg2hab_output.shp",
-    #         "--overschrijf-criteria",
-    #         "mits in de grofzandige delen van FGR Getijdengebied of FGR Noordzee, voorzover gelegen tussen de op Lowest Astronomical Tide gebaseerde laagwaterlijn en de gemiddelde hoogwaterlijn",
-    #         "WAAR",
-    #         "",
-    #         "",
-    #     ]
-    # )
