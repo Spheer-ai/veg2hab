@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Callable, Dict, Literal, Optional
+from typing import Callable, Dict, Optional
 
 import click
 from geopandas.geodataframe import GeoDataFrame
