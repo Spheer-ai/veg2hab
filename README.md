@@ -212,12 +212,18 @@ Voorbeelden:
 
 #### Exporteren van habitattypekaart
 
-Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypekaart vanuit ArcGIS Pro worden geëxporteerd als File GeoDataBase (.gdb), het format dat vereist is voor de NDVH. Hiervoor biedt ArcGIS de volgende functionaliteit:
+Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypekaart vanuit ArcGIS Pro worden geëxporteerd als File GeoDataBase (.gdb), het format dat vereist is voor de NDVH. De habitatkaart uit veg2hab kan toegevoegd worden aan een bestaande geodatabase, of de gebruiker kan hiervoor een nieuwe geodatabase aanmaken. Het aanmaken van een nieuwe File GeoDataBase kan op de volgende manier:
+- Ga naar het Catalog venster.
+- Ga naar Folders, en naar de gewenste locatie voor de nieuwe geodatabase.
+- Rechtermuis klik op de folder, en selecteer New -> File GeoDataBase.
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_geodatabase.png" alt="open geoprocessing pane" width="400"/>
+
+Om de habitattypekaart aan een geodatabase toe te voegen, volgt de gebruiker de volgende stappen:
 - Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools. 
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_tools.png" alt="open geoprocessing pane" width="400"/>
 - Zoek naar de tool 'Feature Class to Geodatabase'.
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_geoprocessingpane.png" alt="feature class to geodatabase functie" width="400"/>
-- Selecteer de kaartlaag die je wilt exporteren, en bepaal een locatie waar de File Geodatabase opgeslagen dient te worden. Druk op 'Run'.
+- Selecteer de kaartlaag die je wilt exporteren, en kies de locatie van de de File Geodatabase waar de kaartlaag in opgeslagen dient te worden. Druk op 'Run'.
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_to_gdb.png" alt="selecteer te exporteren kaartlaag" width="400"/>
 
 
