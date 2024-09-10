@@ -87,7 +87,9 @@ def _2_optioneel_stapel_veg_kart(**kwargs):
 )
 @CLIApplyDefTabelInputs.click_decorator
 def _3_definitie_tabel_en_mitsen(**kwargs):
-    kwargs["override_dict"] = OverrideCriteriumIO.from_strings(kwargs["override_dict"])
+    kwargs["override_dict"] = OverrideCriteriumIO.parse_list_of_strings(
+        kwargs["override_dict"]
+    )
     params = CLIApplyDefTabelInputs(**kwargs)
     main.run(params)
 

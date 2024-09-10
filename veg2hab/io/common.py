@@ -147,7 +147,7 @@ class OverrideCriteriumIO(BaseModel):
         return value
 
     @staticmethod
-    def from_strings(
+    def parse_list_of_strings(
         values: List[Tuple[str, str, str, str]]
     ) -> List["OverrideCriteriumIO"]:
         return [

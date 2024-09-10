@@ -22,7 +22,7 @@ from .common import (
     StackVegKarteringInputs,
 )
 
-MAX_N_OVERRIDE = 6  # NOTE: we this results in max 5 overrides, since we start at 1
+MAX_N_OVERRIDE = 50  # NOTE: we this results in max 49 overrides, since we start at 1
 
 
 class ArcGISInterface(Interface):
@@ -126,7 +126,7 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
     for idx in range(1, MAX_N_OVERRIDE):
         param1 = arcpy.Parameter(
             name=f"override_{idx}_mits",
-            displayName=f"Mits naam {idx} (zie definitietabel) (optioneel)",
+            displayName=f"Handmatig te overschrijven mits {idx}",
             datatype="GPString",
             parameterType="Optional",
             direction="Input",
@@ -139,7 +139,7 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
 
         param2 = arcpy.Parameter(
             name=f"override_{idx}_truth_value",
-            displayName=f"Nieuwe mits {idx} uitkomst",
+            displayName=f"Waarde die geldt voor mits {idx}",
             datatype="GPString",
             parameterType="Optional",
             direction="Input",
@@ -150,7 +150,7 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
 
         param3 = arcpy.Parameter(
             name=f"override_{idx}_geometry",
-            displayName=f"Geometrie waarbinnen deze mits {idx} geldt (optioneel), als niet gegeven, geldt dit voor de hele kartering",
+            displayName=f"Geometrie waarbinnen mits {idx} deze waarde krijgt, als niet gegeven geldt dit voor de hele kartering",
             datatype="GPFeatureLayer",
             parameterType="Optional",
             direction="Input",
@@ -159,7 +159,7 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
 
         param4 = arcpy.Parameter(
             name=f"override_{idx}_truth_value_outside",
-            displayName=f"Mits uitkomst buiten geometrie {idx}, alleen van toepassing als geometrie gegeven is",
+            displayName=f"Waarde die geldt voor mits {idx} buiten geometrie, alleen van toepassing als geometrie gegeven is",
             datatype="GPString",
             parameterType="Optional",
             direction="Input",
@@ -343,11 +343,9 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
             is_override_set = (
                 params_dict[f"override_{idx}_mits"].valueAsText is not None
             )
-            print("hello world")
-            print(is_override_set)
 
             if idx != (MAX_N_OVERRIDE - 1):
-                params_dict[f"override_{idx + 1}_truth_value"].enabled = is_override_set
+                params_dict[f"override_{idx + 1}_mits"].enabled = is_override_set
 
             params_dict[f"override_{idx}_truth_value"].enabled = is_override_set
             params_dict[f"override_{idx}_geometry"].enabled = is_override_set

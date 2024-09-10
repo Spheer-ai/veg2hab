@@ -52,7 +52,7 @@ def test_override_criterium_io_from_strings():
         ("mits in vochtige duinvalleien", "WAAR", "geometry1", "ONWAAR"),
         ("mits in vochtige duinvalleien", "ONWAAR", "", ""),
     ]
-    criteriums = OverrideCriteriumIO.from_strings(values)
+    criteriums = OverrideCriteriumIO.parse_list_of_strings(values)
     assert len(criteriums) == 2
 
     assert criteriums[0].mits == "mits in vochtige duinvalleien"

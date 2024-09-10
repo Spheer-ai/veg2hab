@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import json
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -6,6 +7,7 @@ from typing import Optional
 import click
 
 import veg2hab.constants
+import veg2hab.enums
 from veg2hab.bronnen import get_checksum
 from veg2hab.definitietabel import opschonen_definitietabel
 from veg2hab.waswordtlijst import opschonen_waswordtlijst
@@ -66,6 +68,17 @@ def check_versions(tag_version: Optional[str]):
         )
 
     print("Checksums match correctly")
+
+    path_in_mitsjson = Path(__file__).parent / "data" / "mitsjson.json"
+    with path_in_mitsjson.open("r") as f:
+        mitsjson = set(json.load(f).keys())
+    mitsjson.remove("")  # remove empty string
+    if mitsjson != set(veg2hab.enums.STR_MITSEN):
+        raise ValueError(
+            f"Mitsen in mitsjson.json do not match veg2hab.enums.STR_MITSEN: {mitsjson.symmetric_difference(veg2hab.enums.STR_MITSEN)}"
+        )
+
+    print("Mitsen match correctly")
 
 
 @veg2hab_internal.command()
