@@ -201,7 +201,18 @@ Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van d
 
 #### Beperkende criteria handmatig instellen
 
-TODO
+Veel beperkende criteria zijn door veg2hab niet automatisch te controleren, om verschillende redenen waar in [Omzetstappen](./docs/OMZETSTAPPEN.md#handmatig-controleren-van-beperkende-criteria) op wordt ingegaan. Deze criteria worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`.
+
+Stap 3 geeft gebruikers de mogelijkheid om voor iedere mits-regel uit de definitietabel (sommige bestaan uit meerdere beperkende criteria) de controle door veg2hab te overschrijven, en handmatig een vaste waarde aan deze mits toe te kennen, zie de figuur hieronder. 
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/manual_mits_overwrite.png" alt="overwrite mitsen manually" width="400"/>
+
+De gebruiker:
+1. selecteert een mits uit een lijst met alle bestaande mitsen;
+2. geeft een waarde aan die geldt voor deze mits: `WAAR`, `ONWAAR` of `ONDUIDELIJK`;
+3. geeft aan of deze waarde geldt voor de gehele kartering (in dat geval levert de gebruiker geen geometrie aan), of dat het alleen voor vlakken binnen een aangeleverde geometrie geldt;
+4. indien de gebruiker een geometrie aanlevert, kiest hij ook een waarde die geldt voor de vlakken buiten de geometrie: `WAAR`, `ONWAAR` of `ONDUIDELIJK`.
+
+De gebruiker kan dit voor meerdere mitsen doen. 
 
 #### Overige handmatige correctie van de omzetting
 
