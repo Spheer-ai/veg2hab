@@ -1,9 +1,12 @@
 import logging
+from typing import Dict, List, Sequence, Tuple
 
 import click
 
 import veg2hab
 from veg2hab import main
+from veg2hab.criteria import OverrideCriterium
+from veg2hab.enums import MaybeBoolean
 from veg2hab.io.cli import (
     CLIAccessDBInputs,
     CLIApplyDefTabelInputs,
@@ -13,6 +16,7 @@ from veg2hab.io.cli import (
     CLIShapefileInputs,
     CLIStackVegKarteringInputs,
 )
+from veg2hab.io.common import OverrideCriteriumIO
 
 
 @click.group()
@@ -83,6 +87,9 @@ def _2_optioneel_stapel_veg_kart(**kwargs):
 )
 @CLIApplyDefTabelInputs.click_decorator
 def _3_definitie_tabel_en_mitsen(**kwargs):
+    kwargs["override_dict"] = OverrideCriteriumIO.parse_list_of_strings(
+        kwargs["override_dict"]
+    )
     params = CLIApplyDefTabelInputs(**kwargs)
     main.run(params)
 
@@ -109,5 +116,5 @@ def _5_functionele_samenhang(**kwargs):
 
 if __name__ == "__main__":
     # Dit zorgt ervoor dat veg2hab als volgt aangeroepen kan worden:
-    # python -m veg2hab <command>
+    # # python -m veg2hab <command>
     veg2hab()

@@ -1,15 +1,16 @@
 import json
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import ClassVar, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import geopandas as gpd
 from pydantic import BaseModel as _BaseModel
 from pydantic import BaseSettings, Field, validator
 from typing_extensions import List, Literal
 
+from veg2hab import enums
 from veg2hab.criteria import OverrideCriterium
-from veg2hab.enums import WelkeTypologie
+from veg2hab.enums import MaybeBoolean, WelkeTypologie
 
 
 class BaseModel(_BaseModel):
@@ -119,6 +120,84 @@ class StackVegKarteringInputs(BaseModel):
     )
 
 
+class OverrideCriteriumIO(BaseModel):
+    mits: str
+    truth_value: Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]
+    override_geometry: Optional[str] = None
+    truth_value_outside: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]] = None
+
+    @validator("mits")
+    def validate_mits(cls, value):
+        if value not in enums.STR_MITSEN:
+            raise ValueError(
+                f"Invalide mits: mits moet exact overeenkomen met een mits uit de deftabel"
+            )
+        return value
+
+    @validator("override_geometry")
+    def validate_override_geometry(cls, value):
+        if value == "" or value == "None":
+            return None
+        return value
+
+    @validator("truth_value_outside", pre=True)
+    def validate_truth_value_outside(cls, value):
+        if value == "" or value == "None":
+            return None
+        return value
+
+    @staticmethod
+    def parse_list_of_strings(
+        values: List[Tuple[str, str, str, str]]
+    ) -> List["OverrideCriteriumIO"]:
+        return [
+            OverrideCriteriumIO(
+                mits=mits,
+                truth_value=truth_value,
+                override_geometry=override_geometry,
+                truth_value_outside=truth_value_outside,
+            )
+            for mits, truth_value, override_geometry, truth_value_outside in values
+        ]
+
+    @staticmethod
+    def _str_to_maybeboolean(
+        value: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]]
+    ) -> Optional[MaybeBoolean]:
+        if value is None:
+            return None
+        mapping = {
+            "WAAR": MaybeBoolean.TRUE,
+            "ONWAAR": MaybeBoolean.FALSE,
+            "ONDUIDELIJK": MaybeBoolean.CANNOT_BE_AUTOMATED,
+        }
+        return mapping[value]
+
+    @staticmethod
+    def _read_overrride_geometry(value: Optional[str]) -> Optional[gpd.GeoSeries]:
+        if value is None:
+            return None
+        p = Interface.get_instance().shape_id_to_filename(value)
+        return gpd.read_file(p).geometry
+
+    def to_override_criterium(self) -> OverrideCriterium:
+        if (self.override_geometry is None) != (self.truth_value_outside is None):
+            raise ValueError(
+                "Zowel 'Geometrie' als 'Mits uitkomst buiten geometrie' moeten beide gezet zijn of beide niet"
+            )
+        if self.truth_value == self.truth_value_outside:
+            raise ValueError(
+                "Mits uitkomst binnen geometrie en buiten geometrie kunnen niet gelijk zijn. Laat geometrie leeg wanneer dit niet nodig is."
+            )
+
+        return OverrideCriterium(
+            mits=self.mits,
+            truth_value=self._str_to_maybeboolean(self.truth_value),
+            override_geometry=self._read_overrride_geometry(self.override_geometry),
+            truth_value_outside=self._str_to_maybeboolean(self.truth_value_outside),
+        )
+
+
 class ApplyDefTabelInputs(BaseModel):
     label: ClassVar[str] = "3_definitietabel_en_mitsen"
     description: ClassVar[str] = "Pas de definitie tabel toe en check de mitsen"
@@ -130,17 +209,14 @@ class ApplyDefTabelInputs(BaseModel):
         default=None,
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
-    # @Mark
-
-    # Deze is tijdelijk zodat ik in test_tool_by_tool_walkthrough.py kan testen of
-    # mits overriding goed werkt
-
-    # Vervang dit maar met wat je handig vind, als je nog functionaliteit van mij mist
-    # laat je het me maar weten :)
-    override_dict: Optional[Dict[str, OverrideCriterium]] = Field(
-        default={},
-        description="Dictionary met de mitsen en de OverrideCriteria door welke ze moeten worden vervangen",
+    override_dict: List[OverrideCriteriumIO] = Field(
+        default_factory=list,
+        description="Lijst met de mitsen en de OverrideCriteria door welke ze moeten worden vervangen",
     )
+
+    def as_override_dict(self) -> Dict[str, OverrideCriterium]:
+        crits = [c.to_override_criterium() for c in self.override_dict]
+        return {c.mits: c for c in crits}
 
 
 class ApplyMozaiekInputs(BaseModel):

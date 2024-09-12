@@ -6,8 +6,12 @@ from typing import Callable, Dict, Optional
 
 import click
 from geopandas.geodataframe import GeoDataFrame
+from pydantic import validator
 from typing_extensions import override
 
+from veg2hab.criteria import OverrideCriterium
+
+from .. import enums
 from .common import (
     AccessDBInputs,
     ApplyDefTabelInputs,
@@ -40,15 +44,25 @@ def _decorate_click(func: Callable, param_schema: Dict):
         if field_info.get("format", "") == "path":
             writable = field_name == "output"
             param_type = click.Path(exists=False, writable=writable)
-        elif field_name == "welke_typologie":
-            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
-            param_type = click.Choice(param_schema["definitions"][ref_name]["enum"])
         elif "enum" in field_info:
             param_type = click.Choice(field_info["enum"])
+        elif field_name == "welke_typologie":
+            # NOTE: did is niet zo netjes en zou mooier kunnen
+            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
+            param_type = click.Choice(param_schema["definitions"][ref_name]["enum"])
         else:
             param_type = str
 
-        if is_required:
+        if field_name == "override_dict":
+            func = click.option(
+                "--overschrijf-criteria",
+                "override_dict",
+                help=field_info.get("description"),
+                type=click.Tuple([str, str, str, str]),
+                required=False,
+                multiple=True,  # allow multiple values
+            )(func)
+        elif is_required:
             func = click.argument(
                 field_name,
                 type=param_type,

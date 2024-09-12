@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 import geopandas as gpd
 import pandas as pd
@@ -12,6 +13,7 @@ from veg2hab.io.common import (
     ApplyDefTabelInputs,
     ApplyFunctioneleSamenhangInputs,
     ApplyMozaiekInputs,
+    OverrideCriteriumIO,
 )
 from veg2hab.main import run
 
@@ -188,22 +190,24 @@ def test_mits_override(steps):
     #
     # Dezelfde mits wordt ook gevonden bij vlak iloc[8] (buiten de override_geometry dus),
     # dus daar wordt het H0000 ipv HXXXX, want truth_value_outside is MaybeBoolean.FALSE
-    crit = OverrideCriterium(
-        mits="mits in vochtige duinvalleien",
-        truth_value=MaybeBoolean.TRUE,
-        override_geometry=gdf.geometry.iloc[[4]],
-        truth_value_outside=MaybeBoolean.FALSE,
-    )
+    with tempfile.TemporaryDirectory() as tempdir:
+        override_geometry_file = tempdir + "/temp.gpkg"
+        gdf.geometry.iloc[[4]].to_file(override_geometry_file)
 
-    override_dict = {"mits in vochtige duinvalleien": crit}
+        crit = OverrideCriteriumIO(
+            mits="mits in vochtige duinvalleien",
+            truth_value="WAAR",
+            override_geometry=override_geometry_file,
+            truth_value_outside="ONWAAR",
+        )
 
-    step_3 = ApplyDefTabelInputs(
-        shapefile=str(step_1.output),
-        output="data/tool_by_tool/3.gpkg",
-        override_dict=override_dict,
-    )
+        step_3 = ApplyDefTabelInputs(
+            shapefile=str(step_1.output),
+            output="data/tool_by_tool/3.gpkg",
+            override_dict=[crit],
+        )
 
-    run(step_3)
+        run(step_3)
     run(step_4)
     run(step_5)
 
