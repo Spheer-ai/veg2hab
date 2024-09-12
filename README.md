@@ -191,6 +191,7 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
 **Let op:**
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
 - Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast. Overige velden kunnen door de gebruiker veranderd worden, maar dit heeft geen effect op veg2hab.
+- ArcGIS Pro (en veg2hab) kan niet goed omgaan met velden die beginnen met een getal of speciaal teken. Als inladen van een vegetatiekartering met stap 1 niet goed lukt, controleer dan of de gebruikte velden met een letter beginnen. Zo niet, pas dit dan aan, of kopieer de informatie naar nieuwe velden die beginnen met een letter. 
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN.
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 - Wanneer veg2hab bezig is met een omzetting, dient de gebruiker het Map-venster in ArcGIS geopend te houden. Andere vensters openen kan resulteren in een fout van veg2hab, met de foutcode `ERROR - 'NoneType' object has no attribute 'addLayer'`.
@@ -281,7 +282,7 @@ veg2hab 5_functionele_samenhang_en_min_opp output_stap4.gpkg --output output_sta
 
 De habitattypekaarten die door veg2hab gemaakt worden, bevatten twee soorten attribute kolommen:
 - Kolommen die vanuit het Gegevens Leverings Protol verplicht zijn.
-- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken (`_` of `f_` in ArcGIS Pro) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
+- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken `_` (of `f_` in ArcGIS Pro) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
 
 Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen die een deel van een complex beschrijven. Deze laatsten eindigen altijd op een cijfer, om het deel van het complex aan te geven. In geval van een niet-complex vlak, zijn alleen de kolommen `<kolomnaam>1` ingevuld.
 
