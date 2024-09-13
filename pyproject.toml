@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "veg2hab"
-version = "0.3.3a4"
+version = "0.3.3a5"
 description = "Package voor automatisch omzetten van vegetatiekarteringen naar habitatkaarten"
 authors = ["Spheer.ai <info@spheer.ai>"]
 readme = "README.md"
