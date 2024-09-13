@@ -145,7 +145,13 @@ Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende sta
 ### Installatie veg2hab op linux
 Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
 ```sh
-apt install mdbtools
+sudo apt install unixodbc
+```
+
+ en daarna
+
+```sh
+sudo apt install mdbtools
 ```
 Voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
