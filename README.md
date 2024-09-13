@@ -145,7 +145,13 @@ Als er nog geen driver voor .mdb files is geïnstalleerd, kunnen de volgende sta
 ### Installatie veg2hab op linux
 Op linux heeft veg2hab een extra dependency. Pyodbc kan namelijk niet overweg met .mdb files op linux, dus gebruiken we hiervoor de `mdb-export` tool. Deze is te installeren met:
 ```sh
-apt install mdbtools
+sudo apt install unixodbc
+```
+
+ en daarna
+
+```sh
+sudo apt install mdbtools
 ```
 Voor meer informatie, zie: https://github.com/mdbtools/mdbtools
 
@@ -422,7 +428,7 @@ poetry run pytest tests/
 2. Maak een nieuwe versie met poetry (major, minor, patch): `poetry version {{rule}}`
 3. Pas de [\_\_init\_\_.py](veg2hab/__init__.py) __version__ variabele aan zodat deze overeen komt met de nieuw poetry version.
 4. Pas [veg2hab.pyt](veg2hab/package_data/veg2hab.pyt) zodat de nieuwe version in SUPPORTED_VERSIONS staat. Heb je aanpassingen gedaan aan veg2hab.pyt sinds de laatste release, zorg er dan voor dat de `SUPPORTED_VERSIONS = [{{new_version}}]` wordt gezet.
-5. Draai `python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
+5. Draai `poetry run python release.py check-versions` om te checken dat je geen fouten hebt gemaakt.
 6. Push nu eerst je nieuwe wijzigingen (mochten die er zijn), naar github: (`git add`, `git commit`, `git push`)
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
 8. Push de tag naar git `git push origin tag v$(poetry version -s)`
