@@ -1,6 +1,6 @@
 import warnings
 
-__version__ = "0.3.3a5"
+__version__ = "0.3.3a6"
 
 # Filter out the following warning message
 warnings.filterwarnings(
