@@ -61,22 +61,6 @@ def test_override_criteria_instantiation(override_geometry):
         truth_value_outside=MaybeBoolean.FALSE,
     )
 
-    # geometry OverrideCriterium without truth_value_outside
-    with pytest.raises(ValueError):
-        crit = OverrideCriterium(
-            mits="mitsemits",
-            truth_value=MaybeBoolean.TRUE,
-            override_geometry=override_geometry,
-        )
-
-    # geometry OverrideCriterium without override_geometry
-    with pytest.raises(ValueError):
-        crit = OverrideCriterium(
-            mits="mitsemits",
-            truth_value=MaybeBoolean.TRUE,
-            truth_value_outside=MaybeBoolean.FALSE,
-        )
-
 
 def test_definitietabel_override_criteria_injection(definitietabel):
     # override_dict maken en setten

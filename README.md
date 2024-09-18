@@ -74,7 +74,7 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
-    - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project. 
+    - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project.
 
 Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
@@ -90,7 +90,7 @@ Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
 
 Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
 
-Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving die centraal door IT beheerd wordt. Hiervoor dient IT eerst de stappen in de [vorige sectie](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer) te doorlopen. 
+Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving die centraal door IT beheerd wordt. Hiervoor dient IT eerst de stappen in de [vorige sectie](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer) te doorlopen.
 
  1. Open ArcGIS Pro.
  2. Activeer de juiste conda omgeving **voordat** je een project opent.
@@ -178,7 +178,7 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
   - `Percentage kolom (optioneel)`: in welke kolom(men) staat het percentage voor complexen?
   - `Lokale vegetatietypen kolom (optioneel)`: welke kolom(men) bevatten informatie over het lokale vegetatietype.
   - `Splits karakter`: Indien er complexinformatie in één enkele kolom staat, welke karakter moet veg2hab gebruiken om de complexdelen te splitsen?
-- `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden. 
+- `2_optioneel_stapel_veg`: optionele stap voor het combineren van meerdere vegetatiekarteringen die samen tot één habitattypekaart moeten leiden.
   - `Vegetatiekarteringen`: Twee of meer vegetatiekarteringen; eerst geselecteerde karteringen overschrijven bij overlap later geselecteerde karteringen.
   - Deze karteringen *moeten* output van stap 1 zijn.
 - `3_definitietabel_en_mitsen`: zoekt bij alle vlakken (of complexe vlakdelen) alle habitattypen die volgens de definitietabel (i.e. de profieldocumenten) op het vlak van toepassing kunnen zijn, en controleert de beperkende criteria die bij deze definitietabelregels horen.
@@ -273,7 +273,20 @@ De stappen komen exact overeen met de stappen welke ook vanuit ArcGIS kunnen wor
 Optionele argumenten welke meerdere waardes kunnen meekrijgen, zoals de `sbb_col` bij omzetstap `1b_vector_bestand` kunnen als volgt worden meegegeven:
 
 ```sh
---sbb_col kolom1 --sbb_col kolom2
+ --sbb_col kolom1 --sbb_col kolom2
+```
+
+De `--overschrijf-criteria` wordt als volgt meegegeven. Wanneer men deze functie vanuit de CLI wil gebruiken, moet er na elke `--overschrijf-criteria` vier waardes worden meegegeven, in de volgende volgorderde:
+ 1. Naam van de mits, zoals deze voorkomt in de deftabel
+ 2. Nieuwe mits uitkomst: "WAAR", "ONWAAR", of "ONDUIDELIJK"
+ 3. Geometrie, waarbinnen deze mits van toepassing is. (Deze waarde is optioneel). Indien niet gegeven wordt deze mits.
+ 4. Mits uitkomst buiten de geometrie. Indien 3 wordt meegegeven, wordt deze waarde ook verwacht.
+
+Waardes 3 en 4 zijn optioneel, dit wordt in de CLI opgelost, door een lege string mee te geven:
+```sh
+ --overschrijf-criteria "mits in vochtige duinvalleien" WAAR "path_to_shapefile.gpkg" ONWAAR
+# of
+ --overschrijf-criteria "mits in vochtige duinvalleien" WAAR "" ""
 ```
 
 #### Voorbeeld voor het draaien van stap1 - 5 in volgorde
@@ -311,8 +324,8 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **f_LokVegTyp**: Het in de bronkartering opgegeven lokale vegetatietype, als er een lokaal vegetatietype kolom is opgegeven.
 
-**f_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN, SBB+VvN of rVvN). 
-- Indien SBB, zijn de bijbehorende VvN-typen door veg2hab uit de waswordtlijst gehaald. 
+**f_LokVrtNar**: De landelijke typologie waar lokale vegetatietypen in de bronkartering naar zijn vertaald (SBB, VvN, SBB+VvN of rVvN).
+- Indien SBB, zijn de bijbehorende VvN-typen door veg2hab uit de waswordtlijst gehaald.
 - Indien rVvN, zijn de vegcodes met de waswordtlijst omgezet naar SBB en/of VvN.
 - Indien VvN of SBB+VvN, is vertaling met de waswordtlijst overgeslagen.
 
@@ -330,7 +343,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 **VvN{i}**/**SBB{i}**: De VvN- en/of SBB-code die door de bronkartering aan het complex-deel zijn toegekend. Een waarde `Null` of `None` betekent dat in de bronkartering voor deze typologie geen vegcode is opgegeven, en dat de waswordtlijst ook geen vertaling bevat.
 
-**_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen (inlcusief Nederlandse naam) die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype (inclusief Nederlandse naam) het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa. 
+**_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen (inlcusief Nederlandse naam) die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype (inclusief Nederlandse naam) het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
 
 **f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
@@ -371,7 +384,7 @@ veg2hab.bronbestanden()
 Vanuit deze locatie kunnen bronkaarten door de gebruiker worden ingeladen in ArcGIS. Zo kan de gebruiker inspecteren hoe veg2hab keuzes heeft gemaakt. De laatste versie van de bronbestanden zijn ook altijd te vinden in github [hier](https://github.com/Spheer-ai/veg2hab/tree/master/veg2hab/package_data) en [hier](https://github.com/Spheer-ai/veg2hab/tree/master/data/bronbestanden).
 
 
-**Let op:** 
+**Let op:**
 - De LBK en Bodemkaart worden gedownload wanneer stap 3 voor het eerst gebruikt wordt; dit kan een aantal minuten duren. Als deze stap nog niet is gedraaid zijn deze kaarten nog niet te vinden op je eigen PC.
 - Bij volgende versies van veg2hab komen er mogelijk meer bronbestanden bij.
 

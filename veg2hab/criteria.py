@@ -136,14 +136,6 @@ class OverrideCriterium(BeperkendCriterium):
 
         return OverrideCriterium.serialize_override_geometry(v)
 
-    # Check of de override_geometry en truth_value_outside er beide zijn of beide niet zijn
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if (self.override_geometry is None) != (self.truth_value_outside is None):
-            raise ValueError(
-                "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
-            )
-
     @staticmethod
     def serialize_override_geometry(override_geometry):
         return [geom.wkt for geom in override_geometry]
@@ -153,6 +145,9 @@ class OverrideCriterium(BeperkendCriterium):
 
     def check(self, row: pd.Series) -> None:
         assert "geometry" in row, "geometry kolom niet aanwezig"
+        assert (self.override_geometry is None) == (
+            self.truth_value_outside is None
+        ), "Als er een override_geometry is, moet er ook een truth_value_outside zijn (en andersom)"
 
         if self.override_geometry is None:
             self.cached_evaluation = self.truth_value
