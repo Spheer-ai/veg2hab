@@ -191,6 +191,8 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
 **Let op:**
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
 - Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast. Overige velden kunnen door de gebruiker veranderd worden, maar dit heeft geen effect op veg2hab.
+- ArcGIS Pro (en veg2hab) kan niet goed omgaan met velden die beginnen met een getal of speciaal teken. Als inladen van een vegetatiekartering met stap 1 niet goed lukt, controleer dan of de gebruikte velden met een letter beginnen. Zo niet, pas dit dan aan. **let op:** dat de naam van de velden moet worden aangepast, niet alleen de alias. Dit kan bijvoorbeeld via de Alter Fields tool (Geoprocessing/Tools > Data Management Tools > Fields > Alter Field). Of voeg een nieuw veld toe en kopieer de data hiernaar.
+    <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/alter_fields.PNG" alt="overwrite mitsen manually" width="400"/>
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN.
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
 - Wanneer veg2hab bezig is met een omzetting, dient de gebruiker het Map-venster in ArcGIS geopend te houden. Andere vensters openen kan resulteren in een fout van veg2hab, met de foutcode `ERROR - 'NoneType' object has no attribute 'addLayer'`.
@@ -200,7 +202,18 @@ Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van d
 
 #### Beperkende criteria handmatig instellen
 
-TODO
+Veel beperkende criteria zijn door veg2hab niet automatisch te controleren, om verschillende redenen waar in [Omzetstappen](./docs/OMZETSTAPPEN.md#handmatig-controleren-van-beperkende-criteria) op wordt ingegaan. Deze criteria worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`.
+
+Stap 3 geeft gebruikers de mogelijkheid om voor iedere mits-regel uit de definitietabel (sommige bestaan uit meerdere beperkende criteria) de controle door veg2hab te overschrijven, en handmatig een vaste waarde aan deze mits toe te kennen, zie de figuur hieronder. 
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/manual_mits_overwrite.png" alt="overwrite mitsen manually" width="400"/>
+
+De gebruiker:
+1. selecteert een mits uit een lijst met alle bestaande mitsen;
+2. geeft een waarde aan die geldt voor deze mits: `WAAR`, `ONWAAR` of `ONDUIDELIJK`;
+3. geeft aan of deze waarde geldt voor de gehele kartering (in dat geval levert de gebruiker geen geometrie aan), of dat het alleen voor vlakken binnen een aangeleverde geometrie geldt;
+4. indien de gebruiker een geometrie aanlevert, kiest hij ook een waarde die geldt voor de vlakken buiten de geometrie: `WAAR`, `ONWAAR` of `ONDUIDELIJK`.
+
+De gebruiker kan dit voor meerdere mitsen doen. 
 
 #### Overige handmatige correctie van de omzetting
 
@@ -212,12 +225,18 @@ Voorbeelden:
 
 #### Exporteren van habitattypekaart
 
-Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypekaart vanuit ArcGIS Pro worden geëxporteerd als File GeoDataBase (.gdb), het format dat vereist is voor de NDVH. Hiervoor biedt ArcGIS de volgende functionaliteit:
-- Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools.
+Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypekaart vanuit ArcGIS Pro worden geëxporteerd als File GeoDataBase (.gdb), het format dat vereist is voor de NDVH. De habitatkaart uit veg2hab kan toegevoegd worden aan een bestaande geodatabase, of de gebruiker kan hiervoor een nieuwe geodatabase aanmaken. Het aanmaken van een nieuwe File GeoDataBase kan op de volgende manier:
+- Ga naar het Catalog venster.
+- Ga naar Folders, en naar de gewenste locatie voor de nieuwe geodatabase.
+- Rechtermuis klik op de folder, en selecteer New -> File GeoDataBase.
+  <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_geodatabase.png" alt="open geoprocessing pane" width="400"/>
+
+Om de habitattypekaart aan een geodatabase toe te voegen, volgt de gebruiker de volgende stappen:
+- Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools. 
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_tools.png" alt="open geoprocessing pane" width="400"/>
 - Zoek naar de tool 'Feature Class to Geodatabase'.
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_geoprocessingpane.png" alt="feature class to geodatabase functie" width="400"/>
-- Selecteer de kaartlaag die je wilt exporteren, en bepaal een locatie waar de File Geodatabase opgeslagen dient te worden. Druk op 'Run'.
+- Selecteer de kaartlaag die je wilt exporteren, en kies de locatie van de de File Geodatabase waar de kaartlaag in opgeslagen dient te worden. Druk op 'Run'.
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_to_gdb.png" alt="selecteer te exporteren kaartlaag" width="400"/>
 
 
@@ -288,7 +307,7 @@ veg2hab 5_functionele_samenhang_en_min_opp output_stap4.gpkg --output output_sta
 
 De habitattypekaarten die door veg2hab gemaakt worden, bevatten twee soorten attribute kolommen:
 - Kolommen die vanuit het Gegevens Leverings Protol verplicht zijn.
-- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken (`_` of `f_` in ArcGIS Pro) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
+- Kolommen die informatie bevatten over de omzetting naar habitattypen. Deze velden beginnen met een *underscore*-teken `_` (of `f_` in ArcGIS Pro) en zijn nuttig voor het controleren van een omzetting, of wanneer er nog een handmatige stap noodzakelijk is.
 
 Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen die een deel van een complex beschrijven. Deze laatsten eindigen altijd op een cijfer, om het deel van het complex aan te geven. In geval van een niet-complex vlak, zijn alleen de kolommen `<kolomnaam>1` ingevuld.
 
