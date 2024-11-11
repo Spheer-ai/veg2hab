@@ -361,7 +361,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen (inlcusief Nederlandse naam) die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype (inclusief Nederlandse naam) het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
 
-**f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
+**f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE` / `T`), niet klopt (`FALSE` / `F`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED` / `C`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
 
 **f_V2H_bronnen_info{i}**: Informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
 
@@ -416,7 +416,7 @@ En installeer alle lokale (developmment) dependencies met:
 poetry install
 ```
 
-Binnen het project zijn onderstaande stappen gevolgd om deze data in te lezen:
+Om data uit .mdb Access Databases in te lezen, gebruiken we de volgende stappen:
 - Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
 - Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
 - De SBB-codes staan in Element.csv
