@@ -3,11 +3,12 @@
 - [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
-  - [Installatie instructies](#installatie-instructies)
-    - [Installatie binnen ArcGIS Pro (admin-gebruikers / IT-beheer)](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer)
-      - [Aanvullende opmerkingen](#aanvullende-opmerkingen)
-    - [Installatie binnen ArcGIS Pro (gebruikers onder IT beheer)](#installatie-binnen-arcgis-pro-gebruikers-onder-it-beheer)
-    - [Extra installatie-instructies voor IT beheer](#extra-installatie-instructies-voor-it-beheer)
+  - [Installatie van veg2hab in ArcGIS Pro](#installatie-van-veg2hab-in-arcgis-pro)
+    - [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers)
+    - [Installatie instructies voor gebruik onder IT beheer](#installatie-instructies-voor-gebruik-onder-it-beheer)
+      - [Installatiestappen voor de IT afdeling](#installatiestappen-voor-de-it-afdeling)
+      - [Installatiestappen voor gebruiker](#installatiestappen-voor-gebruiker)
+  - [Aanvullende installatie instructies](#aanvullende-installatie-instructies)
     - [Installatie .mdb drivers op Windows](#installatie-mdb-drivers-op-windows)
     - [Installatie veg2hab op linux](#installatie-veg2hab-op-linux)
   - [Gebruikershandleiding](#gebruikershandleiding)
@@ -46,13 +47,15 @@ Het wordt gebruikers sterk aangeraden om:
 - De output van veg2hab steekproefsgewijs na te lopen, om te zien of de omzetting strookt met de verwachting en kennis over het gebied.
 - Na het toepassen van de beperkende criteria het tussenproduct na te lopen en handmatig `HXXXX` om te zetten naar `H0000` of een habitattype, om pas daarna de mozaiekregels en functionele samenhang toe te passen.
 
-## Installatie instructies
+## Installatie van veg2hab in ArcGIS Pro
 
-### Installatie binnen ArcGIS Pro (admin-gebruikers / IT-beheer)
+Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De installatie-instructies in deze sectie maken gebruik van installatie van veg2hab vanaf PyPI.
 
-Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
-Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
+- Gebruikers die administator-rechten hebben, kunnen veg2hab zelf installeren via de stappen in [Installatie binnen ArcGIS Pro](#installatie-instructies-voor-admin-gebruikers).
+- Gebruikers met een ArcGIS Pro omgeving die beheerd wordt door de organisatie, kunnen veg2hab niet zelf installeren. Volg in dit geval sectie [Installatie instructies voor IT beheer](#installatie-instructies-voor-gebruik-onder-it-beheer).
 
+
+### Installatie instructies voor admin-gebruikers
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
     - Open de 'Package Manager'.
@@ -80,23 +83,27 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
         
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
     - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project.
-
-Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
-
-<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
-
-#### Aanvullende opmerkingen
-
-- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het installeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd worden, zie sectie [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer). De gebruiker moet daarna zelf alleen nog veg2hab activeren en de Toolbox installeren.
-- Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
+ 7. Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab. 
+   
+    <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/> 
+ 8. Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
 
 
-### Installatie binnen ArcGIS Pro (gebruikers onder IT beheer)
+### Installatie instructies voor gebruik onder IT beheer
 
-Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
+In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. 
 
-Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving die centraal door IT beheerd wordt. Hiervoor dient IT eerst de stappen in de [vorige sectie](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer) te doorlopen.
+#### Installatiestappen voor de IT afdeling
+1. Zorg ervoor dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
+   - repo.anaconda.com *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
+   - conda.anaconda.org *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
+   - files.pythonhosted.org *(nodig voor iedere update van veg2hab)*
+   - pypi.org *(nodig voor iedere update van veg2hab)*
+2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er soms problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was: `notebook not found at the requested URL`.
 
+Verder heeft de gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
+
+#### Installatiestappen voor gebruiker
  1. Open ArcGIS Pro.
  2. Activeer de juiste conda omgeving **voordat** je een project opent.
     -  Open de 'Package Manager'.
@@ -116,24 +123,8 @@ Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving
       
       <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
-### Extra installatie-instructies voor IT beheer
 
-In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. Hierbij moeten stap 1 tot en met 4 doorlopen worden door IT-beheer.
-
-Hierbij is het van belang dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
-
-**Voor het eenmalig aanmaken van een nieuwe conda omgeving:**
-- repo.anaconda.com
-- conda.anaconda.org
-
-**Voor het installeren / upgraden naar een nieuwe versie van veg2hab:**
-- files.pythonhosted.org
-- pypi.org
-
-Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er some problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft, dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was de volgende: ‘notebook not found at the requested URL’.
-
-Verder heeft de gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
-
+## Aanvullende installatie instructies
 ### Installatie .mdb drivers op Windows
 Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`:
 
