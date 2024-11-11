@@ -224,7 +224,9 @@ De gebruiker:
 3. geeft aan of deze waarde geldt voor de gehele kartering (in dat geval levert de gebruiker geen geometrie aan), of dat het alleen voor vlakken binnen een aangeleverde geometrie geldt;
 4. indien de gebruiker een geometrie aanlevert, kiest hij ook een waarde die geldt voor de vlakken buiten de geometrie: `WAAR`, `ONWAAR` of `ONDUIDELIJK`.
 
-De gebruiker kan dit voor meerdere mitsen doen. 
+**LET OP:**
+- De gebruiker kan meerdere mitsen overschrijven. Wanneer de eerste overschrijving is geconfigureerd verschijnt vanzelf een veld voor een eventuele tweede (derde, etc.) te overschrijven mits.
+- Het weer verwijderen van overschrijvingen kan door het veld `Mits naam {i} (zie definitietabel)` aan te klikken en leeg te maken (bijvoorbeeld door op de `delete` knop te drukken). 
 
 #### Overige handmatige correctie van de omzetting
 
