@@ -7,6 +7,7 @@
     - [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers)
     - [Installatie instructies voor gebruik onder IT beheer](#installatie-instructies-voor-gebruik-onder-it-beheer)
       - [Installatiestappen voor de IT afdeling](#installatiestappen-voor-de-it-afdeling)
+        - [Troubleshooting](#troubleshooting)
       - [Installatiestappen voor gebruiker](#installatiestappen-voor-gebruiker)
   - [Aanvullende installatie instructies](#aanvullende-installatie-instructies)
     - [Installatie .mdb drivers op Windows](#installatie-mdb-drivers-op-windows)
@@ -99,9 +100,12 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
    - conda.anaconda.org *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
    - files.pythonhosted.org *(nodig voor iedere update van veg2hab)*
    - pypi.org *(nodig voor iedere update van veg2hab)*
-2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er soms problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was: `notebook not found at the requested URL`.
+2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. 
 
-Verder heeft de gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
+
+##### Troubleshooting
+- bij het clonen van de conda omgeving lijken er soms problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was: `notebook not found at the requested URL`.
+- De gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
 
 #### Installatiestappen voor gebruiker
  1. Open ArcGIS Pro.
