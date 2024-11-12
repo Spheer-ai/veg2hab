@@ -3,11 +3,13 @@
 - [veg2hab](#veg2hab)
   - [Introductie](#introductie)
     - [Disclaimer](#disclaimer)
-  - [Installatie instructies](#installatie-instructies)
-    - [Installatie binnen ArcGIS Pro (admin-gebruikers / IT-beheer)](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer)
-      - [Aanvullende opmerkingen](#aanvullende-opmerkingen)
-    - [Installatie binnen ArcGIS Pro (gebruikers onder IT beheer)](#installatie-binnen-arcgis-pro-gebruikers-onder-it-beheer)
-    - [Extra installatie-instructies voor IT beheer](#extra-installatie-instructies-voor-it-beheer)
+  - [Installatie van veg2hab in ArcGIS Pro](#installatie-van-veg2hab-in-arcgis-pro)
+    - [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers)
+    - [Installatie instructies voor gebruik onder IT beheer](#installatie-instructies-voor-gebruik-onder-it-beheer)
+      - [Installatiestappen voor de IT afdeling](#installatiestappen-voor-de-it-afdeling)
+        - [Troubleshooting](#troubleshooting)
+      - [Installatiestappen voor gebruiker](#installatiestappen-voor-gebruiker)
+  - [Aanvullende installatie instructies](#aanvullende-installatie-instructies)
     - [Installatie .mdb drivers op Windows](#installatie-mdb-drivers-op-windows)
     - [Installatie veg2hab op linux](#installatie-veg2hab-op-linux)
   - [Gebruikershandleiding](#gebruikershandleiding)
@@ -46,19 +48,23 @@ Het wordt gebruikers sterk aangeraden om:
 - De output van veg2hab steekproefsgewijs na te lopen, om te zien of de omzetting strookt met de verwachting en kennis over het gebied.
 - Na het toepassen van de beperkende criteria het tussenproduct na te lopen en handmatig `HXXXX` om te zetten naar `H0000` of een habitattype, om pas daarna de mozaiekregels en functionele samenhang toe te passen.
 
-## Installatie instructies
+## Installatie van veg2hab in ArcGIS Pro
 
-### Installatie binnen ArcGIS Pro (admin-gebruikers / IT-beheer)
+Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De installatie-instructies in deze sectie maken gebruik van installatie van veg2hab vanaf PyPI.
 
-Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
-Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
+- Gebruikers die administator-rechten hebben, kunnen veg2hab zelf installeren via de stappen in [Installatie binnen ArcGIS Pro](#installatie-instructies-voor-admin-gebruikers).
+- Gebruikers met een ArcGIS Pro omgeving die beheerd wordt door de organisatie, kunnen veg2hab niet zelf installeren. Volg in dit geval sectie [Installatie instructies voor IT beheer](#installatie-instructies-voor-gebruik-onder-it-beheer).
 
+
+### Installatie instructies voor admin-gebruikers
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
     - Open de 'Package Manager'.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_environment.png" alt="new python environment" width="400"/>
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
@@ -66,35 +72,46 @@ Installatie vanaf PyPI is veruit het eenvoudigst, en wordt hieronder omschreven:
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
     - Download veg2hab met het commando `!pip install veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!pip install --upgrade veg2hab`.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
     - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project.
-
-Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab:
-
-<img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
-
-#### Aanvullende opmerkingen
-
-- In sommige gevallen heeft de gebruiker een ArcGIS Pro omgeving die beheerd wordt door de organisatie, en heeft de gebruiker zelf niet de rechten om alle installatiestappen uit te voeren. Alle stappen tot en met het installeren van veg2hab zullen daarbij door de IT afdeling van de organisatie uitgevoerd worden, zie sectie [Installatie instructies voor IT beheer](#installatie-instructies-voor-it-beheer). De gebruiker moet daarna zelf alleen nog veg2hab activeren en de Toolbox installeren.
-- Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
+ 7. Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab. 
+   
+    <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/> 
+ 8. Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
 
 
-### Installatie binnen ArcGIS Pro (gebruikers onder IT beheer)
+### Installatie instructies voor gebruik onder IT beheer
 
-Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger.
+In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. 
 
-Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving die centraal door IT beheerd wordt. Hiervoor dient IT eerst de stappen in de [vorige sectie](#installatie-binnen-arcgis-pro-admin-gebruikers--it-beheer) te doorlopen.
+#### Installatiestappen voor de IT afdeling
+1. Zorg ervoor dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
+   - repo.anaconda.com *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
+   - conda.anaconda.org *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
+   - files.pythonhosted.org *(nodig voor iedere update van veg2hab)*
+   - pypi.org *(nodig voor iedere update van veg2hab)*
+2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. 
 
+
+##### Troubleshooting
+- bij het clonen van de conda omgeving lijken er soms problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was: `notebook not found at the requested URL`.
+- De gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
+
+#### Installatiestappen voor gebruiker
  1. Open ArcGIS Pro.
  2. Activeer de juiste conda omgeving **voordat** je een project opent.
     -  Open de 'Package Manager'.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Kijk of de veg2hab environment in de lijst met environments staat, zonee, klik dan op de knop "add existing environment" rechts bovenin.
     - De locatie van de environment om in te laden, wordt door IT-beheer ingesteld. Vraag IT-beheer wanneer je deze niet kunt vinden.
@@ -102,30 +119,16 @@ Gebruik de volgende stappen om veg2hab te installeren in een ArcGIS Pro omgeving
     - Open nu een ArcGIS project naar keuze.
  3. Voeg de veg2hab-toolbox toe aan het project. Dit is slechts 1 keer per project nodig.
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
+        
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
     - Activeer veg2hab in het notebook met het commando `import veg2hab`.
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
-    - <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
+      
+      <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
-### Extra installatie-instructies voor IT beheer
 
-In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. Hierbij moeten stap 1 tot en met 4 doorlopen worden door IT-beheer.
-
-Hierbij is het van belang dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
-
-**Voor het eenmalig aanmaken van een nieuwe conda omgeving:**
-- repo.anaconda.com
-- conda.anaconda.org
-
-**Voor het installeren / upgraden naar een nieuwe versie van veg2hab:**
-- files.pythonhosted.org
-- pypi.org
-
-Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. **LET OP:** bij het clonen van de conda omgeving lijken er some problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft, dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was de volgende: ‘notebook not found at the requested URL’.
-
-Verder heeft de gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
-
+## Aanvullende installatie instructies
 ### Installatie .mdb drivers op Windows
 Veg2hab heeft 64-bit drivers nodig voor het openen van Microsoft Access Database bestanden (.mdb). Meestal zijn deze drivers al geïnstalleerd. Dit kan gecontroleerd worden in de `ODBC Data Source Administrator`:
 
@@ -198,6 +201,7 @@ Beschrijving van de omzetstappen en aanvullende inputvelden:
 - Wanneer de gebruiker beschikt over een access database, raden wij aan `digitale_standaard` omzetting te gebruiken, ook als de shapefile alle informatie bevat. Hierbij is de kans op handmatige fouten kleiner.
 - Velden die beginnen met `EDIT` kunnen door de gebruiker worden aangepast en hebben effect op de vervolgstappen van veg2hab. Velden die beginnen met `INTERN` zijn boekhoudvelden die veg2hab nodig heeft, en mogen niet door de gebruiker worden aangepast. Overige velden kunnen door de gebruiker veranderd worden, maar dit heeft geen effect op veg2hab.
 - ArcGIS Pro (en veg2hab) kan niet goed omgaan met velden die beginnen met een getal of speciaal teken. Als inladen van een vegetatiekartering met stap 1 niet goed lukt, controleer dan of de gebruikte velden met een letter beginnen. Zo niet, pas dit dan aan. **let op:** dat de naam van de velden moet worden aangepast, niet alleen de alias. Dit kan bijvoorbeeld via de Alter Fields tool (Geoprocessing/Tools > Data Management Tools > Fields > Alter Field). Of voeg een nieuw veld toe en kopieer de data hiernaar.
+
     <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/alter_fields.PNG" alt="overwrite mitsen manually" width="400"/>
 - Vegetatiekarteringen die omgezet worden met `vector_bestand` moeten beschikken over een landelijke typologie: SBB, VvN of rVvN.
 - De eerste keer dat (een nieuwe versie van) veg2hab gebruikt wordt, worden er automatisch een aantal grote bestanden gedownload, waaronder de Landelijke Bodem Kaart (LBK). Deze download kan enkele minuten duren, afhankelijk van de internetverbinding.
@@ -211,6 +215,7 @@ Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van d
 Veel beperkende criteria zijn door veg2hab niet automatisch te controleren, om verschillende redenen waar in [Omzetstappen](./docs/OMZETSTAPPEN.md#handmatig-controleren-van-beperkende-criteria) op wordt ingegaan. Deze criteria worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`.
 
 Stap 3 geeft gebruikers de mogelijkheid om voor iedere mits-regel uit de definitietabel (sommige bestaan uit meerdere beperkende criteria) de controle door veg2hab te overschrijven, en handmatig een vaste waarde aan deze mits toe te kennen, zie de figuur hieronder. 
+  
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/manual_mits_overwrite.png" alt="overwrite mitsen manually" width="400"/>
 
 De gebruiker:
@@ -219,7 +224,9 @@ De gebruiker:
 3. geeft aan of deze waarde geldt voor de gehele kartering (in dat geval levert de gebruiker geen geometrie aan), of dat het alleen voor vlakken binnen een aangeleverde geometrie geldt;
 4. indien de gebruiker een geometrie aanlevert, kiest hij ook een waarde die geldt voor de vlakken buiten de geometrie: `WAAR`, `ONWAAR` of `ONDUIDELIJK`.
 
-De gebruiker kan dit voor meerdere mitsen doen. 
+**LET OP:**
+- De gebruiker kan meerdere mitsen overschrijven. Wanneer de eerste overschrijving is geconfigureerd verschijnt vanzelf een veld voor een eventuele tweede (derde, etc.) te overschrijven mits.
+- Het weer verwijderen van overschrijvingen kan door het veld `Mits naam {i} (zie definitietabel)` aan te klikken en leeg te maken (bijvoorbeeld door op de `delete` knop te drukken). 
 
 #### Overige handmatige correctie van de omzetting
 
@@ -235,14 +242,18 @@ Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypek
 - Ga naar het Catalog venster.
 - Ga naar Folders, en naar de gewenste locatie voor de nieuwe geodatabase.
 - Rechtermuis klik op de folder, en selecteer New -> File GeoDataBase.
+  
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_geodatabase.png" alt="open geoprocessing pane" width="400"/>
 
 Om de habitattypekaart aan een geodatabase toe te voegen, volgt de gebruiker de volgende stappen:
 - Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools. 
+  
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_tools.png" alt="open geoprocessing pane" width="400"/>
 - Zoek naar de tool 'Feature Class to Geodatabase'.
+  
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_geoprocessingpane.png" alt="feature class to geodatabase functie" width="400"/>
 - Selecteer de kaartlaag die je wilt exporteren, en kies de locatie van de de File Geodatabase waar de kaartlaag in opgeslagen dient te worden. Druk op 'Run'.
+  
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_to_gdb.png" alt="selecteer te exporteren kaartlaag" width="400"/>
 
 
@@ -352,7 +363,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 **_VvNdftbl{i}**/**_SBBdftbl{i}**: Deze kolommen bevatten een lijst met alle vegetatietypen (inlcusief Nederlandse naam) die voor dit vlak zijn teruggevonden in de definitietabel, welke regel van de definitietabel het betreft, en naar welk habitattype (inclusief Nederlandse naam) het vlak mogelijk vertaalt. Een waarde `None` in `_VvNdftbl` betekent dat de regel is gevonden op SBB-code, en vice-versa.
 
 
-**f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE`), niet klopt (`FALSE`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
+**f_Mits_info{i}**/**f_Mozk_info{i}**: Informatie over beperkende criteria en mozaiekregels van alle definitietabelregels die mogelijk op het vlak van toepassing zijn. Voor ieder beperkend criterium en mozaiekregel is weergegeven of deze klopt (`TRUE` / `T`), niet klopt (`FALSE` / `F`), of niet door veg2hab beoordeeld kan worden (`CANNOT_BE_AUTOMATED` / `C`). Een mozaiekregel kan ook nog uitgesteld zijn (`POSTPONE`); in dit geval is er te weinig informatie over de habitattypen van omliggende vlakken (i.e. teveel HXXXX), of stap 4 is nog niet uitgevoerd.
 
 **f_V2H_bronnen_info{i}**: Informatie over bronkaarten zoals de Fysisch Geografische Regiokaart en Bodemkaart die veg2hab heeft gecheckt voor het controleren van beperkende criteria.
 
@@ -374,7 +385,7 @@ Verder zijn er een aantal kolommen die gelden voor het hele vlak, en kolommen di
 
 Veg2hab is afhankelijk van verschillende bronbestanden tijdens het omzetten van vegetatiekarteringen. Deze bestanden worden automatisch mee geïnstalleerd met veg2hab en zijn niet aanpasbaar door de gebruiker:
 
- - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt gebruikt om landelijke vegetatietypologieën in elkaar om te zetten.
+ - [WasWordtLijst](./data/5.%20Was-wordt-lijst-vegetatietypen-en-habitattypen-09-02-2021.xlsx) (versie 09-feb-2021): dit bestand wordt uitsluitend gebruikt om landelijke vegetatietypologieën in elkaar om te zetten. Informatie over beperkende criteria en omzetting naar habitattype wordt genegeerd (want niet vastgesteld), en uitsluitende gehaald uit de:
  - [DefinitieTabel](./data/definitietabel%20habitattypen%20(versie%2024%20maart%202009)_0.xls) (versie 24 maart 2009): dit is een samenvatting van de profieldocumenten.
  - [Fysisch-Geografische Regio kaart (afgekort tot FGR)](./data/bronbestanden/FGR.json) (versie 2013, [link naar origineel op Nationaal georegister](https://nationaalgeoregister.nl/geonetwork/srv/dut/catalog.search#/metadata/c8b5668f-c354-42f3-aafc-d15ae54cf170)).
  - [Landschappelijke Bodem Kaart (afgekort tot LBK)](https://bodemdata.nl/downloads) (versie 2023): dit bestand wordt gebruikt voor het controleren van beperkende criteria met betrekking tot sommige bodemtypen en hoogveen.
@@ -407,7 +418,7 @@ En installeer alle lokale (developmment) dependencies met:
 poetry install
 ```
 
-Binnen het project zijn onderstaande stappen gevolgd om deze data in te lezen:
+Om data uit .mdb Access Databases in te lezen, gebruiken we de volgende stappen:
 - Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
 - Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
 - De SBB-codes staan in Element.csv
