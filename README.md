@@ -60,11 +60,11 @@ Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De insta
  1. Open ArcGIS Pro.
  2. Maak een nieuwe python environment aan voor veg2hab (de default conda environment is read-only en niet geschikt om veg2hab in te installeren):
     - Open de 'Package Manager'.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Klik op het tandwiel naast 'Active Environment'.
     - Maak een nieuwe environment aan op een locatie naar keuze. Gebruik als 'Source' de default Environment.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_environment.png" alt="new python environment" width="400"/>
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/environment_location.png" alt="location of new environment" width="400"/>
     - Selecteer de environment en druk op 'OK'.
@@ -72,27 +72,27 @@ Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De insta
  3. Start ArcGIS Pro opnieuw op.
  4. Download en installeer veg2hab:
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
     - Download veg2hab met het commando `!pip install veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!pip install --upgrade veg2hab`.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
  6. Installeer de veg2hab Python Toolbox:
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
     - **LET OP:** deze laatste stap ('Add Toolbox') moet eenmalig worden uitgevoerd bij het aanmaken van een nieuw project.
- 7. Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab. 
-   
-    <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/> 
+ 7. Als het goed is, wordt de veg2hab toolbox nu getoond in de Geoprocessing tab.
+
+    <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/geoprocessing_tab.png" alt="geoprocessing tab" width="400"/>
  8. Wanneer veg2hab geïmporteerd is en de toolbox is toegevoegd, kan deze instelling bewaard worden door het project op te slaan. Bij opnieuw openen van het project zal veg2hab direct beschikbaar zijn.
 
 
 ### Installatie instructies voor gebruik onder IT beheer
 
-In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden. 
+In organisaties waarin de gebruikers van veg2hab geen volledige local admin rechten hebben binnen ArcGIS Pro, moet een groot deel van de installatiestappen door IT- of applicatiebeheer doorgevoerd worden.
 
 #### Installatiestappen voor de IT afdeling
 1. Zorg ervoor dat de IP adressen van de volgende websites niet door de firewall geblokkeerd worden:
@@ -100,7 +100,7 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
    - conda.anaconda.org *(eenmalig nodig, voor het aanmaken van een nieuwe conda omgeving)*
    - files.pythonhosted.org *(nodig voor iedere update van veg2hab)*
    - pypi.org *(nodig voor iedere update van veg2hab)*
-2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan. 
+2. Doorloop stap 1 tot en met 4 uit de sectie [Installatie instructies voor admin-gebruikers](#installatie-instructies-voor-admin-gebruikers). Het is het veiligst om de conda environment niet meer te verplaatsen nadat deze is gecloned. Het liefst clone je deze naar de plek, waar deze ook voor de gebruikers komt te staan.
 
 
 ##### Troubleshooting
@@ -111,7 +111,7 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
  1. Open ArcGIS Pro.
  2. Activeer de juiste conda omgeving **voordat** je een project opent.
     -  Open de 'Package Manager'.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/package_manager.png" alt="package manager" width="400"/>
     - Kijk of de veg2hab environment in de lijst met environments staat, zonee, klik dan op de knop "add existing environment" rechts bovenin.
     - De locatie van de environment om in te laden, wordt door IT-beheer ingesteld. Vraag IT-beheer wanneer je deze niet kunt vinden.
@@ -119,12 +119,12 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
     - Open nu een ArcGIS project naar keuze.
  3. Voeg de veg2hab-toolbox toe aan het project. Dit is slechts 1 keer per project nodig.
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
-        
+
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
     - Activeer veg2hab in het notebook met het commando `import veg2hab`.
     - Gebruik het commando `veg2hab.installatie_instructies()` om de locatie van de toolbox te vinden.
     - Ga naar 'Add Toolbox (file)' en voeg de toolbox toe vanaf deze locatie.
-      
+
       <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/add_toolbox.png" alt="adding the veg2hab Python Toolbox" width="400"/>
 
 
@@ -214,8 +214,8 @@ Een uitgebreidere uitleg met details over de omzetstappen, en onderbouwing van d
 
 Veel beperkende criteria zijn door veg2hab niet automatisch te controleren, om verschillende redenen waar in [Omzetstappen](./docs/OMZETSTAPPEN.md#handmatig-controleren-van-beperkende-criteria) op wordt ingegaan. Deze criteria worden door veg2hab in de output van stap 3 aangegeven met `NIET_GEAUTOMATISEERD_CRITERIUM`.
 
-Stap 3 geeft gebruikers de mogelijkheid om voor iedere mits-regel uit de definitietabel (sommige bestaan uit meerdere beperkende criteria) de controle door veg2hab te overschrijven, en handmatig een vaste waarde aan deze mits toe te kennen, zie de figuur hieronder. 
-  
+Stap 3 geeft gebruikers de mogelijkheid om voor iedere mits-regel uit de definitietabel (sommige bestaan uit meerdere beperkende criteria) de controle door veg2hab te overschrijven, en handmatig een vaste waarde aan deze mits toe te kennen, zie de figuur hieronder.
+
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/manual_mits_overwrite.png" alt="overwrite mitsen manually" width="400"/>
 
 De gebruiker:
@@ -226,7 +226,7 @@ De gebruiker:
 
 **LET OP:**
 - De gebruiker kan meerdere mitsen overschrijven. Wanneer de eerste overschrijving is geconfigureerd verschijnt vanzelf een veld voor een eventuele tweede (derde, etc.) te overschrijven mits.
-- Het weer verwijderen van overschrijvingen kan door het veld `Mits naam {i} (zie definitietabel)` aan te klikken en leeg te maken (bijvoorbeeld door op de `delete` knop te drukken). 
+- Het weer verwijderen van overschrijvingen kan door het veld `Mits naam {i} (zie definitietabel)` aan te klikken en leeg te maken (bijvoorbeeld door op de `delete` knop te drukken).
 
 #### Overige handmatige correctie van de omzetting
 
@@ -242,18 +242,18 @@ Wanneer een vegetatietypekaart naar tevredenheid is omgezet, kan de habitattypek
 - Ga naar het Catalog venster.
 - Ga naar Folders, en naar de gewenste locatie voor de nieuwe geodatabase.
 - Rechtermuis klik op de folder, en selecteer New -> File GeoDataBase.
-  
+
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_geodatabase.png" alt="open geoprocessing pane" width="400"/>
 
 Om de habitattypekaart aan een geodatabase toe te voegen, volgt de gebruiker de volgende stappen:
-- Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools. 
-  
+- Ga naar het Geoprocessing venster. Deze wordt geopend door in de Analytics balk te klikken op Tools.
+
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_tools.png" alt="open geoprocessing pane" width="400"/>
 - Zoek naar de tool 'Feature Class to Geodatabase'.
-  
+
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_geoprocessingpane.png" alt="feature class to geodatabase functie" width="400"/>
 - Selecteer de kaartlaag die je wilt exporteren, en kies de locatie van de de File Geodatabase waar de kaartlaag in opgeslagen dient te worden. Druk op 'Run'.
-  
+
   <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/export_to_gdb.png" alt="selecteer te exporteren kaartlaag" width="400"/>
 
 
@@ -418,10 +418,7 @@ En installeer alle lokale (developmment) dependencies met:
 poetry install
 ```
 
-Om data uit .mdb Access Databases in te lezen, gebruiken we de volgende stappen:
-- Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
-- Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
-- De SBB-codes staan in Element.csv
+Installeer de drivers die je nodig hebt om veg2hab te draaien, zie de [aanvullende installatie instructies](#aanvullende-installatie-instructies).
 
 Linting doen we met isort en black:
 ```sh
