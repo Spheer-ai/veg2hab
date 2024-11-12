@@ -132,7 +132,7 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
             direction="Input",
         )
         param1.filter.type = "ValueList"
-        param1.filter.list = enums.STR_MITSEN
+        param1.filter.list = [" "] + enums.STR_MITSEN # we use an empty string to deselect the value
         param1.enabled = enable
         # just enable the first mits for the first one.
         enable = False
@@ -308,13 +308,16 @@ class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
 
 
 class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
+    def _is_override_empty(self, param_value: Optional[str]) -> bool:
+        return (param_value is None) or (param_value == " ")
+
     @classmethod
     def from_parameter_list(cls, parameters: List["arcpy.Parameter"]) -> Self:
         params_dict = {p.name: p.valueAsText for p in parameters}
 
         override_dict = []
         for i in range(1, MAX_N_OVERRIDE):
-            if params_dict.get(f"override_{i}_mits") is not None:
+            if not cls._is_override_empty(params_dict.get(f"override_{i}_mits")):
                 override_dict.append(
                     OverrideCriteriumIO(
                         mits=params_dict[f"override_{i}_mits"],
@@ -338,8 +341,8 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
         params_dict = {p.name: p for p in parameters}
 
         for idx in range(1, MAX_N_OVERRIDE):
-            is_override_set = (
-                params_dict[f"override_{idx}_mits"].valueAsText is not None
+            is_override_set = not cls._is_override_empty(
+                params_dict[f"override_{idx}_mits"].valueAsText
             )
 
             if idx != (MAX_N_OVERRIDE - 1):
@@ -357,8 +360,8 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
         # shift override criteria down, if one of 'm not set properly
         for idx in range(1, MAX_N_OVERRIDE - 1):
             if (
-                params_dict[f"override_{idx}_mits"].valueAsText is None
-                and params_dict[f"override_{idx + 1}_mits"].valueAsText is not None
+                cls._is_override_empty(params_dict[f"override_{idx}_mits"].valueAsText)
+                and not cls._is_override_empty(params_dict[f"override_{idx + 1}_mits"].valueAsText)
             ):
                 # shift all the values over 1
                 params_dict[f"override_{idx}_mits"].value = params_dict[
