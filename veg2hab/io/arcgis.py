@@ -338,8 +338,6 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
         params_dict = {p.name: p for p in parameters}
 
         for idx in range(1, MAX_N_OVERRIDE):
-            # turn on the next check
-
             is_override_set = (
                 params_dict[f"override_{idx}_mits"].valueAsText is not None
             )
@@ -350,6 +348,36 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
             params_dict[f"override_{idx}_truth_value"].enabled = is_override_set
             params_dict[f"override_{idx}_geometry"].enabled = is_override_set
             params_dict[f"override_{idx}_truth_value_outside"].enabled = is_override_set
+
+            if not is_override_set:
+                params_dict[f"override_{idx}_truth_value"].value = None
+                params_dict[f"override_{idx}_geometry"].value = None
+                params_dict[f"override_{idx}_truth_value_outside"].value = None
+
+        # shift override criteria down, if one of 'm not set properly
+        for idx in range(1, MAX_N_OVERRIDE - 1):
+            if (
+                params_dict[f"override_{idx}_mits"].valueAsText is None
+                and params_dict[f"override_{idx + 1}_mits"].valueAsText is not None
+            ):
+                # shift all the values over 1
+                params_dict[f"override_{idx}_mits"].value = params_dict[
+                    f"override_{idx + 1}_mits"
+                ].value
+                params_dict[f"override_{idx}_truth_value"].value = params_dict[
+                    f"override_{idx + 1}_truth_value"
+                ].value
+                params_dict[f"override_{idx}_geometry"].value = params_dict[
+                    f"override_{idx + 1}_geometry"
+                ].value
+                params_dict[f"override_{idx}_truth_value_outside"].value = params_dict[
+                    f"override_{idx + 1}_truth_value_outside"
+                ].value
+
+                params_dict[f"override_{idx + 1}_mits"].value = None
+                params_dict[f"override_{idx + 1}_truth_value"].value = None
+                params_dict[f"override_{idx + 1}_geometry"].value = None
+                params_dict[f"override_{idx + 1}_truth_value_outside"].value = None
 
 
 class ArcGISApplyMozaiekInputs(ApplyMozaiekInputs, ArcGISMixin):
