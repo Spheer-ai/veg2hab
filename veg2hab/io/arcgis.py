@@ -132,7 +132,9 @@ def _override_mits_params() -> List["arcpy.Parameter"]:
             direction="Input",
         )
         param1.filter.type = "ValueList"
-        param1.filter.list = [" "] + enums.STR_MITSEN # we use an empty string to deselect the value
+        param1.filter.list = [
+            " "
+        ] + enums.STR_MITSEN  # we use an empty string to deselect the value
         param1.enabled = enable
         # just enable the first mits for the first one.
         enable = False
@@ -308,6 +310,7 @@ class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
 
 
 class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
+    @staticmethod
     def _is_override_empty(self, param_value: Optional[str]) -> bool:
         return (param_value is None) or (param_value == " ")
 
@@ -358,10 +361,12 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
                 params_dict[f"override_{idx}_truth_value_outside"].value = None
 
         # shift override criteria down, if one of 'm not set properly
-        for idx in range(1, MAX_N_OVERRIDE - 1):
-            if (
-                cls._is_override_empty(params_dict[f"override_{idx}_mits"].valueAsText)
-                and not cls._is_override_empty(params_dict[f"override_{idx + 1}_mits"].valueAsText)
+        idx = 0
+        while idx < (MAX_N_OVERRIDE - 1):
+            if cls._is_override_empty(
+                params_dict[f"override_{idx}_mits"].valueAsText
+            ) and not cls._is_override_empty(
+                params_dict[f"override_{idx + 1}_mits"].valueAsText
             ):
                 # shift all the values over 1
                 params_dict[f"override_{idx}_mits"].value = params_dict[
@@ -381,6 +386,9 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
                 params_dict[f"override_{idx + 1}_truth_value"].value = None
                 params_dict[f"override_{idx + 1}_geometry"].value = None
                 params_dict[f"override_{idx + 1}_truth_value_outside"].value = None
+
+            else:
+                idx += 1
 
 
 class ArcGISApplyMozaiekInputs(ApplyMozaiekInputs, ArcGISMixin):
