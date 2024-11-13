@@ -418,10 +418,7 @@ En installeer alle lokale (developmment) dependencies met:
 poetry install
 ```
 
-Om data uit .mdb Access Databases in te lezen, gebruiken we de volgende stappen:
-- Clone de volgende repo: https://github.com/pavlov99/mdb-export-all
-- Gebruik het bash script om .mdb files om te zetten naar een map met csv bestanden
-- De SBB-codes staan in Element.csv
+Installeer de drivers die je nodig hebt om veg2hab te draaien, zie de [aanvullende installatie instructies](#aanvullende-installatie-instructies).
 
 Linting doen we met isort en black:
 ```sh
