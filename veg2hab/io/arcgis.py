@@ -361,8 +361,7 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
                 params_dict[f"override_{idx}_truth_value_outside"].value = None
 
         # shift override criteria down, if one of 'm not set properly
-        idx = 0
-        while idx < (MAX_N_OVERRIDE - 1):
+        for idx in range(1, MAX_N_OVERRIDE - 1):
             if cls._is_override_empty(
                 params_dict[f"override_{idx}_mits"].valueAsText
             ) and not cls._is_override_empty(
@@ -386,9 +385,6 @@ class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
                 params_dict[f"override_{idx + 1}_truth_value"].value = None
                 params_dict[f"override_{idx + 1}_geometry"].value = None
                 params_dict[f"override_{idx + 1}_truth_value_outside"].value = None
-
-            else:
-                idx += 1
 
 
 class ArcGISApplyMozaiekInputs(ApplyMozaiekInputs, ArcGISMixin):
