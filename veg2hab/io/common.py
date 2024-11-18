@@ -216,6 +216,12 @@ class ApplyDefTabelInputs(BaseModel):
 
     def as_override_dict(self) -> Dict[str, OverrideCriterium]:
         crits = [c.to_override_criterium() for c in self.override_dict]
+
+        if len(crits) != len(set(c.mits for c in crits)):
+            raise ValueError(
+                "Mitsen moeten uniek zijn. Elke mits mag maar 1 keer overschreven worden."
+            )
+
         return {c.mits: c for c in crits}
 
 
