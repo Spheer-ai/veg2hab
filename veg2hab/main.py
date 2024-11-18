@@ -81,8 +81,6 @@ def run(
 
 
 def run_1_inladen_vegkartering(params: Union[AccessDBInputs, ShapefileInputs]):
-    logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
-
     filename = Interface.get_instance().shape_id_to_filename(params.shapefile)
 
     if filename != params.shapefile:
