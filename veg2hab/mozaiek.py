@@ -88,7 +88,7 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
         assert self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def __str__(self):
-        return "Placeholder mozaiekregel (nog niet geimplementeerd) (nooit waar)"
+        return "Niet geautomatiseerde mozaiekregel: zie definitietabel."
 
 
 class GeenMozaiekregel(MozaiekRegel):
