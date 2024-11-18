@@ -311,7 +311,7 @@ class ArcGISStackVegKarteringInputs(StackVegKarteringInputs, ArcGISMixin):
 
 class ArcGISApplyDefTabelInputs(ApplyDefTabelInputs, ArcGISMixin):
     @staticmethod
-    def _is_override_empty(self, param_value: Optional[str]) -> bool:
+    def _is_override_empty(param_value: Optional[str]) -> bool:
         return (param_value is None) or (param_value == " ")
 
     @classmethod
