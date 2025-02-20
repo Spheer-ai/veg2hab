@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from veg2hab.criteria import (
+    BeperkendCriterium,
     BodemCriterium,
     EnCriteria,
     FGRCriterium,
@@ -11,6 +12,7 @@ from veg2hab.criteria import (
     NietGeautomatiseerdCriterium,
     OfCriteria,
     OudeBossenCriterium,
+    criteria_from_json,
 )
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
@@ -137,6 +139,10 @@ def test_EnCriteria():
     row = pd.Series({"fgr": FGRType.DU, "fgr_percentage": 100})
     crit.check(row)
     assert crit.evaluation == MaybeBoolean.TRUE
+
+    json_str = crit.model_dump_json()
+    crit2 = criteria_from_json(json_str)
+    assert crit == crit2
 
 
 def test_OfCriteria():

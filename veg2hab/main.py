@@ -61,7 +61,7 @@ def run(
         ApplyDefTabelInputs,
         ApplyMozaiekInputs,
         ApplyFunctioneleSamenhangInputs,
-    ]
+    ],
 ):
     logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
     logging.info(f"Starting veg2hab met input parameters: {params.json()}")

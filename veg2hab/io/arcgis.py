@@ -217,8 +217,7 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             param.filter.list = field_info["enum"]
         elif field_name == "welke_typologie":
             param.filter.type = "ValueList"
-            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
-            param.filter.list = param_schema["definitions"][ref_name]["enum"]
+            param.filter.list = ["SBB", "VvN", "SBB en VvN"]
 
         outputs.append(param)
 
@@ -239,7 +238,7 @@ class ArcGISMixin:
 
     @classmethod
     def to_parameter_list(cls) -> List["arcpy.Parameter"]:
-        return _schema_to_param_list(cls.schema())
+        return _schema_to_param_list(cls.model_json_schema())
 
     @classmethod
     def update_parameters(cls, parameters: List["arcpy.Parameter"]) -> None:

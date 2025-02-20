@@ -95,7 +95,6 @@ def gdf():
                         info="",
                         mits_info="",
                         mozaiek_info="",
-                        debug_info="",
                         habitatvoorstellen=[voorstellen[0]],
                     )
                 ],
@@ -107,7 +106,6 @@ def gdf():
                         info="",
                         mits_info="",
                         mozaiek_info="",
-                        debug_info="",
                         habitatvoorstellen=[voorstellen[1]],
                     )
                 ],
@@ -119,7 +117,6 @@ def gdf():
                         info="",
                         mits_info="",
                         mozaiek_info="",
-                        debug_info="",
                         habitatvoorstellen=[voorstellen[2]],
                     )
                 ],
@@ -131,7 +128,6 @@ def gdf():
                         info="",
                         mits_info="",
                         mozaiek_info="",
-                        debug_info="",
                         habitatvoorstellen=[voorstellen[3]],
                     )
                 ],

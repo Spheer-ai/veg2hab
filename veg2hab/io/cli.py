@@ -95,11 +95,11 @@ def _get_argument_description(description: str, param_schema: Dict):
 class CLIMixin:
     @classmethod
     def click_decorator(cls, func):
-        return _decorate_click(func, cls.schema())
+        return _decorate_click(func, cls.model_json_schema())
 
     @classmethod
     def get_argument_description(cls):
-        return _get_argument_description(cls.description, cls.schema())
+        return _get_argument_description(cls.description, cls.model_json_schema())
 
 
 class CLIAccessDBInputs(AccessDBInputs, CLIMixin):

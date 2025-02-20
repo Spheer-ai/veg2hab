@@ -377,7 +377,7 @@ def _combineer_twee_geodataframes(
     new_gdf = gpd.overlay(lage_prio, hoge_prio, how="difference")
 
     # Voeg de geometrie van hoge_prio toe
-    new_gdf = new_gdf.append(hoge_prio)
+    new_gdf = gpd.GeoDataFrame(pd.concat([new_gdf, hoge_prio], ignore_index=True))
 
     # Exploden eventuele multipolygons naar polygons
     new_gdf = new_gdf.reset_index(drop=True).explode(ignore_index=True)
@@ -666,9 +666,9 @@ class Kartering:
                 gdf = gdf.rename(columns={old_col: new_col})
 
         gdf["Area"] = gdf["geometry"].area
-        gdf[
-            "_LokVrtNar"
-        ] = f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
+        gdf["_LokVrtNar"] = (
+            f"Lokale typologie is primair vertaald naar {welke_typologie.name}"
+        )
 
         element, veginfo_per_locatie = read_access_tables(
             access_mdb_path, welke_typologie
@@ -839,9 +839,9 @@ class Kartering:
                 axis=1,
             )
         else:
-            shapefile[
-                "_LokVegTyp"
-            ] = "Geen kolommen opgegeven voor lokale vegetatietypen"
+            shapefile["_LokVegTyp"] = (
+                "Geen kolommen opgegeven voor lokale vegetatietypen"
+            )
 
         # Selectie van de te bewaren kolommen
         cols = [col for col in [datum_col, opmerking_col] if col is not None] + [
@@ -899,9 +899,9 @@ class Kartering:
 
         # Standardiseren van kolomnamen
         gdf["Area"] = gdf["geometry"].area
-        gdf[
-            "_LokVrtNar"
-        ] = f"Lokale typologie is primair vertaald naar {welke_typologie.value}."
+        gdf["_LokVrtNar"] = (
+            f"Lokale typologie is primair vertaald naar {welke_typologie.value}."
+        )
 
         # Aangezien we de rVvN gaan verliezen in apply_wll(), zetten we deze in _LokVrtNar zodat
         # de gebruiker ze nog wel kan terugvinden
@@ -1169,9 +1169,11 @@ class Kartering:
         self.set_state(KarteringState.POST_DEFTABEL)
 
         self.gdf["HabitatVoorstel"] = self.gdf["VegTypeInfo"].apply(
-            lambda infos: [dt.find_habtypes(info) for info in infos]
-            if len(infos) > 0
-            else [[HabitatVoorstel.H0000_no_vegtype_present()]]
+            lambda infos: (
+                [dt.find_habtypes(info) for info in infos]
+                if len(infos) > 0
+                else [[HabitatVoorstel.H0000_no_vegtype_present()]]
+            )
         )
 
     def _check_mitsen(
@@ -1266,10 +1268,15 @@ class Kartering:
         # We willen de habitatkeuzes die al bepaald zijn niet overschrijven
         self.gdf["HabitatKeuze"] = self.gdf["HabitatKeuze"].apply(
             lambda keuzes: [
-                keuze
-                if keuze.status
-                in [KeuzeStatus.HANDMATIG_TOEGEKEND, KeuzeStatus.HABITATTYPE_TOEGEKEND]
-                else None
+                (
+                    keuze
+                    if keuze.status
+                    in [
+                        KeuzeStatus.HANDMATIG_TOEGEKEND,
+                        KeuzeStatus.HABITATTYPE_TOEGEKEND,
+                    ]
+                    else None
+                )
                 for keuze in keuzes
             ]
         )
@@ -1320,12 +1327,14 @@ class Kartering:
                 ["HabitatVoorstel", "HabitatKeuze"]
             ].apply(
                 lambda row: [
-                    keuze
-                    if (
-                        keuze is not None
-                        and keuze.status == KeuzeStatus.HANDMATIG_TOEGEKEND
+                    (
+                        keuze
+                        if (
+                            keuze is not None
+                            and keuze.status == KeuzeStatus.HANDMATIG_TOEGEKEND
+                        )
+                        else try_to_determine_habkeuze(voorstel)
                     )
-                    else try_to_determine_habkeuze(voorstel)
                     for keuze, voorstel in zip(row.HabitatKeuze, row.HabitatVoorstel)
                 ],
                 axis=1,

@@ -1,33 +1,28 @@
 import json
 from collections import defaultdict
-from copy import deepcopy
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel, root_validator, validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
+from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegelBase, is_mozaiek_type_present
 from veg2hab.vegetatietypen import SBB, VvN
 
 
-class HabitatVoorstel(BaseModel):
+class HabitatVoorstel(BaseModel, extra="forbid", validate_assignment=True):
     """
     Een voorstel voor een habitattype voor een vegetatietype
     """
-
-    class Config:
-        extra = "forbid"
-        validate_assignment = True
 
     onderbouwend_vegtype: Union[SBB, VvN, None]
     vegtype_in_dt: Union[SBB, VvN, None]
     habtype: str
     kwaliteit: Kwaliteit
     mits: BeperkendCriterium
-    mozaiek: MozaiekRegel
+    mozaiek: MozaiekRegelBase
     match_level: MatchLevel
     vegtype_in_dt_naam: str = ""
     habtype_naam: str = ""
@@ -35,9 +30,9 @@ class HabitatVoorstel(BaseModel):
     @classmethod
     def H0000_vegtype_not_in_dt(cls, info: "VegTypeInfo"):
         return cls(
-            onderbouwend_vegtype=info.VvN[0]
-            if info.VvN
-            else (info.SBB[0] if info.SBB else None),
+            onderbouwend_vegtype=(
+                info.VvN[0] if info.VvN else (info.SBB[0] if info.SBB else None)
+            ),
             vegtype_in_dt=None,
             habtype="H0000",
             kwaliteit=Kwaliteit.NVT,
@@ -108,11 +103,7 @@ class HabitatVoorstel(BaseModel):
         ]
 
 
-class HabitatKeuze(BaseModel):
-    class config:
-        extra = "forbid"
-        validate_assignment = True
-
+class HabitatKeuze(BaseModel, extra="forbid"):
     status: KeuzeStatus
     habtype: str  # format = "H1123"
     kwaliteit: Kwaliteit
@@ -121,40 +112,34 @@ class HabitatKeuze(BaseModel):
     mits_info: str = ""
     mozaiek_info: str = ""
 
-    @root_validator
-    def valideer_habtype_keuzestatus(cls, values):
-        status = values.get("status")
-        habtype = values.get("habtype")
-        kwaliteit = values.get("kwaliteit")
+    def __post_init__(self):
+        self.update_info()
 
-        if status in [
+    def validate_keuze_status(self):
+        if self.status in [
             KeuzeStatus.HABITATTYPE_TOEGEKEND,
         ]:
-            assert habtype not in ["HXXXX", "H0000"]
-        elif status in [
+            assert self.habtype not in ["HXXXX", "H0000"]
+        elif self.status in [
             KeuzeStatus.VOLDOET_NIET_AAN_HABTYPEVOORWAARDEN,
             KeuzeStatus.VEGTYPEN_NIET_IN_DEFTABEL,
             KeuzeStatus.GEEN_OPGEGEVEN_VEGTYPEN,
         ]:
-            assert habtype == "H0000"
-        elif status in [
+            assert self.habtype == "H0000"
+        elif self.status in [
             KeuzeStatus.WACHTEN_OP_MOZAIEK,
             KeuzeStatus.NIET_GEAUTOMATISEERD_CRITERIUM,
             KeuzeStatus.VOLDOET_AAN_MEERDERE_HABTYPEN,
         ]:
-            assert habtype == "HXXXX"
-        if habtype in ["H0000", "HXXXX"]:
-            assert kwaliteit == Kwaliteit.NVT
+            assert self.habtype == "HXXXX"
+        if self.habtype in ["H0000", "HXXXX"]:
+            assert self.kwaliteit == Kwaliteit.NVT
 
-        return values
+    @model_validator(mode="after")
+    def valideer_habtype_keuzestatus(self):
+        self.validate_keuze_status()
 
-    @validator(
-        "info",
-        "mits_info",
-        "mozaiek_info",
-        pre=True,
-        always=True,
-    )
+    @field_validator("info", "mits_info", "mozaiek_info", mode="before")
     def vervang_none_door_lege_string(cls, v):
         """
         Omdat ArcGIS niet om kan gaan met lege strings worden deze fields weggeschreven als None
@@ -162,10 +147,6 @@ class HabitatKeuze(BaseModel):
         Dus we zetten ze hier weer om naar een lege string :)
         """
         return v if pd.notna(v) else ""
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.update_info()
 
     @classmethod
     def habitatkeuze_for_postponed_mozaiekregel(
@@ -219,7 +200,7 @@ class HabitatKeuze(BaseModel):
 def rank_habitatkeuzes(
     keuze_vegtypeinfo_en_voorstellen: Tuple[
         HabitatKeuze, "VegTypeInfo", List[HabitatVoorstel]
-    ]
+    ],
 ) -> tuple:
     """
     Returned een tuple voor het sorteren van een lijst habitatkeuzes + vegtypeinfos + habitatvoorstellen

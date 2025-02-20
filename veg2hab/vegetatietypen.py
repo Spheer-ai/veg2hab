@@ -12,9 +12,8 @@ from veg2hab.enums import MatchLevel
 from veg2hab.io.common import Interface
 
 
-class BaseModel(PydanticBaseModel):
-    class Config:
-        extra = "forbid"
+class BaseModel(PydanticBaseModel, extra="forbid"):
+    pass
 
 
 class SBB(BaseModel):

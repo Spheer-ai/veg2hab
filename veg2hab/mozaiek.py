@@ -1,11 +1,20 @@
 import logging
 from collections import defaultdict, namedtuple
 from numbers import Number
-from typing import ClassVar, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import (
+    Annotated,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, TypeAdapter
 
 from veg2hab.enums import Kwaliteit, MaybeBoolean, NumberType
 from veg2hab.io.common import Interface
@@ -18,9 +27,7 @@ class MozkPercTuple(NamedTuple):
     percentage: NumberType
 
 
-class MozaiekRegel(BaseModel):
-    type: ClassVar[Optional[str]] = None
-    _subtypes_: ClassVar[dict] = dict()
+class MozaiekRegelBase(BaseModel, extra="forbid"):
     mozaiek_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
@@ -34,34 +41,6 @@ class MozaiekRegel(BaseModel):
         .get_config()
         .mozaiek_minimum_bedekking
     )
-
-    def __init_subclass__(cls):
-        # Vul de _subtypes_ dict met alle subclasses
-        if cls.type is None:
-            raise ValueError(
-                "You should specify the `type: ClassVar[str] = 'EnCritera'`"
-            )
-        cls._subtypes_[cls.type] = cls
-
-    def __new__(cls, *args, **kwargs):
-        # Maakt de juiste subclass aan op basis van de type parameter
-        if cls == MozaiekRegel:
-            t = kwargs.pop("type")
-            return super().__new__(cls._subtypes_[t])
-        return super().__new__(cls)
-
-    def dict(self, *args, **kwargs):
-        """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
-        Dit is een hack om dat wel voor elkaar te krijgen.
-        """
-        data = super().dict(*args, **kwargs)
-        data["type"] = self.type
-        return data
-
-    def json(self, *args, **kwargs):
-        """Same here"""
-        data = self.dict(*args, **kwargs)
-        return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
     def is_mozaiek_type_present(self, type) -> bool:
         return isinstance(self, type)
@@ -80,8 +59,10 @@ class MozaiekRegel(BaseModel):
         raise NotImplementedError()
 
 
-class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
-    type: ClassVar[str] = "NietGeimplementeerdeMozaiekregel"
+class NietGeimplementeerdeMozaiekregel(MozaiekRegelBase):
+    type: Literal["NietGeimplementeerdeMozaiekregel"] = (
+        "NietGeimplementeerdeMozaiekregel"
+    )
     cached_evaluation: MaybeBoolean = MaybeBoolean.CANNOT_BE_AUTOMATED
 
     def check(self, omringd_door: pd.DataFrame) -> None:
@@ -91,8 +72,8 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegel):
         return "Niet geautomatiseerde mozaiekregel: zie definitietabel."
 
 
-class GeenMozaiekregel(MozaiekRegel):
-    type: ClassVar[str] = "GeenMozaiekregel"
+class GeenMozaiekregel(MozaiekRegelBase):
+    type: Literal["GeenMozaiekregel"] = "GeenMozaiekregel"
     cached_evaluation: MaybeBoolean = MaybeBoolean.TRUE
 
     def check(self, omringd_door: pd.DataFrame) -> None:
@@ -102,8 +83,8 @@ class GeenMozaiekregel(MozaiekRegel):
         return "Geen mozaiekregel (altijd waar)"
 
 
-class StandaardMozaiekregel(MozaiekRegel):
-    type: ClassVar[str] = "StandaardMozaiekregel"
+class StandaardMozaiekregel(MozaiekRegelBase):
+    type: Literal["StandaardMozaiekregel"] = "StandaardMozaiekregel"
     kwalificerend_habtype: str
     ook_mozaiekvegetaties: bool
     alleen_goede_kwaliteit: bool
@@ -550,7 +531,7 @@ def construct_elmid_omringd_door_gdf(
 
 def is_mozaiek_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    mozaiek_type: MozaiekRegel,
+    mozaiek_type: MozaiekRegelBase,
 ) -> bool:
     """
     Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is
@@ -565,3 +546,19 @@ def is_mozaiek_type_present(
             for voorstel in voorstellen
         ]
     )
+
+
+# NOTE: wanneer je een nieuwe MozaiekRegel toevoegt, moet je deze hier registreren!
+MozaiekRegel = Annotated[
+    Union[
+        GeenMozaiekregel,
+        StandaardMozaiekregel,
+        NietGeimplementeerdeMozaiekregel,
+    ],
+    Field(discriminator="type"),
+]
+
+
+def mozaiekregel_from_json(json_str: str) -> MozaiekRegelBase:
+    type_adapter = TypeAdapter(MozaiekRegel)
+    return type_adapter.validate_json(json_str)
