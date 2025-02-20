@@ -267,7 +267,7 @@ def opschonen_definitietabel(
             raise ValueError(f"Mits {mits} is niet gevonden in mitsjson")
 
     # NaN vervangen door lege strings zodat hier GeenCriteria vanuit mitsjson op matchen
-    dt.mits[dt.mits.isna()] = ""
+    dt.loc[dt["mits"].isna(), "mits"] = ""
     dt = dt.merge(mitsjson, on="mits", how="left")
     dt["mitsjson"] = dt.mitsjson.apply(json.dumps)
 

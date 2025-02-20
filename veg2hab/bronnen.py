@@ -123,7 +123,7 @@ class LBK:
     @classmethod
     def from_file(cls, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         return cls(
-            gpd.read_file(path, mask=mask, include_fields=["Serie"]).rename(
+            gpd.read_file(path, mask=mask, columns=["Serie"]).rename(
                 columns={"Serie": "lbk"}
             )
         )
@@ -183,12 +183,12 @@ class Bodemkaart:
     def from_file(cls, path: Path, mask: Optional[gpd.GeoDataFrame] = None) -> Self:
         # inladen
         soil_area = gpd.read_file(
-            path, layer="soilarea", mask=mask, include_fields=["maparea_id"]
+            path, layer="soilarea", mask=mask, columns=["maparea_id"]
         )
         soil_units_table = gpd.read_file(
             path,
             layer="soilarea_soilunit",
-            include_fields=["maparea_id", "soilunit_code"],
+            columns=["maparea_id", "soilunit_code"],
             ignore_geometry=True,
         )
         # Samenvoegen meerdere bodemtypen voor 1 vlak/maparea_id
@@ -231,7 +231,7 @@ class Bodemkaart:
 
 class OudeBossenkaart:
     def __init__(self, path: Path, mask: Optional[gpd.GeoDataFrame] = None):
-        self.gdf = gpd.read_file(path, mask=mask, include_fields=["h9120", "h9190"])
+        self.gdf = gpd.read_file(path, mask=mask, columns=["h9120", "h9190"])
 
         # Validatie van de waarden gebeurt in het instantieren van OBKWaarden
         self.gdf["obk"] = self.gdf.apply(

@@ -92,7 +92,10 @@ class HabitatVoorstel(BaseModel, extra="forbid", validate_assignment=True):
     @staticmethod
     def serialize_list2(voorstellen: List[List["HabitatVoorstel"]]) -> str:
         return json.dumps(
-            [[json.loads(v.json()) for v in sublist] for sublist in voorstellen]
+            [
+                [json.loads(v.model_dump_json()) for v in sublist]
+                for sublist in voorstellen
+            ]
         )
 
     @staticmethod
@@ -172,7 +175,7 @@ class HabitatKeuze(BaseModel, extra="forbid"):
 
     @staticmethod
     def serialize_list(keuzes: List["HabitatKeuze"]) -> str:
-        return json.dumps([json.loads(v.json()) for v in keuzes])
+        return json.dumps([json.loads(v.model_dump_json()) for v in keuzes])
 
     @staticmethod
     def deserialize_list(serialized: str) -> List["HabitatKeuze"]:

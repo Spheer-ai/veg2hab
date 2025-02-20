@@ -104,12 +104,8 @@ def _group_lokale_vegtypen_en_bedekking_to_str(rows: pd.DataFrame) -> str:
     Hier wordt een string van gemaakt uiteindelijk in de output komt zonder verdere bewerkingen.
     """
     assert all(
-        col in rows.columns for col in ["Locatie", "Vegetatietype", "Bedekking_num"]
-    ), "Locatie, Vegetatietype en Bedekking_num moeten kolommen zijn in _group_lokale_vegtypen_en_bedekking_to_str"
-
-    assert (
-        rows["Locatie"].nunique() == 1
-    ), "_group_lokale_vegtypen_en_bedekking_to_str moet op een groupby over Locatie uitgevoerd worden; nu is locatie niet hetzelfde in 1 group"
+        col in rows.columns for col in ["Vegetatietype", "Bedekking_num"]
+    ), "Vegetatietype en Bedekking_num moeten kolommen zijn in _group_lokale_vegtypen_en_bedekking_to_str"
 
     return_strings = [
         f"{row['Vegetatietype']} ({row['Bedekking_num']}%)"
@@ -201,13 +197,14 @@ def read_access_tables(
             welke_typologie=welke_typologie,
             perc_col="Bedekking_num",
             vegtype_col="vegtype",
+            include_groups=False,
         )
         .reset_index(name="VegTypeInfo")
     )
 
     lokale_vegtypen = (
         kart_veg.groupby("Locatie")
-        .apply(_group_lokale_vegtypen_en_bedekking_to_str)
+        .apply(_group_lokale_vegtypen_en_bedekking_to_str, include_groups=False)
         .reset_index(name="_LokVegTyp")
     )
 

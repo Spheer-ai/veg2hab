@@ -103,7 +103,7 @@ class VegTypeInfo(BaseModel, extra="forbid", validate_assignment=True):
 
     @staticmethod
     def serialize_list(l: List[Self]) -> str:
-        return json.dumps([x.dict() for x in l])
+        return json.dumps([x.model_dump() for x in l])
 
     @staticmethod
     def deserialize_list(s: str) -> List[Self]:
