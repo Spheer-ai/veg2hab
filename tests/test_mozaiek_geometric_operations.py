@@ -340,9 +340,9 @@ def test_multiple_mozaiek_present_shapes(gdf):
 
     post = pd.DataFrame(
         {
-            "buffered_ElmID": [1.0, 2.0, 1.0, 2.0],
-            "ElmID": [1, 1, 2, 2],
-            "habtype": ["H1", "H1", "H2", "H2"],
+            "buffered_ElmID": [1.0, 1.0, 2.0, 2.0],
+            "ElmID": [1, 2, 1, 2],
+            "habtype": ["H1", "H2", "H1", "H2"],
             "kwaliteit": [
                 Kwaliteit.GOED,
                 Kwaliteit.GOED,
@@ -351,12 +351,12 @@ def test_multiple_mozaiek_present_shapes(gdf):
             ],
             "vegtypen": [
                 [VvN.from_code("1aa1")],
-                [VvN.from_code("1aa1")],
                 [VvN.from_code("2bb2")],
+                [VvN.from_code("1aa1")],
                 [VvN.from_code("2bb2")],
             ],
             "complexdeel_percentage": [100.0, 100.0, 100.0, 100.0],
-            "omringing_percentage": [100.0, 25.0, 12.5, 100.0],
+            "omringing_percentage": [100.0, 12.5, 25.0, 100.0],
         }
     )
     overlayed = make_buffered_boundary_overlay_gdf(pre, buffer=0)

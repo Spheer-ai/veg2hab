@@ -86,12 +86,18 @@ def test_equivalency_habkart(kartering):
         temp_dir = str(temp_dir)
 
         editable_habtype = kartering.to_editable_habtypes()
-        editable_habtype.to_file(temp_dir + "/habkartering.gpkg", driver="GPKG")
+        editable_habtype.to_file("habkartering.gpkg", driver="GPKG")
 
-        editable_habtype2 = gpd.read_file(temp_dir + "/habkartering.gpkg")
+        editable_habtype2 = gpd.read_file("habkartering.gpkg")
         reconstructed_kartering = Kartering.from_editable_habtypes(editable_habtype2)
         assert set(kartering.gdf.columns) == set(reconstructed_kartering.gdf.columns)
         assert (kartering.gdf.index == reconstructed_kartering.gdf.index).all()
 
         # we need to reorder the columns to compare.
         assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
+
+        kartering.gdf == reconstructed_kartering.gdf[kartering.gdf.columns]
+
+        kartering.gdf.iloc[0].HabitatVoorstel[0][0] == reconstructed_kartering.gdf[
+            kartering.gdf.columns
+        ].iloc[0].HabitatVoorstel[0][0]

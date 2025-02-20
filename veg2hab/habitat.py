@@ -138,6 +138,7 @@ class HabitatKeuze(BaseModel, extra="forbid"):
     @model_validator(mode="after")
     def valideer_habtype_keuzestatus(self):
         self.validate_keuze_status()
+        return self
 
     @field_validator("info", "mits_info", "mozaiek_info", mode="before")
     def vervang_none_door_lege_string(cls, v):
