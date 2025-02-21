@@ -27,7 +27,10 @@ class MozkPercTuple(NamedTuple):
     percentage: NumberType
 
 
-class MozaiekRegelBase(BaseModel, extra="forbid"):
+class _MozaiekRegelBase(BaseModel, extra="forbid"):
+    """ Deze class niet gebruiken buiten deze file.
+    Dit kan mogelijk tot serialisatieproblemen leiden.
+    """
     mozaiek_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )
@@ -59,7 +62,7 @@ class MozaiekRegelBase(BaseModel, extra="forbid"):
         raise NotImplementedError()
 
 
-class NietGeimplementeerdeMozaiekregel(MozaiekRegelBase):
+class NietGeimplementeerdeMozaiekregel(_MozaiekRegelBase):
     type: Literal["NietGeimplementeerdeMozaiekregel"] = (
         "NietGeimplementeerdeMozaiekregel"
     )
@@ -72,7 +75,7 @@ class NietGeimplementeerdeMozaiekregel(MozaiekRegelBase):
         return "Niet geautomatiseerde mozaiekregel: zie definitietabel."
 
 
-class GeenMozaiekregel(MozaiekRegelBase):
+class GeenMozaiekregel(_MozaiekRegelBase):
     type: Literal["GeenMozaiekregel"] = "GeenMozaiekregel"
     cached_evaluation: MaybeBoolean = MaybeBoolean.TRUE
 
@@ -83,7 +86,7 @@ class GeenMozaiekregel(MozaiekRegelBase):
         return "Geen mozaiekregel (altijd waar)"
 
 
-class StandaardMozaiekregel(MozaiekRegelBase):
+class StandaardMozaiekregel(_MozaiekRegelBase):
     type: Literal["StandaardMozaiekregel"] = "StandaardMozaiekregel"
     kwalificerend_habtype: str
     ook_mozaiekvegetaties: bool
@@ -531,7 +534,7 @@ def construct_elmid_omringd_door_gdf(
 
 def is_mozaiek_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    mozaiek_type: MozaiekRegelBase,
+    mozaiek_type: _MozaiekRegelBase,
 ) -> bool:
     """
     Geeft True als er in de lijst met habitatvoorstellen eentje met een mozaiekregel van mozaiek_type is
@@ -559,6 +562,6 @@ MozaiekRegel = Annotated[
 ]
 
 
-def mozaiekregel_from_json(json_str: str) -> MozaiekRegelBase:
+def mozaiekregel_from_json(json_str: str) -> MozaiekRegel:
     type_adapter = TypeAdapter(MozaiekRegel)
     return type_adapter.validate_json(json_str)

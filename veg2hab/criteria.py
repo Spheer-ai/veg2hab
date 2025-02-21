@@ -13,13 +13,14 @@ from typing_extensions import Literal
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 
-class BeperkendCriteriumBase(BaseModel, extra="forbid", validate_assignment=True):
+class _BeperkendCriteriumBase(BaseModel, extra="forbid", validate_assignment=True):
     """Superclass voor alle beperkende criteria.
     Subclasses implementeren hun eigen check en non-standaard evaluation methodes.
     Niet-logic sublasses (dus niet EnCriteria, OfCriteria, NietCriterium) moeten een
     cached_evaluation parameter hebben waar het resultaat van check gecached wordt.
 
-    Gebruik deze class niet direct
+    Gebruik deze class niet direct, gebruik de subclasses of de BeperkendCriterium type
+    onderaan deze file.
     """
 
     def check(self, row: pd.Series):
@@ -46,7 +47,7 @@ class BeperkendCriteriumBase(BaseModel, extra="forbid", validate_assignment=True
         return None
 
 
-class GeenCriterium(BeperkendCriteriumBase):
+class GeenCriterium(_BeperkendCriteriumBase):
     type: Literal["GeenCriterium"] = "GeenCriterium"
     cached_evaluation: Optional[MaybeBoolean] = None
 
@@ -60,7 +61,7 @@ class GeenCriterium(BeperkendCriteriumBase):
         return set()
 
 
-class NietGeautomatiseerdCriterium(BeperkendCriteriumBase):
+class NietGeautomatiseerdCriterium(_BeperkendCriteriumBase):
     type: Literal["NietGeautomatiseerd"] = "NietGeautomatiseerd"
     toelichting: str
     cached_evaluation: Optional[MaybeBoolean] = None
@@ -75,7 +76,7 @@ class NietGeautomatiseerdCriterium(BeperkendCriteriumBase):
         return set()
 
 
-class OverrideCriterium(BeperkendCriteriumBase):
+class OverrideCriterium(_BeperkendCriteriumBase):
     type: Literal["OverrideCriteria"] = "OverrideCriteria"
     mits: str  # Wordt niet gebruikt voor matching, maar enkel voor __str__
     truth_value: MaybeBoolean
@@ -141,7 +142,7 @@ class OverrideCriterium(BeperkendCriteriumBase):
         return set()
 
 
-class FGRCriterium(BeperkendCriteriumBase):
+class FGRCriterium(_BeperkendCriteriumBase):
     type: Literal["FGRCriterium"] = "FGRCriterium"
     wanted_fgrtype: FGRType
     actual_fgrtype: Optional[FGRType] = None
@@ -202,7 +203,7 @@ class FGRCriterium(BeperkendCriteriumBase):
         return f"FGR is {self.wanted_fgrtype.value}" + " ({})"
 
 
-class BodemCriterium(BeperkendCriteriumBase):
+class BodemCriterium(_BeperkendCriteriumBase):
     type: Literal["BodemCriterium"] = "BodemCriterium"
     wanted_bodemtype: BodemType
     actual_bodemcode: Optional[List[str]] = None
@@ -282,7 +283,7 @@ class BodemCriterium(BeperkendCriteriumBase):
         return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
 
-class LBKCriterium(BeperkendCriteriumBase):
+class LBKCriterium(_BeperkendCriteriumBase):
     type: Literal["LBKCriterium"] = "LBKCriterium"
     wanted_lbktype: LBKType
     actual_lbkcode: Optional[str] = None
@@ -375,7 +376,7 @@ class LBKCriterium(BeperkendCriteriumBase):
         return f"LBK is {self.wanted_lbktype}" + " ({})"
 
 
-class OudeBossenCriterium(BeperkendCriteriumBase):
+class OudeBossenCriterium(_BeperkendCriteriumBase):
     type: Literal["OudeBossenCriterium"] = "OudeBossenCriterium"
     for_habtype: Literal["H9120", "H9190"]
     actual_OBK: Optional[OBKWaarden] = None
@@ -454,7 +455,7 @@ class OudeBossenCriterium(BeperkendCriteriumBase):
         return "Bos ouder dan 1850 ({})"
 
 
-class NietCriterium(BeperkendCriteriumBase):
+class NietCriterium(_BeperkendCriteriumBase):
     type: Literal["NietCriterium"] = "NietCriterium"
     sub_criterium: "BeperkendCriterium"
 
@@ -484,7 +485,7 @@ class NietCriterium(BeperkendCriteriumBase):
         return self.sub_criterium.get_info()
 
 
-class OfCriteria(BeperkendCriteriumBase):
+class OfCriteria(_BeperkendCriteriumBase):
     type: Literal["OfCriteria"] = "OfCriteria"
     sub_criteria: List["BeperkendCriterium"]
 
@@ -515,7 +516,7 @@ class OfCriteria(BeperkendCriteriumBase):
         return set.union(*[crit.get_info() for crit in self.sub_criteria])
 
 
-class EnCriteria(BeperkendCriteriumBase):
+class EnCriteria(_BeperkendCriteriumBase):
     type: Literal["EnCriteria"] = "EnCriteria"
     sub_criteria: List["BeperkendCriterium"]
 
@@ -547,7 +548,7 @@ class EnCriteria(BeperkendCriteriumBase):
 
 def is_criteria_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    criteria_type: BeperkendCriteriumBase,
+    criteria_type: _BeperkendCriteriumBase,
 ) -> bool:
     """
     Geeft True als er in de lijst met voorstellen eentje met een criteria van crit_type is

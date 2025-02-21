@@ -102,8 +102,8 @@ class VegTypeInfo(BaseModel, extra="forbid", validate_assignment=True):
         return lst
 
     @staticmethod
-    def serialize_list(l: List[Self]) -> str:
-        return json.dumps([x.model_dump() for x in l])
+    def serialize_list(l: List["VegTypeInfo"]) -> str:
+        return json.dumps([json.loads(x.model_dump_json()) for x in l])
 
     @staticmethod
     def deserialize_list(s: str) -> List[Self]:

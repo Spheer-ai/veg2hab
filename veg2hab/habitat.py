@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium
 from veg2hab.enums import KeuzeStatus, Kwaliteit, MatchLevel, MaybeBoolean
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegelBase, is_mozaiek_type_present
+from veg2hab.mozaiek import GeenMozaiekregel, MozaiekRegel, is_mozaiek_type_present
 from veg2hab.vegetatietypen import SBB, VvN
 
 
@@ -22,7 +22,7 @@ class HabitatVoorstel(BaseModel, extra="forbid", validate_assignment=True):
     habtype: str
     kwaliteit: Kwaliteit
     mits: BeperkendCriterium
-    mozaiek: MozaiekRegelBase
+    mozaiek: MozaiekRegel
     match_level: MatchLevel
     vegtype_in_dt_naam: str = ""
     habtype_naam: str = ""

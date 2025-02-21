@@ -5,7 +5,12 @@ import pandas as pd
 import pytest
 
 from veg2hab.criteria import BeperkendCriterium, GeenCriterium, criteria_from_json
-from veg2hab.mozaiek import MozaiekRegel, mozaiekregel_from_json
+from veg2hab.mozaiek import (
+    GeenMozaiekregel,
+    NietGeimplementeerdeMozaiekregel,
+    StandaardMozaiekregel,
+    mozaiekregel_from_json,
+)
 
 # Simpelweg elke mits en elke mozaiekregel in de .jsons instancen en dan (hopelijk) merken dat alles werkt
 
@@ -33,6 +38,30 @@ def test_mozaiekjson(mozaiekjson):
     for value in mozaiekjson.values():
         mozaiekregel_from_json(json.dumps(value))
 
+
+def test_mozaiekregel_from_json():
+    geen_mozaiekregel = GeenMozaiekregel()
+    assert (
+        mozaiekregel_from_json(geen_mozaiekregel.model_dump_json()) == geen_mozaiekregel
+    )
+
+    standaard_mozaiekregel = StandaardMozaiekregel(
+        kwalificerend_habtype="H1",
+        ook_mozaiekvegetaties=True,
+        alleen_goede_kwaliteit=True,
+        ook_als_rand_langs=True,
+    )
+    assert (
+        mozaiekregel_from_json(standaard_mozaiekregel.model_dump_json())
+        == standaard_mozaiekregel
+    )
+
+
+    niet_geimplementeerde_mozaiekregel = NietGeimplementeerdeMozaiekregel()
+    assert (
+        mozaiekregel_from_json(niet_geimplementeerde_mozaiekregel.model_dump_json())
+        == niet_geimplementeerde_mozaiekregel
+    )
 
 def test_evaluation_can_be_serialized():
     criterium = GeenCriterium()
