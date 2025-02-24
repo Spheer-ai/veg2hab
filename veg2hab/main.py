@@ -64,7 +64,7 @@ def run(
     ],
 ):
     logging.info(f"Huidige veg2hab versie: {veg2hab.__version__}")
-    logging.info(f"Starting veg2hab met input parameters: {params.json()}")
+    logging.info(f"Starting veg2hab met input parameters: {params.model_dump_json()}")
 
     if isinstance(params, (AccessDBInputs, ShapefileInputs)):
         return run_1_inladen_vegkartering(params)
