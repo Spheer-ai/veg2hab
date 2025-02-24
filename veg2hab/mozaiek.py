@@ -28,9 +28,10 @@ class MozkPercTuple(NamedTuple):
 
 
 class _MozaiekRegelBase(BaseModel, extra="forbid"):
-    """ Deze class niet gebruiken buiten deze file.
+    """Deze class niet gebruiken buiten deze file.
     Dit kan mogelijk tot serialisatieproblemen leiden.
     """
+
     mozaiek_threshold: NumberType = Field(
         default_factory=lambda: Interface.get_instance().get_config().mozaiek_threshold
     )

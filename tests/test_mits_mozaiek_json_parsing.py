@@ -56,12 +56,12 @@ def test_mozaiekregel_from_json():
         == standaard_mozaiekregel
     )
 
-
     niet_geimplementeerde_mozaiekregel = NietGeimplementeerdeMozaiekregel()
     assert (
         mozaiekregel_from_json(niet_geimplementeerde_mozaiekregel.model_dump_json())
         == niet_geimplementeerde_mozaiekregel
     )
+
 
 def test_evaluation_can_be_serialized():
     criterium = GeenCriterium()
