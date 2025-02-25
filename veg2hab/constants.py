@@ -1,4 +1,4 @@
-from importlib.resources import files, as_file
+from importlib.resources import as_file, files
 
 # locaties van de meegepackagde bestanden
 TOOLBOX_PYT_PATH = str(files("veg2hab") / "package_data/veg2hab.pyt")
