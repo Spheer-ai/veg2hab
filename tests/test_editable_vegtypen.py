@@ -95,9 +95,3 @@ def test_equivalency_habkart(kartering):
 
         # we need to reorder the columns to compare.
         assert kartering.gdf.equals(reconstructed_kartering.gdf[kartering.gdf.columns])
-
-        kartering.gdf == reconstructed_kartering.gdf[kartering.gdf.columns]
-
-        kartering.gdf.iloc[0].HabitatVoorstel[0][0] == reconstructed_kartering.gdf[
-            kartering.gdf.columns
-        ].iloc[0].HabitatVoorstel[0][0]
