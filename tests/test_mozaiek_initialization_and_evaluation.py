@@ -218,7 +218,9 @@ def test_1_omringend_100_procent_kwalificerend_habtype_goed_matig():
     assert regel.evaluation == MaybeBoolean.TRUE
 
     # Goede kwaliteit niet vereist, goede in de omringing
-    omringd_door_df["kwaliteit"].iloc[0] = Kwaliteit.GOED
+    omringd_door_df.iloc[0, omringd_door_df.columns.get_loc("kwaliteit")] = (
+        Kwaliteit.GOED
+    )
     regel.check(omringd_door_df)
     assert regel.evaluation == MaybeBoolean.TRUE
 

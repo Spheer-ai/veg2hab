@@ -3,15 +3,15 @@ import json
 import logging
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 import pandas as pd
 
-from veg2hab.criteria import BeperkendCriterium, OverrideCriterium
+from veg2hab.criteria import BeperkendCriterium, OverrideCriterium, criteria_from_json
 from veg2hab.enums import Kwaliteit
 from veg2hab.habitat import HabitatVoorstel
 from veg2hab.io.common import Interface
-from veg2hab.mozaiek import MozaiekRegel, StandaardMozaiekregel
+from veg2hab.mozaiek import MozaiekRegel, StandaardMozaiekregel, mozaiekregel_from_json
 from veg2hab.vegetatietypen import SBB, VvN
 from veg2hab.vegtypeinfo import VegTypeInfo
 
@@ -37,14 +37,14 @@ class DefinitieTabel:
         self.df["Criteria"] = (
             self.df["mitsjson"]
             .loc[self.df["mitsjson"].notnull()]
-            .apply(BeperkendCriterium.parse_raw)
+            .apply(criteria_from_json)
         )
 
         # Mozaiekjson parsen
         self.df["Mozaiekregel"] = (
             self.df["mozaiekjson"]
             .loc[self.df["mozaiekjson"].notnull()]
-            .apply(MozaiekRegel.parse_raw)
+            .apply(mozaiekregel_from_json)
         )
         # Aanmaken dict keys die gebruikt gaan worden om de mozaiekregels te checken\
 
@@ -267,7 +267,7 @@ def opschonen_definitietabel(
             raise ValueError(f"Mits {mits} is niet gevonden in mitsjson")
 
     # NaN vervangen door lege strings zodat hier GeenCriteria vanuit mitsjson op matchen
-    dt.mits[dt.mits.isna()] = ""
+    dt.loc[dt["mits"].isna(), "mits"] = ""
     dt = dt.merge(mitsjson, on="mits", how="left")
     dt["mitsjson"] = dt.mitsjson.apply(json.dumps)
 

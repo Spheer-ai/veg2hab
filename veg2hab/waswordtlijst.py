@@ -171,7 +171,7 @@ def opschonen_waswordtlijst(path_in: Path, path_out: Path) -> None:
     wwl = wwl.replace(r"^\s*$", None, regex=True)
 
     # Fixen foute rVvN code
-    wwl.rVvN.loc[wwl.rVvN == "r43A0A1B"] = "r43AA1B"
+    wwl.loc[wwl.rVvN == "r43A0A1B", "rVvN"] = "r43AA1B"
 
     wwl["rVvN"] = rVvN.opschonen_series(wwl["rVvN"])
     wwl["VvN"] = VvN.opschonen_series(wwl["VvN"])

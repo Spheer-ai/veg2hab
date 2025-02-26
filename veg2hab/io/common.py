@@ -5,7 +5,8 @@ from typing import ClassVar, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import geopandas as gpd
 from pydantic import BaseModel as _BaseModel
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator, validator
+from pydantic_settings import BaseSettings
 from typing_extensions import List, Literal
 
 from veg2hab import enums
@@ -13,9 +14,8 @@ from veg2hab.criteria import OverrideCriterium
 from veg2hab.enums import MaybeBoolean, WelkeTypologie
 
 
-class BaseModel(_BaseModel):
-    class Config:
-        extra = "forbid"
+class BaseModel(_BaseModel, extra="forbid"):
+    pass
 
 
 class AccessDBInputs(BaseModel):
@@ -47,7 +47,7 @@ class AccessDBInputs(BaseModel):
         description="Output bestand (optioneel), indien niet gegeven wordt er een bestandsnaam gegenereerd",
     )
 
-    @validator("welke_typologie", pre=True)
+    @field_validator("welke_typologie", mode="before")
     def parse_vegetatiekundig_identiek_json(cls, value):
         if isinstance(value, str):
             return WelkeTypologie(value)
@@ -126,7 +126,7 @@ class OverrideCriteriumIO(BaseModel):
     override_geometry: Optional[str] = None
     truth_value_outside: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]] = None
 
-    @validator("mits")
+    @field_validator("mits")
     def validate_mits(cls, value):
         if value not in enums.STR_MITSEN:
             raise ValueError(
@@ -134,13 +134,13 @@ class OverrideCriteriumIO(BaseModel):
             )
         return value
 
-    @validator("override_geometry")
+    @field_validator("override_geometry")
     def validate_override_geometry(cls, value):
         if value == "" or value == "None":
             return None
         return value
 
-    @validator("truth_value_outside", pre=True)
+    @field_validator("truth_value_outside", mode="before")
     def validate_truth_value_outside(cls, value):
         if value == "" or value == "None":
             return None
@@ -148,7 +148,7 @@ class OverrideCriteriumIO(BaseModel):
 
     @staticmethod
     def parse_list_of_strings(
-        values: List[Tuple[str, str, str, str]]
+        values: List[Tuple[str, str, str, str]],
     ) -> List["OverrideCriteriumIO"]:
         return [
             OverrideCriteriumIO(
@@ -162,7 +162,7 @@ class OverrideCriteriumIO(BaseModel):
 
     @staticmethod
     def _str_to_maybeboolean(
-        value: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]]
+        value: Optional[Literal["WAAR", "ONWAAR", "ONDUIDELIJK"]],
     ) -> Optional[MaybeBoolean]:
         if value is None:
             return None
@@ -240,9 +240,9 @@ class ApplyMozaiekInputs(BaseModel):
 
 class ApplyFunctioneleSamenhangInputs(BaseModel):
     label: ClassVar[str] = "5_functionele_samenhang_en_min_opp"
-    description: ClassVar[
-        str
-    ] = "Functionele samenhang en creeer de definitieve habitatkaart"
+    description: ClassVar[str] = (
+        "Functionele samenhang en creeer de definitieve habitatkaart"
+    )
 
     shapefile: str = Field(
         description="Habitattypekartering (output van stap 4)",
@@ -253,10 +253,7 @@ class ApplyFunctioneleSamenhangInputs(BaseModel):
     )
 
 
-class Veg2HabConfig(BaseSettings):
-    class Config:
-        env_prefix = "VEG2HAB_"
-
+class Veg2HabConfig(BaseSettings, env_prefix="VEG2HAB_"):
     combineer_karteringen_weglaten_threshold: float = Field(
         default=0.0001,
         description="Threshold in m^2 voor het weglaten van vlakken na het combineren van karteringen",
@@ -303,7 +300,7 @@ class Veg2HabConfig(BaseSettings):
         description="Vertaler van vegetatiekundig identieke habitattypen naar een gemene string",
     )
 
-    @validator("functionele_samenhang_vegetatiekundig_identiek", pre=True)
+    @field_validator("functionele_samenhang_vegetatiekundig_identiek", mode="before")
     def parse_vegetatiekundig_identiek_json(cls, value):
         try:
             return json.loads(value) if isinstance(value, str) else value
@@ -344,7 +341,7 @@ class Veg2HabConfig(BaseSettings):
         description="Minimum oppervlakken per habitattype",
     )
 
-    @validator("minimum_oppervlak_exceptions", pre=True)
+    @field_validator("minimum_oppervlak_exceptions", mode="before")
     def parse_minimum_oppervlak_exceptions_json(cls, value):
         try:
             return json.loads(value) if isinstance(value, str) else value

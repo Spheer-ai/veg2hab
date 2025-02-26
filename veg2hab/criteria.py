@@ -2,58 +2,26 @@ import logging
 from functools import reduce
 from itertools import chain
 from operator import and_, or_
-from typing import ClassVar, List, Optional, Set, Union
+from typing import Annotated, List, Optional, Set, Union
 
 import geopandas as gpd
 import pandas as pd
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator
 from shapely import wkt
 from typing_extensions import Literal
 
 from veg2hab.enums import BodemType, FGRType, LBKType, MaybeBoolean, OBKWaarden
 
 
-class BeperkendCriterium(BaseModel):
-    """
-    Superclass voor alle beperkende criteria.
+class _BeperkendCriteriumBase(BaseModel, extra="forbid", validate_assignment=True):
+    """Superclass voor alle beperkende criteria.
     Subclasses implementeren hun eigen check en non-standaard evaluation methodes.
     Niet-logic sublasses (dus niet EnCriteria, OfCriteria, NietCriterium) moeten een
     cached_evaluation parameter hebben waar het resultaat van check gecached wordt.
+
+    Gebruik deze class niet direct, gebruik de subclasses of de BeperkendCriterium type
+    onderaan deze file.
     """
-
-    class Config:
-        validate_assignment = True
-
-    type: ClassVar[Optional[str]] = None
-    _subtypes_: ClassVar[dict] = dict()
-
-    def __init_subclass__(cls):
-        # Vul de _subtypes_ dict met alle subclasses
-        if cls.type is None:
-            raise ValueError(
-                "You should specify the `type: ClassVar[str] = 'EnCritera'`"
-            )
-        cls._subtypes_[cls.type] = cls
-
-    def __new__(cls, *args, **kwargs):
-        # Maakt de juiste subclass aan op basis van de type parameter
-        if cls == BeperkendCriterium:
-            t = kwargs.pop("type")
-            return super().__new__(cls._subtypes_[t])
-        return super().__new__(cls)
-
-    def dict(self, *args, **kwargs):
-        """Ik wil type eigenlijk als ClassVar houden, maar dan wordt ie standaard niet mee geserialized.
-        Dit is een hack om dat wel voor elkaar te krijgen.
-        """
-        data = super().dict(*args, **kwargs)
-        data["type"] = self.type
-        return data
-
-    def json(self, *args, **kwargs):
-        """Same here"""
-        data = self.dict(*args, **kwargs)
-        return self.__config__.json_dumps(data, default=self.__json_encoder__)
 
     def check(self, row: pd.Series):
         raise NotImplementedError()
@@ -79,8 +47,8 @@ class BeperkendCriterium(BaseModel):
         return None
 
 
-class GeenCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "GeenCriterium"
+class GeenCriterium(_BeperkendCriteriumBase):
+    type: Literal["GeenCriterium"] = "GeenCriterium"
     cached_evaluation: Optional[MaybeBoolean] = None
 
     def check(self, row: pd.Series) -> None:
@@ -93,8 +61,8 @@ class GeenCriterium(BeperkendCriterium):
         return set()
 
 
-class NietGeautomatiseerdCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "NietGeautomatiseerd"
+class NietGeautomatiseerdCriterium(_BeperkendCriteriumBase):
+    type: Literal["NietGeautomatiseerd"] = "NietGeautomatiseerd"
     toelichting: str
     cached_evaluation: Optional[MaybeBoolean] = None
 
@@ -108,8 +76,8 @@ class NietGeautomatiseerdCriterium(BeperkendCriterium):
         return set()
 
 
-class OverrideCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "OverrideCriteria"
+class OverrideCriterium(_BeperkendCriteriumBase):
+    type: Literal["OverrideCriteria"] = "OverrideCriteria"
     mits: str  # Wordt niet gebruikt voor matching, maar enkel voor __str__
     truth_value: MaybeBoolean
     override_geometry: Optional[List[str]] = None
@@ -118,7 +86,7 @@ class OverrideCriterium(BeperkendCriterium):
 
     # We serializen de override_geometry naar een list van strings
     # zodat we later zonder problemen OverrideCriterium kunnen serializen
-    @validator("override_geometry", pre=True)
+    @field_validator("override_geometry", mode="before")
     def check_override_geometry(cls, v):
         if v is None:
             return v
@@ -162,9 +130,11 @@ class OverrideCriterium(BeperkendCriterium):
     def __str__(self):
         string = "Handmatig overschreven{}: {}"
         return string.format(
-            f" (met {self.cached_evaluation.as_letter()})"
-            if self.cached_evaluation is not None
-            else "",
+            (
+                f" (met {self.cached_evaluation.as_letter()})"
+                if self.cached_evaluation is not None
+                else ""
+            ),
             self.mits,
         )
 
@@ -172,8 +142,8 @@ class OverrideCriterium(BeperkendCriterium):
         return set()
 
 
-class FGRCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "FGRCriterium"
+class FGRCriterium(_BeperkendCriteriumBase):
+    type: Literal["FGRCriterium"] = "FGRCriterium"
     wanted_fgrtype: FGRType
     actual_fgrtype: Optional[FGRType] = None
     overlap_percentage: float = 0.0
@@ -220,9 +190,11 @@ class FGRCriterium(BeperkendCriterium):
             framework.format(
                 "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
                 self.wanted_fgrtype.value,
-                ", maar " + self.actual_fgrtype.value
-                if self.cached_evaluation == MaybeBoolean.FALSE
-                else "",
+                (
+                    ", maar " + self.actual_fgrtype.value
+                    if self.cached_evaluation == MaybeBoolean.FALSE
+                    else ""
+                ),
                 f"{self.overlap_percentage:.1f}%",
             )
         }
@@ -231,8 +203,8 @@ class FGRCriterium(BeperkendCriterium):
         return f"FGR is {self.wanted_fgrtype.value}" + " ({})"
 
 
-class BodemCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "BodemCriterium"
+class BodemCriterium(_BeperkendCriteriumBase):
+    type: Literal["BodemCriterium"] = "BodemCriterium"
     wanted_bodemtype: BodemType
     actual_bodemcode: Optional[List[str]] = None
     overlap_percentage: float = 0.0
@@ -298,9 +270,11 @@ class BodemCriterium(BeperkendCriterium):
         )
         return {
             framework.format(
-                "mogelijk "
-                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-                else "",
+                (
+                    "mogelijk "
+                    if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    else ""
+                ),
                 "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
             )
         }
@@ -309,8 +283,8 @@ class BodemCriterium(BeperkendCriterium):
         return f"Bodem is {self.wanted_bodemtype}" + " ({})"
 
 
-class LBKCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "LBKCriterium"
+class LBKCriterium(_BeperkendCriteriumBase):
+    type: Literal["LBKCriterium"] = "LBKCriterium"
     wanted_lbktype: LBKType
     actual_lbkcode: Optional[str] = None
     overlap_percentage: float = 0.0
@@ -373,22 +347,28 @@ class LBKCriterium(BeperkendCriterium):
         )
         return {
             framework.format(
-                "mogelijk "
-                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-                else "",
-                "toch "
-                if (
-                    self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-                    and self.wanted_lbktype.enkel_positieven
-                )
-                else "",
+                (
+                    "mogelijk "
+                    if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    else ""
+                ),
+                (
+                    "toch "
+                    if (
+                        self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                        and self.wanted_lbktype.enkel_positieven
+                    )
+                    else ""
+                ),
                 "niet " if self.cached_evaluation == MaybeBoolean.FALSE else "",
-                "ondanks "
-                if (
-                    self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-                    and self.wanted_lbktype.enkel_positieven
-                )
-                else "want ",
+                (
+                    "ondanks "
+                    if (
+                        self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                        and self.wanted_lbktype.enkel_positieven
+                    )
+                    else "want "
+                ),
             )
         }
 
@@ -396,8 +376,8 @@ class LBKCriterium(BeperkendCriterium):
         return f"LBK is {self.wanted_lbktype}" + " ({})"
 
 
-class OudeBossenCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "OudeBossenCriterium"
+class OudeBossenCriterium(_BeperkendCriteriumBase):
+    type: Literal["OudeBossenCriterium"] = "OudeBossenCriterium"
     for_habtype: Literal["H9120", "H9190"]
     actual_OBK: Optional[OBKWaarden] = None
     overlap_percentage: float = 0.0
@@ -453,15 +433,21 @@ class OudeBossenCriterium(BeperkendCriterium):
 
         return {
             framework.format(
-                "mogelijk"
-                if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
-                else "geen",
-                "niet binnen boskaartvlak"
-                if self.actual_OBK is None
-                else f"binnen boskaartvlak (H9120: {self.actual_OBK.H9120}, H9190: {self.actual_OBK.H9190})",
-                f" ({self.overlap_percentage:.1f}%)"
-                if self.actual_OBK is not None
-                else "",
+                (
+                    "mogelijk"
+                    if self.cached_evaluation == MaybeBoolean.CANNOT_BE_AUTOMATED
+                    else "geen"
+                ),
+                (
+                    "niet binnen boskaartvlak"
+                    if self.actual_OBK is None
+                    else f"binnen boskaartvlak (H9120: {self.actual_OBK.H9120}, H9190: {self.actual_OBK.H9190})"
+                ),
+                (
+                    f" ({self.overlap_percentage:.1f}%)"
+                    if self.actual_OBK is not None
+                    else ""
+                ),
             )
         }
 
@@ -469,9 +455,9 @@ class OudeBossenCriterium(BeperkendCriterium):
         return "Bos ouder dan 1850 ({})"
 
 
-class NietCriterium(BeperkendCriterium):
-    type: ClassVar[str] = "NietCriterium"
-    sub_criterium: BeperkendCriterium
+class NietCriterium(_BeperkendCriteriumBase):
+    type: Literal["NietCriterium"] = "NietCriterium"
+    sub_criterium: "BeperkendCriterium"
 
     def check(self, row: pd.Series) -> None:
         self.sub_criterium.check(row)
@@ -499,9 +485,9 @@ class NietCriterium(BeperkendCriterium):
         return self.sub_criterium.get_info()
 
 
-class OfCriteria(BeperkendCriterium):
-    type: ClassVar[str] = "OfCriteria"
-    sub_criteria: List[BeperkendCriterium]
+class OfCriteria(_BeperkendCriteriumBase):
+    type: Literal["OfCriteria"] = "OfCriteria"
+    sub_criteria: List["BeperkendCriterium"]
 
     def check(self, row: pd.Series) -> None:
         for crit in self.sub_criteria:
@@ -530,9 +516,9 @@ class OfCriteria(BeperkendCriterium):
         return set.union(*[crit.get_info() for crit in self.sub_criteria])
 
 
-class EnCriteria(BeperkendCriterium):
-    type: ClassVar[str] = "EnCriteria"
-    sub_criteria: List[BeperkendCriterium]
+class EnCriteria(_BeperkendCriteriumBase):
+    type: Literal["EnCriteria"] = "EnCriteria"
+    sub_criteria: List["BeperkendCriterium"]
 
     def check(self, row: pd.Series) -> None:
         for crit in self.sub_criteria:
@@ -562,7 +548,7 @@ class EnCriteria(BeperkendCriterium):
 
 def is_criteria_type_present(
     voorstellen: Union[List[List["HabitatVoorstel"]], List["HabitatVoorstel"]],
-    criteria_type: BeperkendCriterium,
+    criteria_type: _BeperkendCriteriumBase,
 ) -> bool:
     """
     Geeft True als er in de lijst met voorstellen eentje met een criteria van crit_type is
@@ -579,3 +565,26 @@ def is_criteria_type_present(
         )
         for voorstel in voorstellen
     )
+
+
+# NOTE: wanneer je een nieuwe BeperkendCriterium toevoegt, moet je deze hier registreren!
+BeperkendCriterium = Annotated[
+    Union[
+        GeenCriterium,
+        NietGeautomatiseerdCriterium,
+        OverrideCriterium,
+        FGRCriterium,
+        BodemCriterium,
+        LBKCriterium,
+        OudeBossenCriterium,
+        NietCriterium,
+        OfCriteria,
+        EnCriteria,
+    ],
+    Field(discriminator="type"),
+]
+
+
+def criteria_from_json(json_str: str) -> BeperkendCriterium:
+    type_adapter = TypeAdapter(BeperkendCriterium)
+    return type_adapter.validate_json(json_str)

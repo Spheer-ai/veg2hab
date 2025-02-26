@@ -3,21 +3,17 @@ from numbers import Number
 from typing import List, Optional, Union
 
 import pandas as pd
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, validator
 from typing_extensions import Self
 
 from veg2hab import vegetatietypen
 from veg2hab.enums import WelkeTypologie
 
 
-class VegTypeInfo(BaseModel):
+class VegTypeInfo(BaseModel, extra="forbid", validate_assignment=True):
     """
     Klasse met alle informatie over één vegetatietype van een vlak
     """
-
-    class Config:
-        extra = "forbid"
-        validate_assignment = True
 
     percentage: float
     SBB: List[vegetatietypen.SBB] = Field(default_factory=list)
@@ -27,7 +23,7 @@ class VegTypeInfo(BaseModel):
     # Support voor meerdere rVvN is niet onmogelijk, maar volgensmij niet nodig,
     # en aangezien er in van_rVvN_naar_SBB_en_VvN uit wordt gegaan van maar 1 rVvN,
     # leek me dit valideren wel zo handig
-    @validator("rVvN")
+    @field_validator("rVvN")
     def check_rvvn_length(cls, v):
         if len(v) > 1:
             raise ValueError("Er kan niet meer dan 1 rVvN type zijn")
@@ -91,19 +87,23 @@ class VegTypeInfo(BaseModel):
                 cls.from_str_vegtypes(
                     row[perc_col],
                     VvN_strings=[],
-                    SBB_strings=[row[vegtype_col]]
-                    if vegtype_col and welke_typologie == WelkeTypologie.SBB
-                    else [],
-                    rVvN_strings=[row[vegtype_col]]
-                    if vegtype_col and welke_typologie == WelkeTypologie.rVvN
-                    else [],
+                    SBB_strings=(
+                        [row[vegtype_col]]
+                        if vegtype_col and welke_typologie == WelkeTypologie.SBB
+                        else []
+                    ),
+                    rVvN_strings=(
+                        [row[vegtype_col]]
+                        if vegtype_col and welke_typologie == WelkeTypologie.rVvN
+                        else []
+                    ),
                 )
             )
         return lst
 
     @staticmethod
-    def serialize_list(l: List[Self]) -> str:
-        return json.dumps([x.dict() for x in l])
+    def serialize_list(l: List["VegTypeInfo"]) -> str:
+        return json.dumps([json.loads(x.model_dump_json()) for x in l])
 
     @staticmethod
     def deserialize_list(s: str) -> List[Self]:

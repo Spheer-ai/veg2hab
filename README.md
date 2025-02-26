@@ -74,7 +74,7 @@ Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De insta
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
         
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `!conda run pip install veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!conda run pip install --upgrade veg2hab`.
+    - Download veg2hab met het commando `!set PYTHONNOUSERSITE=1 && conda run pip install veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!set PYTHONNOUSERSITE=1 && conda run pip install veg2hab`.
         
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
@@ -104,7 +104,7 @@ In organisaties waarin de gebruikers van veg2hab geen volledige local admin rech
 
 
 ##### Troubleshooting
-- Voorheen werd aangeraden veg2hab te installeren met het commando `!pip install veg2hab`, dit kon soms voor problemen zorgen, wanneer er meer dan 1 Python installatie aanwezig was op het systeem. Dit zorgde er onder andere voor, dat na het installeren van veg2hab, bepaalde dependencies, zoals geopandas niet beschikbaar waren. Het installatie commando `!conda run pip install veg2hab` lijkt dit in veruit de meeste gevallen op te lossen.
+- Voorheen werd aangeraden veg2hab te installeren met het commando `!pip install veg2hab`, dit kon soms voor problemen zorgen, wanneer er meer dan 1 Python installatie aanwezig was op het systeem. Dit zorgde er onder andere voor, dat na het installeren van veg2hab, bepaalde dependencies, zoals geopandas niet beschikbaar waren. Het installatie commando `!set PYTHONNOUSERSITE=1 && conda run pip install veg2hab` lijkt dit in veruit de meeste gevallen op te lossen.
 - bij het clonen van de conda omgeving lijken er soms problemen met de gebruikersrechten te ontstaan, waarbij de folder andere rechten heeft dan de files binnen deze folders. Het kan dus zijn dat de rechten voor de bestanden nog goed gezet moeten worden (bijvoorbeeld met inheritance). De foutmelding die dit opleverde bij de gebruiker, was: `notebook not found at the requested URL`.
 - De gebruiker rechten nodig om data te downloaden voor het gebruik van veg2hab. De eerste keer dat een gebruiker veg2hab gebruikt, zal deze enkele kaarten downloaden van `https://github.com/Spheer-ai/veg2hab/releases/download/...`. Deze worden vervolgens opgeslagen in `$HOME \ AppData \ Roaming \ veg2hab`.
 

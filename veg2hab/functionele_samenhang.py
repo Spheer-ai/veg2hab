@@ -49,7 +49,7 @@ class UnionFind:
 
     @staticmethod
     def cluster_pairs(
-        pairs: Set[Tuple[FuncSamenhangID, FuncSamenhangID]]
+        pairs: Set[Tuple[FuncSamenhangID, FuncSamenhangID]],
     ) -> List[List[FuncSamenhangID]]:
         """
         Clustert paren op basis van gemene elementen
@@ -240,13 +240,17 @@ def _remove_habtypen_due_to_minimum_oppervlak(
                 "Was {} {}, maar oppervlak was te klein.{}".format(
                     keuze_to_be_edited.habtype,
                     "(" + keuze_to_be_edited.kwaliteit.as_letter() + ")",
-                    f" {keuze_to_be_edited.info}"
-                    if keuze_to_be_edited.info is not None
-                    else "",
+                    (
+                        f" {keuze_to_be_edited.info}"
+                        if keuze_to_be_edited.info is not None
+                        else ""
+                    ),
                 )
             )
             keuze_to_be_edited.habtype = "H0000"
             keuze_to_be_edited.kwaliteit = Kwaliteit.NVT
+
+            keuze_to_be_edited.validate_keuze_status()
 
     return gdf
 
