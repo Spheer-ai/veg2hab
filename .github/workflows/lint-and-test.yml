@@ -31,7 +31,7 @@ jobs:
     # TODO: update poetry version (will require newer version of python)
     - name: Install dependencies
       run: |
-        pip install poetry==1.5.1
+        pip install poetry==1.8.5
         poetry install
 
     - name: Install mdbtools
