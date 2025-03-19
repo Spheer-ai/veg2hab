@@ -48,8 +48,7 @@ def _decorate_click(func: Callable, param_schema: Dict):
             param_type = click.Choice(field_info["enum"])
         elif field_name == "welke_typologie":
             # NOTE: did is niet zo netjes en zou mooier kunnen
-            ref_name = field_info.get("allOf")[0].get("$ref").split("/")[-1]
-            param_type = click.Choice(param_schema["definitions"][ref_name]["enum"])
+            param_type = click.Choice(["SBB", "VvN", "SBB en VvN"])
         else:
             param_type = str
 
