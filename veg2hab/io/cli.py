@@ -42,8 +42,9 @@ def _decorate_click(func: Callable, param_schema: Dict):
         is_required = field_name in param_schema["required"]
 
         if field_info.get("format", "") == "path":
-            writable = field_name == "output"
-            param_type = click.Path(exists=False, writable=writable)
+            param_type = click.Path(exists=False, writable=False)
+        elif field_name == "output":
+            param_type = click.Path(exists=False, writable=True)
         elif "enum" in field_info:
             param_type = click.Choice(field_info["enum"])
         elif field_name == "welke_typologie":
