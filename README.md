@@ -37,7 +37,7 @@
 - Als functionaliteit binnen andere (python) software;
 - Vanuit ArcGIS Pro.
 
-veg2hab wordt gedistribueerd via [PyPI](https://pypi.org/project/veg2hab/), waar alle toekomstige versies aan toe worden gevoegd.
+veg2hab wordt gedistribueerd via [PyPI](https://pypi.org/project/veg2hab/) en [conda-forge](https://anaconda.org/conda-forge/veg2hab), waar alle toekomstige versies aan toe worden gevoegd.
 
 ### Disclaimer
 
@@ -443,3 +443,4 @@ poetry run pytest tests/
 7. Maak een nieuwe tag: `git tag v$(poetry version -s)`
 8. Push de tag naar git `git push origin tag v$(poetry version -s)`
 9. Github actions zal automatisch de nieuwe versie op PyPI zetten.
+10. Na enige tijd zal github automatisch een Pull Request klaar zetten op [veg2hab-feedstock](https://github.com/conda-forge/veg2hab-feedstock) nadat deze gemerged is zal veg2hab ook beschikbaar zijn op conda-forge.
