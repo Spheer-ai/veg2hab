@@ -178,6 +178,7 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
 
     outputs = []
     for field_name, field_info in param_schema["properties"].items():
+        direction = "Input"
         if field_name == "override_dict":
             param_group = _override_mits_params()
             outputs.extend(param_group)
@@ -188,6 +189,9 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             datatype = "Field"
         elif field_info.get("format", "") == "path":
             datatype = "DEFile"
+        elif field_name == "output":
+            datatype = "DEFile"
+            direction = "Output"
         else:
             datatype = "GPString"
 
@@ -199,7 +203,7 @@ def _schema_to_param_list(param_schema: dict) -> List["arcpy.Parameter"]:
             displayName=field_info["description"],
             datatype=datatype,
             parameterType="Required" if is_required else "Optional",
-            direction="Output" if field_name == "output" else "Input",
+            direction=direction,
             multiValue=field_info.get("type") == "array",
         )
 

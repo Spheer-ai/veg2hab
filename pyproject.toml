@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "veg2hab"
-version = "1.1.1"
+version = "1.1.2"
 description = "Package voor automatisch omzetten van vegetatiekarteringen naar habitatkaarten"
 authors = ["Spheer.ai <info@spheer.ai>"]
 readme = "README.md"
@@ -24,19 +24,19 @@ veg2hab = "veg2hab.__main__:veg2hab"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-pandas = "^2.2.3"
+pandas = "^2.0.2"
 geopandas = "^1.0.1"
-openpyxl = "^3.1.5"
+openpyxl = "^3.1.2"
 xlrd = "^2.0.1"
-pyodbc = "^5.2.0"
-pydantic = "^2.10.6"
-setuptools = "^75.8.0"
-click = "^8.1.8"
-fiona = "^1.10.1"
-shapely = "^2.0.7"
-pydantic-settings = "^2.8.0"
+pyodbc = "^5.0.1"
+pydantic = "^2.4.2"
+click = "^8.1.7"
+fiona = "^1.9.0"
+shapely = "^2.0.5"
+pydantic-settings = "^2.2.1"
 
 [tool.poetry.group.dev.dependencies]
+setuptools = "^75.8.0"
 ipykernel = "^6.29.5"
 black = "^25.1.0"
 isort = "^6.0.0"

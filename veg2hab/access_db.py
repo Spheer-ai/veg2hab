@@ -197,14 +197,14 @@ def read_access_tables(
             welke_typologie=welke_typologie,
             perc_col="Bedekking_num",
             vegtype_col="vegtype",
-            include_groups=False,
+            # include_groups=False, # TODO: Dit geeft in nieuwere versie van pandas een deprecation warning.
         )
         .reset_index(name="VegTypeInfo")
     )
 
     lokale_vegtypen = (
         kart_veg.groupby("Locatie")
-        .apply(_group_lokale_vegtypen_en_bedekking_to_str, include_groups=False)
+        .apply(_group_lokale_vegtypen_en_bedekking_to_str)
         .reset_index(name="_LokVegTyp")
     )
 
