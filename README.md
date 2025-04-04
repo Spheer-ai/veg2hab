@@ -74,7 +74,7 @@ Veg2hab is ontwikkeld voor en getest in ArcGIS Pro versie 3.0 en hoger. De insta
     - Klik op 'New notebook' en wacht tot deze is opgestart. Dit kan tot een minuut duren.
         
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/new_notebook.png" alt="new notebook" width="400"/>
-    - Download veg2hab met het commando `conda install --channel conda-forge veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `conda update --channel conda-forge veg2hab`.
+    - Download veg2hab met het commando `!conda install --yes --channel conda-forge veg2hab`. Het uitvoeren van een commandoregel in het notebook kan gedaan worden met `Control`+`Enter` of door te klikken op de `Run` knop. Tijdens het uitvoeren staat er links naast de commandoregel `[*]`. Dit sterretje verandert in een getal wanneer het notebook klaar is. Het installeren van veg2hab kan enkele minuten duren. Wil je veg2hab upgraden naar de laatste versie, gebruik dan `!conda install --yes --channel conda-forge veg2hab`. **LET OP:** Het `--yes` onderdeel van het commando is zeer belangrijk, anders loopt dit commando vast.
         
         <img src="https://github.com/Spheer-ai/veg2hab/raw/master/images/notebook_prompts.png" alt="prompts in notebook to install veg2hab" width="400"/>
  5. Activeer veg2hab in het notebook met het commando `import veg2hab`.
